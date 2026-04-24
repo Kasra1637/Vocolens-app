@@ -39,8 +39,8 @@ export interface ThemeColors {
   gradientStart: string;
   gradientEnd: string;
   accent: string;
-  /** 4-stop screen background gradient, safe for all themes including dark mode */
-  backgroundGradient: [string, string, string, string];
+  /** 3-stop screen background gradient, safe for all themes including dark mode */
+  backgroundGradient: [string, string, string];
 }
 
 export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; description: string }> = {
@@ -52,7 +52,7 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     gradientStart: '#9370DB',
     gradientEnd: '#A79BD8',
     accent: '#9E84EF',
-    backgroundGradient: ['#A79BD8', '#9E84EF', '#9370DB', '#9370DB'],
+    backgroundGradient: ['#A79BD8', '#9E84EF', '#9370DB'],
   },
   softPink: {
     name: 'Sage & Still',
@@ -62,7 +62,7 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     gradientStart: '#8BA888',
     gradientEnd: '#9AAC99',
     accent: '#9AAC99',
-    backgroundGradient: ['#9AB897', '#6D9B6A', '#557A52', '#557A52'],
+    backgroundGradient: ['#9AB897', '#6D9B6A', '#557A52'],
   },
   violetWhisper: {
     name: 'Mystic Dreams',
@@ -72,7 +72,7 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     gradientStart: '#8B5BBF',
     gradientEnd: '#B784D9',
     accent: '#9370DB',
-    backgroundGradient: ['#A670CC', '#7A48B0', '#6035A0', '#6035A0'],
+    backgroundGradient: ['#A670CC', '#7A48B0', '#6035A0'],
   },
   hotPink: {
     name: 'Bold Heart',
@@ -82,7 +82,7 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     gradientStart: '#CC4882',
     gradientEnd: '#DA5A9A',
     accent: '#9370DB',
-    backgroundGradient: ['#CC6898', '#D44E92', '#B83878', '#B83878'],
+    backgroundGradient: ['#CC6898', '#D44E92', '#B83878'],
   },
   oceanCalm: {
     name: 'Ocean Calm',
@@ -92,7 +92,7 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     gradientStart: '#4A85C2',
     gradientEnd: '#A8C8E8',
     accent: '#9370DB',
-    backgroundGradient: ['#6A9FCC', '#3A75B5', '#1A5090', '#1A5090'],
+    backgroundGradient: ['#6A9FCC', '#3A75B5', '#1A5090'],
   },
   darkMode: {
     name: 'Midnight Glow',
@@ -102,7 +102,7 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     gradientStart: '#252333',
     gradientEnd: '#0F0E1A',
     accent: '#A78BFA',
-    backgroundGradient: ['#252333', '#181624', '#0F0E1A', '#0F0E1A'],
+    backgroundGradient: ['#252333', '#181624', '#0F0E1A'],
   },
 };
 
