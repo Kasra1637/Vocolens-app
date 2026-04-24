@@ -1,0 +1,930 @@
+/**
+ * Settings Screen
+ * Customizable settings menu for theme, notifications, dark mode, PIN, time, and sign out
+ */
+
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable, Modal, Alert, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  useFonts,
+  Comfortaa_400Regular,
+  Comfortaa_600SemiBold,
+  Comfortaa_700Bold,
+} from '@expo-google-fonts/comfortaa';
+import {
+  Palette,
+  Bell,
+  Lock,
+  Clock,
+  LogOut,
+  Check,
+  X,
+  Shield,
+  ChevronRight,
+  Moon,
+} from 'lucide-react-native';
+import Animated from 'react-native-reanimated';
+import { selectHaptic, tapHaptic, confirmHaptic, warningHaptic } from '@/lib/haptics';
+import { router } from 'expo-router';
+import useOnboardingStore, { ThemeColorType, THEME_COLORS } from '@/lib/state/onboarding-store';
+import useSettingsStore, { TimeFormat } from '@/lib/state/settings-store';
+import { getThemeColors, getThemeGradients, getThemeShadows } from '@/lib/theme';
+import { ThemedSwitch } from '@/components/ThemedSwitch';
+import { NotificationService } from '@/lib/services/notification-service';
+import { changePin, verifyPin } from '@/lib/auth-service';
+import { BrandedAlert } from '@/components/BrandedAlert';
+import { useUsageMinutes, useRemainingMinutes, USAGE_LIMIT_MINUTES } from '@/lib/state/user-stats-store';
+
+export default function SettingsScreen() {
+  const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [signOutModalVisible, setSignOutModalVisible] = useState(false);
+  const [currentPin, setCurrentPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [pinStep, setPinStep] = useState<'current' | 'new'>('current');
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  // Onboarding Store (for theme and notification time)
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const setSelectedTheme = useOnboardingStore((s) => s.setSelectedTheme);
+  const resetOnboarding = useOnboardingStore((s) => s.resetOnboarding);
+  const notificationPreferences = useOnboardingStore((s) => s.notificationPreferences);
+
+  // Settings Store
+  const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
+  const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
+  const dailyReminderTime = useSettingsStore((s) => s.dailyReminderTime);
+  const isDarkMode = useSettingsStore((s) => s.isDarkMode);
+  const timeFormat = useSettingsStore((s) => s.timeFormat);
+  const setTimeFormat = useSettingsStore((s) => s.setTimeFormat);
+
+  // Usage tracking
+  const usageMinutes = useUsageMinutes();
+  const remainingMinutes = useRemainingMinutes();
+  const usagePct = Math.min(1, usageMinutes / USAGE_LIMIT_MINUTES);
+  const usageMinutesDisplay = Math.floor(usageMinutes);
+  const remainingMinutesDisplay = Math.max(0, Math.floor(remainingMinutes));
+  const isNearLimit = usagePct >= 0.8;
+  const isAtLimit = usagePct >= 1;
+
+  // Theme colors
+  const Colors = getThemeColors(selectedTheme, isDarkMode);
+  const Gradients = getThemeGradients(selectedTheme, isDarkMode);
+  const Shadows = getThemeShadows(selectedTheme);
+
+  const [fontsLoaded] = useFonts({
+    Comfortaa_400Regular,
+    Comfortaa_600SemiBold,
+    Comfortaa_700Bold,
+  });
+
+  const showAlert = (type: 'success' | 'error', title: string, message: string) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
+  const handleThemeSelect = (theme: ThemeColorType) => {
+    selectHaptic();
+    setSelectedTheme(theme);
+  };
+
+  const handleNotificationToggle = async (value: boolean) => {
+    selectHaptic();
+
+    if (value) {
+      // User wants to enable notifications
+      const status = await NotificationService.requestPermissions();
+
+      if (status.granted) {
+        // Schedule notifications using the stored time from onboarding
+        const timeToUse = notificationPreferences?.time || dailyReminderTime;
+        const scheduled = await NotificationService.scheduleDailyNotification(timeToUse);
+
+        if (scheduled) {
+          setNotificationsEnabled(true);
+        } else {
+          Alert.alert('Error', 'Failed to schedule notifications. Please try again.');
+        }
+      } else {
+        Alert.alert(
+          'Permission Required',
+          'Please enable notifications in your device settings to receive daily reminders.',
+          [{ text: 'OK' }]
+        );
+      }
+    } else {
+      // User wants to disable notifications
+      await NotificationService.cancelAllNotifications();
+      setNotificationsEnabled(false);
+    }
+  };
+
+  const handleTimeFormatToggle = (value: boolean) => {
+    selectHaptic();
+    setTimeFormat(value ? '24h' : '12h');
+  };
+
+  const handleOpenPinChange = () => {
+    tapHaptic();
+    setPinModalVisible(true);
+    setPinStep('current');
+    setCurrentPin('');
+    setNewPin('');
+  };
+
+  const handlePinChange = async () => {
+    confirmHaptic();
+
+    if (pinStep === 'current') {
+      // Verify current PIN
+      const isValid = await verifyPin(currentPin);
+      if (!isValid) {
+        showAlert('error', 'Incorrect PIN', 'Current PIN is incorrect. Please try again.');
+        setCurrentPin('');
+        return;
+      }
+      setPinStep('new');
+    } else if (pinStep === 'new') {
+      // Change PIN directly
+      const success = await changePin(currentPin, newPin);
+      if (success) {
+        showAlert('success', 'PIN Changed', 'Your PIN has been changed successfully.');
+        setPinModalVisible(false);
+        setCurrentPin('');
+        setNewPin('');
+        setPinStep('current');
+
+      } else {
+        showAlert('error', 'Change Failed', 'Failed to change PIN. Please try again.');
+      }
+    }
+  };
+
+  const handlePinInput = (value: string) => {
+    if (pinStep === 'current') {
+      setCurrentPin(value);
+    } else {
+      setNewPin(value);
+    }
+  };
+
+  const handleSignOut = () => {
+    warningHaptic();
+    setSignOutModalVisible(true);
+  };
+
+  const confirmSignOut = () => {
+    confirmHaptic();
+    setSignOutModalVisible(false);
+    // Reset onboarding to go back to welcome screen
+    useOnboardingStore.getState().resetOnboarding();
+    router.replace('/(tabs)');
+  };
+
+  const cancelSignOut = () => {
+    tapHaptic();
+    setSignOutModalVisible(false);
+  };
+
+
+  if (!fontsLoaded) {
+    return (
+      <View className="flex-1">
+        <LinearGradient
+          colors={THEME_COLORS[selectedTheme].backgroundGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={{ flex: 1 }}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View className="flex-1">
+      <LinearGradient
+        colors={THEME_COLORS[selectedTheme].backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView className="flex-1">
+          {/* Header */}
+          <View className="px-6 pt-4 pb-6">
+            <Animated.View>
+              <Text
+                className="text-white font-bold mb-2 text-center"
+                style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 22 }}
+              >
+                Settings
+              </Text>
+              <Text className="text-center" style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 16 }}>
+                Customize your experience
+              </Text>
+            </Animated.View>
+          </View>
+
+          {/* Settings Content */}
+          <ScrollView
+            className="flex-1 px-6"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 40 }}
+          >
+            {/* Usage Limit Card */}
+            <Animated.View className="mb-6">
+              <View
+                className="rounded-3xl overflow-hidden"
+                style={{
+                  backgroundColor: isAtLimit
+                    ? 'rgba(255, 80, 80, 0.18)'
+                    : isNearLimit
+                    ? 'rgba(255, 180, 50, 0.15)'
+                    : 'rgba(255, 255, 255, 0.1)',
+                  borderWidth: 1,
+                  borderColor: isAtLimit
+                    ? 'rgba(255, 100, 100, 0.5)'
+                    : isNearLimit
+                    ? 'rgba(255, 200, 80, 0.4)'
+                    : 'rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <View className="p-5">
+                  {/* Header row */}
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center">
+                      <View
+                        className="w-9 h-9 rounded-full items-center justify-center mr-3"
+                        style={{
+                          backgroundColor: isAtLimit
+                            ? 'rgba(255, 100, 100, 0.3)'
+                            : 'rgba(255, 255, 255, 0.2)',
+                        }}
+                      >
+                        <Text style={{ fontSize: 17 }}>
+                          {isAtLimit ? '🔒' : isNearLimit ? '⚠️' : '🎙️'}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text
+                          style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 15 }}
+                        >
+                          Monthly Usage
+                        </Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11 }}>
+                          Resets each calendar month
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      className="px-3 py-1 rounded-full"
+                      style={{
+                        backgroundColor: isAtLimit
+                          ? 'rgba(255, 100, 100, 0.35)'
+                          : isNearLimit
+                          ? 'rgba(255, 200, 80, 0.3)'
+                          : 'rgba(255, 255, 255, 0.15)',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: 'Comfortaa_700Bold',
+                          color: '#FFFFFF',
+                          fontSize: 12,
+                        }}
+                      >
+                        {usageMinutesDisplay} / {USAGE_LIMIT_MINUTES} min
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Progress bar */}
+                  <View
+                    className="h-3 rounded-full mb-3"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+                  >
+                    <View
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.min(100, usagePct * 100)}%`,
+                        backgroundColor: isAtLimit
+                          ? '#FF5050'
+                          : isNearLimit
+                          ? '#FFB830'
+                          : Colors.primary,
+                      }}
+                    />
+                  </View>
+
+                  {/* Status text */}
+                  <Text
+                    style={{
+                      fontFamily: 'Comfortaa_400Regular',
+                      color: isAtLimit
+                        ? 'rgba(255,180,180,0.95)'
+                        : isNearLimit
+                        ? 'rgba(255,230,150,0.95)'
+                        : 'rgba(255,255,255,0.7)',
+                      fontSize: 12,
+                    }}
+                  >
+                    {isAtLimit
+                      ? 'Monthly limit reached. Usage resets at the start of next month.'
+                      : `${remainingMinutesDisplay} minutes remaining this month`}
+                  </Text>
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Theme Customization */}
+            <Animated.View
+              className="mb-6"
+            >
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                >
+                  <Palette size={20} color="#FFFFFF" />
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: 'Comfortaa_600SemiBold',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Theme Colors
+                </Text>
+              </View>
+
+              <View
+                className="rounded-3xl p-5"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)' }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  {(['hotPink', 'softPink', 'lavenderBliss', 'violetWhisper', 'darkMode'] as ThemeColorType[]).map((theme) => {
+                    const themeData = THEME_COLORS[theme];
+                    const isSelected = selectedTheme === theme;
+
+                    return (
+                      <Pressable
+                        key={theme}
+                        onPress={() => handleThemeSelect(theme)}
+                        style={{ alignItems: 'center', width: 52 }}
+                      >
+                        {/* Outer glow ring */}
+                        {isSelected && (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              width: 64,
+                              height: 64,
+                              borderRadius: 32,
+                              borderWidth: 2.5,
+                              borderColor: 'rgba(255,255,255,0.95)',
+                              top: -6,
+                              left: -6,
+                              shadowColor: '#FFFFFF',
+                              shadowOffset: { width: 0, height: 0 },
+                              shadowOpacity: 0.55,
+                              shadowRadius: 10,
+                            }}
+                          />
+                        )}
+
+                        {/* Gradient orb */}
+                        <LinearGradient
+                          colors={[themeData.gradientStart, themeData.gradientEnd]}
+                          start={{ x: 0.15, y: 0 }}
+                          end={{ x: 0.85, y: 1 }}
+                          style={{
+                            width: 52,
+                            height: 52,
+                            borderRadius: 26,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {/* Inner highlight shimmer */}
+                          <View
+                            style={{
+                              position: 'absolute',
+                              top: 7,
+                              left: 7,
+                              width: 16,
+                              height: 16,
+                              borderRadius: 8,
+                              backgroundColor: 'rgba(255,255,255,0.38)',
+                            }}
+                          />
+                          {/* Bottom shadow layer */}
+                          <View
+                            style={{
+                              position: 'absolute',
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: 20,
+                              borderBottomLeftRadius: 26,
+                              borderBottomRightRadius: 26,
+                              backgroundColor: 'rgba(0,0,0,0.10)',
+                            }}
+                          />
+                          {isSelected ? (
+                            <Check size={18} color="#FFFFFF" strokeWidth={2.8} />
+                          ) : theme === 'darkMode' ? (
+                            <Moon size={16} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                          ) : null}
+                        </LinearGradient>
+
+                        {/* Label */}
+                        <Text
+                          numberOfLines={2}
+                          style={{
+                            color: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.65)',
+                            fontSize: 9.5,
+                            fontFamily: 'Comfortaa_600SemiBold',
+                            textAlign: 'center',
+                            marginTop: 8,
+                            lineHeight: 13,
+                            maxWidth: 52,
+                          }}
+                        >
+                          {themeData.name}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Notifications */}
+            <Animated.View
+              className="mb-6"
+            >
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                >
+                  <Bell size={20} color="#FFFFFF" />
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: 'Comfortaa_600SemiBold',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Notifications
+                </Text>
+              </View>
+
+              <View className="rounded-3xl p-5" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1 mr-4">
+                    <Text
+                      className="text-base font-semibold mb-1"
+                      style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                    >
+                      Daily Reminders
+                    </Text>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                      Get reminded to journal every day
+                    </Text>
+                  </View>
+                  <ThemedSwitch
+                    value={notificationsEnabled}
+                    onValueChange={handleNotificationToggle}
+                    trackColor={Colors.primary}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Time Format */}
+            <Animated.View
+              className="mb-6"
+            >
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                >
+                  <Clock size={20} color="#FFFFFF" />
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: 'Comfortaa_600SemiBold',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Time Format
+                </Text>
+              </View>
+
+              <View className="rounded-3xl p-5" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1 mr-4">
+                    <Text
+                      className="text-base font-semibold mb-1"
+                      style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                    >
+                      24-Hour Format
+                    </Text>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                      {timeFormat === '24h' ? 'Using 24-hour format (14:00)' : 'Using 12-hour format (2:00 PM)'}
+                    </Text>
+                  </View>
+                  <ThemedSwitch
+                    value={timeFormat === '24h'}
+                    onValueChange={handleTimeFormatToggle}
+                    trackColor={Colors.primary}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Privacy & Security */}
+            <Animated.View
+              className="mb-6"
+            >
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                >
+                  <Shield size={20} color="#FFFFFF" />
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: 'Comfortaa_600SemiBold',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Privacy & Security
+                </Text>
+              </View>
+
+              <View className="rounded-3xl overflow-hidden" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+                <Pressable
+                  onPress={handleOpenPinChange}
+                  className="p-5 active:opacity-70"
+                  style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text
+                        className="text-base font-semibold mb-1"
+                        style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                      >
+                        Change PIN
+                      </Text>
+                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                        Update your security PIN
+                      </Text>
+                    </View>
+                    <View
+                      className="w-8 h-8 rounded-full items-center justify-center"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                    >
+                      <Lock size={16} color="#FFFFFF" />
+                    </View>
+                  </View>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    router.push('/privacy-settings');
+                  }}
+                  className="p-5 active:opacity-70"
+                  style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text
+                        className="text-base font-semibold mb-1"
+                        style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                      >
+                        Privacy Settings
+                      </Text>
+                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                        Export data, manage entries & account
+                      </Text>
+                    </View>
+                    <ChevronRight size={20} color="rgba(255, 255, 255, 0.6)" strokeWidth={2} />
+                  </View>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    router.push('/legal');
+                  }}
+                  className="p-5 active:opacity-70"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text
+                        className="text-base font-semibold mb-1"
+                        style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                      >
+                        Privacy Policy & Terms
+                      </Text>
+                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                        How your data is used & protected
+                      </Text>
+                    </View>
+                    <ChevronRight size={20} color="rgba(255, 255, 255, 0.6)" strokeWidth={2} />
+                  </View>
+                </Pressable>
+              </View>
+            </Animated.View>
+
+          </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
+
+      {/* PIN Change Modal */}
+      <Modal
+        visible={pinModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPinModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View className="rounded-3xl p-6 w-full max-w-md" style={{ backgroundColor: Colors.surfaceHighlight, ...Shadows.large }}>
+            {/* Header with centered title */}
+            <View style={{ position: 'relative', alignItems: 'center', marginBottom: 16 }}>
+              <Text
+                className="text-2xl font-bold text-center"
+                style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.textPrimary }}
+              >
+                Change PIN
+              </Text>
+              <Pressable
+                onPress={() => setPinModalVisible(false)}
+                className="w-8 h-8 rounded-full items-center justify-center"
+                style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6', position: 'absolute', right: 0, top: 0 }}
+              >
+                <X size={18} color={Colors.textPrimary} />
+              </Pressable>
+            </View>
+
+            {/* Step indicator */}
+            <View className="flex-row justify-center items-center gap-2 mb-4">
+              <View
+                className="w-8 h-2 rounded-full"
+                style={{ backgroundColor: Colors.primary }}
+              />
+              <View
+                className="w-8 h-2 rounded-full"
+                style={{ backgroundColor: pinStep === 'new' ? Colors.primary : isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)' }}
+              />
+            </View>
+
+            <Text className="text-center text-base mb-6" style={{ color: Colors.textSecondary }}>
+              {pinStep === 'current' ? 'Confirm your old PIN' : 'Enter your new PIN'}
+            </Text>
+
+            {/* PIN Input Display */}
+            <View className="flex-row justify-center mb-6 gap-3">
+              {[0, 1, 2, 3].map((index) => {
+                const currentValue = pinStep === 'current' ? currentPin : newPin;
+                const isFilled = index < currentValue.length;
+                return (
+                  <View
+                    key={index}
+                    className="w-14 h-14 rounded-2xl items-center justify-center"
+                    style={{
+                      backgroundColor: isFilled ? Colors.primary : isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6',
+                      borderWidth: 2,
+                      borderColor: isFilled ? Colors.primary : 'transparent',
+                    }}
+                  >
+                    {isFilled && (
+                      <View
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: '#FFFFFF' }}
+                      />
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Number Pad */}
+            <View className="mb-4">
+              <View className="flex-row justify-center gap-3 mb-3">
+                {[1, 2, 3].map((num) => (
+                  <Pressable
+                    key={num}
+                    onPress={() => {
+                      const currentValue = pinStep === 'current' ? currentPin : newPin;
+                      if (currentValue.length < 4) {
+                        tapHaptic();
+                        handlePinInput(currentValue + num.toString());
+                      }
+                    }}
+                    className="w-16 h-16 rounded-2xl items-center justify-center"
+                    style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
+                  >
+                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Comfortaa_700Bold' }}>
+                      {num}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View className="flex-row justify-center gap-3 mb-3">
+                {[4, 5, 6].map((num) => (
+                  <Pressable
+                    key={num}
+                    onPress={() => {
+                      const currentValue = pinStep === 'current' ? currentPin : newPin;
+                      if (currentValue.length < 4) {
+                        tapHaptic();
+                        handlePinInput(currentValue + num.toString());
+                      }
+                    }}
+                    className="w-16 h-16 rounded-2xl items-center justify-center"
+                    style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
+                  >
+                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Comfortaa_700Bold' }}>
+                      {num}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View className="flex-row justify-center gap-3 mb-3">
+                {[7, 8, 9].map((num) => (
+                  <Pressable
+                    key={num}
+                    onPress={() => {
+                      const currentValue = pinStep === 'current' ? currentPin : newPin;
+                      if (currentValue.length < 4) {
+                        tapHaptic();
+                        handlePinInput(currentValue + num.toString());
+                      }
+                    }}
+                    className="w-16 h-16 rounded-2xl items-center justify-center"
+                    style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
+                  >
+                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Comfortaa_700Bold' }}>
+                      {num}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View className="flex-row justify-center gap-3">
+                <View className="w-16 h-16" />
+                <Pressable
+                  onPress={() => {
+                    const currentValue = pinStep === 'current' ? currentPin : newPin;
+                    if (currentValue.length < 4) {
+                      tapHaptic();
+                      handlePinInput(currentValue + '0');
+                    }
+                  }}
+                  className="w-16 h-16 rounded-2xl items-center justify-center"
+                  style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
+                >
+                  <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Comfortaa_700Bold' }}>
+                    0
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    const currentValue = pinStep === 'current' ? currentPin : newPin;
+                    handlePinInput(currentValue.slice(0, -1));
+                  }}
+                  className="w-16 h-16 rounded-2xl items-center justify-center"
+                  style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
+                >
+                  <X size={24} color={Colors.textPrimary} />
+                </Pressable>
+              </View>
+            </View>
+
+            <Pressable
+              onPress={handlePinChange}
+              disabled={
+                (pinStep === 'current' && currentPin.length !== 4) ||
+                (pinStep === 'new' && newPin.length !== 4)
+              }
+              className="rounded-2xl overflow-hidden"
+              style={{
+                opacity:
+                  (pinStep === 'current' && currentPin.length !== 4) ||
+                  (pinStep === 'new' && newPin.length !== 4)
+                    ? 0.5
+                    : 1,
+              }}
+            >
+              <LinearGradient
+                colors={Gradients.primary}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ padding: 16, alignItems: 'center' }}
+              >
+                <Text
+                  className="text-white text-lg font-bold"
+                  style={{ fontFamily: 'Comfortaa_700Bold' }}
+                >
+                  {pinStep === 'new' ? 'Change PIN' : 'Continue'}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Sign Out Confirmation Modal */}
+      <Modal
+        visible={signOutModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelSignOut}
+      >
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View className="rounded-3xl p-6 w-full max-w-md" style={{ backgroundColor: Colors.surfaceHighlight, ...Shadows.large }}>
+            <View className="items-center mb-4">
+              <View
+                className="w-16 h-16 rounded-full items-center justify-center mb-4"
+                style={{ backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2' }}
+              >
+                <LogOut size={32} color="#DC2626" strokeWidth={2} />
+              </View>
+              <Text
+                className="text-2xl font-bold mb-2"
+                style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.textPrimary }}
+              >
+                Sign Out
+              </Text>
+              <Text className="text-center text-base" style={{ color: Colors.textSecondary }}>
+                Are you sure you want to sign out? You'll return to the welcome screen.
+              </Text>
+            </View>
+
+            <View className="space-y-3">
+              <Pressable
+                onPress={confirmSignOut}
+                className="rounded-2xl overflow-hidden mb-3"
+              >
+                <LinearGradient
+                  colors={['#EF4444', '#DC2626']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ padding: 16, alignItems: 'center' }}
+                >
+                  <Text
+                    className="text-white text-lg font-bold"
+                    style={{ fontFamily: 'Comfortaa_700Bold' }}
+                  >
+                    Yes, Sign Out
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+
+              <Pressable
+                onPress={cancelSignOut}
+                className="rounded-2xl py-4 items-center border-2"
+                style={{ borderColor: Colors.primary }}
+              >
+                <Text
+                  className="text-lg font-bold"
+                  style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.primary }}
+                >
+                  Cancel
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Branded Alert */}
+      <BrandedAlert
+        visible={alertVisible}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
+    </View>
+  );
+}
