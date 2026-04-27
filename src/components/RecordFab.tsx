@@ -3,8 +3,8 @@ import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import Animated, {
   useSharedValue, useAnimatedStyle, withRepeat, withDelay, withTiming,
 } from 'react-native-reanimated';
-import { useTheme } from '@react-navigation/native'; // Or styled-components/native if used in your app
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '@react-navigation/native';
+import { Mic } from 'lucide-react-native';
 
 const BUTTON_SIZE = 92;
 const RIPPLE_COUNT = 3;
@@ -80,7 +80,7 @@ export function RecordFab({ onPress, disabled = false }: { onPress: () => void, 
           styles.glow,
           { backgroundColor: lighter, opacity: 0.34 }
         ]} pointerEvents="none" />
-        <Icon name="microphone" size={42} color="#fff" style={{ zIndex: 10 }} />
+        <Mic size={42} color="#fff" style={{ zIndex: 10 }} />
       </Pressable>
     </View>
   );

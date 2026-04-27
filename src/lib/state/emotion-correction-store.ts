@@ -48,7 +48,7 @@ export interface UserEmotionBias {
     valenceBias: number;    // shift to apply to AI valence
     arousalBias: number;     // shift to apply to AI arousal
     labelBias: number;      // confidence shift for this label
-  }>;
+  }>>;
   /** Patterns detected from corrections */
   patterns: CorrectionPattern[];
   /** Total corrections given */

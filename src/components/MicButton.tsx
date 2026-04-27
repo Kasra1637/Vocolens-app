@@ -8,6 +8,7 @@ import Animated, {
   withDelay,
   withTiming,
   withSpring,
+  withSequence,
   Easing,
   cancelAnimation,
 } from 'react-native-reanimated';
@@ -214,12 +215,11 @@ export function MicButton({
             />
 
             {/* Mic Icon */}
-            <View style={styles.iconContainer}>
+            <View style={[styles.iconContainer, { opacity: isAtLimit ? 0.45 : 1 }]}>
               <MicTabIcon
                 size={44}
                 color="#FFFFFF"
                 filled
-                style={{ opacity: isAtLimit ? 0.45 : 1 }}
               />
             </View>
           </View>
