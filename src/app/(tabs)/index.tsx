@@ -34,6 +34,7 @@ import EmotionReflectionScreen from '@/components/emotion-reflection';
 import type { ReflectionResult } from '@/components/emotion-reflection';
 import GroundingToolsModal from '@/components/GroundingToolsModal';
 import { analyzeTranscript } from '@/lib/journal-service';
+import { buildPersonalizationPrompt } from '@/lib/personalization';
 import useOnboardingStore from '@/lib/state/onboarding-store';
 import useSettingsStore from '@/lib/state/settings-store';
 import { useUsageMinutes, useRemainingMinutes, useIsAtLimit, USAGE_LIMIT_MINUTES } from '@/lib/state/user-stats-store';
@@ -280,8 +281,11 @@ export default function SpeakScreen() {
 
       if (finalTranscript && finalTranscript.trim().length > 0) {
         try {
-          // Analyze transcript for emotion suggestions
-          const analysis = await analyzeTranscript(finalTranscript);
+          // Build personalization context from user's correction history
+          const personalizationContext = buildPersonalizationPrompt();
+
+          // Analyze transcript for emotion suggestions (with personalization bias)
+          const analysis = await analyzeTranscript(finalTranscript, undefined, personalizationContext);
 
           // Store data for reflection screen
           setReflectionTranscript(finalTranscript);

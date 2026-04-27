@@ -27,6 +27,7 @@ import {
 } from './api/openrouter-service';
 import * as FileSystem from 'expo-file-system';
 import { recordSessionUsage } from './api/usage-service';
+import { buildPersonalizationPrompt } from './personalization';
 
 /**
  * Analyze transcript for emotional content
@@ -270,7 +271,8 @@ function generateAnalysis(
  * Falls back gracefully if APIs are not configured.
  */
 export async function transcribeAndAnalyze(
-  audioUri: string
+  audioUri: string,
+  personalizationContext?: string
 ): Promise<{
   transcript: string;
   analysis: {
@@ -314,7 +316,7 @@ export async function transcribeAndAnalyze(
   // Analyze with GPT-4o audio model (audio + transcript) - falls back to text-only / local
   let analysis;
   try {
-    analysis = await analyzeTranscript(transcript, audioBase64);
+    analysis = await analyzeTranscript(transcript, audioBase64, personalizationContext);
   } catch (error) {
     console.warn('Analysis failed, using local fallback:', error);
     analysis = analyzeTranscriptLocal(transcript);
@@ -357,7 +359,8 @@ export async function createJournalEntry(
   conversationTopic?: TopicCategory,
   conversationPrompt?: string,
   preTranscribedText?: string,
-  reflectionOverride?: ReflectionOverride
+  reflectionOverride?: ReflectionOverride,
+  personalizationContext?: string
 ): Promise<JournalEntry> {
   const journalStore = useJournalStore.getState();
   const userStatsStore = useUserStatsStore.getState();
@@ -410,7 +413,7 @@ export async function createJournalEntry(
     }
 
     try {
-      const analysisResult = await analyzeTranscript(transcript, audioBase64);
+      const analysisResult = await analyzeTranscript(transcript, audioBase64, personalizationContext);
       analysis = analysisResult;
     } catch (error) {
       console.warn('Analysis failed, using local fallback:', error);
@@ -422,7 +425,7 @@ export async function createJournalEntry(
     }
 
     try {
-      const result = await transcribeAndAnalyze(audioUri);
+      const result = await transcribeAndAnalyze(audioUri, personalizationContext);
       transcript = result.transcript;
       analysis = result.analysis;
     } catch (error) {
