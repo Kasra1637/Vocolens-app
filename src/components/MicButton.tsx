@@ -46,7 +46,7 @@ function SonarRipple({
     progress.value = withDelay(
       delay,
       withRepeat(
-        withTiming(1, { duration: 2500, easing: Easing.out(Easing.ease) }),
+        withTiming(1, { duration: 3000, easing: Easing.out(Easing.ease) }),
         -1,
         false
       )
@@ -58,8 +58,10 @@ function SonarRipple({
   }, [delay]);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const scale = 1 + progress.value * 1.8;
-    const opacity = 0.4 * (1 - progress.value);
+    // More subtle expansion (1x to 1.4x instead of 1x to 2.8x)
+    const scale = 1 + progress.value * 0.4;
+    // Lower base opacity (0.25 instead of 0.4)
+    const opacity = 0.25 * (1 - progress.value);
     return {
       transform: [{ scale }],
       opacity,
@@ -83,22 +85,22 @@ function SonarRipple({
 
 // Outer halo glow component
 function OuterHalo({ color }: { color: string }) {
-  const opacity = useSharedValue(0.3);
+  const opacity = useSharedValue(0.15); // Lower base opacity
   const scale = useSharedValue(1);
 
   useEffect(() => {
     opacity.value = withRepeat(
       withSequence(
-        withTiming(0.5, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.3, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+        withTiming(0.25, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.15, { duration: 2000, easing: Easing.inOut(Easing.ease) })
       ),
       -1,
       true
     );
     scale.value = withRepeat(
       withSequence(
-        withTiming(1.05, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+        withTiming(1.03, { duration: 2000, easing: Easing.inOut(Easing.ease) }), // Smaller scale (1.03 vs 1.05)
+        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) })
       ),
       -1,
       true

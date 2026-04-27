@@ -31,8 +31,13 @@ import { recordSessionUsage } from './api/usage-service';
 /**
  * Analyze transcript for emotional content
  * Priority: OpenRouter backend (GPT-4o audio model with prosody) → local keyword analysis
+ * @param personalizationContext User correction history to bias the model
  */
-export async function analyzeTranscript(transcript: string, audioBase64?: string): Promise<{
+export async function analyzeTranscript(
+  transcript: string,
+  audioBase64?: string,
+  personalizationContext?: string
+): Promise<{
   emotions: EmotionType[];
   primaryEmotion: EmotionType;
   emotionIntensity: number;
@@ -55,7 +60,7 @@ export async function analyzeTranscript(transcript: string, audioBase64?: string
   // Try OpenRouter backend first (GPT-4o audio model — prosody + content analysis)
   try {
     console.log('Using GPT-4o audio model for emotional analysis (prosody + content)...');
-    const result = await analyzeWithOpenRouter(transcript, audioBase64);
+    const result = await analyzeWithOpenRouter(transcript, audioBase64, personalizationContext);
     return {
       emotions: result.emotions,
       primaryEmotion: result.primaryEmotion,
