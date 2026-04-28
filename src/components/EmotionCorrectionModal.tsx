@@ -10,7 +10,7 @@
  * - Always accessible via "Refine Analysis" button after entry is saved
  */
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,17 +19,14 @@ import {
   Pressable,
   TextInput,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
 import Animated, { FadeInUp, FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Mic, Check, X, ChevronRight, Brain, Square } from 'lucide-react-native';
-import { Audio } from 'expo-av';
+import { Mic, Check, X, ChevronRight, Brain } from 'lucide-react-native';
 import { EmotionType, DistressLevel } from '@/lib/types';
 import { EMOTION_EMOJIS } from '@/lib/types';
 import { getEmotionDefinition } from '@/lib/emotion-definitions';
 import { useEmotionCorrectionStore } from '@/lib/state/emotion-correction-store';
 import { tapHaptic, successHaptic } from '@/lib/haptics';
-import { transcribeAudioFile } from '@/lib/deepgram-transcription-service';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const ALL_EMOTIONS: EmotionType[] = ['happiness', 'sadness', 'anger', 'disgust', 'fear', 'surprise', 'trust', 'anticipation'];
@@ -64,12 +61,6 @@ export default function EmotionCorrectionModal({
   const [arousal, setArousal] = useState(aiArousal);
   const [correctionMode, setCorrectionMode] = useState<CorrectionMode>('slider');
   const [reason, setReason] = useState('');
-
-  // Voice note mini-recorder state
-  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
-  const [isTranscribingVoice, setIsTranscribingVoice] = useState(false);
-  const [voiceTranscript, setVoiceTranscript] = useState('');
-  const voiceRecordingRef = useRef<Audio.Recording | null>(null);
 
   const { recordCorrection, recordConfirmation } = useEmotionCorrectionStore();
 
@@ -120,43 +111,6 @@ export default function EmotionCorrectionModal({
 
   const handleVoiceReason = useCallback(() => {
     setCorrectionMode('voice');
-    setVoiceTranscript('');
-  }, []);
-
-  const startVoiceRecording = useCallback(async () => {
-    try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') return;
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      voiceRecordingRef.current = recording;
-      setIsRecordingVoice(true);
-      tapHaptic();
-    } catch (err) {
-      console.warn('Voice reason recording failed:', err);
-    }
-  }, []);
-
-  const stopVoiceRecording = useCallback(async () => {
-    try {
-      setIsRecordingVoice(false);
-      const recording = voiceRecordingRef.current;
-      if (!recording) return;
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      voiceRecordingRef.current = null;
-      if (!uri) return;
-      setIsTranscribingVoice(true);
-      const result = await transcribeAudioFile(uri);
-      setIsTranscribingVoice(false);
-      if (result.transcript && result.transcript.trim().length > 0) {
-        setVoiceTranscript(result.transcript);
-        setReason(result.transcript);
-      }
-    } catch (err) {
-      console.warn('Voice reason transcription failed:', err);
-      setIsTranscribingVoice(false);
-    }
   }, []);
 
   const handleTextReason = useCallback(() => {
@@ -350,28 +304,14 @@ export default function EmotionCorrectionModal({
 
               {correctionMode === 'voice' && (
                 <Animated.View entering={FadeIn.delay(100)} style={{ backgroundColor: '#F3F4F6', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 16 }}>
-                  {isRecordingVoice ? (
-                    <Pressable onPress={stopVoiceRecording}>
-                      <ActivityIndicator size="small" color="#6B7280" />
-                      <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 8, textAlign: 'center' }}>Recording...</Text>
-                    </Pressable>
-                  ) : isTranscribingVoice ? (
-                    <View>
-                      <ActivityIndicator size="small" color="#6B7280" />
-                      <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 8, textAlign: 'center' }}>Transcribing...</Text>
-                    </View>
-                  ) : (
-                    <Pressable onPress={startVoiceRecording}>
-                      <Mic size={24} color="#6B7280" />
-                      <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 8, textAlign: 'center' }}>Tap to record reason</Text>
-                    </Pressable>
-                  )}
-                  {voiceTranscript.length > 0 && (
-                    <Text style={{ fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginTop: 12 }}>
-                      {voiceTranscript}
-                    </Text>
-                  )}
-                </Animated.View>
+                <Mic size={24} color="#6B7280" />
+                <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 8, textAlign: 'center' }}>
+                  Voice note coming soon
+                </Text>
+                <Text style={{ fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginTop: 4 }}>
+                  Use the text field for now, or skip this step
+                </Text>
+              </Animated.View>
               )}
             </Animated.View>
           )}

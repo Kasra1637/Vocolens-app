@@ -27,18 +27,12 @@ import {
 } from './api/openrouter-service';
 import * as FileSystem from 'expo-file-system';
 import { recordSessionUsage } from './api/usage-service';
-import { buildPersonalizationPrompt } from './personalization';
 
 /**
  * Analyze transcript for emotional content
  * Priority: OpenRouter backend (GPT-4o audio model with prosody) → local keyword analysis
- * @param personalizationContext User correction history to bias the model
  */
-export async function analyzeTranscript(
-  transcript: string,
-  audioBase64?: string,
-  personalizationContext?: string
-): Promise<{
+export async function analyzeTranscript(transcript: string, audioBase64?: string): Promise<{
   emotions: EmotionType[];
   primaryEmotion: EmotionType;
   emotionIntensity: number;
@@ -61,7 +55,7 @@ export async function analyzeTranscript(
   // Try OpenRouter backend first (GPT-4o audio model — prosody + content analysis)
   try {
     console.log('Using GPT-4o audio model for emotional analysis (prosody + content)...');
-    const result = await analyzeWithOpenRouter(transcript, audioBase64, personalizationContext);
+    const result = await analyzeWithOpenRouter(transcript, audioBase64);
     return {
       emotions: result.emotions,
       primaryEmotion: result.primaryEmotion,
@@ -271,8 +265,7 @@ function generateAnalysis(
  * Falls back gracefully if APIs are not configured.
  */
 export async function transcribeAndAnalyze(
-  audioUri: string,
-  personalizationContext?: string
+  audioUri: string
 ): Promise<{
   transcript: string;
   analysis: {
@@ -316,7 +309,7 @@ export async function transcribeAndAnalyze(
   // Analyze with GPT-4o audio model (audio + transcript) - falls back to text-only / local
   let analysis;
   try {
-    analysis = await analyzeTranscript(transcript, audioBase64, personalizationContext);
+    analysis = await analyzeTranscript(transcript, audioBase64);
   } catch (error) {
     console.warn('Analysis failed, using local fallback:', error);
     analysis = analyzeTranscriptLocal(transcript);
@@ -359,8 +352,7 @@ export async function createJournalEntry(
   conversationTopic?: TopicCategory,
   conversationPrompt?: string,
   preTranscribedText?: string,
-  reflectionOverride?: ReflectionOverride,
-  personalizationContext?: string
+  reflectionOverride?: ReflectionOverride
 ): Promise<JournalEntry> {
   const journalStore = useJournalStore.getState();
   const userStatsStore = useUserStatsStore.getState();
@@ -413,7 +405,7 @@ export async function createJournalEntry(
     }
 
     try {
-      const analysisResult = await analyzeTranscript(transcript, audioBase64, personalizationContext);
+      const analysisResult = await analyzeTranscript(transcript, audioBase64);
       analysis = analysisResult;
     } catch (error) {
       console.warn('Analysis failed, using local fallback:', error);
@@ -425,7 +417,7 @@ export async function createJournalEntry(
     }
 
     try {
-      const result = await transcribeAndAnalyze(audioUri, personalizationContext);
+      const result = await transcribeAndAnalyze(audioUri);
       transcript = result.transcript;
       analysis = result.analysis;
     } catch (error) {

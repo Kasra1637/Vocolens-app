@@ -22,7 +22,6 @@ import Animated, {
   FadeOut,
   interpolateColor,
 } from 'react-native-reanimated';
-import { MicButton } from '@/components/MicButton';
 import { heavyHaptic, tapHaptic, errorHaptic, successHaptic, warningHaptic } from '@/lib/haptics';
 import { router } from 'expo-router';
 import { getThemeColors, getThemeGradients, getThemeShadows, BorderRadius, Spacing } from '@/lib/theme';
@@ -34,7 +33,6 @@ import EmotionReflectionScreen from '@/components/emotion-reflection';
 import type { ReflectionResult } from '@/components/emotion-reflection';
 import GroundingToolsModal from '@/components/GroundingToolsModal';
 import { analyzeTranscript } from '@/lib/journal-service';
-import { buildPersonalizationPrompt } from '@/lib/personalization';
 import useOnboardingStore from '@/lib/state/onboarding-store';
 import useSettingsStore from '@/lib/state/settings-store';
 import { useUsageMinutes, useRemainingMinutes, useIsAtLimit, USAGE_LIMIT_MINUTES } from '@/lib/state/user-stats-store';
@@ -281,11 +279,8 @@ export default function SpeakScreen() {
 
       if (finalTranscript && finalTranscript.trim().length > 0) {
         try {
-          // Build personalization context from user's correction history
-          const personalizationContext = buildPersonalizationPrompt();
-
-          // Analyze transcript for emotion suggestions (with personalization bias)
-          const analysis = await analyzeTranscript(finalTranscript, undefined, personalizationContext);
+          // Analyze transcript for emotion suggestions
+          const analysis = await analyzeTranscript(finalTranscript);
 
           // Store data for reflection screen
           setReflectionTranscript(finalTranscript);
@@ -983,21 +978,28 @@ export default function SpeakScreen() {
               </View>
             </Animated.View>
           ) : (
-            /* Idle — enhanced mic button with sonar ripples, halo glow, and 3-stop gradient */
+            /* Idle — single mic button with pulse */
             <>
-              <MicButton
-                onPress={handleMicPress}
-                onPressIn={() => { buttonScale.value = withSpring(0.92); }}
+              <Pressable
+                onPressIn={() => { buttonScale.value = withSpring(0.95); }}
                 onPressOut={() => { buttonScale.value = withSpring(1); }}
+                onPress={handleMicPress}
                 disabled={isProcessing || isAtLimit}
-                isAtLimit={isAtLimit}
-                micButtonGradient={Gradients.micButton}
-                glowColor={Colors.buttonGlow}
-                scale={buttonScale}
-              />
+              >
+                <Animated.View style={buttonAnimatedStyle}>
+                  <Animated.View style={{ width: 100, height: 100, borderRadius: 50, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', opacity: isAtLimit ? 0.45 : 1, ...Shadows.large }}>
+                    <LinearGradient
+                      colors={[Colors.gradientEnd, Colors.gradientStart]}
+                      style={{ position: 'absolute', width: '100%', height: '100%' }}
+                      start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                    />
+                    <MicTabIcon size={44} color="#FFFFFF" filled />
+                  </Animated.View>
+                </Animated.View>
+              </Pressable>
               <Text
                 style={{ fontFamily: 'Comfortaa_400Regular', color: isAtLimit ? 'rgba(255,120,120,0.9)' : '#FFFFFF' }}
-                className="text-xs mt-3"
+                className="text-xs mt-2"
               >
                 {isProcessing ? 'Please wait...' : isAtLimit ? 'Monthly limit reached' : `Tap to start · ${Math.floor(remainingMinutes)} min left`}
               </Text>

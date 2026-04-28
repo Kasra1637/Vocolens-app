@@ -24,14 +24,12 @@ import {
   Shield,
   ChevronRight,
   Moon,
-  Brain,
-  BarChart3,
 } from 'lucide-react-native';
 import Animated from 'react-native-reanimated';
 import { selectHaptic, tapHaptic, confirmHaptic, warningHaptic } from '@/lib/haptics';
 import { router } from 'expo-router';
 import useOnboardingStore, { ThemeColorType, THEME_COLORS } from '@/lib/state/onboarding-store';
-import useSettingsStore, { TimeFormat, EmotionReflectionMode } from '@/lib/state/settings-store';
+import useSettingsStore, { TimeFormat } from '@/lib/state/settings-store';
 import { getThemeColors, getThemeGradients, getThemeShadows } from '@/lib/theme';
 import { ThemedSwitch } from '@/components/ThemedSwitch';
 import { NotificationService } from '@/lib/services/notification-service';

@@ -38,11 +38,6 @@ import {
   Square,
   Volume2,
   BarChart2,
-  RefreshCw,
-  CheckCircle2,
-  Heart,
-  AlertTriangle,
-  Wind,
 } from 'lucide-react-native';
 import Animated, {
   FadeInDown,
@@ -623,9 +618,8 @@ export default function EntryDetailScreen() {
                         .map(({ emotion, score }, rank) => {
                           const isPrimary = emotion === entry.primaryEmotion;
                           const barWidth = barContainerWidth > 0 ? (score / 100) * barContainerWidth : 0;
-                          // Prefer user override, then saved AI label, then compute from score
+                          // Prefer saved label, always fall back to computing from the per-emotion score
                           const intensityLabel =
-                            entry.userOverrideLabels?.[emotion] ??
                             entry.emotionIntensityLabels?.[emotion] ??
                             getEmotionSubLabel(emotion, score);
                           const subLabelMatchesBase =
@@ -717,9 +711,8 @@ export default function EntryDetailScreen() {
                             ? entry.emotionIntensity
                             : Math.round(entry.emotionIntensity * (0.7 - index * 0.1));
                           const barWidth = barContainerWidth > 0 ? (intensity / 100) * barContainerWidth : 0;
-                          // Prefer user override, then saved AI label, then compute
-                          const subLabel = entry.userOverrideLabels?.[emotion]
-                            ?? entry.emotionIntensityLabels?.[emotion]
+                          // Prefer saved label, fall back to computed sub-label
+                          const subLabel = entry.emotionIntensityLabels?.[emotion]
                             ?? getEmotionSubLabel(emotion, intensity);
                           const subLabelMatchesBase =
                             subLabel.toLowerCase() === emotion.toLowerCase();
@@ -805,290 +798,6 @@ export default function EntryDetailScreen() {
           </Pressable>
         </Animated.View>
 
-        {/* Your Reflection Card — valence/arousal, body sensation, grounding */}
-        {(entry.valence !== undefined || entry.arousal !== undefined || entry.bodySensation || entry.groundingUsed) && (
-          <Animated.View entering={FadeInDown.delay(450).duration(600)}>
-            <View
-              className="rounded-3xl overflow-hidden mb-6"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.2)',
-              }}
-            >
-              <View className="p-5">
-                <View className="flex-row items-center justify-between mb-4">
-                  <View className="flex-row items-center">
-                    <Heart size={18} color="#FFFFFF" strokeWidth={2} />
-                    <Text
-                      style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
-                      className="text-base ml-2"
-                    >
-                      Your Reflection
-                    </Text>
-                  </View>
-                  {/* User validation chip */}
-                  {entry.userValidated ? (
-                    <View
-                      className="flex-row items-center px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: 'rgba(34, 197, 94, 0.25)' }}
-                    >
-                      <CheckCircle2 size={12} color="#22C55E" strokeWidth={2} />
-                      <Text
-                        style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
-                          color: '#22C55E',
-                          fontSize: 10,
-                          marginLeft: 4,
-                        }}
-                      >
-                        Confirmed
-                      </Text>
-                    </View>
-                  ) : entry.aiCorrected ? (
-                    <View
-                      className="flex-row items-center px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: 'rgba(234, 179, 8, 0.25)' }}
-                    >
-                      <RefreshCw size={12} color="#EAB308" strokeWidth={2} />
-                      <Text
-                        style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
-                          color: '#EAB308',
-                          fontSize: 10,
-                          marginLeft: 4,
-                        }}
-                      >
-                        Adjusted
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-
-                {/* Valence & Arousal Bars */}
-                {(entry.valence !== undefined || entry.arousal !== undefined) && (
-                  <View style={{ gap: 12, marginBottom: 16 }}>
-                    {/* Valence */}
-                    {entry.valence !== undefined && (
-                      <View>
-                        <View className="flex-row items-center justify-between mb-1.5">
-                          <Text
-                            style={{
-                              fontFamily: 'Comfortaa_500Medium',
-                              color: 'rgba(255, 255, 255, 0.8)',
-                              fontSize: 12,
-                            }}
-                          >
-                            Valence
-                          </Text>
-                          <Text
-                            style={{
-                              fontFamily: 'Comfortaa_600SemiBold',
-                              color: '#FFFFFF',
-                              fontSize: 12,
-                            }}
-                          >
-                            {entry.valence > 0 ? '+' : ''}{entry.valence}
-                          </Text>
-                        </View>
-                        <View
-                          className="h-2.5 rounded-full overflow-hidden"
-                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                        >
-                          <View
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${Math.abs(entry.valence)}%`,
-                              backgroundColor: entry.valence >= 0 ? '#22C55E' : '#EF4444',
-                              marginLeft: entry.valence < 0 ? `${100 - Math.abs(entry.valence)}%` : 0,
-                            }}
-                          />
-                        </View>
-                        <View className="flex-row justify-between mt-1">
-                          <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
-                            Unpleasant
-                          </Text>
-                          <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
-                            Pleasant
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                    {/* Arousal */}
-                    {entry.arousal !== undefined && (
-                      <View>
-                        <View className="flex-row items-center justify-between mb-1.5">
-                          <Text
-                            style={{
-                              fontFamily: 'Comfortaa_500Medium',
-                              color: 'rgba(255, 255, 255, 0.8)',
-                              fontSize: 12,
-                            }}
-                          >
-                            Arousal
-                          </Text>
-                          <Text
-                            style={{
-                              fontFamily: 'Comfortaa_600SemiBold',
-                              color: '#FFFFFF',
-                              fontSize: 12,
-                            }}
-                          >
-                            {entry.arousal}%
-                          </Text>
-                        </View>
-                        <View
-                          className="h-2.5 rounded-full overflow-hidden"
-                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                        >
-                          <View
-                            className="h-full rounded-full"
-                            style={{
-                              width: `${entry.arousal}%`,
-                              backgroundColor: Colors.primary,
-                            }}
-                          />
-                        </View>
-                        <View className="flex-row justify-between mt-1">
-                          <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
-                            Calm
-                          </Text>
-                          <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
-                            Activated
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {/* Body Sensation & Grounding Chips */}
-                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                  {entry.bodySensation && (
-                    <View
-                      className="flex-row items-center px-3 py-2 rounded-full"
-                      style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        borderWidth: 1,
-                        borderColor: 'rgba(255, 255, 255, 0.25)',
-                      }}
-                    >
-                      <AlertTriangle size={12} color="#FFFFFF" strokeWidth={2} />
-                      <Text
-                        style={{
-                          fontFamily: 'Comfortaa_500Medium',
-                          color: '#FFFFFF',
-                          fontSize: 11,
-                          marginLeft: 6,
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {entry.bodySensation.replace(/_/g, ' ')}
-                      </Text>
-                    </View>
-                  )}
-                  {entry.groundingUsed && (
-                    <View
-                      className="flex-row items-center px-3 py-2 rounded-full"
-                      style={{
-                        backgroundColor: `${Colors.primary}30`,
-                        borderWidth: 1,
-                        borderColor: `${Colors.primary}50`,
-                      }}
-                    >
-                      <Wind size={12} color={Colors.primary} strokeWidth={2} />
-                      <Text
-                        style={{
-                          fontFamily: 'Comfortaa_500Medium',
-                          color: '#FFFFFF',
-                          fontSize: 11,
-                          marginLeft: 6,
-                        }}
-                      >
-                        Grounding used
-                      </Text>
-                    </View>
-                  )}
-                  {entry.distressLevel && (
-                    <View
-                      className="flex-row items-center px-3 py-2 rounded-full"
-                      style={{
-                        backgroundColor:
-                          entry.distressLevel === 'high'
-                            ? 'rgba(239, 68, 68, 0.2)'
-                            : entry.distressLevel === 'moderate'
-                            ? 'rgba(234, 179, 8, 0.2)'
-                            : 'rgba(34, 197, 94, 0.2)',
-                        borderWidth: 1,
-                        borderColor:
-                          entry.distressLevel === 'high'
-                            ? 'rgba(239, 68, 68, 0.4)'
-                            : entry.distressLevel === 'moderate'
-                            ? 'rgba(234, 179, 8, 0.4)'
-                            : 'rgba(34, 197, 94, 0.4)',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: 'Comfortaa_500Medium',
-                          color:
-                            entry.distressLevel === 'high'
-                              ? '#EF4444'
-                              : entry.distressLevel === 'moderate'
-                              ? '#EAB308'
-                              : '#22C55E',
-                          fontSize: 11,
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {entry.distressLevel} distress
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-          </Animated.View>
-        )}
-
-        {/* Refine Analysis Button */}
-        {!entry.userValidated && (
-          <Animated.View entering={FadeInDown.delay(480).duration(600)} className="mb-6">
-            <Pressable
-              onPress={() => {
-                selectHaptic();
-                // Route to reflection screen with entry data for re-analysis
-                router.push({
-                  pathname: '/reflection',
-                  params: {
-                    entryId: entry.id,
-                    transcript: entry.transcript,
-                    mode: 'refine',
-                  },
-                });
-              }}
-              className="flex-row items-center justify-center rounded-2xl py-3.5 px-5"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.25)',
-              }}
-            >
-              <RefreshCw size={16} color="#FFFFFF" strokeWidth={2} />
-              <Text
-                style={{
-                  fontFamily: 'Comfortaa_600SemiBold',
-                  color: '#FFFFFF',
-                  fontSize: 13,
-                  marginLeft: 8,
-                }}
-              >
-                Refine Analysis
-              </Text>
-            </Pressable>
-          </Animated.View>
-        )}
-
         {/* AI Analysis - Collapsible */}
         {entry.aiAnalysis && entry.aiAnalysis.trim().length > 1 && (
           <Animated.View entering={FadeInDown.delay(500).duration(600)}>
@@ -1111,16 +820,6 @@ export default function EntryDetailScreen() {
                     >
                       AI Analysis
                     </Text>
-                    {entry.aiCorrected && (
-                      <View
-                        className="ml-2 px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: 'rgba(234, 179, 8, 0.25)' }}
-                      >
-                        <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#EAB308', fontSize: 9 }}>
-                          ADJUSTED
-                        </Text>
-                      </View>
-                    )}
                   </View>
                   {expandedSection === 'analysis' ? (
                     <ChevronUp size={20} color="#FFFFFF" strokeWidth={2} />
