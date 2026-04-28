@@ -42,15 +42,19 @@ export interface OpenRouterAnalysisResult {
  */
 export async function analyzeWithOpenRouter(
   transcript: string,
-  audioBase64?: string
+  audioBase64?: string,
+  personalizationContext?: string
 ): Promise<OpenRouterAnalysisResult> {
   if (!transcript || transcript.trim().length === 0) {
     throw new Error('Transcript is empty');
   }
 
-  const body: { transcript: string; audioBase64?: string } = { transcript };
+  const body: { transcript: string; audioBase64?: string; personalizationContext?: string } = { transcript };
   if (audioBase64 && audioBase64.length > 0) {
     body.audioBase64 = audioBase64;
+  }
+  if (personalizationContext && personalizationContext.trim().length > 0) {
+    body.personalizationContext = personalizationContext;
   }
 
   const response = await fetch(`${BACKEND_URL}/api/journal/analyze`, {

@@ -43,6 +43,10 @@ export interface ThemeColors {
   backgroundGradient: [string, string, string];
   /** 2-stop button gradient */
   buttonGradient: [string, string];
+  /** 3-stop mic button gradient for idle state (outer, middle, inner) */
+  micButtonGradient: [string, string, string];
+  /** Glow/halo color for the button */
+  buttonGlowColor: string;
 }
 
 export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; description: string }> = {
@@ -56,6 +60,8 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     accent: '#9E84EF',
     backgroundGradient: ['#A79BD8', '#9E84EF', '#9370DB'],
     buttonGradient: ['#9370DB', '#7A50C0'],
+    micButtonGradient: ['#A79BD8', '#9370DB', '#7A50C0'],
+    buttonGlowColor: 'rgba(167, 155, 216, 0.5)',
   },
   softPink: {
     name: 'Sage & Still',
@@ -67,6 +73,8 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     accent: '#9AAC99',
     backgroundGradient: ['#9AB897', '#6D9B6A', '#557A52'],
     buttonGradient: ['#6D9B6A', '#4A6E47'],
+    micButtonGradient: ['#9AAC99', '#6D9B6A', '#4A6E47'],
+    buttonGlowColor: 'rgba(154, 172, 153, 0.5)',
   },
   violetWhisper: {
     name: 'Mystic Dreams',
@@ -78,6 +86,8 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     accent: '#9370DB',
     backgroundGradient: ['#A670CC', '#7A48B0', '#6035A0'],
     buttonGradient: ['#7A48B0', '#572E90'],
+    micButtonGradient: ['#B784D9', '#7A48B0', '#572E90'],
+    buttonGlowColor: 'rgba(183, 132, 217, 0.5)',
   },
   hotPink: {
     name: 'Bold Heart',
@@ -89,6 +99,8 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     accent: '#9370DB',
     backgroundGradient: ['#CC6898', '#D44E92', '#B83878'],
     buttonGradient: ['#D44E92', '#A32E6A'],
+    micButtonGradient: ['#DA5A9A', '#D44E92', '#A32E6A'],
+    buttonGlowColor: 'rgba(218, 90, 154, 0.5)',
   },
   oceanCalm: {
     name: 'Ocean Calm',
@@ -100,6 +112,8 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     accent: '#9370DB',
     backgroundGradient: ['#6A9FCC', '#3A75B5', '#1A5090'],
     buttonGradient: ['#3A75B5', '#1A5090'],
+    micButtonGradient: ['#5A8FCC', '#3A75B5', '#1A5090'],
+    buttonGlowColor: 'rgba(90, 143, 204, 0.5)',
   },
   darkMode: {
     name: 'Midnight Glow',
@@ -111,6 +125,8 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     accent: '#A78BFA',
     backgroundGradient: ['#252333', '#181624', '#0F0E1A'],
     buttonGradient: ['#9370DB', '#6A3FC0'],
+    micButtonGradient: ['#A78BFA', '#9370DB', '#6A3FC0'],
+    buttonGlowColor: 'rgba(167, 139, 250, 0.5)',
   },
 };
 

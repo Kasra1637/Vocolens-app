@@ -49,6 +49,9 @@ export const getThemeColors = (selectedTheme: ThemeColorType = 'lavenderBliss', 
       surface: 'rgba(42, 42, 42, 0.85)',
       surfaceHighlight: 'rgba(55, 55, 55, 0.9)',
       surfaceElevated: 'rgba(48, 48, 48, 0.85)',
+
+      // Button glow color
+      buttonGlow: theme.buttonGlowColor,
     };
   }
 
@@ -93,6 +96,9 @@ export const getThemeColors = (selectedTheme: ThemeColorType = 'lavenderBliss', 
     surface: 'rgba(255, 255, 255, 0.7)',
     surfaceHighlight: 'rgba(255, 255, 255, 0.9)',
     surfaceElevated: 'rgba(255, 255, 255, 0.85)',
+
+    // Button glow color
+    buttonGlow: theme.buttonGlowColor,
   };
 };
 
@@ -108,6 +114,7 @@ export const getThemeGradients = (selectedTheme: ThemeColorType = 'lavenderBliss
       background: theme.backgroundGradient,
       button: [theme.gradientEnd, theme.primary, theme.gradientStart] as const,
       chart: [theme.gradientEnd, theme.primary, theme.gradientStart, theme.accent] as const,
+      micButton: theme.micButtonGradient,
     };
   }
 
@@ -116,6 +123,7 @@ export const getThemeGradients = (selectedTheme: ThemeColorType = 'lavenderBliss
     background: theme.backgroundGradient,
     button: [theme.gradientEnd, theme.primary, theme.gradientStart] as const,
     chart: [theme.gradientEnd, theme.primary, theme.gradientStart, theme.accent] as const,
+    micButton: theme.micButtonGradient,
   };
 };
 

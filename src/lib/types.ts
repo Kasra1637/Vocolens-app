@@ -88,6 +88,10 @@ export interface JournalEntry {
   aiReflection?: string; // TTS-ready empathetic reflection
   conversationTopic?: TopicCategory;
   conversationPrompt?: string;
+  // User correction / override
+  userOverrideLabels?: Partial<Record<EmotionType, string>>; // user-edited intensity labels
+  userValidated?: boolean; // user confirmed the analysis is correct
+  aiCorrected?: boolean; // user corrected the AI's analysis
 }
 
 // Daily Mood Summary

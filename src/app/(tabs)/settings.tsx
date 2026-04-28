@@ -24,12 +24,14 @@ import {
   Shield,
   ChevronRight,
   Moon,
+  Brain,
+  BarChart3,
 } from 'lucide-react-native';
 import Animated from 'react-native-reanimated';
 import { selectHaptic, tapHaptic, confirmHaptic, warningHaptic } from '@/lib/haptics';
 import { router } from 'expo-router';
 import useOnboardingStore, { ThemeColorType, THEME_COLORS } from '@/lib/state/onboarding-store';
-import useSettingsStore, { TimeFormat } from '@/lib/state/settings-store';
+import useSettingsStore, { TimeFormat, EmotionReflectionMode } from '@/lib/state/settings-store';
 import { getThemeColors, getThemeGradients, getThemeShadows } from '@/lib/theme';
 import { ThemedSwitch } from '@/components/ThemedSwitch';
 import { NotificationService } from '@/lib/services/notification-service';
@@ -62,6 +64,8 @@ export default function SettingsScreen() {
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const setTimeFormat = useSettingsStore((s) => s.setTimeFormat);
+  const emotionReflectionMode = useSettingsStore((s) => s.emotionReflectionMode);
+  const setEmotionReflectionMode = useSettingsStore((s) => s.setEmotionReflectionMode);
 
   // Usage tracking
   const usageMinutes = useUsageMinutes();
@@ -554,6 +558,76 @@ export default function SettingsScreen() {
                     thumbColor="#FFFFFF"
                   />
                 </View>
+              </View>
+            </Animated.View>
+
+            {/* Emotion Reflection */}
+            <Animated.View className="mb-6">
+              <View className="flex-row items-center mb-3">
+                <View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
+                  <Brain size={20} color="#FFFFFF" />
+                </View>
+                <Text className="text-xl font-bold" style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}>
+                  Emotion Reflection
+                </Text>
+              </View>
+
+              <View className="rounded-3xl overflow-hidden" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+                <View className="p-5" style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.1)' }}>
+                  <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 15, marginBottom: 4 }}>
+                    After each recording
+                  </Text>
+                  <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 12 }}>
+                    The AI learns from your confirms and adjusts. Choose how much time you want to spend refining.
+                  </Text>
+
+                  {(['quick', 'full', 'off'] as EmotionReflectionMode[]).map((mode) => (
+                    <Pressable
+                      key={mode}
+                      onPress={() => { selectHaptic(); setEmotionReflectionMode(mode); }}
+                      className="flex-row items-center py-3"
+                    >
+                      <View
+                        className="w-5 h-5 rounded-full mr-3 items-center justify-center"
+                        style={{
+                          borderWidth: 2,
+                          borderColor: emotionReflectionMode === mode ? Colors.primary : 'rgba(255,255,255,0.4)',
+                        }}
+                      >
+                        {emotionReflectionMode === mode && (
+                          <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: Colors.primary }} />
+                        )}
+                      </View>
+                      <View className="flex-1">
+                        <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 14, textTransform: 'capitalize' }}>
+                          {mode}
+                        </Text>
+                        <Text style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 12 }}>
+                          {mode === 'full' ? 'Emotion labels, V-A sliders, body check-in' : mode === 'quick' ? 'Emotion labels + sliders only' : 'Skip reflection, save immediately'}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+
+                <Pressable
+                  onPress={() => { tapHaptic(); router.push('/correction-history'); }}
+                  className="p-5 active:opacity-70"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 15, marginBottom: 2 }}>
+                        My Feedback History
+                      </Text>
+                      <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13 }}>
+                        Confirmation rate, patterns, export CSV
+                      </Text>
+                    </View>
+                    <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
+                      <BarChart3 size={16} color="#FFFFFF" />
+                    </View>
+                  </View>
+                </Pressable>
               </View>
             </Animated.View>
 
