@@ -13,7 +13,23 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
-import { Palette, Bell, Lock, Clock, LogOut, Check, X, Shield, ChevronRight, Moon, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download } from 'lucide-react-native';
+import {
+  Palette,
+  Bell,
+  Lock,
+  Clock,
+  LogOut,
+  Check,
+  X,
+  Shield,
+  ChevronRight,
+  Moon,
+  Brain,
+  BarChart3,
+  AlertTriangle,
+  Trash2,
+  Download,
+} from 'lucide-react-native';
 import Animated from 'react-native-reanimated';
 import { selectHaptic, tapHaptic, confirmHaptic, warningHaptic } from '@/lib/haptics';
 import { router } from 'expo-router';
@@ -184,8 +200,9 @@ export default function SettingsScreen() {
   const confirmSignOut = () => {
     confirmHaptic();
     setSignOutModalVisible(false);
-    // Reset onboarding — AuthGate will automatically show OnboardingFlow
+    // Reset onboarding to go back to welcome screen
     useOnboardingStore.getState().resetOnboarding();
+    router.replace('/(tabs)');
   };
 
   const cancelSignOut = () => {
@@ -234,9 +251,9 @@ export default function SettingsScreen() {
     // Clear PIN from secure storage
     await removePin();
 
-    // Reset onboarding last — AuthGate will automatically show OnboardingFlow
-    // when hasCompletedOnboarding becomes false, no navigation needed.
+    // Reset onboarding last (redirects to welcome)
     useOnboardingStore.getState().resetOnboarding();
+    router.replace('/(tabs)');
   };
 
   const cancelReset = () => {
