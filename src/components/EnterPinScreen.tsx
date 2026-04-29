@@ -17,6 +17,7 @@ import Animated, {
   useAnimatedStyle,
   withSequence,
   withTiming,
+  withSpring,
 } from 'react-native-reanimated';
 import { Delete, Lock } from 'lucide-react-native';
 import { successHaptic, tapHaptic, errorHaptic } from '@/lib/haptics';
@@ -25,15 +26,7 @@ import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 import { EmotionalCompanion } from '@/components/EmotionalCompanion';
 
 // ── Dot row ──────────────────────────────────────────────────────────────────
-function PinDots({
-  filled,
-  shake,
-  accentColor,
-}: {
-  filled: number;
-  shake: Animated.SharedValue<number>;
-  accentColor: string;
-}) {
+function PinDots({ filled, shake }: { filled: number; shake: Animated.SharedValue<number> }) {
   const shakeStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shake.value }],
   }));
@@ -48,12 +41,8 @@ function PinDots({
             height: 18,
             borderRadius: 9,
             borderWidth: 2,
-            borderColor: i < filled ? accentColor : 'rgba(255,255,255,0.5)',
-            backgroundColor: i < filled ? accentColor : 'transparent',
-            shadowColor: i < filled ? accentColor : 'transparent',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: i < filled ? 0.8 : 0,
-            shadowRadius: 6,
+            borderColor: '#FFFFFF',
+            backgroundColor: i < filled ? '#FFFFFF' : 'transparent',
           }}
         />
       ))}
@@ -64,35 +53,31 @@ function PinDots({
 // ── Numpad ────────────────────────────────────────────────────────────────────
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'] as const;
 
-function Numpad({ onKey, accentColor }: { onKey: (k: string) => void; accentColor: string }) {
+function Numpad({ onKey }: { onKey: (k: string) => void }) {
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 268, justifyContent: 'center', gap: 16 }}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 260, justifyContent: 'center', gap: 16 }}>
       {KEYS.map((key, idx) => {
-        if (key === '') return <View key={idx} style={{ width: 76, height: 76 }} />;
+        if (key === '') return <View key={idx} style={{ width: 72, height: 72 }} />;
         return (
           <Pressable
             key={idx}
             onPress={() => onKey(key)}
             android_ripple={{ color: 'rgba(255,255,255,0.25)', borderless: true }}
             style={({ pressed }) => ({
-              width: 76,
-              height: 76,
-              borderRadius: 38,
-              backgroundColor: pressed
-                ? 'rgba(255,255,255,0.22)'
-                : 'rgba(255,255,255,0.10)',
-              borderWidth: 1.5,
-              borderColor: pressed
-                ? 'rgba(255,255,255,0.4)'
-                : 'rgba(255,255,255,0.18)',
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: pressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.14)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.2)',
               alignItems: 'center',
               justifyContent: 'center',
             })}
           >
             {key === 'del' ? (
-              <Delete size={22} color="rgba(255,255,255,0.9)" strokeWidth={2} />
+              <Delete size={22} color="#FFFFFF" strokeWidth={2} />
             ) : (
-              <Text style={{ color: '#FFFFFF', fontSize: 26, fontFamily: 'Inter_700Bold', letterSpacing: 0.5 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 26, fontFamily: 'Inter_700Bold' }}>
                 {key}
               </Text>
             )}
@@ -137,6 +122,7 @@ export function EnterPinScreen() {
     const ok = verifyPin(pin);
     if (ok) {
       successHaptic();
+      // AuthGate re-renders automatically via store subscription
     } else {
       const next = failCount + 1;
       setFailCount(next);
@@ -160,165 +146,69 @@ export function EnterPinScreen() {
   }, [digits, handleComplete]);
 
   const handleForgotPin = useCallback(() => {
+    // Clear PIN and reset onboarding so user goes through flow again
     clearPin();
   }, [clearPin]);
 
   const bgColors = themeColors.backgroundGradient;
-  // Use the theme's button gradient accent color for dots and highlights
-  const accentColor = themeColors.buttonGradient[0];
 
   return (
     <View style={{ flex: 1 }}>
-      <LinearGradient
-        colors={bgColors}
-        start={{ x: 0.2, y: 0 }}
-        end={{ x: 0.8, y: 1 }}
-        style={{ flex: 1 }}
-      >
-        {/* Soft inner glow overlay */}
-        <View
-          style={{
-            ...{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-            backgroundColor: 'rgba(0,0,0,0.08)',
-          }}
-          pointerEvents="none"
-        />
-
+      <LinearGradient colors={bgColors} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }}>
         <SafeAreaView style={{ flex: 1 }}>
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: 24,
-              paddingBottom: 48,
-              paddingTop: 40,
-            }}
-          >
-            {/* Top: companion + greeting */}
-            <Animated.View entering={FadeInDown.duration(500)} style={{ alignItems: 'center', gap: 20 }}>
-              <View
-                style={{
-                  width: 130,
-                  height: 130,
-                  borderRadius: 65,
-                  backgroundColor: 'rgba(255,255,255,0.12)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: 1.5,
-                  borderColor: 'rgba(255,255,255,0.22)',
-                }}
-              >
-                <EmotionalCompanion
-                  state="idle"
-                  size={100}
-                  themeColor={accentColor}
-                />
-              </View>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingBottom: 40, paddingTop: 32 }}>
 
-              <View style={{ alignItems: 'center', gap: 6 }}>
+            {/* Top: lock icon + greeting */}
+            <Animated.View entering={FadeInDown.duration(500)} style={{ alignItems: 'center', gap: 20 }}>
+              <EmotionalCompanion
+                state="idle"
+                size={110}
+                themeColor={selectedTheme === 'darkMode' ? '#9370DB' : themeColors.primary}
+              />
+              <View style={{ alignItems: 'center', gap: 8 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Lock size={16} color="rgba(255,255,255,0.6)" strokeWidth={2} />
-                  <Text
-                    style={{
-                      fontFamily: 'Inter_700Bold',
-                      fontSize: 28,
-                      color: '#FFFFFF',
-                      letterSpacing: -0.5,
-                    }}
-                  >
+                  <Lock size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 26, color: '#FFFFFF' }}>
                     Welcome back
                   </Text>
                 </View>
-                <Text
-                  style={{
-                    fontFamily: 'Inter_400Regular',
-                    fontSize: 15,
-                    color: 'rgba(255,255,255,0.65)',
-                    textAlign: 'center',
-                  }}
-                >
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 15, color: 'rgba(255,255,255,0.75)', textAlign: 'center' }}>
                   Enter your PIN to continue
                 </Text>
               </View>
             </Animated.View>
 
             {/* Middle: dots + error */}
-            <Animated.View
-              entering={FadeInDown.delay(100).duration(500)}
-              style={{ alignItems: 'center', gap: 20 }}
-            >
-              {/* Frosted pill behind dots */}
-              <View
-                style={{
-                  paddingHorizontal: 36,
-                  paddingVertical: 22,
-                  borderRadius: 28,
-                  backgroundColor: 'rgba(255,255,255,0.10)',
-                  borderWidth: 1,
-                  borderColor: 'rgba(255,255,255,0.18)',
-                }}
-              >
-                <PinDots filled={digits.length} shake={shake} accentColor={accentColor} />
-              </View>
-
+            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={{ alignItems: 'center', gap: 18 }}>
+              <PinDots filled={digits.length} shake={shake} />
               {error ? (
                 <Animated.Text
                   entering={FadeIn.duration(200)}
-                  style={{
-                    fontFamily: 'Inter_600SemiBold',
-                    fontSize: 13,
-                    color: 'rgba(255,140,140,1)',
-                    textAlign: 'center',
-                  }}
+                  style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: 'rgba(255,120,120,1)', textAlign: 'center' }}
                 >
                   {error}
                 </Animated.Text>
               ) : (
-                <Text
-                  style={{
-                    fontFamily: 'Inter_400Regular',
-                    fontSize: 13,
-                    color: 'rgba(255,255,255,0.35)',
-                  }}
-                >
-                  4-digit PIN
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>
+                  Enter 4-digit PIN
                 </Text>
               )}
             </Animated.View>
 
             {/* Bottom: numpad + forgot */}
-            <Animated.View
-              entering={FadeInDown.delay(180).duration(500)}
-              style={{ alignItems: 'center', gap: 28 }}
-            >
-              <Numpad onKey={handleKey} accentColor={accentColor} />
-
+            <Animated.View entering={FadeInDown.delay(180).duration(500)} style={{ alignItems: 'center', gap: 24 }}>
+              <Numpad onKey={handleKey} />
               {failCount >= 3 && (
                 <Animated.View entering={FadeIn.duration(300)}>
-                  <Pressable
-                    onPress={handleForgotPin}
-                    style={({ pressed }) => ({
-                      paddingHorizontal: 24,
-                      paddingVertical: 12,
-                      borderRadius: 20,
-                      backgroundColor: pressed ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    })}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: 'Inter_600SemiBold',
-                        fontSize: 14,
-                        color: 'rgba(255,255,255,0.55)',
-                        textDecorationLine: 'underline',
-                      }}
-                    >
+                  <Pressable onPress={handleForgotPin} style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: 'rgba(255,255,255,0.6)', textDecorationLine: 'underline' }}>
                       Forgot PIN? Reset access
                     </Text>
                   </Pressable>
                 </Animated.View>
               )}
             </Animated.View>
+
           </View>
         </SafeAreaView>
       </LinearGradient>

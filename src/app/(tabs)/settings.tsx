@@ -13,7 +13,23 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
-import { Palette, Bell, Lock, Clock, LogOut, Check, X, Shield, ChevronRight, Moon, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download } from 'lucide-react-native';
+import {
+  Palette,
+  Bell,
+  Lock,
+  Clock,
+  LogOut,
+  Check,
+  X,
+  Shield,
+  ChevronRight,
+  Moon,
+  Brain,
+  BarChart3,
+  AlertTriangle,
+  Trash2,
+  Download,
+} from 'lucide-react-native';
 import Animated from 'react-native-reanimated';
 import { selectHaptic, tapHaptic, confirmHaptic, warningHaptic } from '@/lib/haptics';
 import { router } from 'expo-router';
@@ -46,6 +62,7 @@ export default function SettingsScreen() {
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [isExporting, setIsExporting] = useState(false);
   // Onboarding Store (for theme and notification time)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
@@ -208,15 +225,19 @@ export default function SettingsScreen() {
 
   const handleResetAllData = () => {
     warningHaptic();
+    setResetStep(1);
     setResetModalVisible(true);
+  };
+
+  const handleResetStep1Confirm = () => {
+    warningHaptic();
+    setResetStep(2);
   };
 
   const confirmResetAllData = async () => {
     confirmHaptic();
     setResetModalVisible(false);
-
-    // Mark PIN as verified so the gate doesn't block during the reset transition
-    usePinStore.getState().setPinVerified(true);
+    setResetStep(1);
 
     // Reset all stores
     useJournalStore.getState().clearAllEntries();
@@ -230,13 +251,15 @@ export default function SettingsScreen() {
     // Clear PIN from secure storage
     await removePin();
 
-    // Reset onboarding — AuthGate detects hasCompletedOnboarding=false and shows the welcome flow
+    // Reset onboarding last (redirects to welcome)
     useOnboardingStore.getState().resetOnboarding();
+    router.replace('/(tabs)');
   };
 
   const cancelReset = () => {
     tapHaptic();
     setResetModalVisible(false);
+    setResetStep(1);
   };
 
 
@@ -1145,21 +1168,34 @@ export default function SettingsScreen() {
                 className="text-2xl font-bold mb-2"
                 style={{ fontFamily: 'Inter_700Bold', color: Colors.textPrimary }}
               >
-                Reset All Data?
+                {resetStep === 1 ? 'Reset All Data?' : 'Are you sure?'}
               </Text>
               <Text
                 className="text-center text-base"
                 style={{ color: Colors.textSecondary, lineHeight: 22 }}
               >
-                This will permanently erase all your journal entries, stats, badges, PIN, and
-                settings. This action cannot be undone.
+                {resetStep === 1
+                  ? 'This will permanently erase all your journal entries, stats, badges, PIN, and settings.'
+                  : 'This action cannot be undone. All your data will be permanently deleted and the app will return to its initial state.'}
               </Text>
+            </View>
+
+            {/* Step indicator */}
+            <View className="flex-row justify-center items-center gap-2 mb-4">
+              <View
+                className="w-8 h-1.5 rounded-full"
+                style={{ backgroundColor: '#EF4444' }}
+              />
+              <View
+                className="w-8 h-1.5 rounded-full"
+                style={{ backgroundColor: resetStep === 2 ? '#EF4444' : 'rgba(255,255,255,0.2)' }}
+              />
             </View>
 
             <View className="space-y-3">
               <Pressable
-                data-testid="confirm-reset-button"
-                onPress={confirmResetAllData}
+                data-testid={resetStep === 1 ? 'confirm-reset-step1-button' : 'confirm-reset-button'}
+                onPress={resetStep === 1 ? handleResetStep1Confirm : confirmResetAllData}
                 className="rounded-2xl overflow-hidden mb-3"
               >
                 <LinearGradient
@@ -1172,7 +1208,7 @@ export default function SettingsScreen() {
                     className="text-white text-lg font-bold"
                     style={{ fontFamily: 'Inter_700Bold' }}
                   >
-                    Yes, Reset Everything
+                    {resetStep === 1 ? 'Yes, Reset Everything' : 'Delete All Data Now'}
                   </Text>
                 </LinearGradient>
               </Pressable>

@@ -30,32 +30,6 @@ import { recordSessionUsage } from './api/usage-service';
 import { buildPersonalizationPrompt } from './personalization';
 
 /**
- * Generate a concise, meaningful title from a transcript.
- * Takes the first sentence or up to 50 chars, cleaning punctuation.
- */
-export function generateEntryTitle(transcript: string): string {
-  if (!transcript || transcript.trim().length === 0) return 'Journal Entry';
-
-  const cleaned = transcript.trim().replace(/\s+/g, ' ');
-
-  // Try to extract first sentence
-  const sentenceMatch = cleaned.match(/^[^.!?]+[.!?]/);
-  let candidate = sentenceMatch ? sentenceMatch[0].replace(/[.!?]$/, '').trim() : cleaned;
-
-  // Strip leading filler words people often start voice notes with
-  candidate = candidate.replace(/^(okay|so|well|um|uh|like|hey|hi|hello|alright)[,\s]+/i, '').trim();
-
-  if (candidate.length === 0) candidate = cleaned;
-
-  if (candidate.length <= 50) return candidate;
-
-  // Truncate at a word boundary under 50 chars
-  const truncated = candidate.substring(0, 50);
-  const lastSpace = truncated.lastIndexOf(' ');
-  return lastSpace > 10 ? truncated.substring(0, lastSpace) : truncated;
-}
-
-/**
  * Analyze transcript for emotional content
  * Priority: OpenRouter backend (GPT-4o audio model with prosody) → local keyword analysis
  * @param personalizationContext User correction history to bias the model
@@ -462,7 +436,7 @@ export async function createJournalEntry(
 
   // Create the entry
   const entry = journalStore.addEntry({
-    title: generateEntryTitle(transcript),
+    title: 'Journal Entry',
     transcript,
     audioUri,
     duration,

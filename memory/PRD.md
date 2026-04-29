@@ -55,6 +55,19 @@ Add an option to reset all app data and start from scratch. Adds a "Danger Zone"
   - Removed border radius and shadow from bottom tab bar
   - Background uses `backgroundGradient[2]` (darkest gradient stop) for seamless blend with screen gradient
 
+- **Jan 2026**: Journal entries UX improvements
+  - Dynamic title generation from transcript when title is generic
+  - Collapsible transcript (2 lines + "Read more") on both entries list and entry detail
+  - Themed delete confirmation modal with gradient background (replaces white modal)
+  - Cancel button: transparent bg + theme color border; delete button: red gradient
+  - Edit mode: header icons (X, Save) stay white; title editable via TextInput
+  - Split delete handler into request + confirm pattern with haptic feedback
+
+- **Jan 2026**: Two-step reset confirmation (no PIN)
+  - Replaced single confirmation with two-step flow: Step 1 "Reset All Data?" → Step 2 "Are you sure?"
+  - Step indicator dots show progress; Cancel resets to step 1
+  - No PIN input required — just double confirmation then immediate data wipe
+
 ## Prioritized Backlog
 - P0: None
 - P1: None

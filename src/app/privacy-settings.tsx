@@ -1,11 +1,23 @@
+/**
+ * Privacy Settings Screen
+ *
+ * Allows users to:
+ * - Export their journal data
+ * - Delete all entries
+ * - Delete their account
+ * - Change PIN
+ */
+
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Modal } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { tapHaptic, warningHaptic, errorHaptic } from '@/lib/haptics';
-import { TriangleAlert as AlertTriangle, ChevronLeft, RotateCcw } from 'lucide-react-native';
+import { tapHaptic, successHaptic, errorHaptic, warningHaptic } from '@/lib/haptics';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import { Download, Trash2, ChevronLeft, AlertCircle } from 'lucide-react-native';
 import useJournalStore from '@/lib/state/journal-store';
 import useUserStatsStore from '@/lib/state/user-stats-store';
 import useBadgesStore from '@/lib/state/badges-store';
@@ -17,8 +29,10 @@ import useSettingsStore from '@/lib/state/settings-store';
 import { getThemeColors, getThemeGradients, BorderRadius } from '@/lib/theme';
 
 export default function PrivacySettingsScreen() {
-  const [showPinVerify, setShowPinVerify] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState<boolean>(false);
+  const [showPinVerify, setShowPinVerify] = useState<boolean>(false);
+  const [deleteAction, setDeleteAction] = useState<'entries' | 'account' | null>(null);
 
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
@@ -26,44 +40,111 @@ export default function PrivacySettingsScreen() {
   const themeGradients = getThemeGradients(selectedTheme, isDarkMode);
 
   const clearAllEntries = useJournalStore((s) => s.clearAllEntries);
+  const entries = useJournalStore((s) => s.entries);
   const resetStats = useUserStatsStore((s) => s.resetStats);
+  const stats = useUserStatsStore((s) => s.stats);
   const resetBadges = useBadgesStore((s) => s.resetBadges);
-  const resetSettings = useSettingsStore((s) => s.resetSettings);
+  const getAllBadges = useBadgesStore((s) => s.getAllBadges);
   const logout = useAuthStore((s) => s.logout);
   const setPinSetup = useAuthStore((s) => s.setPinSetup);
-  const resetOnboarding = useOnboardingStore((s) => s.resetOnboarding);
 
-  const handleResetRequest = () => {
-    warningHaptic();
+  const handleExportData = async () => {
+    try {
+      tapHaptic();
+
+      const exportStats = {
+        currentStreak: stats.currentStreak,
+        longestStreak: stats.longestStreak,
+        totalEntries: stats.totalEntries,
+        averageMood: stats.averageMood,
+        lastEntryDate: stats.lastEntryDate,
+      };
+      const badges = getAllBadges();
+
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        entries,
+        stats: exportStats,
+        badges,
+      };
+
+      const jsonString = JSON.stringify(exportData, null, 2);
+      const fileName = `journal_export_${new Date().toISOString().split('T')[0]}.json`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+
+      await FileSystem.writeAsStringAsync(fileUri, jsonString);
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/json',
+          dialogTitle: 'Export Journal Data',
+        });
+        successHaptic();
+      } else {
+        Alert.alert('Success', `Data exported to: ${fileName}`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      Alert.alert('Error', 'Failed to export data');
+      errorHaptic();
+    }
+  };
+
+  const handleDeleteEntries = () => {
+    setDeleteAction('entries');
+    setShowPinVerify(true);
+  };
+
+  const handleDeleteAccount = () => {
+    setDeleteAction('account');
     setShowPinVerify(true);
   };
 
   const handlePinVerified = () => {
     setShowPinVerify(false);
-    setShowResetConfirm(true);
+    if (deleteAction === 'entries') {
+      setShowDeleteConfirm(true);
+    } else if (deleteAction === 'account') {
+      setShowDeleteAccountConfirm(true);
+    }
   };
 
-  const confirmReset = async () => {
+  const confirmDeleteEntries = async () => {
+    try {
+      warningHaptic();
+      clearAllEntries();
+      resetStats();
+      setShowDeleteConfirm(false);
+      Alert.alert('Success', 'All journal entries have been deleted');
+    } catch (error) {
+      console.error('Delete error:', error);
+      Alert.alert('Error', 'Failed to delete entries');
+      errorHaptic();
+    }
+  };
+
+  const confirmDeleteAccount = async () => {
     try {
       warningHaptic();
       clearAllEntries();
       resetStats();
       resetBadges();
-      resetSettings();
       await removePin();
       logout();
       setPinSetup(false);
-      resetOnboarding();
-      setShowResetConfirm(false);
+      setShowDeleteAccountConfirm(false);
       router.replace('/(tabs)');
     } catch (error) {
+      console.error('Delete account error:', error);
+      Alert.alert('Error', 'Failed to delete account');
       errorHaptic();
-      setShowResetConfirm(false);
     }
   };
 
   return (
     <View className="flex-1" style={{ backgroundColor: themeColors.background }}>
+      {/* Full-screen gradient background */}
       <LinearGradient
         colors={themeGradients.background}
         style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
@@ -76,25 +157,30 @@ export default function PrivacySettingsScreen() {
         <View className="px-6 pt-2 pb-4">
           <View className="flex-row items-center justify-center" style={{ minHeight: 44 }}>
             <Pressable
-              onPress={() => { tapHaptic(); router.back(); }}
+              onPress={() => {
+                tapHaptic();
+                router.back();
+              }}
               className="absolute left-0 active:opacity-60"
               style={{ padding: 4 }}
             >
               <ChevronLeft size={28} color="#FFFFFF" />
             </Pressable>
             <View className="items-center">
-              <Text style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 22, color: '#FFFFFF' }}>
+              <Text
+                style={{ fontFamily: 'Inter_700Bold', fontSize: 22, color: '#FFFFFF' }}
+              >
                 Privacy & Security
               </Text>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   fontSize: 13,
                   color: 'rgba(255,255,255,0.7)',
                   marginTop: 2,
                 }}
               >
-                Reset & data management
+                Manage your data
               </Text>
             </View>
           </View>
@@ -105,258 +191,251 @@ export default function PrivacySettingsScreen() {
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Section Label */}
-          <Animated.View entering={FadeInDown.delay(40).duration(500)} className="mb-3">
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  backgroundColor: 'rgba(239,68,68,0.2)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <AlertTriangle size={16} color="#EF4444" strokeWidth={2.5} />
-              </View>
-              <Text
-                style={{
-                  fontFamily: 'Comfortaa_700Bold',
-                  fontSize: 13,
-                  color: '#EF4444',
-                  textTransform: 'uppercase',
-                  letterSpacing: 1,
-                }}
-              >
-                Danger Zone
-              </Text>
-            </View>
-          </Animated.View>
-
-          {/* Reset All Data Card */}
-          <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+          {/* Export Data */}
+          <Animated.View entering={FadeInDown.delay(60).duration(500)} className="mb-4">
             <View
               style={{
-                backgroundColor: 'rgba(239,68,68,0.08)',
+                backgroundColor: 'rgba(255,255,255,0.1)',
                 borderWidth: 1,
-                borderColor: 'rgba(239,68,68,0.3)',
+                borderColor: 'rgba(255,255,255,0.2)',
                 borderRadius: BorderRadius.xlarge,
               }}
             >
-              {/* Red top band */}
-              <View
-                style={{
-                  height: 3,
-                  backgroundColor: '#EF4444',
-                  opacity: 0.7,
-                  borderTopLeftRadius: BorderRadius.xlarge,
-                  borderTopRightRadius: BorderRadius.xlarge,
-                }}
-              />
-
               <View className="p-5">
-                {/* Card header */}
-                <View className="flex-row items-center mb-4">
+                <View className="flex-row items-center mb-3">
                   <View
                     style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 14,
-                      backgroundColor: 'rgba(239,68,68,0.15)',
+                      width: 44,
+                      height: 44,
+                      borderRadius: BorderRadius.medium,
+                      backgroundColor: 'rgba(255,255,255,0.15)',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      marginRight: 14,
-                      borderWidth: 1,
-                      borderColor: 'rgba(239,68,68,0.25)',
+                      marginRight: 12,
                     }}
                   >
-                    <RotateCcw size={22} color="#EF4444" strokeWidth={2} />
+                    <Download size={20} color="#FFFFFF" strokeWidth={2} />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 17, color: '#FFFFFF' }}
-                    >
-                      Reset All App Data
-                    </Text>
-                    <Text
-                      style={{
-                        fontFamily: 'Comfortaa_400Regular',
-                        fontSize: 12,
-                        color: 'rgba(239,68,68,0.85)',
-                        marginTop: 2,
-                      }}
-                    >
-                      Irreversible action
-                    </Text>
-                  </View>
+                  <Text
+                    style={{ fontFamily: 'Inter_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
+                  >
+                    Export Your Data
+                  </Text>
                 </View>
-
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 13,
                     color: 'rgba(255,255,255,0.75)',
-                    lineHeight: 21,
+                    lineHeight: 22,
                     marginBottom: 16,
                   }}
                 >
-                  This will permanently erase everything and return the app to its initial state. The following will be deleted:
+                  Download all your journal entries, statistics, and achievements as a JSON file.
                 </Text>
-
-                {[
-                  'All journal entries & audio',
-                  'Statistics and streaks',
-                  'Badges and achievements',
-                  'PIN and security settings',
-                  'App preferences and theme',
-                ].map((item, i) => (
-                  <View key={i} className="flex-row items-center mb-2" style={{ gap: 10 }}>
-                    <View
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: '#EF4444',
-                        opacity: 0.8,
-                      }}
-                    />
-                    <Text
-                      style={{
-                        fontFamily: 'Comfortaa_400Regular',
-                        fontSize: 13,
-                        color: 'rgba(255,255,255,0.7)',
-                      }}
-                    >
-                      {item}
-                    </Text>
-                  </View>
-                ))}
-
                 <Pressable
-                  onPress={handleResetRequest}
-                  className="active:opacity-70 mt-5"
+                  onPress={handleExportData}
+                  className="active:opacity-70"
                   style={{
-                    backgroundColor: '#EF4444',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.3)',
                     borderRadius: BorderRadius.medium,
-                    paddingVertical: 14,
+                    paddingVertical: 12,
                     alignItems: 'center',
-                    shadowColor: '#EF4444',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.35,
-                    shadowRadius: 10,
-                    elevation: 6,
                   }}
                 >
-                  <Text
-                    style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 15, color: '#FFFFFF' }}
-                  >
-                    Reset All Data
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
+                    Export Data
                   </Text>
                 </Pressable>
               </View>
             </View>
           </Animated.View>
 
-          {/* Info note */}
-          <Animated.View entering={FadeInDown.delay(180).duration(500)} className="mt-5">
-            <Text
+          {/* Delete All Entries */}
+          <Animated.View entering={FadeInDown.delay(120).duration(500)} className="mb-4">
+            <View
               style={{
-                fontFamily: 'Comfortaa_400Regular',
-                fontSize: 12,
-                color: 'rgba(255,255,255,0.45)',
-                textAlign: 'center',
-                lineHeight: 18,
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.2)',
+                borderRadius: BorderRadius.xlarge,
               }}
             >
-              You will be asked to verify your PIN before resetting.{'\n'}
-              This action cannot be undone.
-            </Text>
+              <View className="p-5">
+                <View className="flex-row items-center mb-3">
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: BorderRadius.medium,
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 12,
+                    }}
+                  >
+                    <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
+                  </View>
+                  <Text
+                    style={{ fontFamily: 'Inter_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
+                  >
+                    Delete All Entries
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    fontFamily: 'Inter_400Regular',
+                    fontSize: 13,
+                    color: 'rgba(255,255,255,0.75)',
+                    lineHeight: 22,
+                    marginBottom: 16,
+                  }}
+                >
+                  Permanently delete all your journal entries and reset your statistics. Your account and PIN will remain active.
+                </Text>
+                <Pressable
+                  onPress={handleDeleteEntries}
+                  className="active:opacity-70"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    borderRadius: BorderRadius.medium,
+                    paddingVertical: 12,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
+                    Delete All Entries
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </Animated.View>
+
+          {/* Delete Account */}
+          <Animated.View entering={FadeInDown.delay(180).duration(500)}>
+            <View
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.2)',
+                borderRadius: BorderRadius.xlarge,
+              }}
+            >
+              <View className="p-5">
+                <View className="flex-row items-center mb-3">
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: BorderRadius.medium,
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 12,
+                    }}
+                  >
+                    <AlertCircle size={20} color="#FFFFFF" strokeWidth={2} />
+                  </View>
+                  <Text
+                    style={{ fontFamily: 'Inter_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
+                  >
+                    Delete Account
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    fontFamily: 'Inter_400Regular',
+                    fontSize: 13,
+                    color: 'rgba(255,255,255,0.75)',
+                    lineHeight: 22,
+                    marginBottom: 16,
+                  }}
+                >
+                  Permanently delete your account, all entries, statistics, achievements, and security settings. This action cannot be undone.
+                </Text>
+                <Pressable
+                  onPress={handleDeleteAccount}
+                  className="active:opacity-70"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    borderRadius: BorderRadius.medium,
+                    paddingVertical: 12,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
+                    Delete Account
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
 
-      {/* Reset Confirmation Modal */}
+      {/* Delete Entries Confirmation Modal */}
       <Modal
-        visible={showResetConfirm}
+        visible={showDeleteConfirm}
         animationType="fade"
         transparent
-        onRequestClose={() => setShowResetConfirm(false)}
+        onRequestClose={() => setShowDeleteConfirm(false)}
       >
         <View
           className="flex-1 items-center justify-center p-6"
-          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
         >
           <View
             style={{
               backgroundColor: themeColors.surface,
               borderWidth: 1,
-              borderColor: 'rgba(239,68,68,0.4)',
+              borderColor: 'rgba(255,255,255,0.2)',
               borderRadius: BorderRadius.xxlarge,
               padding: 24,
               width: '100%',
               maxWidth: 360,
             }}
           >
-            <View className="items-center mb-4">
-              <View
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 32,
-                  backgroundColor: 'rgba(239,68,68,0.15)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: 1,
-                  borderColor: 'rgba(239,68,68,0.3)',
-                }}
-              >
-                <AlertTriangle size={30} color="#EF4444" strokeWidth={2} />
-              </View>
-            </View>
-
             <Text
-              style={{
-                fontFamily: 'Comfortaa_700Bold',
-                fontSize: 20,
-                color: '#FCA5A5',
-                marginBottom: 10,
-                textAlign: 'center',
-              }}
+              style={{ fontFamily: 'Inter_700Bold', fontSize: 20, color: '#FFFFFF', marginBottom: 10 }}
             >
-              Reset Everything?
+              Delete All Entries?
             </Text>
             <Text
               style={{
-                fontFamily: 'Comfortaa_400Regular',
+                fontFamily: 'Inter_400Regular',
                 fontSize: 14,
                 color: 'rgba(255,255,255,0.75)',
                 lineHeight: 22,
                 marginBottom: 24,
-                textAlign: 'center',
               }}
             >
-              All your entries, stats, badges, PIN, and settings will be permanently erased. You will start completely fresh. This cannot be undone.
+              This will permanently delete all your journal entries and reset your statistics. Your account will remain active. This action cannot be undone.
             </Text>
             <View style={{ gap: 10 }}>
               <Pressable
-                onPress={confirmReset}
+                onPress={confirmDeleteEntries}
                 className="active:opacity-70"
                 style={{
-                  backgroundColor: '#EF4444',
+                  backgroundColor: 'rgba(239,68,68,0.4)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(239,68,68,0.6)',
                   borderRadius: BorderRadius.medium,
                   paddingVertical: 14,
                   alignItems: 'center',
                 }}
               >
-                <Text
-                  style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 15, color: '#FFFFFF' }}
-                >
-                  Yes, Reset Everything
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#FFFFFF' }}>
+                  Delete All Entries
                 </Text>
               </Pressable>
               <Pressable
-                onPress={() => setShowResetConfirm(false)}
+                onPress={() => setShowDeleteConfirm(false)}
                 className="active:opacity-70"
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.12)',
@@ -367,13 +446,83 @@ export default function PrivacySettingsScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text
-                  style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
-                    fontSize: 15,
-                    color: 'rgba(255,255,255,0.85)',
-                  }}
-                >
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(255,255,255,0.85)' }}>
+                  Cancel
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Account Confirmation Modal */}
+      <Modal
+        visible={showDeleteAccountConfirm}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowDeleteAccountConfirm(false)}
+      >
+        <View
+          className="flex-1 items-center justify-center p-6"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        >
+          <View
+            style={{
+              backgroundColor: themeColors.surface,
+              borderWidth: 1,
+              borderColor: 'rgba(239,68,68,0.35)',
+              borderRadius: BorderRadius.xxlarge,
+              padding: 24,
+              width: '100%',
+              maxWidth: 360,
+            }}
+          >
+            <Text
+              style={{ fontFamily: 'Inter_700Bold', fontSize: 20, color: '#FCA5A5', marginBottom: 10 }}
+            >
+              Delete Account?
+            </Text>
+            <Text
+              style={{
+                fontFamily: 'Inter_400Regular',
+                fontSize: 14,
+                color: 'rgba(255,255,255,0.75)',
+                lineHeight: 22,
+                marginBottom: 24,
+              }}
+            >
+              This will permanently delete your account, all entries, statistics, achievements, and security settings. You will need to set up a new PIN to use the app again. This action cannot be undone.
+            </Text>
+            <View style={{ gap: 10 }}>
+              <Pressable
+                onPress={confirmDeleteAccount}
+                className="active:opacity-70"
+                style={{
+                  backgroundColor: 'rgba(239,68,68,0.4)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(239,68,68,0.6)',
+                  borderRadius: BorderRadius.medium,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#FFFFFF' }}>
+                  Delete Everything
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setShowDeleteAccountConfirm(false)}
+                className="active:opacity-70"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.2)',
+                  borderRadius: BorderRadius.medium,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(255,255,255,0.85)' }}>
                   Cancel
                 </Text>
               </Pressable>
