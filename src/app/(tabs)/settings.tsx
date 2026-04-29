@@ -26,6 +26,8 @@ import {
   Moon,
   Brain,
   BarChart3,
+  AlertTriangle,
+  Trash2,
 } from 'lucide-react-native';
 import Animated from 'react-native-reanimated';
 import { selectHaptic, tapHaptic, confirmHaptic, warningHaptic } from '@/lib/haptics';
@@ -38,6 +40,13 @@ import { NotificationService } from '@/lib/services/notification-service';
 import { changePin, verifyPin } from '@/lib/auth-service';
 import { BrandedAlert } from '@/components/BrandedAlert';
 import { useUsageMinutes, useRemainingMinutes, USAGE_LIMIT_MINUTES } from '@/lib/state/user-stats-store';
+import useUserStatsStore from '@/lib/state/user-stats-store';
+import useJournalStore from '@/lib/state/journal-store';
+import useBadgesStore from '@/lib/state/badges-store';
+import usePinStore from '@/lib/state/pin-store';
+import { useEmotionCorrectionStore } from '@/lib/state/emotion-correction-store';
+import useSubscriptionStore from '@/lib/state/subscription-store';
+import { removePin } from '@/lib/auth-service';
 
 export default function SettingsScreen() {
   const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
@@ -50,7 +59,7 @@ export default function SettingsScreen() {
   const [alertType, setAlertType] = useState<'success' | 'error'>('success');
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-
+  const [resetModalVisible, setResetModalVisible] = useState(false);
   // Onboarding Store (for theme and notification time)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const setSelectedTheme = useOnboardingStore((s) => s.setSelectedTheme);
@@ -195,6 +204,38 @@ export default function SettingsScreen() {
   const cancelSignOut = () => {
     tapHaptic();
     setSignOutModalVisible(false);
+  };
+
+
+  const handleResetAllData = () => {
+    warningHaptic();
+    setResetModalVisible(true);
+  };
+
+  const confirmResetAllData = async () => {
+    confirmHaptic();
+    setResetModalVisible(false);
+
+    // Reset all stores
+    useJournalStore.getState().clearAllEntries();
+    useBadgesStore.getState().resetBadges();
+    useUserStatsStore.getState().resetStats();
+    useSettingsStore.getState().resetSettings();
+    usePinStore.getState().clearPin();
+    useEmotionCorrectionStore.getState().clearCorrections();
+    useSubscriptionStore.getState().clearSubscription();
+
+    // Clear PIN from secure storage
+    await removePin();
+
+    // Reset onboarding last (redirects to welcome)
+    useOnboardingStore.getState().resetOnboarding();
+    router.replace('/(tabs)');
+  };
+
+  const cancelReset = () => {
+    tapHaptic();
+    setResetModalVisible(false);
   };
 
 
@@ -729,6 +770,89 @@ export default function SettingsScreen() {
               </View>
             </Animated.View>
 
+            {/* Danger Zone */}
+            <Animated.View className="mb-6 mt-4">
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
+                >
+                  <AlertTriangle size={20} color="#EF4444" />
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: 'Comfortaa_600SemiBold',
+                    color: '#EF4444',
+                  }}
+                >
+                  Danger Zone
+                </Text>
+              </View>
+
+              <View
+                className="rounded-3xl overflow-hidden"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(239, 68, 68, 0.25)',
+                }}
+              >
+                <View className="p-5">
+                  <Text
+                    style={{
+                      fontFamily: 'Comfortaa_600SemiBold',
+                      color: '#FFFFFF',
+                      fontSize: 15,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Reset All Data
+                  </Text>
+                  <Text
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      fontSize: 13,
+                      marginBottom: 16,
+                      lineHeight: 19,
+                    }}
+                  >
+                    This will permanently delete all your journal entries, stats, badges, PIN, and
+                    settings. The app will return to its initial state.
+                  </Text>
+                  <Pressable
+                    data-testid="reset-all-data-button"
+                    onPress={handleResetAllData}
+                    className="rounded-2xl overflow-hidden active:opacity-80"
+                  >
+                    <LinearGradient
+                      colors={['#EF4444', '#DC2626']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        paddingVertical: 14,
+                        paddingHorizontal: 24,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Trash2 size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                      <Text
+                        style={{
+                          fontFamily: 'Comfortaa_700Bold',
+                          color: '#FFFFFF',
+                          fontSize: 15,
+                        }}
+                      >
+                        Reset All Data
+                      </Text>
+                    </LinearGradient>
+                  </Pressable>
+                </View>
+              </View>
+            </Animated.View>
+
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>
@@ -976,6 +1100,79 @@ export default function SettingsScreen() {
 
               <Pressable
                 onPress={cancelSignOut}
+                className="rounded-2xl py-4 items-center border-2"
+                style={{ borderColor: Colors.primary }}
+              >
+                <Text
+                  className="text-lg font-bold"
+                  style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.primary }}
+                >
+                  Cancel
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Reset All Data Confirmation Modal */}
+      <Modal
+        visible={resetModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelReset}
+      >
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View
+            className="rounded-3xl p-6 w-full max-w-md"
+            style={{ backgroundColor: Colors.surfaceHighlight, ...Shadows.large }}
+          >
+            <View className="items-center mb-4">
+              <View
+                className="w-16 h-16 rounded-full items-center justify-center mb-4"
+                style={{ backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2' }}
+              >
+                <AlertTriangle size={32} color="#DC2626" strokeWidth={2} />
+              </View>
+              <Text
+                className="text-2xl font-bold mb-2"
+                style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.textPrimary }}
+              >
+                Reset All Data?
+              </Text>
+              <Text
+                className="text-center text-base"
+                style={{ color: Colors.textSecondary, lineHeight: 22 }}
+              >
+                This will permanently erase all your journal entries, stats, badges, PIN, and
+                settings. This action cannot be undone.
+              </Text>
+            </View>
+
+            <View className="space-y-3">
+              <Pressable
+                data-testid="confirm-reset-button"
+                onPress={confirmResetAllData}
+                className="rounded-2xl overflow-hidden mb-3"
+              >
+                <LinearGradient
+                  colors={['#EF4444', '#DC2626']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ padding: 16, alignItems: 'center' }}
+                >
+                  <Text
+                    className="text-white text-lg font-bold"
+                    style={{ fontFamily: 'Comfortaa_700Bold' }}
+                  >
+                    Yes, Reset Everything
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+
+              <Pressable
+                data-testid="cancel-reset-button"
+                onPress={cancelReset}
                 className="rounded-2xl py-4 items-center border-2"
                 style={{ borderColor: Colors.primary }}
               >

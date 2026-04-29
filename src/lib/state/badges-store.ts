@@ -431,7 +431,15 @@ const useBadgesStore = create<BadgesStore>()(
       },
 
       resetBadges: () => {
-        set({ badgeStates: {}, unlockedCount: 0 });
+        const freshStates: Record<string, BadgeState> = {};
+        BADGE_DEFINITIONS.forEach((badge) => {
+          freshStates[badge.id] = {
+            id: badge.id,
+            progress: 0,
+            unlocked: false,
+          };
+        });
+        set({ badgeStates: freshStates, unlockedCount: 0, pendingCelebrations: [] });
       },
 
       queueCelebration: (badgeId) => {
