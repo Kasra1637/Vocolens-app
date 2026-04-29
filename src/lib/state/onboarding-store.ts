@@ -99,7 +99,7 @@ export const THEME_COLORS: Record<ThemeColorType, ThemeColors & { name: string; 
     accent: '#9370DB',
     backgroundGradient: ['#CC6898', '#D44E92', '#B83878'],
     buttonGradient: ['#D44E92', '#A32E6A'],
-    micButtonGradient: ['#DA5A9A', '#D44E92', '#A32E6A'],
+    micButtonGradient: ['#E87AB4', '#D44E92', '#A32E6A'],
     buttonGlowColor: 'rgba(218, 90, 154, 0.5)',
   },
   oceanCalm: {
