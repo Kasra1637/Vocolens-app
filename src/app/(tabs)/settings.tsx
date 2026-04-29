@@ -739,33 +739,10 @@ export default function SettingsScreen() {
                 <Pressable
                   onPress={() => {
                     tapHaptic();
-                    router.push('/privacy-settings');
-                  }}
-                  className="p-5 active:opacity-70"
-                  style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <Text
-                        className="text-base font-semibold mb-1"
-                        style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
-                      >
-                        Privacy Settings
-                      </Text>
-                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 15 }}>
-                        Export data, manage entries & account
-                      </Text>
-                    </View>
-                    <ChevronRight size={20} color="rgba(255, 255, 255, 0.6)" strokeWidth={2} />
-                  </View>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => {
-                    tapHaptic();
                     router.push('/legal');
                   }}
                   className="p-5 active:opacity-70"
+                  style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.1)' }}
                 >
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1">
@@ -782,37 +759,8 @@ export default function SettingsScreen() {
                     <ChevronRight size={20} color="rgba(255, 255, 255, 0.6)" strokeWidth={2} />
                   </View>
                 </Pressable>
-              </View>
-            </Animated.View>
 
-            {/* Danger Zone */}
-            <Animated.View className="mb-6 mt-4">
-              <View className="flex-row items-center mb-3">
-                <View
-                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
-                >
-                  <AlertTriangle size={20} color="#EF4444" />
-                </View>
-                <Text
-                  className="text-xl font-bold"
-                  style={{
-                    fontFamily: 'Inter_600SemiBold',
-                    color: '#EF4444',
-                  }}
-                >
-                  Danger Zone
-                </Text>
-              </View>
-
-              <View
-                className="rounded-3xl overflow-hidden"
-                style={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                  borderWidth: 1,
-                  borderColor: 'rgba(239, 68, 68, 0.25)',
-                }}
-              >
+                {/* Export & Reset Data */}
                 <View className="p-5">
                   {/* Export Data */}
                   <Text
@@ -875,7 +823,7 @@ export default function SettingsScreen() {
                   <Text
                     style={{
                       fontFamily: 'Inter_600SemiBold',
-                      color: '#FFFFFF',
+                      color: '#EF4444',
                       fontSize: 15,
                       marginBottom: 4,
                     }}
