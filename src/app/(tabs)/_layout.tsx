@@ -11,19 +11,13 @@ import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 
 const ICON_SIZE = 22;
 
-function darkenHex(hex: string, factor = 0.68): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const h = (v: number) => Math.round(v * factor).toString(16).padStart(2, '0');
-  return `#${h(r)}${h(g)}${h(b)}`;
-}
-
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors = THEME_COLORS[selectedTheme] || THEME_COLORS.lavenderBliss;
-  const navBarColor = darkenHex(themeColors.gradientStart);
+  // Use the darkest (last) stop of the background gradient so the tab bar
+  // blends seamlessly with the bottom of the screen background.
+  const navBarColor = themeColors.backgroundGradient[2];
 
   const renderIcon = (index: number, isFocused: boolean) => {
     const color = isFocused ? '#FFFFFF' : 'rgba(255,255,255,0.4)';

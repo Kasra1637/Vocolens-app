@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'legacy-peer-deps=true' > /tmp/cc-agent/66230881/project/.npmrc"
+          }
+        ]
+      }
+    ]
+  }
+}
