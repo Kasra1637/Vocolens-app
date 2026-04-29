@@ -109,6 +109,10 @@ export async function transcribeAudioFile(audioUri: string, language: string = '
     url.searchParams.append('smart_format', 'true');
     url.searchParams.append('diarize', 'false');
 
+    if (!apiKey) {
+      throw new Error('Deepgram API key is not configured. Set EXPO_PUBLIC_DEEPGRAM_API_KEY.');
+    }
+
     console.log('[Deepgram] Sending request to:', url.toString());
 
     // Prepare body for fetch (platform-specific)
