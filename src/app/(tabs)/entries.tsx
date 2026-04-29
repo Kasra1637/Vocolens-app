@@ -5,11 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
   useFonts,
-  Comfortaa_400Regular,
-  Comfortaa_500Medium,
-  Comfortaa_600SemiBold,
-  Comfortaa_700Bold,
-} from '@expo-google-fonts/comfortaa';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import {
   Filter,
   Search,
@@ -88,10 +88,10 @@ export default function EntriesScreen() {
   const deleteEntryMutation = useDeleteEntry();
 
   const [fontsLoaded] = useFonts({
-    Comfortaa_400Regular,
-    Comfortaa_500Medium,
-    Comfortaa_600SemiBold,
-    Comfortaa_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   const filteredEntries = useMemo(() => {
@@ -187,13 +187,13 @@ export default function EntriesScreen() {
         {/* Header */}
         <Animated.View>
           <Text
-            style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22 }}
+            style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22 }}
             className="text-center mb-2"
           >
             Your Journal Entries
           </Text>
           <Text
-            style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+            style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
             className="text-sm text-center mb-4"
           >
             Browse, search, and revisit all your{'\n'}journal entries in one place.
@@ -202,13 +202,13 @@ export default function EntriesScreen() {
           {/* Total Entries */}
           <View className="items-center mb-6">
             <Text
-              style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF' }}
+              style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
               className="text-4xl"
             >
               {filteredEntries.length}
             </Text>
             <Text
-              style={{ fontFamily: 'Comfortaa_500Medium', color: 'rgba(255, 255, 255, 0.8)' }}
+              style={{ fontFamily: 'Inter_500Medium', color: 'rgba(255, 255, 255, 0.8)' }}
               className="text-xs uppercase tracking-wider"
             >
               Total Entries
@@ -231,7 +231,7 @@ export default function EntriesScreen() {
               <View className="flex-row items-center mb-3">
                 <Filter size={16} color="#FFFFFF" strokeWidth={2} />
                 <Text
-                  style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                  style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                   className="text-sm ml-2"
                 >
                   FILTER & SEARCH
@@ -246,7 +246,7 @@ export default function EntriesScreen() {
                 <Search size={18} color="#FFFFFF" strokeWidth={2} />
                 <TextInput
                   className="flex-1 ml-3"
-                  style={{ fontFamily: 'Comfortaa_400Regular', fontSize: 14, color: '#FFFFFF' }}
+                  style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#FFFFFF' }}
                   placeholder="Search your thoughts..."
                   placeholderTextColor="rgba(255, 255, 255, 0.6)"
                   value={searchQuery}
@@ -268,11 +268,11 @@ export default function EntriesScreen() {
                     setShowSortDropdown(!showSortDropdown);
                     setShowEmotionDropdown(false);
                   }}
-                  className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-2"
+                  className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-3"
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
                 >
                   <Text
-                    style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF' }}
+                    style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF' }}
                     className="text-xs"
                   >
                     {selectedSort}
@@ -287,11 +287,11 @@ export default function EntriesScreen() {
                     setShowEmotionDropdown(!showEmotionDropdown);
                     setShowSortDropdown(false);
                   }}
-                  className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-2"
+                  className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-3"
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
                 >
                   <Text
-                    style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF' }}
+                    style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF' }}
                     className="text-xs"
                   >
                     {selectedEmotions.length > 0
@@ -321,7 +321,7 @@ export default function EntriesScreen() {
                         setSelectedSort(sort);
                         setShowSortDropdown(false);
                       }}
-                      className="px-3 py-2.5"
+                      className="px-3 py-3"
                       style={{
                         backgroundColor:
                           selectedSort === sort
@@ -333,8 +333,8 @@ export default function EntriesScreen() {
                     >
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_500Medium',
-                          fontSize: 13,
+                          fontFamily: 'Inter_500Medium',
+                          fontSize: 14,
                           color: '#FFFFFF',
                         }}
                       >
@@ -361,7 +361,7 @@ export default function EntriesScreen() {
                       <Pressable
                         key={emotion}
                         onPress={() => toggleEmotion(emotion)}
-                        className="px-3 py-2.5 rounded-full"
+                        className="px-3 py-3 rounded-full"
                         style={{
                           backgroundColor: selectedEmotions.includes(emotion)
                             ? 'rgba(255, 255, 255, 0.15)'
@@ -372,8 +372,8 @@ export default function EntriesScreen() {
                       >
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_500Medium',
-                            fontSize: 13,
+                            fontFamily: 'Inter_500Medium',
+                            fontSize: 14,
                             color: '#FFFFFF',
                           }}
                         >
@@ -410,13 +410,13 @@ export default function EntriesScreen() {
             className="items-center py-8"
           >
             <Text
-              style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+              style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
               className="text-center text-lg mb-2"
             >
               {entries.length === 0 ? 'No Entries Yet' : 'No Matches Found'}
             </Text>
             <Text
-              style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+              style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
               className="text-center"
             >
               {entries.length === 0
@@ -503,7 +503,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
             <View className="flex-1 mr-3">
               <View className="flex-row items-center" style={{ gap: 8 }}>
                 <Text
-                  style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                  style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                   className="text-lg flex-1"
                   numberOfLines={1}
                 >
@@ -519,7 +519,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
                 )}
               </View>
               <Text
-                style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
+                style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
                 className="text-xs"
               >
                 {formatDate(entry.createdAt)}, {formatTime(entry.createdAt)}
@@ -532,7 +532,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
             <View className="flex-row items-center">
               <Clock size={14} color="rgba(255, 255, 255, 0.7)" strokeWidth={2} />
               <Text
-                style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
+                style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
                 className="text-xs ml-1"
               >
                 {formatShortDuration(entry.duration)}
@@ -541,7 +541,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
             <View className="flex-row items-center">
               <Activity size={14} color="rgba(255, 255, 255, 0.7)" strokeWidth={2} />
               <Text
-                style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
+                style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
                 className="text-xs ml-1"
               >
                 {entry.emotionIntensity}% intensity
@@ -557,7 +557,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', gap: 6 }}
               >
                 <Text
-                  style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                  style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                   className="text-xs"
                 >
                   {/* Show intensity-adjusted sub-label from saved labels, or compute on-the-fly */}
@@ -566,7 +566,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
                 </Text>
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     color: 'rgba(255,255,255,0.5)',
                     fontSize: 10,
                     textTransform: 'capitalize',
@@ -586,7 +586,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
               >
                 <Text
-                  style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+                  style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
                   className="text-xs italic"
                   numberOfLines={2}
                 >
@@ -598,7 +598,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
 
           {/* Transcript Preview */}
           <Text
-            style={{ fontFamily: 'Comfortaa_400Regular', color: '#FFFFFF', lineHeight: 20 }}
+            style={{ fontFamily: 'Inter_400Regular', color: '#FFFFFF', lineHeight: 22 }}
             className="text-sm mb-3"
             numberOfLines={3}
           >
@@ -609,7 +609,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
           {entry.topics && entry.topics.length > 0 && entry.topics.some(t => t && t.trim().length > 0) && (
             <View className="mb-3">
               <Text
-                style={{ fontFamily: 'Comfortaa_600SemiBold', color: 'rgba(255, 255, 255, 0.8)' }}
+                style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255, 255, 255, 0.8)' }}
                 className="text-xs uppercase mb-2"
               >
                 Topics
@@ -622,7 +622,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                   >
                     <Text
-                      style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.9)' }}
+                      style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.9)' }}
                       className="text-xs capitalize"
                     >
                       {topic}
@@ -635,7 +635,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                   >
                     <Text
-                      style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.9)' }}
+                      style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.9)' }}
                       className="text-xs"
                     >
                       +{entry.topics.filter(t => t && t.trim().length > 0).length - 3}
@@ -658,7 +658,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
                 }}
               >
                 <Text
-                  style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.9)', lineHeight: 18 }}
+                  style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.9)', lineHeight: 22 }}
                   className="text-xs"
                   numberOfLines={2}
                 >
@@ -687,7 +687,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
               style={{ backgroundColor: primaryColor }}
             >
               <Text
-                style={{ fontFamily: 'Comfortaa_600SemiBold' }}
+                style={{ fontFamily: 'Inter_600SemiBold' }}
                 className="text-sm text-white"
               >
                 View Full Analysis

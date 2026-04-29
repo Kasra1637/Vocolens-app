@@ -111,7 +111,7 @@ function TypingText({ lines }: { lines: string[] }) {
       <Text
         style={{
           color: '#FFFFFF',
-          fontFamily: 'Comfortaa_400Regular',
+          fontFamily: 'Inter_400Regular',
           fontSize: 11,
           lineHeight: 16,
         }}
@@ -174,7 +174,7 @@ function InsightChip({ label, delay }: { label: string; delay: number }) {
       ]}
     >
       <Sparkles size={10} color="#FFFFFF" strokeWidth={2} style={{ marginRight: 3 }} />
-      <Text style={{ color: '#FFFFFF', fontFamily: 'Comfortaa_500Medium', fontSize: 9 }}>{label}</Text>
+      <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_500Medium', fontSize: 9 }}>{label}</Text>
     </Animated.View>
   );
 }
@@ -210,14 +210,14 @@ function AnimatedBar({
     <View style={{ marginBottom: 6 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
         <View>
-          <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>{label}</Text>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>{label}</Text>
           {subLabel ? (
-            <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 7, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+            <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 7, textTransform: 'uppercase', letterSpacing: 0.3 }}>
               {subLabel}
             </Text>
           ) : null}
         </View>
-        <Text style={{ fontFamily: 'Comfortaa_700Bold', color: 'rgba(255,255,255,0.8)', fontSize: 9 }}>{score}</Text>
+        <Text style={{ fontFamily: 'Inter_700Bold', color: 'rgba(255,255,255,0.8)', fontSize: 9 }}>{score}</Text>
       </View>
       <View style={{ height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.1)' }}>
         <Animated.View
@@ -358,7 +358,7 @@ export function FreeTrialPreviewScreen() {
             <Animated.View entering={FadeInDown.delay(50).duration(600)} style={{ alignItems: 'center', marginTop: 4 }}>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_700Bold',
+                  fontFamily: 'Inter_700Bold',
                   color: '#FFFFFF',
                   fontSize: 22,
                   textAlign: 'center',
@@ -401,7 +401,7 @@ export function FreeTrialPreviewScreen() {
                         {/* Header — matches actual app */}
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_700Bold',
+                            fontFamily: 'Inter_700Bold',
                             color: '#FFFFFF',
                             fontSize: 15,
                             textAlign: 'center',
@@ -411,7 +411,7 @@ export function FreeTrialPreviewScreen() {
                         </Text>
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_400Regular',
+                            fontFamily: 'Inter_400Regular',
                             color: 'rgba(255,255,255,0.8)',
                             fontSize: 10,
                             marginTop: 2,
@@ -438,7 +438,7 @@ export function FreeTrialPreviewScreen() {
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                               <Sparkles size={11} color="#FFFFFF" strokeWidth={2} />
-                              <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 10, marginLeft: 4 }}>
+                              <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 10, marginLeft: 4 }}>
                                 Live Transcription
                               </Text>
                               <LiveDot />
@@ -454,7 +454,7 @@ export function FreeTrialPreviewScreen() {
                               }}
                             >
                               <Radio size={8} color="#FFFFFF" strokeWidth={2} />
-                              <Text style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF', fontSize: 8, marginLeft: 3 }}>
+                              <Text style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF', fontSize: 8, marginLeft: 3 }}>
                                 LIVE
                               </Text>
                             </View>
@@ -473,7 +473,7 @@ export function FreeTrialPreviewScreen() {
                         {/* Duration timer */}
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_600SemiBold',
+                            fontFamily: 'Inter_600SemiBold',
                             color: '#FFFFFF',
                             fontSize: 20,
                             marginTop: 8,
@@ -500,7 +500,7 @@ export function FreeTrialPreviewScreen() {
                             >
                               <Pause size={18} color="#FFFFFF" fill="#FFFFFF" strokeWidth={0} />
                             </View>
-                            <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 8 }}>
+                            <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 8 }}>
                               Pause
                             </Text>
                           </View>
@@ -521,7 +521,7 @@ export function FreeTrialPreviewScreen() {
                             >
                               <Check size={22} color="#FFFFFF" strokeWidth={3} />
                             </LinearGradient>
-                            <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 8 }}>
+                            <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 8 }}>
                               Save
                             </Text>
                           </View>
@@ -556,7 +556,7 @@ export function FreeTrialPreviewScreen() {
                         {/* Entry title */}
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_700Bold',
+                            fontFamily: 'Inter_700Bold',
                             color: '#FFFFFF',
                             fontSize: 13,
                             marginBottom: 2,
@@ -566,7 +566,7 @@ export function FreeTrialPreviewScreen() {
                         </Text>
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_400Regular',
+                            fontFamily: 'Inter_400Regular',
                             color: 'rgba(255,255,255,0.8)',
                             fontSize: 8,
                             marginBottom: 6,
@@ -579,19 +579,19 @@ export function FreeTrialPreviewScreen() {
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 10 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Calendar size={9} color="rgba(255,255,255,0.8)" strokeWidth={2} />
-                            <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.8)', fontSize: 8, marginLeft: 3 }}>
+                            <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.8)', fontSize: 8, marginLeft: 3 }}>
                               8:32 PM
                             </Text>
                           </View>
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Clock size={9} color="rgba(255,255,255,0.8)" strokeWidth={2} />
-                            <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.8)', fontSize: 8, marginLeft: 3 }}>
+                            <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.8)', fontSize: 8, marginLeft: 3 }}>
                               2:34
                             </Text>
                           </View>
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Activity size={9} color="rgba(255,255,255,0.8)" strokeWidth={2} />
-                            <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.8)', fontSize: 8, marginLeft: 3 }}>
+                            <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.8)', fontSize: 8, marginLeft: 3 }}>
                               72%
                             </Text>
                           </View>
@@ -610,7 +610,7 @@ export function FreeTrialPreviewScreen() {
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                             <Volume2 size={10} color="#FFFFFF" strokeWidth={2} />
-                            <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 9, marginLeft: 4 }}>
+                            <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9, marginLeft: 4 }}>
                               AI Reflection
                             </Text>
                             <View
@@ -622,7 +622,7 @@ export function FreeTrialPreviewScreen() {
                                 backgroundColor: 'rgba(255,255,255,0.2)',
                               }}
                             >
-                              <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 6 }}>
+                              <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 6 }}>
                                 OPENROUTER
                               </Text>
                             </View>
@@ -643,7 +643,7 @@ export function FreeTrialPreviewScreen() {
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                             <BarChart2 size={10} color="#FFFFFF" strokeWidth={2} />
-                            <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 9, marginLeft: 4 }}>
+                            <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9, marginLeft: 4 }}>
                               Emotion Breakdown
                             </Text>
                             <View
@@ -655,7 +655,7 @@ export function FreeTrialPreviewScreen() {
                                 backgroundColor: 'rgba(255,255,255,0.2)',
                               }}
                             >
-                              <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 6 }}>TOP 4</Text>
+                              <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 6 }}>TOP 4</Text>
                             </View>
                           </View>
                           <AnimatedBar label="Serenity" subLabel="trust" score={78} barOpacity={1} delay={200} primaryColor={themeColors.primary} />
@@ -676,7 +676,7 @@ export function FreeTrialPreviewScreen() {
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                             <Target size={10} color="#FFFFFF" strokeWidth={2} />
-                            <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 9, marginLeft: 4 }}>
+                            <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9, marginLeft: 4 }}>
                               Topics
                             </Text>
                           </View>
@@ -693,7 +693,7 @@ export function FreeTrialPreviewScreen() {
                                   borderColor: 'rgba(255,255,255,0.25)',
                                 }}
                               >
-                                <Text style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF', fontSize: 8 }}>
+                                <Text style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF', fontSize: 8 }}>
                                   {topic}
                                 </Text>
                               </View>
@@ -789,7 +789,7 @@ function AnimatedReflectionText() {
   return (
     <Text
       style={{
-        fontFamily: 'Comfortaa_400Regular',
+        fontFamily: 'Inter_400Regular',
         color: 'rgba(255,255,255,0.95)',
         fontSize: 8,
         lineHeight: 13,

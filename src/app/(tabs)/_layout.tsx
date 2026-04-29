@@ -88,7 +88,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               {renderIcon(index, isFocused)}
               <Text
                 style={{
-                  fontFamily: isFocused ? 'Comfortaa_700Bold' : 'Comfortaa_400Regular',
+                  fontFamily: isFocused ? 'Inter_700Bold' : 'Inter_400Regular',
                   fontSize: 10,
                   color: isFocused ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
                   letterSpacing: 0.3,

@@ -77,7 +77,7 @@ function Numpad({ onKey }: { onKey: (k: string) => void }) {
             {key === 'del' ? (
               <Delete size={22} color="#FFFFFF" strokeWidth={2} />
             ) : (
-              <Text style={{ color: '#FFFFFF', fontSize: 26, fontFamily: 'Comfortaa_700Bold' }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 26, fontFamily: 'Inter_700Bold' }}>
                 {key}
               </Text>
             )}
@@ -168,7 +168,7 @@ export function EnterPinScreen() {
               <View style={{ alignItems: 'center', gap: 8 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Lock size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-                  <Text style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 26, color: '#FFFFFF' }}>
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 26, color: '#FFFFFF' }}>
                     Welcome back
                   </Text>
                 </View>

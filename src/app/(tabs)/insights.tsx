@@ -5,11 +5,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useFonts,
-  Comfortaa_400Regular,
-  Comfortaa_500Medium,
-  Comfortaa_600SemiBold,
-  Comfortaa_700Bold,
-} from '@expo-google-fonts/comfortaa';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import { Flame, Award, TrendingUp, Sun, Moon, Sunset, CloudMoon, Smile, Frown, AlertTriangle, Zap, Eye, ShieldAlert, Heart, Sparkles, BarChart3, Lightbulb, TrendingDown, Shield, Target, MessageCircle, Laugh, Meh, Angry, Sunrise, Handshake, Star, Zap as Shock, Heart as HeartFace, Clock } from 'lucide-react-native';
 import Animated, {
   FadeOut,
@@ -230,10 +230,10 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
   }, [entries]);
 
   const [fontsLoaded] = useFonts({
-    Comfortaa_400Regular,
-    Comfortaa_500Medium,
-    Comfortaa_600SemiBold,
-    Comfortaa_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   if (!fontsLoaded) {
@@ -302,7 +302,7 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
                 <Sparkles size={20} color="#FFFFFF" strokeWidth={2} />
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: '#FFFFFF',
                     fontSize: 15,
                     marginLeft: 8,
@@ -313,7 +313,7 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
               </View>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   color: 'rgba(255, 255, 255, 0.8)',
                   fontSize: 12,
                   textAlign: 'center',
@@ -484,13 +484,13 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
 
       {/* Greeting */}
       <Text
-        style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22 }}
+        style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22 }}
         className="mb-1 text-center"
       >
         Hello, {user.name}
       </Text>
       <Text
-        style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+        style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
         className="text-base mb-5 text-center"
       >
         Here are your journaling insights
@@ -524,13 +524,13 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
             </View>
             <View>
               <Text
-                style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                 className="text-xl"
               >
                 {user.streak} {user.streak === 1 ? 'Day' : 'Days'} Streak
               </Text>
               <Text
-                style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+                style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
                 className="text-sm"
               >
                 {user.streak === 0
@@ -570,7 +570,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
             </View>
             <View className="flex-1">
               <Text
-                style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF' }}
+                style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF' }}
                 className="text-base mb-2"
               >
                 Next: {user.nextBadge.name}
@@ -621,13 +621,13 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
             <View className="flex-1">
               <View className="flex-row items-center justify-between mb-1.5">
                 <Text
-                  style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF', fontSize: 14 }}
+                  style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF', fontSize: 14 }}
                 >
                   Monthly Minutes
                 </Text>
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_700Bold',
+                    fontFamily: 'Inter_700Bold',
                     color: isAtLimit
                       ? '#FF8080'
                       : isNearLimit
@@ -637,7 +637,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                   }}
                 >
                   {Math.floor(user.usageMinutes)}{' '}
-                  <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
+                  <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
                     / {USAGE_LIMIT_MINUTES} min
                   </Text>
                 </Text>
@@ -655,7 +655,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
               </View>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   color: isAtLimit
                     ? 'rgba(255,160,160,0.9)'
                     : 'rgba(255,255,255,0.7)',
@@ -686,7 +686,7 @@ function EmotionSelector({ selectedEmotion, onEmotionSelect }: EmotionSelectorPr
     <View className="mb-4" style={{ backgroundColor: 'transparent' }}>
       <Text
         style={{
-          fontFamily: 'Comfortaa_500Medium',
+          fontFamily: 'Inter_500Medium',
           color: '#FFFFFF',
           fontSize: 12,
           marginBottom: 10,
@@ -739,7 +739,7 @@ function EmotionSelector({ selectedEmotion, onEmotionSelect }: EmotionSelectorPr
                     <FaceIcon size={20} color="#FFFFFF" strokeWidth={2} />
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_500Medium',
+                        fontFamily: 'Inter_500Medium',
                         fontSize: 8,
                         color: '#FFFFFF',
                         marginTop: 2,
@@ -794,7 +794,7 @@ function SentimentTimeline({
           <View className="flex-row items-center">
             <TrendingUp size={20} color="#FFFFFF" strokeWidth={2} />
             <Text
-              style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+              style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
               className="text-lg ml-2"
             >
               {viewMode === 'overall' ? 'Sentiment Timeline' : `${selectedEmotionData?.label || 'Emotion'} Focus`}
@@ -831,7 +831,7 @@ function SentimentTimeline({
             ) : null}
             <Text
               style={{
-                fontFamily: 'Comfortaa_500Medium',
+                fontFamily: 'Inter_500Medium',
                 color: '#FFFFFF',
                 fontSize: 13,
               }}
@@ -864,7 +864,7 @@ function SentimentTimeline({
             ) : null}
             <Text
               style={{
-                fontFamily: 'Comfortaa_500Medium',
+                fontFamily: 'Inter_500Medium',
                 color: '#FFFFFF',
                 fontSize: 13,
               }}
@@ -903,7 +903,7 @@ function SentimentTimeline({
           <View style={{ paddingVertical: 32, alignItems: 'center', justifyContent: 'center' }}>
             <Text
               style={{
-                fontFamily: 'Comfortaa_400Regular',
+                fontFamily: 'Inter_400Regular',
                 color: 'rgba(255, 255, 255, 0.8)',
                 textAlign: 'center',
               }}
@@ -919,7 +919,7 @@ function SentimentTimeline({
             <BarChart3 size={40} color='rgba(255, 255, 255, 0.5)' strokeWidth={1.5} />
             <Text
               style={{
-                fontFamily: 'Comfortaa_400Regular',
+                fontFamily: 'Inter_400Regular',
                 color: 'rgba(255, 255, 255, 0.8)',
                 textAlign: 'center',
                 marginTop: 12,
@@ -1014,7 +1014,7 @@ function OverallMoodDisplay() {
               <View className="flex-1">
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_500Medium',
+                    fontFamily: 'Inter_500Medium',
                     fontSize: 13,
                     color: '#FFFFFF',
                     marginBottom: 4,
@@ -1026,7 +1026,7 @@ function OverallMoodDisplay() {
                   <>
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_600SemiBold',
+                        fontFamily: 'Inter_600SemiBold',
                         fontSize: 18,
                         color: '#FFFFFF',
                         marginBottom: 6,
@@ -1036,7 +1036,7 @@ function OverallMoodDisplay() {
                     </Text>
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_400Regular',
+                        fontFamily: 'Inter_400Regular',
                         fontSize: 12,
                         color: 'rgba(255, 255, 255, 0.8)',
                       }}
@@ -1047,7 +1047,7 @@ function OverallMoodDisplay() {
                 ) : (
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_400Regular',
+                      fontFamily: 'Inter_400Regular',
                       fontSize: 14,
                       color: 'rgba(255, 255, 255, 0.8)',
                     }}
@@ -1073,7 +1073,7 @@ function OverallMoodDisplay() {
                   >
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_700Bold',
+                        fontFamily: 'Inter_700Bold',
                         fontSize: 18,
                         color: '#FFFFFF',
                       }}
@@ -1083,7 +1083,7 @@ function OverallMoodDisplay() {
                   </View>
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_500Medium',
+                      fontFamily: 'Inter_500Medium',
                       fontSize: 10,
                       color: 'rgba(255, 255, 255, 0.8)',
                       marginTop: 4,
@@ -1180,7 +1180,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
             <View className="flex-1">
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_500Medium',
+                  fontFamily: 'Inter_500Medium',
                   fontSize: 13,
                   color: '#FFFFFF',
                   marginBottom: 8,
@@ -1191,7 +1191,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
               {timeframe.data ? (
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 12,
                     color: 'rgba(255, 255, 255, 0.8)',
                   }}
@@ -1203,7 +1203,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
               ) : (
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 14,
                     color: 'rgba(255, 255, 255, 0.8)',
                   }}
@@ -1229,7 +1229,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
                 >
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_700Bold',
+                      fontFamily: 'Inter_700Bold',
                       fontSize: 18,
                       color: '#FFFFFF',
                     }}
@@ -1239,7 +1239,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
                 </View>
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_500Medium',
+                    fontFamily: 'Inter_500Medium',
                     fontSize: 10,
                     color: 'rgba(255, 255, 255, 0.8)',
                     marginTop: 4,
@@ -1275,7 +1275,7 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
     >
       <View className="p-5">
         <Text
-          style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+          style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
           className="text-lg mb-4"
         >
           Emotional Themes
@@ -1344,7 +1344,7 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
         ]}
       >
         <Text
-          style={{ fontFamily: 'Comfortaa_500Medium', fontSize: 14, color: '#FFFFFF' }}
+          style={{ fontFamily: 'Inter_500Medium', fontSize: 14, color: '#FFFFFF' }}
         >
           {label}
         </Text>
@@ -1358,7 +1358,7 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
           }}
         >
           <Text
-            style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 12, color: '#FFFFFF' }}
+            style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#FFFFFF' }}
           >
             {count}
           </Text>
@@ -1387,7 +1387,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
     >
       <View className="p-5">
         <Text
-          style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+          style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
           className="text-lg mb-4"
         >
           Time of Day Patterns
@@ -1466,7 +1466,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
         </View>
         <Text
           style={{
-            fontFamily: 'Comfortaa_600SemiBold',
+            fontFamily: 'Inter_600SemiBold',
             fontSize: 16,
             color: '#FFFFFF',
             marginBottom: 4,
@@ -1476,7 +1476,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
         </Text>
         <Text
           style={{
-            fontFamily: 'Comfortaa_400Regular',
+            fontFamily: 'Inter_400Regular',
             fontSize: 14,
             color: 'rgba(255, 255, 255, 0.8)',
             marginBottom: 8,
@@ -1486,7 +1486,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
         </Text>
         <Text
           style={{
-            fontFamily: 'Comfortaa_500Medium',
+            fontFamily: 'Inter_500Medium',
             fontSize: 12,
             color: 'rgba(255, 255, 255, 0.7)',
           }}
@@ -1578,7 +1578,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
       <View style={{ marginBottom: 16 }}>
         <View className="flex-row items-center mb-4">
           <Text
-            style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+            style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
             className="text-lg"
           >
             Deep Insights
@@ -1586,10 +1586,10 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
         </View>
         <Text
           style={{
-            fontFamily: 'Comfortaa_400Regular',
+            fontFamily: 'Inter_400Regular',
             color: 'rgba(255, 255, 255, 0.7)',
             fontSize: 12,
-            lineHeight: 18,
+            lineHeight: 22,
           }}
         >
           AI-powered analysis of your emotional patterns and growth
@@ -1633,7 +1633,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                   {/* Title */}
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_600SemiBold',
+                      fontFamily: 'Inter_600SemiBold',
                       fontSize: 16,
                       color: '#FFFFFF',
                       marginBottom: 8,
@@ -1655,7 +1655,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                   >
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_600SemiBold',
+                        fontFamily: 'Inter_600SemiBold',
                         fontSize: 9,
                         color: '#FFFFFF',
                         textTransform: 'uppercase',
@@ -1669,10 +1669,10 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                   {/* Message */}
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_400Regular',
+                      fontFamily: 'Inter_400Regular',
                       fontSize: 13,
                       color: 'rgba(255, 255, 255, 0.95)',
-                      lineHeight: 20,
+                      lineHeight: 22,
                       marginBottom: 16,
                     }}
                   >
@@ -1690,7 +1690,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                     >
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_500Medium',
+                          fontFamily: 'Inter_500Medium',
                           fontSize: 11,
                           color: 'rgba(255, 255, 255, 0.7)',
                           marginBottom: 8,
@@ -1702,7 +1702,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                         <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: i === 0 ? 6 : 0 }}>
                           <Text
                             style={{
-                              fontFamily: 'Comfortaa_400Regular',
+                              fontFamily: 'Inter_400Regular',
                               fontSize: 11,
                               color: 'rgba(255, 255, 255, 0.7)',
                               marginRight: 6,
@@ -1713,7 +1713,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                           </Text>
                           <Text
                             style={{
-                              fontFamily: 'Comfortaa_400Regular',
+                              fontFamily: 'Inter_400Regular',
                               fontSize: 11,
                               color: 'rgba(255, 255, 255, 0.8)',
                               flex: 1,
@@ -1749,7 +1749,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
         >
           <Text
             style={{
-              fontFamily: 'Comfortaa_500Medium',
+              fontFamily: 'Inter_500Medium',
               fontSize: 13,
               color: '#FFFFFF',
             }}

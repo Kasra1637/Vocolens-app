@@ -203,7 +203,7 @@ export function SetPinScreen() {
                   themeColor={selectedTheme === 'darkMode' ? '#9370DB' : themeColors.primary}
                 />
                 <View style={{ alignItems: 'center', gap: 8 }}>
-                  <Text style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 22, color: '#FFFFFF', textAlign: 'center', opacity: 0.92, letterSpacing: 0.2 }}>
+                  <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 22, color: '#FFFFFF', textAlign: 'center', opacity: 0.92, letterSpacing: 0.2 }}>
                     {phaseTitle}
                   </Text>
                   <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 15, color: 'rgba(255,255,255,0.80)', textAlign: 'center', lineHeight: 22 }}>

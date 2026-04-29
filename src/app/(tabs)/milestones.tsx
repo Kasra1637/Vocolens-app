@@ -4,11 +4,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useFonts,
-  Comfortaa_400Regular,
-  Comfortaa_500Medium,
-  Comfortaa_600SemiBold,
-  Comfortaa_700Bold,
-} from '@expo-google-fonts/comfortaa';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import { shareMilestone } from '@/lib/share-utils';
 import {
   Flame,
@@ -143,10 +143,10 @@ export default function MilestonesScreen() {
   const stats = useUserStatsStore((s) => s.stats);
 
   const [fontsLoaded] = useFonts({
-    Comfortaa_400Regular,
-    Comfortaa_500Medium,
-    Comfortaa_600SemiBold,
-    Comfortaa_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   const allBadges = useMemo(() => getAllBadges(), [getAllBadges]);
@@ -224,13 +224,13 @@ export default function MilestonesScreen() {
           <View className="flex-row items-center justify-center mb-6">
             <View className="items-center">
               <Text
-                style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22 }}
+                style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22 }}
                 className="mb-2"
               >
                 Your Milestones
               </Text>
               <Text
-                style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+                style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
                 className="text-base"
               >
                 Track your progress & earn badges
@@ -280,7 +280,7 @@ export default function MilestonesScreen() {
             style={{ paddingVertical: 60 }}
           >
             <Text
-              style={{ fontFamily: 'Comfortaa_500Medium', color: 'rgba(255, 255, 255, 0.8)' }}
+              style={{ fontFamily: 'Inter_500Medium', color: 'rgba(255, 255, 255, 0.8)' }}
               className="text-center"
             >
               No badges in this category yet
@@ -377,13 +377,13 @@ function StatItem({ icon: Icon, label, value, color, isDarkMode = false }: StatI
         <Icon size={24} color="#FFFFFF" strokeWidth={2} />
       </View>
       <Text
-        style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+        style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
         className="text-base mb-1"
       >
         {value}
       </Text>
       <Text
-        style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+        style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
         className="text-xs text-center"
       >
         {label}
@@ -431,7 +431,7 @@ function CategoryDropdown({
         <View className="flex-row items-center">
           <Icon size={20} color="#FFFFFF" strokeWidth={2} />
           <Text
-            style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF' }}
+            style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF' }}
             className="text-base ml-2"
           >
             {selectedOption.label}
@@ -478,7 +478,7 @@ function CategoryDropdown({
                   />
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_500Medium',
+                      fontFamily: 'Inter_500Medium',
                       color: '#FFFFFF',
                       marginLeft: 12,
                       fontSize: 13,
@@ -613,7 +613,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
           {/* Badge Title */}
           <Text
             style={{
-              fontFamily: 'Comfortaa_600SemiBold',
+              fontFamily: 'Inter_600SemiBold',
               color: '#FFFFFF',
               textAlign: 'center',
               fontSize: 14,
@@ -627,7 +627,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
           {/* Badge Rarity */}
           <Text
             style={{
-              fontFamily: 'Comfortaa_500Medium',
+              fontFamily: 'Inter_500Medium',
               color: 'rgba(255, 255, 255, 0.8)',
               textAlign: 'center',
               fontSize: 10,
@@ -644,7 +644,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 <Check size={12} color="#FFFFFF" strokeWidth={2.5} />
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     color: 'rgba(255, 255, 255, 0.8)',
                     fontSize: 10,
                     marginLeft: 4,
@@ -674,7 +674,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
               </View>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_500Medium',
+                  fontFamily: 'Inter_500Medium',
                   color: 'rgba(255, 255, 255, 0.8)',
                   fontSize: 10,
                   textAlign: 'center',
@@ -809,7 +809,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           {/* Badge Title & Rarity */}
           <Text
             style={{
-              fontFamily: 'Comfortaa_700Bold',
+              fontFamily: 'Inter_700Bold',
               color: StaticColors.textPrimary,
               textAlign: 'center',
               fontSize: 24,
@@ -820,7 +820,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           </Text>
           <Text
             style={{
-              fontFamily: 'Comfortaa_500Medium',
+              fontFamily: 'Inter_500Medium',
               color: '#000000',
               textAlign: 'center',
               fontSize: 14,
@@ -833,7 +833,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           {/* Description */}
           <Text
             style={{
-              fontFamily: 'Comfortaa_400Regular',
+              fontFamily: 'Inter_400Regular',
               color: StaticColors.textSecondary,
               textAlign: 'center',
               fontSize: 15,
@@ -856,7 +856,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           >
             <Text
               style={{
-                fontFamily: 'Comfortaa_600SemiBold',
+                fontFamily: 'Inter_600SemiBold',
                 color: '#000000',
                 fontSize: 10,
                 letterSpacing: 0.5,
@@ -867,7 +867,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
             </Text>
             <Text
               style={{
-                fontFamily: 'Comfortaa_600SemiBold',
+                fontFamily: 'Inter_600SemiBold',
                 color: '#2D1B4E',
                 fontSize: 15,
                 lineHeight: 22,
@@ -892,7 +892,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           >
             <Text
               style={{
-                fontFamily: 'Comfortaa_600SemiBold',
+                fontFamily: 'Inter_600SemiBold',
                 color: Colors.primary,
                 fontSize: 10,
                 letterSpacing: 0.5,
@@ -903,7 +903,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
             </Text>
             <Text
               style={{
-                fontFamily: 'Comfortaa_500Medium',
+                fontFamily: 'Inter_500Medium',
                 color: '#3B2463',
                 fontSize: 13,
                 lineHeight: 21,
@@ -919,7 +919,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
             <View className="items-center mb-6">
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_500Medium',
+                  fontFamily: 'Inter_500Medium',
                   color: StaticColors.textTertiary,
                   fontSize: 12,
                 }}
@@ -952,7 +952,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                 <Share2 size={18} color="#FFFFFF" strokeWidth={2} />
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: '#FFFFFF',
                     fontSize: 15,
                     marginLeft: 8,

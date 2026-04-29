@@ -126,7 +126,7 @@ export function GoalInsightScreen() {
             >
               <Text
                 className="text-center"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
+                style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
               >
                 You're on the right path
               </Text>
@@ -172,7 +172,7 @@ export function GoalInsightScreen() {
                   >
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_700Bold',
+                        fontFamily: 'Inter_700Bold',
                         color: '#FFFFFF',
                         fontSize: 18,
                       }}

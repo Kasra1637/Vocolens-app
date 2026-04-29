@@ -77,7 +77,7 @@ export function MoodStoryTimeline({ entries, primaryColor }: MoodStoryTimelinePr
       <View style={{ padding: 20, paddingBottom: 0 }}>
         <View className="flex-row items-center mb-4" style={{ gap: 8 }}>
           <BookOpen size={18} color="#FFFFFF" strokeWidth={2} />
-          <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 17, color: '#FFFFFF' }}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 17, color: '#FFFFFF' }}>
             Mood Story
           </Text>
         </View>
@@ -110,7 +110,7 @@ export function MoodStoryTimeline({ entries, primaryColor }: MoodStoryTimelinePr
                 <View style={{ paddingVertical: 8, alignItems: 'center' }}>
                   <Text
                     style={{
-                      fontFamily: isActive ? 'Comfortaa_600SemiBold' : 'Comfortaa_400Regular',
+                      fontFamily: isActive ? 'Inter_600SemiBold' : 'Inter_400Regular',
                       fontSize: 12,
                       color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
                     }}
@@ -292,7 +292,7 @@ function WeekView({ entries, primaryColor }: { entries: JournalEntry[]; primaryC
           >
             <Text
               style={{
-                fontFamily: 'Comfortaa_400Regular',
+                fontFamily: 'Inter_400Regular',
                 fontSize: 13,
                 color: 'rgba(255,255,255,0.4)',
                 textAlign: 'center',
@@ -406,7 +406,7 @@ function WeekView({ entries, primaryColor }: { entries: JournalEntry[]; primaryC
           <Text
             key={i}
             style={{
-              fontFamily: 'Comfortaa_500Medium',
+              fontFamily: 'Inter_500Medium',
               fontSize: 10,
               color: d.hasEntry ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.28)',
               textAlign: 'center',
@@ -481,7 +481,7 @@ function PatternsView({ entries, primaryColor }: { entries: JournalEntry[]; prim
         <View style={{ paddingVertical: 32, alignItems: 'center' }}>
           <Text
             style={{
-              fontFamily: 'Comfortaa_400Regular',
+              fontFamily: 'Inter_400Regular',
               fontSize: 13,
               color: 'rgba(255,255,255,0.4)',
               textAlign: 'center',
@@ -510,7 +510,7 @@ function PatternsView({ entries, primaryColor }: { entries: JournalEntry[]; prim
                   {/* Day label */}
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_500Medium',
+                      fontFamily: 'Inter_500Medium',
                       fontSize: 12,
                       color: val !== null ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.25)',
                       width: 28,
@@ -547,7 +547,7 @@ function PatternsView({ entries, primaryColor }: { entries: JournalEntry[]; prim
                         style={{
                           position: 'absolute',
                           left: 10,
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           fontSize: 11,
                           color: 'rgba(255,255,255,0.9)',
                         }}
@@ -560,7 +560,7 @@ function PatternsView({ entries, primaryColor }: { entries: JournalEntry[]; prim
                         style={{
                           position: 'absolute',
                           left: 10,
-                          fontFamily: 'Comfortaa_400Regular',
+                          fontFamily: 'Inter_400Regular',
                           fontSize: 10,
                           color: 'rgba(255,255,255,0.25)',
                         }}
@@ -582,7 +582,7 @@ function PatternsView({ entries, primaryColor }: { entries: JournalEntry[]; prim
                     >
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           fontSize: 9,
                           color: '#FFFFFF',
                           textTransform: 'uppercase',
@@ -613,10 +613,10 @@ function PatternsView({ entries, primaryColor }: { entries: JournalEntry[]; prim
             >
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_500Medium',
+                  fontFamily: 'Inter_500Medium',
                   fontSize: 13,
                   color: 'rgba(255,255,255,0.88)',
-                  lineHeight: 20,
+                  lineHeight: 22,
                 }}
               >
                 {insight}
@@ -768,7 +768,7 @@ function EmotionsView({ entries, primaryColor }: { entries: JournalEntry[]; prim
       <View style={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 8, alignItems: 'center' }}>
         <Text
           style={{
-            fontFamily: 'Comfortaa_400Regular',
+            fontFamily: 'Inter_400Regular',
             fontSize: 13,
             color: 'rgba(255,255,255,0.4)',
             textAlign: 'center',
@@ -879,7 +879,7 @@ function EmotionStoryCard({
           >
             <Text
               style={{
-                fontFamily: 'Comfortaa_700Bold',
+                fontFamily: 'Inter_700Bold',
                 fontSize: 9,
                 color: '#FFFFFF',
                 textTransform: 'uppercase',
@@ -894,7 +894,7 @@ function EmotionStoryCard({
           <View style={{ marginBottom: 4 }}>
             <Text
               style={{
-                fontFamily: 'Comfortaa_700Bold',
+                fontFamily: 'Inter_700Bold',
                 fontSize: 20,
                 color: '#FFFFFF',
               }}
@@ -905,7 +905,7 @@ function EmotionStoryCard({
             {getEmotionSubLabel(emotion, score).toLowerCase() !== emotion.toLowerCase() && (
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   fontSize: 10,
                   color: 'rgba(255,255,255,0.4)',
                   textTransform: 'uppercase',
@@ -921,7 +921,7 @@ function EmotionStoryCard({
           {/* Description */}
           <Text
             style={{
-              fontFamily: 'Comfortaa_400Regular',
+              fontFamily: 'Inter_400Regular',
               fontSize: 12,
               color: 'rgba(255,255,255,0.65)',
               lineHeight: 17,
@@ -953,7 +953,7 @@ function EmotionStoryCard({
             {delta !== undefined && (
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_600SemiBold',
+                  fontFamily: 'Inter_600SemiBold',
                   fontSize: 11,
                   color: delta > 0 ? '#FFFFFF' : 'rgba(255,255,255,0.6)',
                   textAlign: 'center',

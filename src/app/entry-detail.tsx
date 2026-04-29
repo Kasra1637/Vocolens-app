@@ -14,11 +14,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   useFonts,
-  Comfortaa_400Regular,
-  Comfortaa_500Medium,
-  Comfortaa_600SemiBold,
-  Comfortaa_700Bold,
-} from '@expo-google-fonts/comfortaa';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import {
   ArrowLeft,
   Calendar,
@@ -92,10 +92,10 @@ export default function EntryDetailScreen() {
   const deleteEntryMutation = useDeleteEntry();
 
   const [fontsLoaded] = useFonts({
-    Comfortaa_400Regular,
-    Comfortaa_500Medium,
-    Comfortaa_600SemiBold,
-    Comfortaa_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   const entry = id ? getEntry(id) : null;
@@ -192,7 +192,7 @@ export default function EntryDetailScreen() {
           end={{ x: 0, y: 1 }}
         />
         <Text
-          style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+          style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
           className="text-lg"
         >
           Entry not found
@@ -300,13 +300,13 @@ export default function EntryDetailScreen() {
         {/* Entry Header */}
         <Animated.View entering={FadeInDown.delay(100).duration(600)}>
           <Text
-            style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF' }}
+            style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
             className="text-2xl mb-2"
           >
             {entry.title}
           </Text>
           <Text
-            style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+            style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
             className="text-sm mb-4"
           >
             {formatDate(entry.createdAt)}
@@ -318,7 +318,7 @@ export default function EntryDetailScreen() {
               <Calendar size={16} color="rgba(255, 255, 255, 0.8)" strokeWidth={2} />
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   color: 'rgba(255, 255, 255, 0.8)',
                 }}
                 className="text-sm ml-2"
@@ -330,7 +330,7 @@ export default function EntryDetailScreen() {
               <Clock size={16} color="rgba(255, 255, 255, 0.8)" strokeWidth={2} />
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   color: 'rgba(255, 255, 255, 0.8)',
                 }}
                 className="text-sm ml-2"
@@ -342,7 +342,7 @@ export default function EntryDetailScreen() {
               <Activity size={16} color="rgba(255, 255, 255, 0.8)" strokeWidth={2} />
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   color: 'rgba(255, 255, 255, 0.8)',
                 }}
                 className="text-sm ml-2"
@@ -370,7 +370,7 @@ export default function EntryDetailScreen() {
                   <View className="flex-row items-center">
                     <Volume2 size={18} color="#FFFFFF" strokeWidth={2} />
                     <Text
-                      style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                      style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                       className="text-base ml-2"
                     >
                       AI Reflection
@@ -379,7 +379,7 @@ export default function EntryDetailScreen() {
                       className="ml-2 px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                     >
-                      <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
                         OPENROUTER
                       </Text>
                     </View>
@@ -395,7 +395,7 @@ export default function EntryDetailScreen() {
                   <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_400Regular',
+                        fontFamily: 'Inter_400Regular',
                         lineHeight: 24,
                         color: 'rgba(255, 255, 255, 0.95)',
                         marginBottom: 16,
@@ -426,7 +426,7 @@ export default function EntryDetailScreen() {
                       )}
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           color: '#FFFFFF',
                           fontSize: 13,
                           marginLeft: 8,
@@ -457,7 +457,7 @@ export default function EntryDetailScreen() {
                 <MessageSquare size={16} color="rgba(255, 255, 255, 0.8)" strokeWidth={2} />
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: 'rgba(255, 255, 255, 0.8)',
                   }}
                   className="text-xs uppercase ml-2"
@@ -467,7 +467,7 @@ export default function EntryDetailScreen() {
               </View>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   color: '#FFFFFF',
                   lineHeight: 22,
                 }}
@@ -491,7 +491,7 @@ export default function EntryDetailScreen() {
           >
             <View className="p-5">
               <Text
-                style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                 className="text-base mb-3"
               >
                 Full Transcript
@@ -504,7 +504,7 @@ export default function EntryDetailScreen() {
                   numberOfLines={10}
                   textAlignVertical="top"
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 14,
                     lineHeight: 24,
                     color: '#FFFFFF',
@@ -518,7 +518,7 @@ export default function EntryDetailScreen() {
               ) : (
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     lineHeight: 24,
                     color: 'rgba(255, 255, 255, 0.95)',
                   }}
@@ -544,7 +544,7 @@ export default function EntryDetailScreen() {
             >
               <View className="p-5">
                 <Text
-                  style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                  style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                   className="text-base mb-4"
                 >
                   Recording
@@ -576,7 +576,7 @@ export default function EntryDetailScreen() {
                 <View className="flex-row items-center">
                   <BarChart2 size={18} color="#FFFFFF" strokeWidth={2} />
                   <Text
-                    style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                    style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                     className="text-base ml-2"
                   >
                     Emotion Breakdown
@@ -586,7 +586,7 @@ export default function EntryDetailScreen() {
                       className="ml-2 px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                     >
-                      <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
                         TOP 4
                       </Text>
                     </View>
@@ -606,7 +606,7 @@ export default function EntryDetailScreen() {
                     <View style={{ gap: 10 }} onLayout={onBarContainerLayout}>
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           color: 'rgba(255, 255, 255, 0.6)',
                           fontSize: 10,
                           textTransform: 'uppercase',
@@ -639,7 +639,7 @@ export default function EntryDetailScreen() {
                                   <View>
                                     <Text
                                       style={{
-                                        fontFamily: isPrimary ? 'Comfortaa_600SemiBold' : 'Comfortaa_400Regular',
+                                        fontFamily: isPrimary ? 'Inter_600SemiBold' : 'Inter_400Regular',
                                         color: '#FFFFFF',
                                         fontSize: 13,
                                       }}
@@ -649,7 +649,7 @@ export default function EntryDetailScreen() {
                                     {!subLabelMatchesBase && (
                                       <Text
                                         style={{
-                                          fontFamily: 'Comfortaa_400Regular',
+                                          fontFamily: 'Inter_400Regular',
                                           color: 'rgba(255,255,255,0.4)',
                                           fontSize: 9,
                                           textTransform: 'uppercase',
@@ -665,7 +665,7 @@ export default function EntryDetailScreen() {
                                       className="ml-2 px-2 py-0.5 rounded-full"
                                       style={{ backgroundColor: `${Colors.primary}40` }}
                                     >
-                                      <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
+                                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
                                         PRIMARY
                                       </Text>
                                     </View>
@@ -673,7 +673,7 @@ export default function EntryDetailScreen() {
                                 </View>
                                 <Text
                                   style={{
-                                    fontFamily: 'Comfortaa_700Bold',
+                                    fontFamily: 'Inter_700Bold',
                                     color: 'rgba(255,255,255,0.8)',
                                     fontSize: 13,
                                   }}
@@ -703,7 +703,7 @@ export default function EntryDetailScreen() {
                     <View onLayout={onBarContainerLayout}>
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           color: 'rgba(255, 255, 255, 0.8)',
                         }}
                         className="text-xs uppercase mb-3"
@@ -731,7 +731,7 @@ export default function EntryDetailScreen() {
                                   <View>
                                     <Text
                                       style={{
-                                        fontFamily: isPrimary ? 'Comfortaa_600SemiBold' : 'Comfortaa_400Regular',
+                                        fontFamily: isPrimary ? 'Inter_600SemiBold' : 'Inter_400Regular',
                                         color: '#FFFFFF',
                                         fontSize: 13,
                                       }}
@@ -741,7 +741,7 @@ export default function EntryDetailScreen() {
                                     {!subLabelMatchesBase && (
                                       <Text
                                         style={{
-                                          fontFamily: 'Comfortaa_400Regular',
+                                          fontFamily: 'Inter_400Regular',
                                           color: 'rgba(255,255,255,0.4)',
                                           fontSize: 9,
                                           textTransform: 'uppercase',
@@ -761,7 +761,7 @@ export default function EntryDetailScreen() {
                                     >
                                       <Text
                                         style={{
-                                          fontFamily: 'Comfortaa_600SemiBold',
+                                          fontFamily: 'Inter_600SemiBold',
                                           color: '#FFFFFF',
                                           fontSize: 9,
                                         }}
@@ -773,7 +773,7 @@ export default function EntryDetailScreen() {
                                 </View>
                                 <Text
                                   style={{
-                                    fontFamily: 'Comfortaa_700Bold',
+                                    fontFamily: 'Inter_700Bold',
                                     color: '#FFFFFF',
                                     fontSize: 13,
                                   }}
@@ -821,7 +821,7 @@ export default function EntryDetailScreen() {
                   <View className="flex-row items-center">
                     <Heart size={18} color="#FFFFFF" strokeWidth={2} />
                     <Text
-                      style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                      style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                       className="text-base ml-2"
                     >
                       Your Reflection
@@ -836,7 +836,7 @@ export default function EntryDetailScreen() {
                       <CheckCircle2 size={12} color="#22C55E" strokeWidth={2} />
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           color: '#22C55E',
                           fontSize: 10,
                           marginLeft: 4,
@@ -853,7 +853,7 @@ export default function EntryDetailScreen() {
                       <RefreshCw size={12} color="#EAB308" strokeWidth={2} />
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           color: '#EAB308',
                           fontSize: 10,
                           marginLeft: 4,
@@ -874,7 +874,7 @@ export default function EntryDetailScreen() {
                         <View className="flex-row items-center justify-between mb-1.5">
                           <Text
                             style={{
-                              fontFamily: 'Comfortaa_500Medium',
+                              fontFamily: 'Inter_500Medium',
                               color: 'rgba(255, 255, 255, 0.8)',
                               fontSize: 12,
                             }}
@@ -883,7 +883,7 @@ export default function EntryDetailScreen() {
                           </Text>
                           <Text
                             style={{
-                              fontFamily: 'Comfortaa_600SemiBold',
+                              fontFamily: 'Inter_600SemiBold',
                               color: '#FFFFFF',
                               fontSize: 12,
                             }}
@@ -905,10 +905,10 @@ export default function EntryDetailScreen() {
                           />
                         </View>
                         <View className="flex-row justify-between mt-1">
-                          <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                          <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
                             Unpleasant
                           </Text>
-                          <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                          <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
                             Pleasant
                           </Text>
                         </View>
@@ -920,7 +920,7 @@ export default function EntryDetailScreen() {
                         <View className="flex-row items-center justify-between mb-1.5">
                           <Text
                             style={{
-                              fontFamily: 'Comfortaa_500Medium',
+                              fontFamily: 'Inter_500Medium',
                               color: 'rgba(255, 255, 255, 0.8)',
                               fontSize: 12,
                             }}
@@ -929,7 +929,7 @@ export default function EntryDetailScreen() {
                           </Text>
                           <Text
                             style={{
-                              fontFamily: 'Comfortaa_600SemiBold',
+                              fontFamily: 'Inter_600SemiBold',
                               color: '#FFFFFF',
                               fontSize: 12,
                             }}
@@ -950,10 +950,10 @@ export default function EntryDetailScreen() {
                           />
                         </View>
                         <View className="flex-row justify-between mt-1">
-                          <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                          <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
                             Calm
                           </Text>
-                          <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                          <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
                             Activated
                           </Text>
                         </View>
@@ -976,7 +976,7 @@ export default function EntryDetailScreen() {
                       <AlertTriangle size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_500Medium',
+                          fontFamily: 'Inter_500Medium',
                           color: '#FFFFFF',
                           fontSize: 11,
                           marginLeft: 6,
@@ -999,7 +999,7 @@ export default function EntryDetailScreen() {
                       <Wind size={12} color={Colors.primary} strokeWidth={2} />
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_500Medium',
+                          fontFamily: 'Inter_500Medium',
                           color: '#FFFFFF',
                           fontSize: 11,
                           marginLeft: 6,
@@ -1030,7 +1030,7 @@ export default function EntryDetailScreen() {
                     >
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_500Medium',
+                          fontFamily: 'Inter_500Medium',
                           color:
                             entry.distressLevel === 'high'
                               ? '#EF4444'
@@ -1077,7 +1077,7 @@ export default function EntryDetailScreen() {
               <RefreshCw size={16} color="#FFFFFF" strokeWidth={2} />
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_600SemiBold',
+                  fontFamily: 'Inter_600SemiBold',
                   color: '#FFFFFF',
                   fontSize: 13,
                   marginLeft: 8,
@@ -1106,7 +1106,7 @@ export default function EntryDetailScreen() {
                   <View className="flex-row items-center">
                     <Lightbulb size={18} color="#FFFFFF" strokeWidth={2} />
                     <Text
-                      style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                      style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                       className="text-base ml-2"
                     >
                       AI Analysis
@@ -1116,7 +1116,7 @@ export default function EntryDetailScreen() {
                         className="ml-2 px-2 py-0.5 rounded-full"
                         style={{ backgroundColor: 'rgba(234, 179, 8, 0.25)' }}
                       >
-                        <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#EAB308', fontSize: 9 }}>
+                        <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#EAB308', fontSize: 9 }}>
                           ADJUSTED
                         </Text>
                       </View>
@@ -1133,7 +1133,7 @@ export default function EntryDetailScreen() {
                   <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_400Regular',
+                        fontFamily: 'Inter_400Regular',
                         lineHeight: 24,
                         color: 'rgba(255, 255, 255, 0.95)',
                       }}
@@ -1163,7 +1163,7 @@ export default function EntryDetailScreen() {
                 <View className="flex-row items-center mb-3">
                   <Target size={18} color="#FFFFFF" strokeWidth={2} />
                   <Text
-                    style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                    style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                     className="text-base ml-2"
                   >
                     Topics
@@ -1184,7 +1184,7 @@ export default function EntryDetailScreen() {
                       >
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_500Medium',
+                            fontFamily: 'Inter_500Medium',
                             color: '#FFFFFF',
                           }}
                           className="text-xs capitalize"
@@ -1226,7 +1226,7 @@ export default function EntryDetailScreen() {
               <Text
                 className="text-2xl font-bold mb-2 text-center"
                 style={{
-                  fontFamily: 'Comfortaa_700Bold',
+                  fontFamily: 'Inter_700Bold',
                   color: isDarkMode ? '#FFFFFF' : '#1A1229',
                 }}
               >
@@ -1235,7 +1235,7 @@ export default function EntryDetailScreen() {
               <Text
                 className="text-center text-base"
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(26, 18, 41, 0.7)',
                 }}
               >
@@ -1256,7 +1256,7 @@ export default function EntryDetailScreen() {
                 >
                   <Text
                     className="text-white text-base font-bold"
-                    style={{ fontFamily: 'Comfortaa_700Bold' }}
+                    style={{ fontFamily: 'Inter_700Bold' }}
                   >
                     Delete Entry
                   </Text>
@@ -1274,7 +1274,7 @@ export default function EntryDetailScreen() {
                 <Text
                   className="text-base font-bold"
                   style={{
-                    fontFamily: 'Comfortaa_700Bold',
+                    fontFamily: 'Inter_700Bold',
                     color: isDarkMode ? '#FFFFFF' : Colors.primary,
                   }}
                 >

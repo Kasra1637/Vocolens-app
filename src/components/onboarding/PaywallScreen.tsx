@@ -73,8 +73,8 @@ function BenefitsList() {
               <Icon size={18} color="#FFFFFF" strokeWidth={2} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#FFFFFF', fontFamily: 'Comfortaa_700Bold', fontSize: 14, marginBottom: 4 }}>{benefit.title}</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 18 }}>{benefit.description}</Text>
+              <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 14, marginBottom: 4 }}>{benefit.title}</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 22 }}>{benefit.description}</Text>
             </View>
           </View>
         );
@@ -128,7 +128,7 @@ function BenefitsCarousel({ themeColors }: { themeColors: typeof THEME_COLORS[ke
 
   return (
     <View style={{ marginBottom: 2, paddingHorizontal: 24 }}>
-      <Text style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 18, marginBottom: 10 }}>
+      <Text style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 18, marginBottom: 10 }}>
         What you'll gain
       </Text>
 
@@ -152,7 +152,7 @@ function BenefitsCarousel({ themeColors }: { themeColors: typeof THEME_COLORS[ke
           <Icon size={20} color="#FFFFFF" strokeWidth={2} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: '#FFFFFF', fontFamily: 'Comfortaa_700Bold', fontSize: 15, marginBottom: 5 }}>{benefit.title}</Text>
+          <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 15, marginBottom: 5 }}>{benefit.title}</Text>
           <Text style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 19 }}>{benefit.description}</Text>
         </View>
       </Animated.View>
@@ -379,7 +379,7 @@ export function PaywallScreen() {
           >
             {/* Header */}
             <Animated.View entering={FadeInDown.delay(50).duration(600)} style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16, alignItems: 'center' }}>
-              <Text style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22, textAlign: 'center', lineHeight: 30 }}>
+              <Text style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22, textAlign: 'center', lineHeight: 30 }}>
                 {selectedPlan === 'yearly'
                   ? 'Start your 3-day FREE trial\nto continue.'
                   : 'Upgrade to Premium\n& unlock everything.'}
@@ -404,8 +404,8 @@ export function PaywallScreen() {
                         {!isLast && <View style={{ width: 2, flex: 1, minHeight: 20, backgroundColor: 'rgba(255,255,255,0.25)', marginVertical: 4 }} />}
                       </View>
                       <View style={{ flex: 1, paddingBottom: isLast ? 0 : 16, paddingTop: 2 }}>
-                        <Text style={{ color: '#FFFFFF', fontFamily: 'Comfortaa_700Bold', fontSize: 14, marginBottom: 3 }}>{step.label}</Text>
-                        <Text style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 18 }}>{step.sublabel}</Text>
+                        <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 14, marginBottom: 3 }}>{step.label}</Text>
+                        <Text style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 22 }}>{step.sublabel}</Text>
                       </View>
                     </View>
                   );
@@ -463,8 +463,8 @@ export function PaywallScreen() {
                   {/* Price row */}
                   <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                     <View>
-                      <Text style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'Comfortaa_700Bold', fontSize: 12, marginBottom: 3 }}>Yearly</Text>
-                      <Text style={{ color: '#FFFFFF', fontFamily: 'Comfortaa_700Bold', fontSize: 28 }}>{YEARLY_PRICE}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.75)', fontFamily: 'Inter_700Bold', fontSize: 12, marginBottom: 3 }}>Yearly</Text>
+                      <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 28 }}>{YEARLY_PRICE}</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end', paddingBottom: 4 }}>
                       <Text style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'Inter_400Regular', fontSize: 12, textDecorationLine: 'line-through', marginBottom: 4 }}>{YEARLY_FULL}</Text>
@@ -490,9 +490,9 @@ export function PaywallScreen() {
                   }}
                 >
                   <View>
-                    <Text style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'Comfortaa_700Bold', fontSize: 11, marginBottom: 2 }}>Monthly</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'Inter_700Bold', fontSize: 11, marginBottom: 2 }}>Monthly</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-                      <Text style={{ color: '#FFFFFF', fontFamily: 'Comfortaa_700Bold', fontSize: 20 }}>{MONTHLY_PRICE}</Text>
+                      <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 20 }}>{MONTHLY_PRICE}</Text>
                       <Text style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'Inter_400Regular', fontSize: 12 }}>per month</Text>
                     </View>
                   </View>

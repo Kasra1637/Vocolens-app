@@ -174,7 +174,7 @@ function DayPopup({
           {/* Date label */}
           <Text
             style={{
-              fontFamily: 'Comfortaa_400Regular',
+              fontFamily: 'Inter_400Regular',
               fontSize: 13,
               color: 'rgba(255,255,255,0.5)',
               marginBottom: 10,
@@ -197,7 +197,7 @@ function DayPopup({
           >
             <Text
               style={{
-                fontFamily: 'Comfortaa_700Bold',
+                fontFamily: 'Inter_700Bold',
                 fontSize: 22,
                 color: '#FFFFFF',
                 textAlign: 'center',
@@ -207,7 +207,7 @@ function DayPopup({
             </Text>
             <Text
               style={{
-                fontFamily: 'Comfortaa_400Regular',
+                fontFamily: 'Inter_400Regular',
                 fontSize: 11,
                 color: 'rgba(255,255,255,0.5)',
                 textAlign: 'center',
@@ -295,7 +295,7 @@ export function StreakCalendar({ entries, primaryColor, currentStreak }: StreakC
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Calendar size={18} color="#FFFFFF" strokeWidth={2} />
-          <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 16, color: '#FFFFFF' }}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 16, color: '#FFFFFF' }}>
             Journal Calendar
           </Text>
         </View>
@@ -313,7 +313,7 @@ export function StreakCalendar({ entries, primaryColor, currentStreak }: StreakC
           }}
         >
           <Flame size={13} color="#FFFFFF" strokeWidth={2.5} />
-          <Text style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 13, color: '#FFFFFF' }}>
+          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 13, color: '#FFFFFF' }}>
             {currentStreak}
           </Text>
         </View>
@@ -345,10 +345,10 @@ export function StreakCalendar({ entries, primaryColor, currentStreak }: StreakC
         </Pressable>
 
         <View style={{ alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 18, color: '#FFFFFF' }}>
+          <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 18, color: '#FFFFFF' }}>
             {MONTH_NAMES[viewMonth]}
           </Text>
-          <Text style={{ fontFamily: 'Comfortaa_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
             {viewYear}
           </Text>
         </View>
@@ -382,7 +382,7 @@ export function StreakCalendar({ entries, primaryColor, currentStreak }: StreakC
           <View key={d} style={{ flex: 1, alignItems: 'center' }}>
             <Text
               style={{
-                fontFamily: 'Comfortaa_600SemiBold',
+                fontFamily: 'Inter_600SemiBold',
                 fontSize: 11,
                 color: 'rgba(255,255,255,0.35)',
                 letterSpacing: 0.3,
@@ -420,7 +420,7 @@ export function StreakCalendar({ entries, primaryColor, currentStreak }: StreakC
           gap: 12,
         }}
       >
-        <Text style={{ fontFamily: 'Comfortaa_400Regular', fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
           Less
         </Text>
         {(['few', 'several', 'many'] as const).map((tier) => (
@@ -434,7 +434,7 @@ export function StreakCalendar({ entries, primaryColor, currentStreak }: StreakC
             }}
           />
         ))}
-        <Text style={{ fontFamily: 'Comfortaa_400Regular', fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
+        <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
           More
         </Text>
       </View>
@@ -527,7 +527,7 @@ function DayCell({
       >
         <Text
           style={{
-            fontFamily: day.isToday ? 'Comfortaa_700Bold' : 'Comfortaa_400Regular',
+            fontFamily: day.isToday ? 'Inter_700Bold' : 'Inter_400Regular',
             fontSize: 13,
             color: hasBg
               ? '#FFFFFF'
@@ -588,12 +588,12 @@ function StatPill({
           : 'rgba(255,255,255,0.12)',
       }}
     >
-      <Text style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 18, color: '#FFFFFF' }}>
+      <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 18, color: '#FFFFFF' }}>
         {value}
       </Text>
       <Text
         style={{
-          fontFamily: 'Comfortaa_400Regular',
+          fontFamily: 'Inter_400Regular',
           fontSize: 10,
           color: 'rgba(255,255,255,0.5)',
           marginTop: 3,

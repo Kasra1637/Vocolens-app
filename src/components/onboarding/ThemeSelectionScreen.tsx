@@ -113,7 +113,7 @@ export function ThemeSelectionScreen() {
           >
             <Text
               style={{
-                fontFamily: 'Comfortaa_700Bold',
+                fontFamily: 'Inter_700Bold',
                 fontSize: 22,
                 color: '#FFFFFF',
                 opacity: 0.92,
@@ -260,7 +260,7 @@ export function ThemeSelectionScreen() {
                       <View style={{ alignItems: 'center', gap: 8 }}>
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_700Bold',
+                            fontFamily: 'Inter_700Bold',
                             fontSize: 22,
                             color: '#FFFFFF',
                             textAlign: 'center',
@@ -276,7 +276,7 @@ export function ThemeSelectionScreen() {
                             fontSize: 14,
                             color: isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.50)',
                             textAlign: 'center',
-                            lineHeight: 20,
+                            lineHeight: 22,
                           }}
                         >
                           {data.description}

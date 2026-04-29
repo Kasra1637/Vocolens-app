@@ -144,7 +144,7 @@ export function MoodInsightScreen() {
             >
               <Text
                 className="text-center"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
+                style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
               >
                 We hear you
               </Text>
@@ -190,7 +190,7 @@ export function MoodInsightScreen() {
                   >
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_700Bold',
+                        fontFamily: 'Inter_700Bold',
                         color: '#FFFFFF',
                         fontSize: 18,
                       }}

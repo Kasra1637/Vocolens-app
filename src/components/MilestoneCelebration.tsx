@@ -354,7 +354,7 @@ export function MilestoneCelebration() {
             >
               <Text
                 style={{
-                  fontFamily:    'Comfortaa_700Bold',
+                  fontFamily:    'Inter_700Bold',
                   fontSize:      10,
                   color:         rarity.color,
                   textTransform: 'uppercase',
@@ -389,7 +389,7 @@ export function MilestoneCelebration() {
             <Animated.View style={[contentStyle, { alignItems: 'center' }]}>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_700Bold',
+                  fontFamily: 'Inter_700Bold',
                   fontSize:   22,
                   color:      '#FFFFFF',
                   textAlign:  'center',
@@ -400,11 +400,11 @@ export function MilestoneCelebration() {
               </Text>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   fontSize:   14,
                   color:      'rgba(255,255,255,0.65)',
                   textAlign:  'center',
-                  lineHeight: 20,
+                  lineHeight: 22,
                   marginBottom: 6,
                 }}
               >
@@ -412,7 +412,7 @@ export function MilestoneCelebration() {
               </Text>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_600SemiBold',
+                  fontFamily: 'Inter_600SemiBold',
                   fontSize:   13,
                   color:      rarity.color,
                   textAlign:  'center',
@@ -440,7 +440,7 @@ export function MilestoneCelebration() {
                   <Share2 size={17} color="#FFFFFF" strokeWidth={2.5} />
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_700Bold',
+                      fontFamily: 'Inter_700Bold',
                       fontSize:   15,
                       color:      '#FFFFFF',
                     }}
@@ -463,7 +463,7 @@ export function MilestoneCelebration() {
                 >
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_600SemiBold',
+                      fontFamily: 'Inter_600SemiBold',
                       fontSize:   15,
                       color:      'rgba(255,255,255,0.75)',
                     }}

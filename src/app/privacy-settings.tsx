@@ -168,13 +168,13 @@ export default function PrivacySettingsScreen() {
             </Pressable>
             <View className="items-center">
               <Text
-                style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 22, color: '#FFFFFF' }}
+                style={{ fontFamily: 'Inter_700Bold', fontSize: 22, color: '#FFFFFF' }}
               >
                 Privacy & Security
               </Text>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_400Regular',
+                  fontFamily: 'Inter_400Regular',
                   fontSize: 13,
                   color: 'rgba(255,255,255,0.7)',
                   marginTop: 2,
@@ -217,17 +217,17 @@ export default function PrivacySettingsScreen() {
                     <Download size={20} color="#FFFFFF" strokeWidth={2} />
                   </View>
                   <Text
-                    style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
+                    style={{ fontFamily: 'Inter_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
                   >
                     Export Your Data
                   </Text>
                 </View>
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 13,
                     color: 'rgba(255,255,255,0.75)',
-                    lineHeight: 20,
+                    lineHeight: 22,
                     marginBottom: 16,
                   }}
                 >
@@ -245,7 +245,7 @@ export default function PrivacySettingsScreen() {
                     alignItems: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
                     Export Data
                   </Text>
                 </Pressable>
@@ -279,17 +279,17 @@ export default function PrivacySettingsScreen() {
                     <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
                   </View>
                   <Text
-                    style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
+                    style={{ fontFamily: 'Inter_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
                   >
                     Delete All Entries
                   </Text>
                 </View>
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 13,
                     color: 'rgba(255,255,255,0.75)',
-                    lineHeight: 20,
+                    lineHeight: 22,
                     marginBottom: 16,
                   }}
                 >
@@ -307,7 +307,7 @@ export default function PrivacySettingsScreen() {
                     alignItems: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
                     Delete All Entries
                   </Text>
                 </Pressable>
@@ -341,17 +341,17 @@ export default function PrivacySettingsScreen() {
                     <AlertCircle size={20} color="#FFFFFF" strokeWidth={2} />
                   </View>
                   <Text
-                    style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
+                    style={{ fontFamily: 'Inter_700Bold', fontSize: 17, color: '#FFFFFF', flex: 1 }}
                   >
                     Delete Account
                   </Text>
                 </View>
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 13,
                     color: 'rgba(255,255,255,0.75)',
-                    lineHeight: 20,
+                    lineHeight: 22,
                     marginBottom: 16,
                   }}
                 >
@@ -369,7 +369,7 @@ export default function PrivacySettingsScreen() {
                     alignItems: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: '#FFFFFF' }}>
                     Delete Account
                   </Text>
                 </Pressable>
@@ -402,13 +402,13 @@ export default function PrivacySettingsScreen() {
             }}
           >
             <Text
-              style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 20, color: '#FFFFFF', marginBottom: 10 }}
+              style={{ fontFamily: 'Inter_700Bold', fontSize: 20, color: '#FFFFFF', marginBottom: 10 }}
             >
               Delete All Entries?
             </Text>
             <Text
               style={{
-                fontFamily: 'Comfortaa_400Regular',
+                fontFamily: 'Inter_400Regular',
                 fontSize: 14,
                 color: 'rgba(255,255,255,0.75)',
                 lineHeight: 22,
@@ -430,7 +430,7 @@ export default function PrivacySettingsScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 15, color: '#FFFFFF' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#FFFFFF' }}>
                   Delete All Entries
                 </Text>
               </Pressable>
@@ -446,7 +446,7 @@ export default function PrivacySettingsScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 15, color: 'rgba(255,255,255,0.85)' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(255,255,255,0.85)' }}>
                   Cancel
                 </Text>
               </Pressable>
@@ -478,13 +478,13 @@ export default function PrivacySettingsScreen() {
             }}
           >
             <Text
-              style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 20, color: '#FCA5A5', marginBottom: 10 }}
+              style={{ fontFamily: 'Inter_700Bold', fontSize: 20, color: '#FCA5A5', marginBottom: 10 }}
             >
               Delete Account?
             </Text>
             <Text
               style={{
-                fontFamily: 'Comfortaa_400Regular',
+                fontFamily: 'Inter_400Regular',
                 fontSize: 14,
                 color: 'rgba(255,255,255,0.75)',
                 lineHeight: 22,
@@ -506,7 +506,7 @@ export default function PrivacySettingsScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 15, color: '#FFFFFF' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#FFFFFF' }}>
                   Delete Everything
                 </Text>
               </Pressable>
@@ -522,7 +522,7 @@ export default function PrivacySettingsScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ fontFamily: 'Comfortaa_600SemiBold', fontSize: 15, color: 'rgba(255,255,255,0.85)' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'rgba(255,255,255,0.85)' }}>
                   Cancel
                 </Text>
               </Pressable>

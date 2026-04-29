@@ -170,7 +170,7 @@ export function PrivacyPermissionsScreen() {
               entering={FadeInDown.delay(100).duration(600)}
               className="items-center mb-3"
             >
-              <Text className="text-center mb-1" style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}>
+              <Text className="text-center mb-1" style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}>
                 Your privacy
               </Text>
               <Text style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: 15, textAlign: 'center', fontFamily: 'Inter_400Regular' }}>
@@ -203,7 +203,7 @@ export function PrivacyPermissionsScreen() {
                     {feature.icon}
                   </View>
                   <View className="flex-1">
-                    <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, marginBottom: 2, fontFamily: 'Comfortaa_700Bold' }}>
+                    <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, marginBottom: 2, fontFamily: 'Inter_700Bold' }}>
                       {feature.title}
                     </Text>
                     <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 12, lineHeight: 17, fontFamily: 'Inter_400Regular' }}>
@@ -222,7 +222,7 @@ export function PrivacyPermissionsScreen() {
                   <Mic size={22} color="#FFFFFF" strokeWidth={2} />
                 </View>
                 <View className="flex-1">
-                  <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, marginBottom: 2, fontFamily: 'Comfortaa_700Bold' }}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, marginBottom: 2, fontFamily: 'Inter_700Bold' }}>
                     Microphone Access
                   </Text>
                   <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 12, lineHeight: 17, fontFamily: 'Inter_400Regular' }}>

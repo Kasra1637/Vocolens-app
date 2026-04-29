@@ -15,11 +15,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
   useFonts,
-  Comfortaa_400Regular,
-  Comfortaa_500Medium,
-  Comfortaa_600SemiBold,
-  Comfortaa_700Bold,
-} from '@expo-google-fonts/comfortaa';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import { ArrowLeft, FileText, Shield } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { tapHaptic, selectionHaptic } from '@/lib/haptics';
@@ -45,10 +45,10 @@ export default function LegalScreen() {
   const Shadows = getThemeShadows(selectedTheme);
 
   const [fontsLoaded] = useFonts({
-    Comfortaa_400Regular,
-    Comfortaa_500Medium,
-    Comfortaa_600SemiBold,
-    Comfortaa_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   if (!fontsLoaded) return null;
@@ -78,7 +78,7 @@ export default function LegalScreen() {
           <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
         </Pressable>
         <Text
-          style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 20 }}
+          style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 20 }}
         >
           Legal
         </Text>
@@ -108,7 +108,7 @@ export default function LegalScreen() {
               <Icon size={14} color="#FFFFFF" strokeWidth={2} />
               <Text
                 style={{
-                  fontFamily: activeTab === key ? 'Comfortaa_600SemiBold' : 'Comfortaa_400Regular',
+                  fontFamily: activeTab === key ? 'Inter_600SemiBold' : 'Inter_400Regular',
                   color: '#FFFFFF',
                   fontSize: 13,
                   marginLeft: 6,
@@ -153,7 +153,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       >
         <Text
           style={{
-            fontFamily: 'Comfortaa_700Bold',
+            fontFamily: 'Inter_700Bold',
             color: '#FFFFFF',
             fontSize: 15,
             marginBottom: 10,
@@ -171,7 +171,7 @@ function Body({ children }: { children: string }) {
   return (
     <Text
       style={{
-        fontFamily: 'Comfortaa_400Regular',
+        fontFamily: 'Inter_400Regular',
         color: 'rgba(255, 255, 255, 0.9)',
         fontSize: 13,
         lineHeight: 22,
@@ -187,7 +187,7 @@ function Bullet({ children }: { children: string }) {
     <View className="flex-row mb-2" style={{ alignItems: 'flex-start' }}>
       <Text
         style={{
-          fontFamily: 'Comfortaa_400Regular',
+          fontFamily: 'Inter_400Regular',
           color: 'rgba(255, 255, 255, 0.7)',
           fontSize: 13,
           marginRight: 8,
@@ -198,7 +198,7 @@ function Bullet({ children }: { children: string }) {
       </Text>
       <Text
         style={{
-          fontFamily: 'Comfortaa_400Regular',
+          fontFamily: 'Inter_400Regular',
           color: 'rgba(255, 255, 255, 0.9)',
           fontSize: 13,
           lineHeight: 22,
@@ -215,7 +215,7 @@ function Highlight({ children }: { children: string }) {
   return (
     <Text
       style={{
-        fontFamily: 'Comfortaa_600SemiBold',
+        fontFamily: 'Inter_600SemiBold',
         color: '#FFFFFF',
         fontSize: 13,
         lineHeight: 22,
@@ -232,10 +232,10 @@ function Highlight({ children }: { children: string }) {
 function MetaLine({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row mb-1">
-      <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: 'rgba(255,255,255,0.6)', fontSize: 12, width: 110 }}>
+      <Text style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.6)', fontSize: 12, width: 110 }}>
         {label}
       </Text>
-      <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.9)', fontSize: 12, flex: 1 }}>
+      <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.9)', fontSize: 12, flex: 1 }}>
         {value}
       </Text>
     </View>
@@ -279,7 +279,7 @@ function PrivacyPolicy({ isDarkMode }: { isDarkMode: boolean }) {
       <Section title="Data Sent to Third-Party Services">
         <Body>{'Two external services receive data when you create a journal entry:\n'}</Body>
 
-        <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 13, marginBottom: 6, marginTop: 4 }}>
+        <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 13, marginBottom: 6, marginTop: 4 }}>
           1. Deepgram (Speech-to-Text)
         </Text>
         <Bullet>Your audio recording (WAV format) is sent to Deepgram's API to be transcribed into text.</Bullet>
@@ -287,7 +287,7 @@ function PrivacyPolicy({ isDarkMode }: { isDarkMode: boolean }) {
         <Bullet>Deepgram's own privacy policy governs how they handle audio data. See deepgram.com/privacy.</Bullet>
         <Bullet>If Deepgram is unavailable or no API key is configured, a fallback transcript is used and no audio is transmitted.</Bullet>
 
-        <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 13, marginBottom: 6, marginTop: 12 }}>
+        <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 13, marginBottom: 6, marginTop: 12 }}>
           2. OpenAI (Emotional Analysis)
         </Text>
         <Bullet>Both your audio recording and text transcript are sent to our analysis backend for emotional analysis.</Bullet>

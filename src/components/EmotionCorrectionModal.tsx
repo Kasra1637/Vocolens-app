@@ -244,7 +244,7 @@ export default function EmotionCorrectionModal({
           {/* Replace emotion */}
           {step === 'replace' && (
             <Animated.View entering={FadeInDown.delay(100)}>
-              <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 12, lineHeight: 20 }}>
+              <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 12, lineHeight: 22 }}>
                 No worries — emotions can be hard to pin down. Which label feels more like what you were actually feeling?
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -314,7 +314,7 @@ export default function EmotionCorrectionModal({
                 </View>
               )}
 
-              <Text style={{ fontSize: 14, color: '#6B7280', lineHeight: 20, marginBottom: 16 }}>
+              <Text style={{ fontSize: 14, color: '#6B7280', lineHeight: 22, marginBottom: 16 }}>
                 Is there anything that might help us understand this better next time? {'(Optional)'}
               </Text>
 

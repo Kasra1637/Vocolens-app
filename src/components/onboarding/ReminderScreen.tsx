@@ -178,7 +178,7 @@ export function ReminderScreen() {
               </View>
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_700Bold',
+                  fontFamily: 'Inter_700Bold',
                   color: '#FFFFFF',
                   fontSize: 22,
                   textAlign: 'center',

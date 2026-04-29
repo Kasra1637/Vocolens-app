@@ -112,7 +112,7 @@ export function JournalingGoalsScreen() {
             >
               <Text
                 className="text-center mb-1"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
+                style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
               >
                 What would you like to gain from your voice journaling?
               </Text>
@@ -171,7 +171,7 @@ export function JournalingGoalsScreen() {
                           <View className="flex-1">
                             <Text
                               style={{
-                                fontFamily: 'Comfortaa_600SemiBold',
+                                fontFamily: 'Inter_600SemiBold',
                                 color: '#FFFFFF',
                                 fontSize: 15
                               }}

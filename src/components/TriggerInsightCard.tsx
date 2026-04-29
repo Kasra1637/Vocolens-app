@@ -181,7 +181,7 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     fontSize: 16,
                     color: '#FFFFFF',
                     marginBottom: 4,
@@ -191,7 +191,7 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
                 </Text>
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_500Medium',
+                    fontFamily: 'Inter_500Medium',
                     fontSize: 11,
                     color: 'rgba(255, 255, 255, 0.75)',
                   }}
@@ -214,7 +214,7 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
             >
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_600SemiBold',
+                  fontFamily: 'Inter_600SemiBold',
                   fontSize: 9,
                   color: '#FFFFFF',
                   textTransform: 'uppercase',
@@ -228,10 +228,10 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
             {/* Insight message */}
             <Text
               style={{
-                fontFamily: 'Comfortaa_400Regular',
+                fontFamily: 'Inter_400Regular',
                 fontSize: 13,
                 color: 'rgba(255, 255, 255, 0.95)',
-                lineHeight: 20,
+                lineHeight: 22,
                 marginBottom: 16,
               }}
             >
@@ -249,7 +249,7 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
               {/* Frequency stats */}
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_500Medium',
+                  fontFamily: 'Inter_500Medium',
                   fontSize: 11,
                   color: 'rgba(255, 255, 255, 0.7)',
                 }}
@@ -299,7 +299,7 @@ export function TriggerEmptyState({ currentEntries, minRequired }: TriggerEmptyS
 
         <Text
           style={{
-            fontFamily: 'Comfortaa_600SemiBold',
+            fontFamily: 'Inter_600SemiBold',
             fontSize: 15,
             color: '#FFFFFF',
             textAlign: 'center',
@@ -311,11 +311,11 @@ export function TriggerEmptyState({ currentEntries, minRequired }: TriggerEmptyS
 
         <Text
           style={{
-            fontFamily: 'Comfortaa_400Regular',
+            fontFamily: 'Inter_400Regular',
             fontSize: 12,
             color: 'rgba(255, 255, 255, 0.6)',
             textAlign: 'center',
-            lineHeight: 18,
+            lineHeight: 22,
           }}
         >
           {currentEntries > 0
@@ -350,7 +350,7 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
         <Text
           style={{
-            fontFamily: 'Comfortaa_600SemiBold',
+            fontFamily: 'Inter_600SemiBold',
             fontSize: 16,
             color: '#FFFFFF',
           }}
@@ -361,11 +361,11 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
 
       <Text
         style={{
-          fontFamily: 'Comfortaa_400Regular',
+          fontFamily: 'Inter_400Regular',
           fontSize: 12,
           color: 'rgba(255, 255, 255, 0.7)',
           marginBottom: 14,
-          lineHeight: 18,
+          lineHeight: 22,
         }}
       >
         Recurring topics and situations that correlate with your emotional states.
@@ -392,7 +392,7 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
           >
             <Text
               style={{
-                fontFamily: timeWindow === tw ? 'Comfortaa_600SemiBold' : 'Comfortaa_500Medium',
+                fontFamily: timeWindow === tw ? 'Inter_600SemiBold' : 'Inter_500Medium',
                 fontSize: 12,
                 color: timeWindow === tw ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
               }}

@@ -268,13 +268,13 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
         </View>
         <View className="flex-row justify-between mt-1">
           <Text
-            style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
             className="text-xs"
           >
             {formatTime(position)}
           </Text>
           <Text
-            style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.7)' }}
             className="text-xs"
           >
             {formatTime(duration)}

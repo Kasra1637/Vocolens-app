@@ -76,7 +76,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                   <View className="flex-row items-center" style={{ gap: 6 }}>
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_700Bold',
+                        fontFamily: 'Inter_700Bold',
                         fontSize: 15,
                         color: '#FFFFFF',
                         letterSpacing: 0.2,
@@ -95,7 +95,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                       >
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_600SemiBold',
+                            fontFamily: 'Inter_600SemiBold',
                             fontSize: 8,
                             color: '#FFC107',
                             textTransform: 'uppercase',
@@ -109,7 +109,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                   </View>
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_400Regular',
+                      fontFamily: 'Inter_400Regular',
                       fontSize: 11,
                       color: 'rgba(255,255,255,0.6)',
                     }}
@@ -144,7 +144,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                 <ActivityIndicator size="small" color={dominantColor} />
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 13,
                     color: 'rgba(255,255,255,0.6)',
                     textAlign: 'center',
@@ -157,7 +157,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
               <Animated.View entering={FadeIn.duration(400)} className="items-center py-3">
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 13,
                     color: 'rgba(255,255,255,0.6)',
                     textAlign: 'center',
@@ -168,7 +168,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                 <Pressable onPress={handleRefresh} className="mt-2">
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_600SemiBold',
+                      fontFamily: 'Inter_600SemiBold',
                       fontSize: 13,
                       color: dominantColor,
                     }}
@@ -182,7 +182,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                 {/* Narrative Summary — always visible */}
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     fontSize: 14,
                     color: 'rgba(255,255,255,0.92)',
                     lineHeight: 22,
@@ -206,7 +206,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                   >
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_600SemiBold',
+                        fontFamily: 'Inter_600SemiBold',
                         fontSize: 12,
                         color: '#FFFFFF',
                       }}
@@ -226,7 +226,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                   >
                     <Text
                       style={{
-                        fontFamily: 'Comfortaa_500Medium',
+                        fontFamily: 'Inter_500Medium',
                         fontSize: 12,
                         color: 'rgba(255,255,255,0.85)',
                         textTransform: 'capitalize',
@@ -255,7 +255,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                         <BookOpen size={13} color="#FFFFFF" strokeWidth={2.5} />
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_700Bold',
+                            fontFamily: 'Inter_700Bold',
                             fontSize: 11,
                             color: '#FFFFFF',
                             letterSpacing: 1,
@@ -267,10 +267,10 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                       </View>
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_400Regular',
+                          fontFamily: 'Inter_400Regular',
                           fontSize: 13,
                           color: 'rgba(255,255,255,0.85)',
-                          lineHeight: 20,
+                          lineHeight: 22,
                         }}
                       >
                         {reflection.emotionalJourney}
@@ -284,7 +284,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                           <Leaf size={13} color="#FFFFFF" strokeWidth={2.5} />
                           <Text
                             style={{
-                              fontFamily: 'Comfortaa_700Bold',
+                              fontFamily: 'Inter_700Bold',
                               fontSize: 11,
                               color: '#FFFFFF',
                               letterSpacing: 1,
@@ -309,7 +309,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                             >
                               <Text
                                 style={{
-                                  fontFamily: 'Comfortaa_500Medium',
+                                  fontFamily: 'Inter_500Medium',
                                   fontSize: 12,
                                   color: 'rgba(255,255,255,0.9)',
                                   textTransform: 'capitalize',
@@ -337,7 +337,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                         <Star size={13} color="#FFFFFF" strokeWidth={2.5} />
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_700Bold',
+                            fontFamily: 'Inter_700Bold',
                             fontSize: 11,
                             color: '#FFFFFF',
                             letterSpacing: 1,
@@ -349,10 +349,10 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                       </View>
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_400Regular',
+                          fontFamily: 'Inter_400Regular',
                           fontSize: 13,
                           color: 'rgba(255,255,255,0.9)',
-                          lineHeight: 20,
+                          lineHeight: 22,
                           fontStyle: 'italic',
                         }}
                       >
@@ -374,7 +374,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                         <Sunrise size={13} color="rgba(255,255,255,0.7)" strokeWidth={2.5} />
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_700Bold',
+                            fontFamily: 'Inter_700Bold',
                             fontSize: 11,
                             color: 'rgba(255,255,255,0.6)',
                             letterSpacing: 1,
@@ -386,10 +386,10 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                       </View>
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_400Regular',
+                          fontFamily: 'Inter_400Regular',
                           fontSize: 13,
                           color: 'rgba(255,255,255,0.8)',
-                          lineHeight: 20,
+                          lineHeight: 22,
                         }}
                       >
                         {reflection.weekAhead}
@@ -402,7 +402,7 @@ export function WeeklyReflectionCard({ primaryColor, isDarkMode = false }: Weekl
                 {!expanded && (
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_400Regular',
+                      fontFamily: 'Inter_400Regular',
                       fontSize: 11,
                       color: 'rgba(255,255,255,0.4)',
                       textAlign: 'center',

@@ -122,7 +122,7 @@ export function MoodFollowUpScreen() {
             <Animated.View entering={FadeInUp.delay(400).duration(600)} className="items-center mb-4">
               <Text
                 className="text-center mb-1"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
+                style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
               >
                 {config.question}
               </Text>
@@ -149,7 +149,7 @@ export function MoodFollowUpScreen() {
                         }}
                       >
                         <View style={{ paddingHorizontal: 16, paddingVertical: 16 }}>
-                          <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
+                          <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
                             {option.label}
                           </Text>
                         </View>

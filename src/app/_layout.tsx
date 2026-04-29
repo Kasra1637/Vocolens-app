@@ -11,11 +11,11 @@ import { MilestoneCelebration } from '@/components/MilestoneCelebration';
 import { useEffect } from 'react';
 import {
   useFonts,
-  Comfortaa_400Regular,
-  Comfortaa_500Medium,
-  Comfortaa_600SemiBold,
-  Comfortaa_700Bold,
-} from '@expo-google-fonts/comfortaa';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 
 export const unstable_settings = {
@@ -51,10 +51,10 @@ export default function RootLayout() {
   useFrameworkReady();
   const colorScheme = useColorScheme();
   const [fontsLoaded, fontError] = useFonts({
-    Comfortaa_400Regular,
-    Comfortaa_500Medium,
-    Comfortaa_600SemiBold,
-    Comfortaa_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   useEffect(() => {

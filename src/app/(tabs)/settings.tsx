@@ -9,10 +9,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useFonts,
-  Comfortaa_400Regular,
-  Comfortaa_600SemiBold,
-  Comfortaa_700Bold,
-} from '@expo-google-fonts/comfortaa';
+  Inter_400Regular,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import {
   Palette,
   Bell,
@@ -94,9 +94,9 @@ export default function SettingsScreen() {
   const Shadows = getThemeShadows(selectedTheme);
 
   const [fontsLoaded] = useFonts({
-    Comfortaa_400Regular,
-    Comfortaa_600SemiBold,
-    Comfortaa_700Bold,
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   const showAlert = (type: 'success' | 'error', title: string, message: string) => {
@@ -281,7 +281,7 @@ export default function SettingsScreen() {
             <Animated.View>
               <Text
                 className="text-white font-bold mb-2 text-center"
-                style={{ fontFamily: 'Comfortaa_700Bold', fontSize: 22 }}
+                style={{ fontFamily: 'Inter_700Bold', fontSize: 22 }}
               >
                 Settings
               </Text>
@@ -333,7 +333,7 @@ export default function SettingsScreen() {
                       </View>
                       <View>
                         <Text
-                          style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 15 }}
+                          style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 15 }}
                         >
                           Monthly Usage
                         </Text>
@@ -354,7 +354,7 @@ export default function SettingsScreen() {
                     >
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_700Bold',
+                          fontFamily: 'Inter_700Bold',
                           color: '#FFFFFF',
                           fontSize: 12,
                         }}
@@ -385,7 +385,7 @@ export default function SettingsScreen() {
                   {/* Status text */}
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_400Regular',
+                      fontFamily: 'Inter_400Regular',
                       color: isAtLimit
                         ? 'rgba(255,180,180,0.95)'
                         : isNearLimit
@@ -416,7 +416,7 @@ export default function SettingsScreen() {
                 <Text
                   className="text-xl font-bold"
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: '#FFFFFF',
                   }}
                 >
@@ -510,11 +510,11 @@ export default function SettingsScreen() {
                           numberOfLines={2}
                           style={{
                             color: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.65)',
-                            fontSize: 9.5,
-                            fontFamily: 'Comfortaa_600SemiBold',
+                            fontSize: 10,
+                            fontFamily: 'Inter_600SemiBold',
                             textAlign: 'center',
                             marginTop: 8,
-                            lineHeight: 13,
+                            lineHeight: 14,
                             maxWidth: 52,
                           }}
                         >
@@ -541,7 +541,7 @@ export default function SettingsScreen() {
                 <Text
                   className="text-xl font-bold"
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: '#FFFFFF',
                   }}
                 >
@@ -554,11 +554,11 @@ export default function SettingsScreen() {
                   <View className="flex-1 mr-4">
                     <Text
                       className="text-base font-semibold mb-1"
-                      style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                      style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                     >
                       Daily Reminders
                     </Text>
-                    <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 15 }}>
                       Get reminded to journal every day
                     </Text>
                   </View>
@@ -586,7 +586,7 @@ export default function SettingsScreen() {
                 <Text
                   className="text-xl font-bold"
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: '#FFFFFF',
                   }}
                 >
@@ -599,11 +599,11 @@ export default function SettingsScreen() {
                   <View className="flex-1 mr-4">
                     <Text
                       className="text-base font-semibold mb-1"
-                      style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                      style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                     >
                       24-Hour Format
                     </Text>
-                    <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 15 }}>
                       {timeFormat === '24h' ? 'Using 24-hour format (14:00)' : 'Using 12-hour format (2:00 PM)'}
                     </Text>
                   </View>
@@ -623,14 +623,14 @@ export default function SettingsScreen() {
                 <View className="w-10 h-10 rounded-full items-center justify-center mr-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
                   <Brain size={20} color="#FFFFFF" />
                 </View>
-                <Text className="text-xl font-bold" style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}>
+                <Text className="text-xl font-bold" style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}>
                   Emotion Reflection
                 </Text>
               </View>
 
               <View className="rounded-3xl overflow-hidden" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)' }}>
                 <View className="p-5" style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 15, marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15, marginBottom: 4 }}>
                     After each recording
                   </Text>
                   <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginBottom: 12 }}>
@@ -641,10 +641,10 @@ export default function SettingsScreen() {
                     <Pressable
                       key={mode}
                       onPress={() => { selectHaptic(); setEmotionReflectionMode(mode); }}
-                      className="flex-row items-center py-3"
+                      className="flex-row items-center py-4"
                     >
                       <View
-                        className="w-5 h-5 rounded-full mr-3 items-center justify-center"
+                        className="w-6 h-6 rounded-full mr-3 items-center justify-center"
                         style={{
                           borderWidth: 2,
                           borderColor: emotionReflectionMode === mode ? Colors.primary : 'rgba(255,255,255,0.4)',
@@ -655,10 +655,10 @@ export default function SettingsScreen() {
                         )}
                       </View>
                       <View className="flex-1">
-                        <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 14, textTransform: 'capitalize' }}>
+                        <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15, textTransform: 'capitalize' }}>
                           {mode}
                         </Text>
-                        <Text style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 12 }}>
+                        <Text style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: 13, lineHeight: 18 }}>
                           {mode === 'full' ? 'Emotion labels, V-A sliders, body check-in' : mode === 'quick' ? 'Emotion labels + sliders only' : 'Skip reflection, save immediately'}
                         </Text>
                       </View>
@@ -672,7 +672,7 @@ export default function SettingsScreen() {
                 >
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1">
-                      <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 15, marginBottom: 2 }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15, marginBottom: 2 }}>
                         My Feedback History
                       </Text>
                       <Text style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13 }}>
@@ -701,7 +701,7 @@ export default function SettingsScreen() {
                 <Text
                   className="text-xl font-bold"
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: '#FFFFFF',
                   }}
                 >
@@ -719,11 +719,11 @@ export default function SettingsScreen() {
                     <View className="flex-1">
                       <Text
                         className="text-base font-semibold mb-1"
-                        style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                        style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                       >
                         Change PIN
                       </Text>
-                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 15 }}>
                         Update your security PIN
                       </Text>
                     </View>
@@ -748,11 +748,11 @@ export default function SettingsScreen() {
                     <View className="flex-1">
                       <Text
                         className="text-base font-semibold mb-1"
-                        style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                        style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                       >
                         Privacy Settings
                       </Text>
-                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 15 }}>
                         Export data, manage entries & account
                       </Text>
                     </View>
@@ -771,11 +771,11 @@ export default function SettingsScreen() {
                     <View className="flex-1">
                       <Text
                         className="text-base font-semibold mb-1"
-                        style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                        style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                       >
                         Privacy Policy & Terms
                       </Text>
-                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 14 }}>
+                      <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 15 }}>
                         How your data is used & protected
                       </Text>
                     </View>
@@ -797,7 +797,7 @@ export default function SettingsScreen() {
                 <Text
                   className="text-xl font-bold"
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: '#EF4444',
                   }}
                 >
@@ -817,7 +817,7 @@ export default function SettingsScreen() {
                   {/* Export Data */}
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_600SemiBold',
+                      fontFamily: 'Inter_600SemiBold',
                       color: '#FFFFFF',
                       fontSize: 15,
                       marginBottom: 4,
@@ -858,7 +858,7 @@ export default function SettingsScreen() {
                       <Download size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_700Bold',
+                          fontFamily: 'Inter_700Bold',
                           color: '#FFFFFF',
                           fontSize: 15,
                         }}
@@ -874,7 +874,7 @@ export default function SettingsScreen() {
                   {/* Reset All Data */}
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_600SemiBold',
+                      fontFamily: 'Inter_600SemiBold',
                       color: '#FFFFFF',
                       fontSize: 15,
                       marginBottom: 4,
@@ -913,7 +913,7 @@ export default function SettingsScreen() {
                       <Trash2 size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_700Bold',
+                          fontFamily: 'Inter_700Bold',
                           color: '#FFFFFF',
                           fontSize: 15,
                         }}
@@ -943,7 +943,7 @@ export default function SettingsScreen() {
             <View style={{ position: 'relative', alignItems: 'center', marginBottom: 16 }}>
               <Text
                 className="text-2xl font-bold text-center"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.textPrimary }}
+                style={{ fontFamily: 'Inter_700Bold', color: Colors.textPrimary }}
               >
                 Change PIN
               </Text>
@@ -1014,7 +1014,7 @@ export default function SettingsScreen() {
                     className="w-16 h-16 rounded-2xl items-center justify-center"
                     style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
                   >
-                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Comfortaa_700Bold' }}>
+                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Inter_700Bold' }}>
                       {num}
                     </Text>
                   </Pressable>
@@ -1034,7 +1034,7 @@ export default function SettingsScreen() {
                     className="w-16 h-16 rounded-2xl items-center justify-center"
                     style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
                   >
-                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Comfortaa_700Bold' }}>
+                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Inter_700Bold' }}>
                       {num}
                     </Text>
                   </Pressable>
@@ -1054,7 +1054,7 @@ export default function SettingsScreen() {
                     className="w-16 h-16 rounded-2xl items-center justify-center"
                     style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
                   >
-                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Comfortaa_700Bold' }}>
+                    <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Inter_700Bold' }}>
                       {num}
                     </Text>
                   </Pressable>
@@ -1073,7 +1073,7 @@ export default function SettingsScreen() {
                   className="w-16 h-16 rounded-2xl items-center justify-center"
                   style={{ backgroundColor: isDarkMode ? 'rgba(139, 92, 246, 0.15)' : '#F3F4F6' }}
                 >
-                  <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Comfortaa_700Bold' }}>
+                  <Text className="text-2xl font-bold" style={{ color: Colors.textPrimary, fontFamily: 'Inter_700Bold' }}>
                     0
                   </Text>
                 </Pressable>
@@ -1114,7 +1114,7 @@ export default function SettingsScreen() {
               >
                 <Text
                   className="text-white text-lg font-bold"
-                  style={{ fontFamily: 'Comfortaa_700Bold' }}
+                  style={{ fontFamily: 'Inter_700Bold' }}
                 >
                   {pinStep === 'new' ? 'Change PIN' : 'Continue'}
                 </Text>
@@ -1142,7 +1142,7 @@ export default function SettingsScreen() {
               </View>
               <Text
                 className="text-2xl font-bold mb-2"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.textPrimary }}
+                style={{ fontFamily: 'Inter_700Bold', color: Colors.textPrimary }}
               >
                 Sign Out
               </Text>
@@ -1164,7 +1164,7 @@ export default function SettingsScreen() {
                 >
                   <Text
                     className="text-white text-lg font-bold"
-                    style={{ fontFamily: 'Comfortaa_700Bold' }}
+                    style={{ fontFamily: 'Inter_700Bold' }}
                   >
                     Yes, Sign Out
                   </Text>
@@ -1178,7 +1178,7 @@ export default function SettingsScreen() {
               >
                 <Text
                   className="text-lg font-bold"
-                  style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.primary }}
+                  style={{ fontFamily: 'Inter_700Bold', color: Colors.primary }}
                 >
                   Cancel
                 </Text>
@@ -1209,7 +1209,7 @@ export default function SettingsScreen() {
               </View>
               <Text
                 className="text-2xl font-bold mb-2"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.textPrimary }}
+                style={{ fontFamily: 'Inter_700Bold', color: Colors.textPrimary }}
               >
                 Reset All Data?
               </Text>
@@ -1236,7 +1236,7 @@ export default function SettingsScreen() {
                 >
                   <Text
                     className="text-white text-lg font-bold"
-                    style={{ fontFamily: 'Comfortaa_700Bold' }}
+                    style={{ fontFamily: 'Inter_700Bold' }}
                   >
                     Yes, Reset Everything
                   </Text>
@@ -1251,7 +1251,7 @@ export default function SettingsScreen() {
               >
                 <Text
                   className="text-lg font-bold"
-                  style={{ fontFamily: 'Comfortaa_700Bold', color: Colors.primary }}
+                  style={{ fontFamily: 'Inter_700Bold', color: Colors.primary }}
                 >
                   Cancel
                 </Text>

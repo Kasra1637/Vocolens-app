@@ -103,7 +103,7 @@ export default function EmotionReflectionScreen({
 
             {alexithymiaMode ? (
               <View style={{ marginTop: 12 }}>
-                <Text style={{ fontSize: 14, color: '#6B7280', lineHeight: 20, marginBottom: 12 }}>
+                <Text style={{ fontSize: 14, color: '#6B7280', lineHeight: 22, marginBottom: 12 }}>
                   That is completely okay. Many people find it hard to name emotions. Try noticing where you feel something in your body, or use the sliders below.
                 </Text>
                 <BodySensationPicker selected={bodySensation} onChange={setBodySensation} suggestedSensations={suggestedBodySensations} />

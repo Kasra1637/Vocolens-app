@@ -4,11 +4,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useFonts,
-  Comfortaa_400Regular,
-  Comfortaa_500Medium,
-  Comfortaa_600SemiBold,
-  Comfortaa_700Bold,
-} from '@expo-google-fonts/comfortaa';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import { Pause, Check, ChevronDown, RefreshCw, Sparkles, Settings, AlertCircle, Radio } from 'lucide-react-native';
 import Animated, {
   useAnimatedStyle,
@@ -159,10 +159,10 @@ export default function SpeakScreen() {
   const [voiceState, voiceActions] = useRealtimeVoiceRecording();
 
   const [fontsLoaded] = useFonts({
-    Comfortaa_400Regular,
-    Comfortaa_500Medium,
-    Comfortaa_600SemiBold,
-    Comfortaa_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   // Animation values
@@ -494,7 +494,7 @@ export default function SpeakScreen() {
         {/* Header */}
         <Animated.View className="items-center">
           <Text
-            style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22 }}
+            style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22 }}
             className="mb-2 text-center"
           >
             {isProcessing ? 'Processing...' : isPaused ? 'Recording paused' : isRecording ? 'Listening...' : 'Speak your mind'}
@@ -502,7 +502,7 @@ export default function SpeakScreen() {
           {!isRecording ? (
             <Pressable onPress={!isProcessing ? cyclePrompt : undefined}>
               <Text
-                style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+                style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
                 className="text-base text-center px-4"
               >
                 {currentPrompt || "What's on your mind today?"}
@@ -531,10 +531,10 @@ export default function SpeakScreen() {
                     {permissionMessage && permissionMessage.trim().length > 0 ? (
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           color: '#FFFFFF',
                           fontSize: 13,
-                          lineHeight: 20,
+                          lineHeight: 22,
                           marginBottom: 8,
                         }}
                       >
@@ -551,7 +551,7 @@ export default function SpeakScreen() {
                           <Settings size={14} color="#FFFFFF" strokeWidth={2} />
                           <Text
                             style={{
-                              fontFamily: 'Comfortaa_600SemiBold',
+                              fontFamily: 'Inter_600SemiBold',
                               color: '#FFFFFF',
                               fontSize: 12,
                               marginLeft: 6,
@@ -594,7 +594,7 @@ export default function SpeakScreen() {
                 <View className="flex-1">
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_700Bold',
+                      fontFamily: 'Inter_700Bold',
                       color: '#FFFFFF',
                       fontSize: 13,
                       marginBottom: 3,
@@ -604,10 +604,10 @@ export default function SpeakScreen() {
                   </Text>
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_400Regular',
+                      fontFamily: 'Inter_400Regular',
                       color: 'rgba(255,255,255,0.75)',
                       fontSize: 12,
-                      lineHeight: 18,
+                      lineHeight: 22,
                     }}
                   >
                     {isAtLimit
@@ -656,10 +656,10 @@ export default function SpeakScreen() {
                     {errorMessage && typeof errorMessage === 'string' && errorMessage.trim().length > 0 ? (
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_600SemiBold',
+                          fontFamily: 'Inter_600SemiBold',
                           color: isDarkMode ? '#FCD34D' : '#92400E',
                           fontSize: 13,
-                          lineHeight: 20,
+                          lineHeight: 22,
                         }}
                       >
                         {errorMessage}
@@ -692,7 +692,7 @@ export default function SpeakScreen() {
                 {/* Topic Selector */}
                 <View className="flex-row items-center justify-between mb-3">
                   <Text
-                    style={{ fontFamily: 'Comfortaa_600SemiBold', color: 'rgba(255, 255, 255, 0.8)' }}
+                    style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255, 255, 255, 0.8)' }}
                     className="text-xs uppercase tracking-wide"
                   >
                     Warm-up Question
@@ -702,11 +702,11 @@ export default function SpeakScreen() {
                       tapHaptic();
                       setShowTopicDropdown(!showTopicDropdown);
                     }}
-                    className="flex-row items-center rounded-full px-3 py-1.5"
+                    className="flex-row items-center rounded-full px-3 py-2"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
                   >
                     <Text
-                      style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF' }}
+                      style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF' }}
                       className="text-xs"
                     >
                       {selectedTopic ? TOPIC_LABELS[selectedTopic] : 'Select Topic'}
@@ -730,7 +730,7 @@ export default function SpeakScreen() {
                       <Pressable
                         key={topic}
                         onPress={() => handleTopicChange(topic)}
-                        className="px-3 py-2.5"
+                        className="px-4 py-3"
                         style={{
                           backgroundColor: selectedTopic === topic ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
                           borderBottomWidth: 1,
@@ -739,8 +739,8 @@ export default function SpeakScreen() {
                       >
                         <Text
                           style={{
-                            fontFamily: 'Comfortaa_500Medium',
-                            fontSize: 13,
+                            fontFamily: 'Inter_500Medium',
+                            fontSize: 14,
                             color: '#FFFFFF',
                           }}
                         >
@@ -757,7 +757,7 @@ export default function SpeakScreen() {
                     <View className="flex-1" style={{ marginRight: 10 }}>
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_400Regular',
+                          fontFamily: 'Inter_400Regular',
                           color: '#FFFFFF',
                           lineHeight: 22,
                         }}
@@ -800,7 +800,7 @@ export default function SpeakScreen() {
                 <View className="flex-row items-center">
                   <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
                   <Text
-                    style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                    style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                     className="text-sm ml-2"
                   >
                     {isPaused ? 'Paused' : voiceState.isStreaming ? 'Live Transcription' : 'Recording...'}
@@ -812,7 +812,7 @@ export default function SpeakScreen() {
                 {voiceState.isStreaming ? (
                   <View className="flex-row items-center px-2 py-1 rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
                     <Radio size={10} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={{ fontFamily: 'Comfortaa_500Medium', color: '#FFFFFF', fontSize: 10, marginLeft: 4 }}>
+                    <Text style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF', fontSize: 10, marginLeft: 4 }}>
                       LIVE
                     </Text>
                   </View>
@@ -823,7 +823,7 @@ export default function SpeakScreen() {
               {voiceState.transcript && voiceState.transcript.trim().length > 0 ? (
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     color: '#FFFFFF',
                     lineHeight: 22,
                     fontSize: 14,
@@ -837,7 +837,7 @@ export default function SpeakScreen() {
               ) : (
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_400Regular',
+                    fontFamily: 'Inter_400Regular',
                     color: 'rgba(255, 255, 255, 0.7)',
                     lineHeight: 22,
                     fontSize: 13,
@@ -872,7 +872,7 @@ export default function SpeakScreen() {
               <View className="flex-row items-center mb-3">
                 <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
                 <Text
-                  style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }}
+                  style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
                   className="text-sm ml-2"
                 >
                   Your Recording
@@ -883,7 +883,7 @@ export default function SpeakScreen() {
                 {voiceState.transcript && voiceState.transcript.trim().length > 0 ? (
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_400Regular',
+                      fontFamily: 'Inter_400Regular',
                       color: '#FFFFFF',
                       lineHeight: 22,
                       fontSize: 14,
@@ -900,10 +900,10 @@ export default function SpeakScreen() {
         {/* Duration Display — shown while recording or paused */}
         {isActiveSession ? (
           <Animated.View style={{ marginTop: 16 }} className="items-center">
-            <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF' }} className="text-3xl">
+            <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }} className="text-3xl">
               {formatDuration(duration)}
               {isPaused ? (
-                <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.55)', fontSize: 18 }}> paused</Text>
+                <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.55)', fontSize: 18 }}> paused</Text>
               ) : null}
             </Text>
           </Animated.View>
@@ -956,7 +956,7 @@ export default function SpeakScreen() {
                       )}
                     </Animated.View>
                   </Pressable>
-                  <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 11 }}>
+                  <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 11 }}>
                     {isPaused ? 'Resume' : 'Pause'}
                   </Text>
                 </View>
@@ -975,7 +975,7 @@ export default function SpeakScreen() {
                       <Check size={36} color="#FFFFFF" strokeWidth={3} />
                     </LinearGradient>
                   </Pressable>
-                  <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 11 }}>
+                  <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 11 }}>
                     Save
                   </Text>
                 </View>
@@ -996,7 +996,7 @@ export default function SpeakScreen() {
                 scale={buttonScale}
               />
               <Text
-                style={{ fontFamily: 'Comfortaa_400Regular', color: isAtLimit ? 'rgba(255,120,120,0.9)' : '#FFFFFF' }}
+                style={{ fontFamily: 'Inter_400Regular', color: isAtLimit ? 'rgba(255,120,120,0.9)' : '#FFFFFF' }}
                 className="text-xs mt-3"
               >
                 {isProcessing ? 'Please wait...' : isAtLimit ? 'Monthly limit reached' : `Tap to start · ${Math.floor(remainingMinutes)} min left`}

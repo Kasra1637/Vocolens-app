@@ -208,7 +208,7 @@ export function NotificationPreferencesScreen() {
             <Animated.View entering={FadeInUp.delay(300).duration(600)} className="items-center mb-3">
               <Text
                 className="text-center mb-1"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
+                style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22, opacity: 0.92, letterSpacing: 0.2 }}
               >
                 Set your journaling time
               </Text>
@@ -243,7 +243,7 @@ export function NotificationPreferencesScreen() {
                       <BellOff size={22} color="rgba(255,255,255,0.45)" strokeWidth={2.5} />
                     )}
                     <View className="ml-3 flex-1">
-                      <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
                         {enableNotifications ? 'Reminders on' : 'Reminders off'}
                       </Text>
                       <Text style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'Inter_400Regular', fontSize: 12 }}>
@@ -285,7 +285,7 @@ export function NotificationPreferencesScreen() {
                 <Animated.View entering={FadeInDown.delay(440).duration(500)} className="mb-4">
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_700Bold',
+                      fontFamily: 'Inter_700Bold',
                       color: '#FFFFFF',
                       fontSize: 14,
                       marginBottom: 10,
@@ -390,7 +390,7 @@ export function NotificationPreferencesScreen() {
                 <Animated.View entering={FadeInDown.delay(500).duration(500)} className="mb-4">
                   <Text
                     style={{
-                      fontFamily: 'Comfortaa_700Bold',
+                      fontFamily: 'Inter_700Bold',
                       color: '#FFFFFF',
                       fontSize: 14,
                       marginBottom: 10,
@@ -418,7 +418,7 @@ export function NotificationPreferencesScreen() {
                       <Clock size={22} color="#FFFFFF" strokeWidth={2} style={{ marginRight: 12 }} />
                       <Text
                         style={{
-                          fontFamily: 'Comfortaa_700Bold',
+                          fontFamily: 'Inter_700Bold',
                           color: '#FFFFFF',
                           fontSize: 32,
                         }}
@@ -458,7 +458,7 @@ export function NotificationPreferencesScreen() {
                         color: 'rgba(255,255,255,0.85)',
                         fontFamily: 'Inter_400Regular',
                         fontSize: 12,
-                        lineHeight: 18,
+                        lineHeight: 22,
                       }}
                     >
                       Notifications will arrive at{' '}
@@ -479,7 +479,7 @@ export function NotificationPreferencesScreen() {
                 <BellOff size={56} color="rgba(255,255,255,0.25)" strokeWidth={2} />
                 <Text
                   style={{
-                    fontFamily: 'Comfortaa_600SemiBold',
+                    fontFamily: 'Inter_600SemiBold',
                     color: 'rgba(255,255,255,0.65)',
                     fontSize: 15,
                     textAlign: 'center',
@@ -532,7 +532,7 @@ export function NotificationPreferencesScreen() {
             >
               <Text
                 style={{
-                  fontFamily: 'Comfortaa_700Bold',
+                  fontFamily: 'Inter_700Bold',
                   color: '#FFFFFF',
                   fontSize: 18,
                   textAlign: 'center',

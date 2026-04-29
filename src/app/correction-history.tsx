@@ -92,7 +92,7 @@ export default function CorrectionHistoryScreen() {
         >
           <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
         </Pressable>
-        <Text style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 18 }}>
+        <Text style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 18 }}>
           My Feedback
         </Text>
         <View style={{ width: 40 }} />
@@ -118,10 +118,10 @@ export default function CorrectionHistoryScreen() {
               }}
             >
               <CheckCircle2 size={20} color="#22C55E" strokeWidth={2} />
-              <Text style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 24, marginTop: 8 }}>
+              <Text style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 24, marginTop: 8 }}>
                 {Math.round(confirmationRate * 100)}%
               </Text>
-              <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2 }}>
+              <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2 }}>
                 AI confirmation rate
               </Text>
             </View>
@@ -138,10 +138,10 @@ export default function CorrectionHistoryScreen() {
               }}
             >
               <TrendingUp size={20} color={Colors.primary} strokeWidth={2} />
-              <Text style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF', fontSize: 24, marginTop: 8 }}>
+              <Text style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 24, marginTop: 8 }}>
                 {Math.round(personalizationStrength * 100)}%
               </Text>
-              <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2 }}>
+              <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 2 }}>
                 Personalization
               </Text>
             </View>
@@ -160,19 +160,19 @@ export default function CorrectionHistoryScreen() {
                 borderColor: 'rgba(255,255,255,0.2)',
               }}
             >
-              <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: 'rgba(255,255,255,0.7)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.7)', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
                 Top pattern
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'Comfortaa_400Regular', color: '#FFFFFF', fontSize: 16, textTransform: 'capitalize' }}>
+                <Text style={{ fontFamily: 'Inter_400Regular', color: '#FFFFFF', fontSize: 16, textTransform: 'capitalize' }}>
                   {topPattern.aiLabel}
                 </Text>
                 <RefreshCw size={16} color={Colors.primary} style={{ marginHorizontal: 12 }} />
-                <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 16, textTransform: 'capitalize' }}>
+                <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 16, textTransform: 'capitalize' }}>
                   {topPattern.actualLabel}
                 </Text>
               </View>
-              <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 6 }}>
+              <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 6 }}>
                 {topPattern.occurrences} times · {Math.round(topPattern.confidence * 100)}% confidence
               </Text>
             </View>
@@ -181,13 +181,13 @@ export default function CorrectionHistoryScreen() {
 
         {/* Recent Corrections List */}
         <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-          <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 16, marginBottom: 12 }}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 16, marginBottom: 12 }}>
             Recent feedback
           </Text>
 
           {corrections.length === 0 ? (
             <View style={{ backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 24, alignItems: 'center' }}>
-              <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center' }}>
+              <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center' }}>
                 No feedback yet. Confirm or adjust emotions after recording to build your personalized model.
               </Text>
             </View>
@@ -213,21 +213,21 @@ export default function CorrectionHistoryScreen() {
                       ) : (
                         <RefreshCw size={14} color="#EAB308" />
                       )}
-                      <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 13, marginLeft: 6, textTransform: 'capitalize' }}>
+                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 13, marginLeft: 6, textTransform: 'capitalize' }}>
                         {isConfirmation ? 'Confirmed' : 'Adjusted'} {c.aiEmotion}
                       </Text>
                     </View>
-                    <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
+                    <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
                       {formatDate(c.timestamp)}
                     </Text>
                   </View>
                   {!isConfirmation && (
-                    <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 4 }}>
+                    <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 4 }}>
                       → {c.userEmotion} · V: {c.aiValence}→{c.userValence} · A: {c.aiArousal}→{c.userArousal}
                     </Text>
                   )}
                   {c.reason && (
-                    <Text style={{ fontFamily: 'Comfortaa_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4, fontStyle: 'italic' }}>
+                    <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4, fontStyle: 'italic' }}>
                       "{c.reason}"
                     </Text>
                   )}
@@ -254,7 +254,7 @@ export default function CorrectionHistoryScreen() {
               }}
             >
               <Download size={16} color="#FFFFFF" />
-              <Text style={{ fontFamily: 'Comfortaa_600SemiBold', color: '#FFFFFF', fontSize: 14, marginLeft: 8 }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 14, marginLeft: 8 }}>
                 Export feedback as CSV
               </Text>
             </Pressable>

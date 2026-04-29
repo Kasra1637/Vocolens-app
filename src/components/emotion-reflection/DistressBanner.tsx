@@ -28,7 +28,7 @@ export default function DistressBanner({
           {isHigh ? 'Your distress level seems high' : 'You seem moderately distressed'}
         </Text>
       </View>
-      <Text style={{ fontSize: 14, color: isHigh ? '#991B1B' : '#92400E', lineHeight: 20, marginBottom: 12 }}>
+      <Text style={{ fontSize: 14, color: isHigh ? '#991B1B' : '#92400E', lineHeight: 22, marginBottom: 12 }}>
         {isHigh
           ? 'It might help to pause and ground yourself before saving. You are not alone in this.'
           : 'Taking a moment to breathe can help. Would you like to try a grounding exercise?'}

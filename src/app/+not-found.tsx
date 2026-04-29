@@ -6,7 +6,7 @@ export default function NotFoundScreen() {
     <>
       <Stack.Screen options={{ title: 'Oops!' }} />
       <View className="flex-1 items-center justify-center bg-white p-5 dark:bg-black">
-        <Text className="text-xl font-bold text-black dark:text-white" style={{ fontFamily: 'Comfortaa_700Bold' }}>
+        <Text className="text-xl font-bold text-black dark:text-white" style={{ fontFamily: 'Inter_700Bold' }}>
           This screen doesn't exist.
         </Text>
 

@@ -47,7 +47,7 @@ export default function GroundingToolsModal({ visible, onDismiss }: Props) {
           <ToolContent tool={activeTool} onDone={() => { tapHaptic(); onDismiss(); }} />
         ) : (
           <ScrollView contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-            <Text style={{ fontSize: 14, color: '#6B7280', lineHeight: 20, marginBottom: 20 }}>
+            <Text style={{ fontSize: 14, color: '#6B7280', lineHeight: 22, marginBottom: 20 }}>
               These exercises help bring your attention back to the present moment. Choose one that feels right right now.
             </Text>
 
@@ -94,7 +94,7 @@ function ToolCard({ icon, title, description, color, onPress }: { icon: React.Re
       <View style={{ marginRight: 16 }}>{icon}</View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 16, fontWeight: '700', color: '#1F2937', marginBottom: 4 }}>{title}</Text>
-        <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 18 }}>{description}</Text>
+        <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 22 }}>{description}</Text>
       </View>
       <ChevronRight size={20} color="#9CA3AF" />
     </Pressable>

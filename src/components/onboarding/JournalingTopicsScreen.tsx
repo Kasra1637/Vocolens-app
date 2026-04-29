@@ -112,7 +112,7 @@ export function JournalingTopicsScreen() {
             >
               <Text
                 className="text-2xl font-bold text-center mb-1"
-                style={{ fontFamily: 'Comfortaa_700Bold', color: '#FFFFFF' }}
+                style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
               >
                 What topics do you most enjoy journaling about?
               </Text>
@@ -171,7 +171,7 @@ export function JournalingTopicsScreen() {
                           <View className="flex-1">
                             <Text
                               style={{
-                                fontFamily: 'Comfortaa_600SemiBold',
+                                fontFamily: 'Inter_600SemiBold',
                                 color: '#FFFFFF',
                                 fontSize: 15
                               }}

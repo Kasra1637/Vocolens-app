@@ -137,7 +137,7 @@ export function AccountPreparationScreen() {
               <Text
                 style={{
                   color: '#FFFFFF',
-                  fontFamily: 'Comfortaa_700Bold',
+                  fontFamily: 'Inter_700Bold',
                   fontSize: 24,
                   textAlign: 'center',
                   marginBottom: 10,
@@ -160,7 +160,7 @@ export function AccountPreparationScreen() {
                 <Text
                   style={{
                     color: '#FFFFFF',
-                    fontFamily: 'Comfortaa_700Bold',
+                    fontFamily: 'Inter_700Bold',
                     fontSize: 36,
                     lineHeight: 42,
                     letterSpacing: -1,
@@ -271,7 +271,7 @@ export function AccountPreparationScreen() {
                   fontFamily: 'Inter_400Regular',
                   fontSize: 13,
                   textAlign: 'center',
-                  lineHeight: 20,
+                  lineHeight: 22,
                 }}
               >
                 We use the scientifically validated{' '}
