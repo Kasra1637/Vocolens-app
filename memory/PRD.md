@@ -45,6 +45,12 @@ Add an option to reset all app data and start from scratch. Adds a "Danger Zone"
   - Increased touch targets on dropdowns, filters, radio buttons (py-3 minimum)
   - Font colors kept unchanged as requested
 
+- **Jan 2026**: Settings restructure
+  - Removed standalone "Danger Zone" section
+  - Removed "Privacy Settings" link (Export data, manage entries & account)
+  - Moved Export All Data + Reset All Data into the Privacy & Security card
+  - Privacy & Security now contains: Change PIN, Privacy Policy & Terms, Export All Data, Reset All Data
+
 ## Prioritized Backlog
 - P0: None
 - P1: None
