@@ -30,10 +30,17 @@ Add an option to reset all app data and start from scratch. Adds a "Danger Zone"
   - Redirects to onboarding screen after reset
   - All data-testid attributes added for testing
 
+- **Jan 2026**: "Export All Data" feature
+  - CSV export of all app data (journal entries, stats, badges, settings, emotion corrections)
+  - Uses expo-file-system + expo-sharing for native file write and share sheet
+  - "Export as CSV" button in Danger Zone section, above Reset button with divider separator
+  - Loading state with "Exporting..." feedback
+  - New utility: `/app/src/lib/export-data.ts`
+
 ## Prioritized Backlog
 - P0: None
 - P1: None
-- P2: Data export before reset option
+- P2: CSV re-import functionality
 
 ## Next Tasks
 - None pending
