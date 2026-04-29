@@ -28,6 +28,7 @@ import {
   BarChart3,
   AlertTriangle,
   Trash2,
+  Download,
 } from 'lucide-react-native';
 import Animated from 'react-native-reanimated';
 import { selectHaptic, tapHaptic, confirmHaptic, warningHaptic } from '@/lib/haptics';
@@ -47,6 +48,7 @@ import usePinStore from '@/lib/state/pin-store';
 import { useEmotionCorrectionStore } from '@/lib/state/emotion-correction-store';
 import useSubscriptionStore from '@/lib/state/subscription-store';
 import { removePin } from '@/lib/auth-service';
+import { exportAllDataAsCsv } from '@/lib/export-data';
 
 export default function SettingsScreen() {
   const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
@@ -60,6 +62,7 @@ export default function SettingsScreen() {
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   // Onboarding Store (for theme and notification time)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const setSelectedTheme = useOnboardingStore((s) => s.setSelectedTheme);
@@ -206,6 +209,18 @@ export default function SettingsScreen() {
     setSignOutModalVisible(false);
   };
 
+
+  const handleExportData = async () => {
+    tapHaptic();
+    setIsExporting(true);
+    try {
+      await exportAllDataAsCsv();
+    } catch {
+      showAlert('error', 'Export Failed', 'Could not export your data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleResetAllData = () => {
     warningHaptic();
@@ -799,6 +814,64 @@ export default function SettingsScreen() {
                 }}
               >
                 <View className="p-5">
+                  {/* Export Data */}
+                  <Text
+                    style={{
+                      fontFamily: 'Comfortaa_600SemiBold',
+                      color: '#FFFFFF',
+                      fontSize: 15,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Export All Data
+                  </Text>
+                  <Text
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      fontSize: 13,
+                      marginBottom: 14,
+                      lineHeight: 19,
+                    }}
+                  >
+                    Download a CSV backup of your journal entries, stats, badges, and settings.
+                  </Text>
+                  <Pressable
+                    data-testid="export-data-button"
+                    onPress={handleExportData}
+                    disabled={isExporting}
+                    className="rounded-2xl overflow-hidden active:opacity-80 mb-5"
+                    style={{ opacity: isExporting ? 0.6 : 1 }}
+                  >
+                    <View
+                      style={{
+                        paddingVertical: 14,
+                        paddingHorizontal: 24,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.25)',
+                        borderRadius: 16,
+                      }}
+                    >
+                      <Download size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                      <Text
+                        style={{
+                          fontFamily: 'Comfortaa_700Bold',
+                          color: '#FFFFFF',
+                          fontSize: 15,
+                        }}
+                      >
+                        {isExporting ? 'Exporting...' : 'Export as CSV'}
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  {/* Divider */}
+                  <View style={{ height: 1, backgroundColor: 'rgba(239, 68, 68, 0.2)', marginBottom: 16 }} />
+
+                  {/* Reset All Data */}
                   <Text
                     style={{
                       fontFamily: 'Comfortaa_600SemiBold',
