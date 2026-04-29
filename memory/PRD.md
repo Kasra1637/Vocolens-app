@@ -51,6 +51,10 @@ Add an option to reset all app data and start from scratch. Adds a "Danger Zone"
   - Moved Export All Data + Reset All Data into the Privacy & Security card
   - Privacy & Security now contains: Change PIN, Privacy Policy & Terms, Export All Data, Reset All Data
 
+- **Jan 2026**: Tab bar blend
+  - Removed border radius and shadow from bottom tab bar
+  - Background uses `backgroundGradient[2]` (darkest gradient stop) for seamless blend with screen gradient
+
 ## Prioritized Backlog
 - P0: None
 - P1: None
