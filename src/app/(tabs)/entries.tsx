@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, TextInput, Platform } from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Platform, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -21,17 +21,19 @@ import {
   BookOpen,
   Activity,
   Mic,
+  ChevronUp,
 } from 'lucide-react-native';
 import Animated, {
   FadeOut,
+  FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { tapHaptic, selectHaptic } from '@/lib/haptics';
+import { tapHaptic, selectHaptic, warningHaptic, confirmHaptic } from '@/lib/haptics';
 import { getThemeColors, getThemeGradients, getThemeShadows } from '@/lib/theme';
 import useJournalStore from '@/lib/state/journal-store';
-import useOnboardingStore from '@/lib/state/onboarding-store';
+import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 import useSettingsStore from '@/lib/state/settings-store';
 import { useDeleteEntry } from '@/lib/hooks';
 import { useClickSound } from '@/lib/hooks/useClickSound';
@@ -75,6 +77,8 @@ export default function EntriesScreen() {
   const [selectedEmotions, setSelectedEmotions] = useState<DisplayEmotion[]>([]);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showEmotionDropdown, setShowEmotionDropdown] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
 
   // Get selected theme and dark mode
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
@@ -145,14 +149,28 @@ export default function EntriesScreen() {
     [router, playClickSound]
   );
 
-  const handleDeleteEntry = useCallback(
+  const handleDeleteRequest = useCallback(
     (entryId: string) => {
-      playClickSound();
-      selectHaptic();
-      deleteEntryMutation.mutate(entryId);
+      warningHaptic();
+      setEntryToDelete(entryId);
+      setDeleteModalVisible(true);
     },
-    [deleteEntryMutation, playClickSound]
+    []
   );
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!entryToDelete) return;
+    confirmHaptic();
+    deleteEntryMutation.mutate(entryToDelete);
+    setDeleteModalVisible(false);
+    setEntryToDelete(null);
+  }, [entryToDelete, deleteEntryMutation]);
+
+  const handleDeleteCancel = useCallback(() => {
+    tapHaptic();
+    setDeleteModalVisible(false);
+    setEntryToDelete(null);
+  }, []);
 
   if (!fontsLoaded) {
     return (
@@ -396,7 +414,7 @@ export default function EntriesScreen() {
             <EntryCard
               entry={entry}
               onPress={() => handleEntryPress(entry)}
-              onDelete={() => handleDeleteEntry(entry.id)}
+              onDelete={() => handleDeleteRequest(entry.id)}
               surfaceElevatedColor={Colors.surfaceElevated}
               primaryColor={Colors.primary}
               isDarkMode={isDarkMode}
@@ -426,6 +444,89 @@ export default function EntriesScreen() {
           </Animated.View>
         )}
       </ScrollView>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={deleteModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={handleDeleteCancel}
+      >
+        <View className="flex-1 bg-black/60 items-center justify-center px-6">
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            className="rounded-3xl overflow-hidden w-full max-w-sm"
+          >
+            <LinearGradient
+              colors={Gradients.background}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={{ padding: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+            >
+              <View className="items-center mb-4">
+                <View
+                  className="w-16 h-16 rounded-full items-center justify-center mb-4"
+                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
+                >
+                  <Trash2 size={32} color="#EF4444" strokeWidth={2} />
+                </View>
+                <Text
+                  className="text-2xl font-bold mb-2 text-center"
+                  style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
+                >
+                  Delete Entry?
+                </Text>
+                <Text
+                  className="text-center text-base"
+                  style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)', lineHeight: 22 }}
+                >
+                  This will permanently delete this journal entry. This action cannot be undone.
+                </Text>
+              </View>
+
+              <View style={{ gap: 12 }}>
+                <Pressable
+                  data-testid="confirm-delete-entry-button"
+                  onPress={handleDeleteConfirm}
+                  className="rounded-2xl overflow-hidden"
+                >
+                  <LinearGradient
+                    colors={['#EF4444', '#DC2626']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ padding: 16, alignItems: 'center' }}
+                  >
+                    <Text
+                      className="text-white text-base font-bold"
+                      style={{ fontFamily: 'Inter_700Bold' }}
+                    >
+                      Delete Entry
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
+
+                <Pressable
+                  data-testid="cancel-delete-entry-button"
+                  onPress={handleDeleteCancel}
+                  className="rounded-2xl py-4 items-center"
+                  style={{
+                    borderWidth: 2,
+                    borderColor: Colors.primary,
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  <Text
+                    className="text-base font-bold"
+                    style={{ fontFamily: 'Inter_700Bold', color: Colors.primary }}
+                  >
+                    Cancel
+                  </Text>
+                </Pressable>
+              </View>
+            </LinearGradient>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -441,11 +542,7 @@ interface EntryCardProps {
 
 function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColor, isDarkMode = false }: EntryCardProps) {
   const scale = useSharedValue(1);
-
-  // Log entry audioUri for debugging
-  React.useEffect(() => {
-    console.log('[EntryCard] Entry ID:', entry.id, 'audioUri:', entry.audioUri);
-  }, [entry.id, entry.audioUri]);
+  const [transcriptExpanded, setTranscriptExpanded] = useState(false);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -458,6 +555,22 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
   const handlePressOut = () => {
     scale.value = withSpring(1);
   };
+
+  // Dynamic title: use entry.title if meaningful, else generate from transcript
+  const displayTitle = useMemo(() => {
+    const title = entry.title;
+    // If title looks auto-generated/generic (e.g., "Journal Entry", "Untitled", empty, or just a date)
+    if (!title || title.trim().length === 0 || /^(journal entry|untitled|entry|new entry)/i.test(title.trim())) {
+      // Generate from first meaningful sentence of transcript
+      const transcript = entry.transcript || '';
+      const firstSentence = transcript.split(/[.!?\n]/)[0]?.trim() || '';
+      if (firstSentence.length > 0) {
+        return firstSentence.length > 50 ? firstSentence.slice(0, 50).trim() + '...' : firstSentence;
+      }
+      return 'Journal Entry';
+    }
+    return title;
+  }, [entry.title, entry.transcript]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -507,7 +620,7 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
                   className="text-lg flex-1"
                   numberOfLines={1}
                 >
-                  {entry.title}
+                  {displayTitle}
                 </Text>
                 {entry.audioUri && (
                   <View
@@ -596,14 +709,28 @@ function EntryCard({ entry, onPress, onDelete, surfaceElevatedColor, primaryColo
             </View>
           )}
 
-          {/* Transcript Preview */}
-          <Text
-            style={{ fontFamily: 'Inter_400Regular', color: '#FFFFFF', lineHeight: 22 }}
-            className="text-sm mb-3"
-            numberOfLines={3}
-          >
-            {entry.transcript}
-          </Text>
+          {/* Transcript Preview — Collapsible */}
+          <View className="mb-3">
+            <Text
+              style={{ fontFamily: 'Inter_400Regular', color: '#FFFFFF', lineHeight: 22 }}
+              className="text-sm"
+              numberOfLines={transcriptExpanded ? undefined : 2}
+            >
+              {entry.transcript}
+            </Text>
+            {entry.transcript && entry.transcript.length > 100 && (
+              <Pressable
+                onPress={() => { tapHaptic(); setTranscriptExpanded(!transcriptExpanded); }}
+                className="mt-1"
+              >
+                <Text
+                  style={{ fontFamily: 'Inter_500Medium', color: primaryColor, fontSize: 13 }}
+                >
+                  {transcriptExpanded ? 'Show less' : 'Read more'}
+                </Text>
+              </Pressable>
+            )}
+          </View>
 
           {/* Topics */}
           {entry.topics && entry.topics.length > 0 && entry.topics.some(t => t && t.trim().length > 0) && (

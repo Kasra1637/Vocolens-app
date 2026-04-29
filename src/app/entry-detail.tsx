@@ -71,8 +71,10 @@ export default function EntryDetailScreen() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedTranscript, setEditedTranscript] = useState('');
+  const [editedTitle, setEditedTitle] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [expandedSection, setExpandedSection] = useState<'emotions' | 'analysis' | 'reflection' | null>('emotions');
+  const [transcriptExpanded, setTranscriptExpanded] = useState(false);
   const [barContainerWidth, setBarContainerWidth] = useState(0);
   const onBarContainerLayout = useCallback((e: LayoutChangeEvent) => {
     setBarContainerWidth(e.nativeEvent.layout.width);
@@ -116,20 +118,23 @@ export default function EntryDetailScreen() {
     selectHaptic();
     setIsEditing(true);
     setEditedTranscript(entry.transcript);
+    setEditedTitle(entry.title);
   };
 
   const handleSave = () => {
     if (!entry) return;
     successHaptic();
-    updateEntry(entry.id, { transcript: editedTranscript });
+    updateEntry(entry.id, { transcript: editedTranscript, title: editedTitle });
     setIsEditing(false);
     setEditedTranscript('');
+    setEditedTitle('');
   };
 
   const handleCancelEdit = () => {
     tapHaptic();
     setIsEditing(false);
     setEditedTranscript('');
+    setEditedTitle('');
   };
 
   const handleDeletePress = () => {
@@ -273,16 +278,16 @@ export default function EntryDetailScreen() {
               <Pressable
                 onPress={handleCancelEdit}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
               >
-                <X size={18} color="#EF4444" strokeWidth={2.5} />
+                <X size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
               <Pressable
                 onPress={handleSave}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
               >
-                <Save size={18} color="#22C55E" strokeWidth={2.5} />
+                <Save size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
             </>
           )}
@@ -299,12 +304,32 @@ export default function EntryDetailScreen() {
       >
         {/* Entry Header */}
         <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-          <Text
-            style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
-            className="text-2xl mb-2"
-          >
-            {entry.title}
-          </Text>
+          {isEditing ? (
+            <TextInput
+              value={editedTitle}
+              onChangeText={setEditedTitle}
+              style={{
+                fontFamily: 'Inter_700Bold',
+                color: '#FFFFFF',
+                fontSize: 24,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 12,
+                padding: 12,
+                marginBottom: 8,
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.25)',
+              }}
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+              placeholder="Entry title..."
+            />
+          ) : (
+            <Text
+              style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
+              className="text-2xl mb-2"
+            >
+              {entry.title}
+            </Text>
+          )}
           <Text
             style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
             className="text-sm mb-4"
@@ -516,16 +541,36 @@ export default function EntryDetailScreen() {
                   placeholderTextColor="rgba(255, 255, 255, 0.5)"
                 />
               ) : (
-                <Text
-                  style={{
-                    fontFamily: 'Inter_400Regular',
-                    lineHeight: 24,
-                    color: 'rgba(255, 255, 255, 0.95)',
-                  }}
-                  className="text-sm"
-                >
-                  {entry.transcript}
-                </Text>
+                <View>
+                  <Text
+                    style={{
+                      fontFamily: 'Inter_400Regular',
+                      lineHeight: 24,
+                      color: 'rgba(255, 255, 255, 0.95)',
+                    }}
+                    className="text-sm"
+                    numberOfLines={transcriptExpanded ? undefined : 2}
+                  >
+                    {entry.transcript}
+                  </Text>
+                  {entry.transcript && entry.transcript.length > 120 && (
+                    <Pressable
+                      onPress={() => { tapHaptic(); setTranscriptExpanded(!transcriptExpanded); }}
+                      className="flex-row items-center mt-2"
+                    >
+                      {transcriptExpanded ? (
+                        <ChevronUp size={14} color={Colors.primary} strokeWidth={2} />
+                      ) : (
+                        <ChevronDown size={14} color={Colors.primary} strokeWidth={2} />
+                      )}
+                      <Text
+                        style={{ fontFamily: 'Inter_500Medium', color: Colors.primary, fontSize: 13, marginLeft: 4 }}
+                      >
+                        {transcriptExpanded ? 'Show less' : 'Read more'}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
               )}
             </View>
           </View>
@@ -1210,78 +1255,73 @@ export default function EntryDetailScreen() {
         <View className="flex-1 bg-black/60 items-center justify-center px-6">
           <Animated.View
             entering={FadeIn.duration(200)}
-            className="rounded-3xl p-6 w-full max-w-sm"
-            style={{
-              backgroundColor: isDarkMode ? '#1A1229' : '#FFFFFF',
-              ...Shadows.large,
-            }}
+            className="rounded-3xl overflow-hidden w-full max-w-sm"
           >
-            <View className="items-center mb-4">
-              <View
-                className="w-16 h-16 rounded-full items-center justify-center mb-4"
-                style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
-              >
-                <Trash2 size={32} color="#EF4444" strokeWidth={2} />
-              </View>
-              <Text
-                className="text-2xl font-bold mb-2 text-center"
-                style={{
-                  fontFamily: 'Inter_700Bold',
-                  color: isDarkMode ? '#FFFFFF' : '#1A1229',
-                }}
-              >
-                Delete Entry?
-              </Text>
-              <Text
-                className="text-center text-base"
-                style={{
-                  fontFamily: 'Inter_400Regular',
-                  color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(26, 18, 41, 0.7)',
-                }}
-              >
-                This will permanently delete this journal entry. This action cannot be undone.
-              </Text>
-            </View>
-
-            <View style={{ gap: 12 }}>
-              <Pressable
-                onPress={handleDeleteConfirm}
-                className="rounded-2xl overflow-hidden"
-              >
-                <LinearGradient
-                  colors={['#EF4444', '#DC2626']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ padding: 16, alignItems: 'center' }}
+            <LinearGradient
+              colors={Gradients.background}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={{ padding: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+            >
+              <View className="items-center mb-4">
+                <View
+                  className="w-16 h-16 rounded-full items-center justify-center mb-4"
+                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
                 >
-                  <Text
-                    className="text-white text-base font-bold"
-                    style={{ fontFamily: 'Inter_700Bold' }}
-                  >
-                    Delete Entry
-                  </Text>
-                </LinearGradient>
-              </Pressable>
-
-              <Pressable
-                onPress={handleDeleteCancel}
-                className="rounded-2xl py-4 items-center"
-                style={{
-                  borderWidth: 2,
-                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.3)' : Colors.primary,
-                }}
-              >
+                  <Trash2 size={32} color="#EF4444" strokeWidth={2} />
+                </View>
                 <Text
-                  className="text-base font-bold"
+                  className="text-2xl font-bold mb-2 text-center"
+                  style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
+                >
+                  Delete Entry?
+                </Text>
+                <Text
+                  className="text-center text-base"
+                  style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)', lineHeight: 22 }}
+                >
+                  This will permanently delete this journal entry. This action cannot be undone.
+                </Text>
+              </View>
+
+              <View style={{ gap: 12 }}>
+                <Pressable
+                  onPress={handleDeleteConfirm}
+                  className="rounded-2xl overflow-hidden"
+                >
+                  <LinearGradient
+                    colors={['#EF4444', '#DC2626']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ padding: 16, alignItems: 'center' }}
+                  >
+                    <Text
+                      className="text-white text-base font-bold"
+                      style={{ fontFamily: 'Inter_700Bold' }}
+                    >
+                      Delete Entry
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
+
+                <Pressable
+                  onPress={handleDeleteCancel}
+                  className="rounded-2xl py-4 items-center"
                   style={{
-                    fontFamily: 'Inter_700Bold',
-                    color: isDarkMode ? '#FFFFFF' : Colors.primary,
+                    borderWidth: 2,
+                    borderColor: Colors.primary,
+                    backgroundColor: 'transparent',
                   }}
                 >
-                  Cancel
-                </Text>
-              </Pressable>
-            </View>
+                  <Text
+                    className="text-base font-bold"
+                    style={{ fontFamily: 'Inter_700Bold', color: Colors.primary }}
+                  >
+                    Cancel
+                  </Text>
+                </Pressable>
+              </View>
+            </LinearGradient>
           </Animated.View>
         </View>
       </Modal>
