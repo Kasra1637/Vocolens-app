@@ -37,6 +37,14 @@ Add an option to reset all app data and start from scratch. Adds a "Danger Zone"
   - Loading state with "Exporting..." feedback
   - New utility: `/app/src/lib/export-data.ts`
 
+- **Jan 2026**: Font migration & readability improvements
+  - Replaced Comfortaa with Inter font family across all 41 files
+  - Installed `@expo-google-fonts/inter` (v0.4.2)
+  - Standardized typography: headings 22px Bold, body 15px Regular, labels 12px Medium
+  - Improved line heights (body text now 22px+, labels 18-20px)
+  - Increased touch targets on dropdowns, filters, radio buttons (py-3 minimum)
+  - Font colors kept unchanged as requested
+
 ## Prioritized Backlog
 - P0: None
 - P1: None

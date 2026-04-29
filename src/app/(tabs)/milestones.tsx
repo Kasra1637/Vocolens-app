@@ -463,7 +463,7 @@ function CategoryDropdown({
               <Pressable
                 key={option.value}
                 onPress={() => onSelect(option.value)}
-                className="px-3 py-2.5"
+                className="px-3 py-3"
                 style={{
                   backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
                   borderBottomWidth: 1,

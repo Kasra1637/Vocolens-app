@@ -702,7 +702,7 @@ export default function SpeakScreen() {
                       tapHaptic();
                       setShowTopicDropdown(!showTopicDropdown);
                     }}
-                    className="flex-row items-center rounded-full px-3 py-2"
+                    className="flex-row items-center rounded-full px-3 py-2.5"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
                   >
                     <Text
