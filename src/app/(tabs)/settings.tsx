@@ -215,6 +215,9 @@ export default function SettingsScreen() {
     confirmHaptic();
     setResetModalVisible(false);
 
+    // Mark PIN as verified so the gate doesn't block during the reset transition
+    usePinStore.getState().setPinVerified(true);
+
     // Reset all stores
     useJournalStore.getState().clearAllEntries();
     useBadgesStore.getState().resetBadges();
