@@ -110,8 +110,7 @@ export async function secureRemoveItem(key: string): Promise<void> {
     await SecureStore.deleteItemAsync(key);
   } catch (error) {
     console.error('Secure removal error:', error);
-    // Don't throw - allow the reset flow to continue even if storage fails
-    // Logging is sufficient for debugging
+    throw new Error('Failed to remove secure data');
   }
 }
 
