@@ -7,27 +7,25 @@ import {
   TopicCategory,
   generateId,
   buildIntensityLabels,
-} from './types';
-import useJournalStore from './state/journal-store';
-import useUserStatsStore from './state/user-stats-store';
-import useBadgesStore from './state/badges-store';
+} from "./types";
+import useJournalStore from "./state/journal-store";
+import useUserStatsStore from "./state/user-stats-store";
+import useBadgesStore from "./state/badges-store";
 import {
   countEntriesByTimeOfDay,
   countPositiveEntries,
   countNeutralEntries,
   getUniqueEmotions,
   getLongestSessionDuration,
-} from './analytics';
+} from "./analytics";
 import {
   transcribeAudioWithRetry,
   isDeepgramConfigured,
-} from './api/deepgram-service';
-import {
-  analyzeWithOpenRouter,
-} from './api/openrouter-service';
-import * as FileSystem from 'expo-file-system';
-import { recordSessionUsage } from './api/usage-service';
-import { buildPersonalizationPrompt } from './personalization';
+} from "./api/deepgram-service";
+import { analyzeWithOpenRouter } from "./api/openrouter-service";
+import * as FileSystem from "expo-file-system";
+import { recordSessionUsage } from "./api/usage-service";
+import { buildPersonalizationPrompt } from "./personalization";
 
 /**
  * Analyze transcript for emotional content
@@ -37,7 +35,7 @@ import { buildPersonalizationPrompt } from './personalization';
 export async function analyzeTranscript(
   transcript: string,
   audioBase64?: string,
-  personalizationContext?: string
+  personalizationContext?: string,
 ): Promise<{
   emotions: EmotionType[];
   primaryEmotion: EmotionType;
@@ -50,18 +48,24 @@ export async function analyzeTranscript(
   valence: number;
   arousal: number;
   suggestedBodySensations: string[];
-  distressLevel: 'low' | 'moderate' | 'high';
+  distressLevel: "low" | "moderate" | "high";
 }> {
   // Ensure we have a transcript
   if (!transcript || transcript.trim().length === 0) {
-    console.warn('Empty transcript, using default local analysis');
-    return analyzeTranscriptLocal('reflection');
+    console.warn("Empty transcript, using default local analysis");
+    return analyzeTranscriptLocal("reflection");
   }
 
   // Try OpenRouter backend first (GPT-4o audio model — prosody + content analysis)
   try {
-    console.log('Using GPT-4o audio model for emotional analysis (prosody + content)...');
-    const result = await analyzeWithOpenRouter(transcript, audioBase64, personalizationContext);
+    console.log(
+      "Using GPT-4o audio model for emotional analysis (prosody + content)...",
+    );
+    const result = await analyzeWithOpenRouter(
+      transcript,
+      audioBase64,
+      personalizationContext,
+    );
     return {
       emotions: result.emotions,
       primaryEmotion: result.primaryEmotion,
@@ -74,29 +78,41 @@ export async function analyzeTranscript(
       valence: result.valence ?? 0,
       arousal: result.arousal ?? 50,
       suggestedBodySensations: result.suggestedBodySensations ?? [],
-      distressLevel: result.distressLevel ?? 'low',
+      distressLevel: result.distressLevel ?? "low",
     };
   } catch (error) {
-    console.warn('OpenRouter analysis failed, falling back to local analysis:', error);
+    console.warn(
+      "OpenRouter analysis failed, falling back to local analysis:",
+      error,
+    );
   }
 
   // Local keyword-based analysis (final fallback - always succeeds)
   try {
-    console.log('Using local keyword analysis (fallback)...');
+    console.log("Using local keyword analysis (fallback)...");
     return analyzeTranscriptLocal(transcript);
   } catch (error) {
-    console.error('Local analysis failed, using safe defaults:', error);
+    console.error("Local analysis failed, using safe defaults:", error);
     return {
-      emotions: ['happiness'],
-      primaryEmotion: 'happiness',
+      emotions: ["happiness"],
+      primaryEmotion: "happiness",
       emotionIntensity: 50,
-      emotionScores: { happiness: 50, sadness: 0, anger: 0, disgust: 0, fear: 0, surprise: 0, trust: 30, anticipation: 20 },
-      topics: ['reflection'],
-      analysis: 'Your journal entry has been recorded.',
+      emotionScores: {
+        happiness: 50,
+        sadness: 0,
+        anger: 0,
+        disgust: 0,
+        fear: 0,
+        surprise: 0,
+        trust: 30,
+        anticipation: 20,
+      },
+      topics: ["reflection"],
+      analysis: "Your journal entry has been recorded.",
       valence: 25,
       arousal: 40,
       suggestedBodySensations: [],
-      distressLevel: 'low',
+      distressLevel: "low",
     };
   }
 }
@@ -116,38 +132,176 @@ function analyzeTranscriptLocal(transcript: string): {
   valence: number;
   arousal: number;
   suggestedBodySensations: string[];
-  distressLevel: 'low' | 'moderate' | 'high';
+  distressLevel: "low" | "moderate" | "high";
 } {
   const lowerTranscript = transcript.toLowerCase();
 
   // Weighted keyword matching — score each emotion 0-100 based on keyword hits
   const emotionKeywords: Record<EmotionType, string[]> = {
-    happiness: ['happy', 'joy', 'joyful', 'delighted', 'pleased', 'content', 'cheerful', 'glad', 'wonderful', 'amazing', 'great', 'fantastic', 'blessed', 'grateful', 'excited', 'love', 'beautiful', 'good', 'positive'],
-    sadness: ['sad', 'unhappy', 'down', 'depressed', 'miserable', 'heartbroken', 'grief', 'mourning', 'disappointed', 'lonely', 'melancholy', 'blue', 'sorrow', 'cry', 'miss', 'lost', 'hurt', 'pain'],
-    anger: ['angry', 'mad', 'furious', 'annoyed', 'frustrated', 'irritated', 'rage', 'outraged', 'resentful', 'hostile', 'bitter', 'hate', 'unfair', 'wrong', 'terrible'],
-    disgust: ['disgusted', 'repulsed', 'sick', 'revolted', 'appalled', 'gross', 'unpleasant', 'offensive', 'distasteful', 'horrible', 'awful', 'nasty'],
-    fear: ['afraid', 'scared', 'worried', 'anxious', 'nervous', 'terrified', 'frightened', 'panicked', 'uneasy', 'dread', 'concern', 'stress', 'overwhelmed', 'uncertain', 'insecure', 'threat'],
-    surprise: ['surprised', 'amazed', 'shocked', 'unexpected', 'astonished', 'startled', 'stunned', 'wow', 'incredible', 'unbelievable', 'sudden', 'discovered', 'realized'],
-    trust: ['trust', 'believe', 'faith', 'confident', 'secure', 'reliable', 'dependable', 'safe', 'comfortable', 'acceptance', 'assured', 'certain', 'hope', 'support'],
-    anticipation: ['excited', 'looking forward', 'anticipate', 'expect', 'eager', 'hopeful', 'optimistic', 'ready', 'prepared', 'enthusiastic', "can't wait", 'plan', 'future', 'goal', 'dream'],
+    happiness: [
+      "happy",
+      "joy",
+      "joyful",
+      "delighted",
+      "pleased",
+      "content",
+      "cheerful",
+      "glad",
+      "wonderful",
+      "amazing",
+      "great",
+      "fantastic",
+      "blessed",
+      "grateful",
+      "excited",
+      "love",
+      "beautiful",
+      "good",
+      "positive",
+    ],
+    sadness: [
+      "sad",
+      "unhappy",
+      "down",
+      "depressed",
+      "miserable",
+      "heartbroken",
+      "grief",
+      "mourning",
+      "disappointed",
+      "lonely",
+      "melancholy",
+      "blue",
+      "sorrow",
+      "cry",
+      "miss",
+      "lost",
+      "hurt",
+      "pain",
+    ],
+    anger: [
+      "angry",
+      "mad",
+      "furious",
+      "annoyed",
+      "frustrated",
+      "irritated",
+      "rage",
+      "outraged",
+      "resentful",
+      "hostile",
+      "bitter",
+      "hate",
+      "unfair",
+      "wrong",
+      "terrible",
+    ],
+    disgust: [
+      "disgusted",
+      "repulsed",
+      "sick",
+      "revolted",
+      "appalled",
+      "gross",
+      "unpleasant",
+      "offensive",
+      "distasteful",
+      "horrible",
+      "awful",
+      "nasty",
+    ],
+    fear: [
+      "afraid",
+      "scared",
+      "worried",
+      "anxious",
+      "nervous",
+      "terrified",
+      "frightened",
+      "panicked",
+      "uneasy",
+      "dread",
+      "concern",
+      "stress",
+      "overwhelmed",
+      "uncertain",
+      "insecure",
+      "threat",
+    ],
+    surprise: [
+      "surprised",
+      "amazed",
+      "shocked",
+      "unexpected",
+      "astonished",
+      "startled",
+      "stunned",
+      "wow",
+      "incredible",
+      "unbelievable",
+      "sudden",
+      "discovered",
+      "realized",
+    ],
+    trust: [
+      "trust",
+      "believe",
+      "faith",
+      "confident",
+      "secure",
+      "reliable",
+      "dependable",
+      "safe",
+      "comfortable",
+      "acceptance",
+      "assured",
+      "certain",
+      "hope",
+      "support",
+    ],
+    anticipation: [
+      "excited",
+      "looking forward",
+      "anticipate",
+      "expect",
+      "eager",
+      "hopeful",
+      "optimistic",
+      "ready",
+      "prepared",
+      "enthusiastic",
+      "can't wait",
+      "plan",
+      "future",
+      "goal",
+      "dream",
+    ],
   };
 
   // Count keyword hits per emotion and convert to 0-100 scores
   const rawScores: Record<EmotionType, number> = {
-    happiness: 0, sadness: 0, anger: 0, disgust: 0,
-    fear: 0, surprise: 0, trust: 0, anticipation: 0,
+    happiness: 0,
+    sadness: 0,
+    anger: 0,
+    disgust: 0,
+    fear: 0,
+    surprise: 0,
+    trust: 0,
+    anticipation: 0,
   };
 
-  (Object.entries(emotionKeywords) as [EmotionType, string[]][]).forEach(([emotion, keywords]) => {
-    let hits = 0;
-    keywords.forEach((keyword) => {
-      // Count all occurrences, not just first match
-      const regex = new RegExp(keyword.replace(/'/g, "'"), 'gi');
-      const matches = lowerTranscript.match(regex);
-      if (matches) hits += matches.length;
-    });
-    rawScores[emotion] = hits;
-  });
+  (Object.entries(emotionKeywords) as [EmotionType, string[]][]).forEach(
+    ([emotion, keywords]) => {
+      let hits = 0;
+      keywords.forEach((keyword) => {
+        // Count all occurrences, not just first match
+        const regex = new RegExp(keyword.replace(/'/g, "'"), "gi");
+        const matches = lowerTranscript.match(regex);
+        if (matches) hits += matches.length;
+      });
+      rawScores[emotion] = hits;
+    },
+  );
 
   // Add a small baseline trust/happiness for any journal entry (people journal to process)
   rawScores.trust = Math.max(rawScores.trust, 1);
@@ -157,8 +311,14 @@ function analyzeTranscriptLocal(transcript: string): {
 
   // Normalize to 0-100, primary gets at least 50, others scale relative
   const emotionScores: EmotionScores = {
-    happiness: 0, sadness: 0, anger: 0, disgust: 0,
-    fear: 0, surprise: 0, trust: 0, anticipation: 0,
+    happiness: 0,
+    sadness: 0,
+    anger: 0,
+    disgust: 0,
+    fear: 0,
+    surprise: 0,
+    trust: 0,
+    anticipation: 0,
   };
 
   (Object.keys(rawScores) as EmotionType[]).forEach((emotion) => {
@@ -171,7 +331,7 @@ function analyzeTranscriptLocal(transcript: string): {
   });
 
   // Determine primaryEmotion (highest score)
-  let primaryEmotion: EmotionType = 'happiness';
+  let primaryEmotion: EmotionType = "happiness";
   let highestScore = -1;
   (Object.keys(emotionScores) as EmotionType[]).forEach((emotion) => {
     if (emotionScores[emotion] > highestScore) {
@@ -194,37 +354,74 @@ function analyzeTranscriptLocal(transcript: string): {
   const topScores = (Object.values(emotionScores) as number[])
     .sort((a, b) => b - a)
     .slice(0, 3);
-  const emotionIntensity = Math.round(topScores.reduce((s, v) => s + v, 0) / topScores.length);
+  const emotionIntensity = Math.round(
+    topScores.reduce((s, v) => s + v, 0) / topScores.length,
+  );
 
   // Topic extraction
-  const topicKeywords = ['work', 'family', 'health', 'relationship', 'goal', 'dream', 'stress', 'gratitude', 'self-care', 'growth', 'friend', 'school', 'money'];
-  const topics = topicKeywords.filter((topic) => lowerTranscript.includes(topic));
+  const topicKeywords = [
+    "work",
+    "family",
+    "health",
+    "relationship",
+    "goal",
+    "dream",
+    "stress",
+    "gratitude",
+    "self-care",
+    "growth",
+    "friend",
+    "school",
+    "money",
+  ];
+  const topics = topicKeywords.filter((topic) =>
+    lowerTranscript.includes(topic),
+  );
   const analysis = generateAnalysis(primaryEmotion, topics);
 
   // Compute valence-arousal from emotion scores
-  const positive = emotionScores.happiness + emotionScores.trust + emotionScores.anticipation + emotionScores.surprise;
-  const negative = emotionScores.sadness + emotionScores.fear + emotionScores.anger + emotionScores.disgust;
+  const positive =
+    emotionScores.happiness +
+    emotionScores.trust +
+    emotionScores.anticipation +
+    emotionScores.surprise;
+  const negative =
+    emotionScores.sadness +
+    emotionScores.fear +
+    emotionScores.anger +
+    emotionScores.disgust;
   const total = positive + negative;
-  const valence = total === 0 ? 0 : Math.round(((positive - negative) / total) * 100);
+  const valence =
+    total === 0 ? 0 : Math.round(((positive - negative) / total) * 100);
 
-  const highArousal = emotionScores.anger + emotionScores.fear + emotionScores.surprise + emotionScores.anticipation;
-  const lowArousal = emotionScores.sadness + emotionScores.trust + emotionScores.disgust + emotionScores.happiness * 0.5;
+  const highArousal =
+    emotionScores.anger +
+    emotionScores.fear +
+    emotionScores.surprise +
+    emotionScores.anticipation;
+  const lowArousal =
+    emotionScores.sadness +
+    emotionScores.trust +
+    emotionScores.disgust +
+    emotionScores.happiness * 0.5;
   const arousalTotal = highArousal + lowArousal;
-  const arousal = arousalTotal === 0 ? 50 : Math.round((highArousal / arousalTotal) * 100);
+  const arousal =
+    arousalTotal === 0 ? 50 : Math.round((highArousal / arousalTotal) * 100);
 
-  const distress = (-valence * 0.5) + (arousal * 0.5);
-  const distressLevel = distress > 60 ? 'high' : distress > 30 ? 'moderate' : 'low';
+  const distress = -valence * 0.5 + arousal * 0.5;
+  const distressLevel =
+    distress > 60 ? "high" : distress > 30 ? "moderate" : "low";
 
   // Suggest body sensations based on dominant emotion
   const sensationMap: Record<EmotionType, string[]> = {
-    happiness: ['lightness', 'warmth'],
-    sadness: ['heavy limbs', 'chest tightness'],
-    anger: ['tension in shoulders', 'racing heart'],
-    disgust: ['stomach discomfort', 'coldness'],
-    fear: ['racing heart', 'breathlessness'],
-    surprise: ['tingling', 'restlessness'],
-    trust: ['warmth', 'lightness'],
-    anticipation: ['restlessness', 'racing heart'],
+    happiness: ["lightness", "warmth"],
+    sadness: ["heavy limbs", "chest tightness"],
+    anger: ["tension in shoulders", "racing heart"],
+    disgust: ["stomach discomfort", "coldness"],
+    fear: ["racing heart", "breathlessness"],
+    surprise: ["tingling", "restlessness"],
+    trust: ["warmth", "lightness"],
+    anticipation: ["restlessness", "racing heart"],
   };
 
   return {
@@ -233,7 +430,7 @@ function analyzeTranscriptLocal(transcript: string): {
     emotionIntensity: Math.min(100, Math.max(20, emotionIntensity)),
     emotionScores,
     emotionIntensityLabels: buildIntensityLabels(emotionScores),
-    topics: topics.length > 0 ? topics : ['reflection'],
+    topics: topics.length > 0 ? topics : ["reflection"],
     analysis,
     valence,
     arousal,
@@ -244,22 +441,30 @@ function analyzeTranscriptLocal(transcript: string): {
 
 function generateAnalysis(
   primaryEmotion: EmotionType,
-  topics: string[]
+  topics: string[],
 ): string {
   const emotionAdvice: Record<EmotionType, string> = {
-    happiness: 'Savor these positive moments and consider what contributed to this feeling.',
-    sadness: 'It\'s okay to feel sad. Consider what support you might need right now.',
-    anger: 'Your frustration is valid. Think about healthy ways to express and process it.',
-    disgust: 'Strong reactions can reveal important values. Reflect on what triggered this.',
-    fear: 'Acknowledge your fears and worries. Consider what small step you could take to address them.',
-    surprise: 'Unexpected events can be opportunities for growth and new perspectives.',
-    trust: 'Building trust starts with self-trust. Continue nurturing this feeling of security.',
-    anticipation: 'Channel this hopeful energy into preparation and positive action.',
+    happiness:
+      "Savor these positive moments and consider what contributed to this feeling.",
+    sadness:
+      "It's okay to feel sad. Consider what support you might need right now.",
+    anger:
+      "Your frustration is valid. Think about healthy ways to express and process it.",
+    disgust:
+      "Strong reactions can reveal important values. Reflect on what triggered this.",
+    fear: "Acknowledge your fears and worries. Consider what small step you could take to address them.",
+    surprise:
+      "Unexpected events can be opportunities for growth and new perspectives.",
+    trust:
+      "Building trust starts with self-trust. Continue nurturing this feeling of security.",
+    anticipation:
+      "Channel this hopeful energy into preparation and positive action.",
   };
 
-  const topicsPhrase = topics.length > 0
-    ? ` Your focus on ${topics.join(', ')} shows meaningful self-reflection.`
-    : '';
+  const topicsPhrase =
+    topics.length > 0
+      ? ` Your focus on ${topics.join(", ")} shows meaningful self-reflection.`
+      : "";
 
   return `Your entry reflects your emotional journey.${topicsPhrase} ${emotionAdvice[primaryEmotion]}`;
 }
@@ -272,25 +477,25 @@ function generateAnalysis(
  */
 export async function transcribeAndAnalyze(
   audioUri: string,
-  personalizationContext?: string
+  personalizationContext?: string,
 ): Promise<{
   transcript: string;
   analysis: {
     emotions: EmotionType[];
     primaryEmotion: EmotionType;
     emotionIntensity: number;
-    emotionScores?: import('./types').EmotionScores;
-    emotionIntensityLabels?: import('./types').EmotionIntensityLabels;
+    emotionScores?: import("./types").EmotionScores;
+    emotionIntensityLabels?: import("./types").EmotionIntensityLabels;
     topics: string[];
     analysis: string;
     reflection?: string;
     valence: number;
     arousal: number;
     suggestedBodySensations: string[];
-    distressLevel: 'low' | 'moderate' | 'high';
+    distressLevel: "low" | "moderate" | "high";
   };
 }> {
-  let transcript = '';
+  let transcript = "";
   let audioBase64: string | undefined;
 
   // Read the audio file as base64 for GPT-4o audio model (prosody analysis)
@@ -298,27 +503,40 @@ export async function transcribeAndAnalyze(
     audioBase64 = await FileSystem.readAsStringAsync(audioUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
-    console.log('Audio file read as base64 for GPT-4o prosody analysis');
+    console.log("Audio file read as base64 for GPT-4o prosody analysis");
   } catch (err) {
-    console.warn('Could not read audio file as base64, will use text-only analysis:', err);
+    console.warn(
+      "Could not read audio file as base64, will use text-only analysis:",
+      err,
+    );
   }
 
   // Try to transcribe with Deepgram
   try {
     const transcriptionResult = await transcribeAudioWithRetry(audioUri);
     transcript = transcriptionResult.transcript;
-    console.log('Deepgram transcription successful:', transcript.substring(0, 100));
+    console.log(
+      "Deepgram transcription successful:",
+      transcript.substring(0, 100),
+    );
   } catch (error) {
-    console.warn('Deepgram transcription failed, using mock transcript:', error);
+    console.warn(
+      "Deepgram transcription failed, using mock transcript:",
+      error,
+    );
     transcript = generateMockTranscript();
   }
 
   // Analyze with GPT-4o audio model (audio + transcript) - falls back to text-only / local
   let analysis;
   try {
-    analysis = await analyzeTranscript(transcript, audioBase64, personalizationContext);
+    analysis = await analyzeTranscript(
+      transcript,
+      audioBase64,
+      personalizationContext,
+    );
   } catch (error) {
-    console.warn('Analysis failed, using local fallback:', error);
+    console.warn("Analysis failed, using local fallback:", error);
     analysis = analyzeTranscriptLocal(transcript);
   }
 
@@ -346,9 +564,11 @@ export interface ReflectionOverride {
   primaryEmotion: EmotionType;
   valence: number;
   arousal: number;
-  bodySensation?: import('./types').BodySensation;
+  bodySensation?: import("./types").BodySensation;
+  bodyRegions?: import("./types").BodyRegionSensation[];
+  groundingUsed?: boolean;
   alexithymiaFlag?: boolean;
-  distressLevel: 'low' | 'moderate' | 'high';
+  distressLevel: "low" | "moderate" | "high";
   emotionScores?: EmotionScores;
   emotionIntensityLabels?: EmotionIntensityLabels;
 }
@@ -360,7 +580,7 @@ export async function createJournalEntry(
   conversationPrompt?: string,
   preTranscribedText?: string,
   reflectionOverride?: ReflectionOverride,
-  personalizationContext?: string
+  personalizationContext?: string,
 ): Promise<JournalEntry> {
   const journalStore = useJournalStore.getState();
   const userStatsStore = useUserStatsStore.getState();
@@ -371,15 +591,15 @@ export async function createJournalEntry(
     emotions: EmotionType[];
     primaryEmotion: EmotionType;
     emotionIntensity: number;
-    emotionScores?: import('./types').EmotionScores;
-    emotionIntensityLabels?: import('./types').EmotionIntensityLabels;
+    emotionScores?: import("./types").EmotionScores;
+    emotionIntensityLabels?: import("./types").EmotionIntensityLabels;
     topics: string[];
     analysis: string;
     reflection?: string;
     valence: number;
     arousal: number;
     suggestedBodySensations: string[];
-    distressLevel: 'low' | 'moderate' | 'high';
+    distressLevel: "low" | "moderate" | "high";
   };
 
   // If reflection override is provided, skip AI analysis and use user-adjusted data
@@ -391,8 +611,8 @@ export async function createJournalEntry(
       emotionIntensity: 50, // placeholder — could compute from V-A
       emotionScores: reflectionOverride.emotionScores,
       emotionIntensityLabels: reflectionOverride.emotionIntensityLabels,
-      topics: ['reflection'],
-      analysis: 'Journal entry recorded with user reflection.',
+      topics: ["reflection"],
+      analysis: "Journal entry recorded with user reflection.",
       valence: reflectionOverride.valence,
       arousal: reflectionOverride.arousal,
       suggestedBodySensations: [],
@@ -413,30 +633,37 @@ export async function createJournalEntry(
     }
 
     try {
-      const analysisResult = await analyzeTranscript(transcript, audioBase64, personalizationContext);
+      const analysisResult = await analyzeTranscript(
+        transcript,
+        audioBase64,
+        personalizationContext,
+      );
       analysis = analysisResult;
     } catch (error) {
-      console.warn('Analysis failed, using local fallback:', error);
+      console.warn("Analysis failed, using local fallback:", error);
       analysis = analyzeTranscriptLocal(transcript);
     }
   } else {
     if (!audioUri) {
-      throw new Error('Audio URI or transcript is required');
+      throw new Error("Audio URI or transcript is required");
     }
 
     try {
-      const result = await transcribeAndAnalyze(audioUri, personalizationContext);
+      const result = await transcribeAndAnalyze(
+        audioUri,
+        personalizationContext,
+      );
       transcript = result.transcript;
       analysis = result.analysis;
     } catch (error) {
-      console.error('Failed to transcribe and analyze:', error);
+      console.error("Failed to transcribe and analyze:", error);
       throw error;
     }
   }
 
   // Create the entry
   const entry = journalStore.addEntry({
-    title: 'Journal Entry',
+    title: "Journal Entry",
     transcript,
     audioUri,
     duration,
@@ -449,6 +676,8 @@ export async function createJournalEntry(
     arousal: analysis.arousal,
     distressLevel: analysis.distressLevel,
     bodySensation: reflectionOverride?.bodySensation,
+    bodyRegions: reflectionOverride?.bodyRegions,
+    groundingUsed: reflectionOverride?.groundingUsed,
     alexithymiaFlag: reflectionOverride?.alexithymiaFlag,
     topics: analysis.topics,
     aiAnalysis: analysis.analysis,
@@ -463,10 +692,7 @@ export async function createJournalEntry(
   // Record usage toward the 300-minute monthly limit (fire-and-forget)
   recordSessionUsage(duration).catch(() => {});
   userStatsStore.updateStreak(entry.createdAt);
-  userStatsStore.updateMoodStats(
-    analysis.emotionIntensity,
-    analysis.emotions
-  );
+  userStatsStore.updateMoodStats(analysis.emotionIntensity, analysis.emotions);
 
   // Check and update badges - calculate stats from ALL entries including the new one
   const allEntries = journalStore.entries;
@@ -481,7 +707,10 @@ export async function createJournalEntry(
     morningEntries: timeOfDay.morning,
     eveningEntries: timeOfDay.evening,
     uniqueEmotions: getUniqueEmotions(allEntries),
-    longestSessionSeconds: Math.max(getLongestSessionDuration(allEntries), duration),
+    longestSessionSeconds: Math.max(
+      getLongestSessionDuration(allEntries),
+      duration,
+    ),
   });
 
   // Queue a celebration for each newly unlocked badge
@@ -502,7 +731,7 @@ export function getFormattedEntries(
     emotions?: EmotionType[];
     searchQuery?: string;
   },
-  sortOrder: 'newest' | 'oldest' = 'newest'
+  sortOrder: "newest" | "oldest" = "newest",
 ): JournalEntry[] {
   const journalStore = useJournalStore.getState();
   let entries = [...journalStore.entries];
@@ -510,7 +739,7 @@ export function getFormattedEntries(
   // Apply filters
   if (filter?.emotions && filter.emotions.length > 0) {
     entries = entries.filter((e) =>
-      filter.emotions!.some((emotion) => e.emotions.includes(emotion))
+      filter.emotions!.some((emotion) => e.emotions.includes(emotion)),
     );
   }
 
@@ -519,7 +748,7 @@ export function getFormattedEntries(
     entries = entries.filter(
       (e) =>
         e.transcript.toLowerCase().includes(query) ||
-        e.title.toLowerCase().includes(query)
+        e.title.toLowerCase().includes(query),
     );
   }
 
@@ -527,7 +756,7 @@ export function getFormattedEntries(
   entries.sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
-    return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
   });
 
   return entries;

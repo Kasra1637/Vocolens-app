@@ -1,15 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, Dimensions, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, Pressable, Dimensions, ScrollView } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-} from '@expo-google-fonts/inter';
-import { Pause, Check, ChevronDown, RefreshCw, Sparkles, Settings, AlertCircle, Radio } from 'lucide-react-native';
+} from "@expo-google-fonts/inter";
+import {
+  Pause,
+  Check,
+  ChevronDown,
+  RefreshCw,
+  Sparkles,
+  Settings,
+  AlertCircle,
+  Radio,
+} from "lucide-react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -21,28 +30,52 @@ import Animated, {
   cancelAnimation,
   FadeOut,
   interpolateColor,
-} from 'react-native-reanimated';
-import { MicButton } from '@/components/MicButton';
-import { heavyHaptic, tapHaptic, errorHaptic, successHaptic, warningHaptic } from '@/lib/haptics';
-import { router } from 'expo-router';
-import { getThemeColors, getThemeGradients, getThemeShadows, BorderRadius, Spacing } from '@/lib/theme';
-import { useCreateEntry } from '@/lib/hooks';
-import { useRealtimeVoiceRecording } from '@/lib/hooks/useRealtimeVoiceRecording';
-import { MicTabIcon } from '@/components/TabIcons';
-import { TopicCategory, EmotionType } from '@/lib/types';
-import EmotionReflectionScreen from '@/components/emotion-reflection';
-import type { ReflectionResult } from '@/components/emotion-reflection';
-import GroundingToolsModal from '@/components/GroundingToolsModal';
-import { analyzeTranscript } from '@/lib/journal-service';
-import { buildPersonalizationPrompt } from '@/lib/personalization';
-import useOnboardingStore from '@/lib/state/onboarding-store';
-import useSettingsStore from '@/lib/state/settings-store';
-import { useUsageMinutes, useRemainingMinutes, useIsAtLimit, USAGE_LIMIT_MINUTES } from '@/lib/state/user-stats-store';
+} from "react-native-reanimated";
+import { MicButton } from "@/components/MicButton";
+import {
+  heavyHaptic,
+  tapHaptic,
+  errorHaptic,
+  successHaptic,
+  warningHaptic,
+} from "@/lib/haptics";
+import { router } from "expo-router";
+import {
+  getThemeColors,
+  getThemeGradients,
+  getThemeShadows,
+  BorderRadius,
+  Spacing,
+} from "@/lib/theme";
+import { useCreateEntry } from "@/lib/hooks";
+import { useRealtimeVoiceRecording } from "@/lib/hooks/useRealtimeVoiceRecording";
+import { MicTabIcon } from "@/components/TabIcons";
+import { TopicCategory, EmotionType } from "@/lib/types";
+import EmotionReflectionScreen from "@/components/emotion-reflection";
+import type { ReflectionResult } from "@/components/emotion-reflection";
+import GroundingToolsModal from "@/components/GroundingToolsModal";
+import { analyzeTranscript } from "@/lib/journal-service";
+import { buildPersonalizationPrompt } from "@/lib/personalization";
+import useReflectionStore from "@/lib/state/reflection-store";
+import useOnboardingStore from "@/lib/state/onboarding-store";
+import useSettingsStore from "@/lib/state/settings-store";
+import {
+  useUsageMinutes,
+  useRemainingMinutes,
+  useIsAtLimit,
+  USAGE_LIMIT_MINUTES,
+} from "@/lib/state/user-stats-store";
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // Types
-type RecordingState = 'idle' | 'listening' | 'recording' | 'paused' | 'processing' | 'permission_denied';
+type RecordingState =
+  | "idle"
+  | "listening"
+  | "recording"
+  | "paused"
+  | "processing"
+  | "permission_denied";
 
 // Conversation starters by topic
 const CONVERSATION_STARTERS: Record<TopicCategory, string[]> = {
@@ -99,11 +132,11 @@ const CONVERSATION_STARTERS: Record<TopicCategory, string[]> = {
 };
 
 const TOPIC_LABELS: Record<TopicCategory, string> = {
-  emotional: 'Emotional Processing',
-  goals: 'Goal Setting',
-  reflection: 'Self-Reflection',
-  decision: 'Decision Making',
-  manifestation: 'Manifestation',
+  emotional: "Emotional Processing",
+  goals: "Goal Setting",
+  reflection: "Self-Reflection",
+  decision: "Decision Making",
+  manifestation: "Manifestation",
 };
 
 // Prompts for journaling
@@ -117,26 +150,38 @@ const PROMPTS = [
 
 export default function SpeakScreen() {
   const insets = useSafeAreaInsets();
-  const [recordingState, setRecordingState] = useState<RecordingState>('idle');
+  const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [currentPrompt, setCurrentPrompt] = useState(PROMPTS[0]);
   const [duration, setDuration] = useState(0);
-  const [selectedTopic, setSelectedTopic] = useState<TopicCategory | undefined>(undefined);
+  const [selectedTopic, setSelectedTopic] = useState<TopicCategory | undefined>(
+    undefined,
+  );
   const [showTopicDropdown, setShowTopicDropdown] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState<string | undefined>(undefined);
-  const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<string | undefined>(
+    undefined,
+  );
+  const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
   const recordingDurationRef = useRef(0);
 
   // Emotion reflection state
   const [showReflection, setShowReflection] = useState(false);
   const [showGrounding, setShowGrounding] = useState(false);
-  const [reflectionTranscript, setReflectionTranscript] = useState('');
-  const [reflectionAudioUri, setReflectionAudioUri] = useState<string | undefined>();
+  const [reflectionTranscript, setReflectionTranscript] = useState("");
+  const [reflectionAudioUri, setReflectionAudioUri] = useState<
+    string | undefined
+  >();
   const [reflectionDuration, setReflectionDuration] = useState(0);
   const [suggestedEmotions, setSuggestedEmotions] = useState<EmotionType[]>([]);
-  const [suggestedBodySensations, setSuggestedBodySensations] = useState<string[]>([]);
+  const [suggestedBodySensations, setSuggestedBodySensations] = useState<
+    string[]
+  >([]);
   const [initialValence, setInitialValence] = useState(0);
   const [initialArousal, setInitialArousal] = useState(50);
-  const [initialDistress, setInitialDistress] = useState<'low' | 'moderate' | 'high'>('low');
+  const [initialDistress, setInitialDistress] = useState<
+    "low" | "moderate" | "high"
+  >("low");
 
   // Get selected theme and dark mode
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
@@ -173,7 +218,12 @@ export default function SpeakScreen() {
 
   // Pulse animation for button size - always active
   useEffect(() => {
-    if (recordingState === 'processing' || recordingState === 'permission_denied' || recordingState === 'recording' || recordingState === 'listening') {
+    if (
+      recordingState === "processing" ||
+      recordingState === "permission_denied" ||
+      recordingState === "recording" ||
+      recordingState === "listening"
+    ) {
       // No animation during processing or recording
       cancelAnimation(buttonScale);
       buttonScale.value = withTiming(1);
@@ -182,17 +232,17 @@ export default function SpeakScreen() {
       buttonScale.value = withRepeat(
         withSequence(
           withTiming(1.15, { duration: 1500, easing: Easing.out(Easing.ease) }),
-          withTiming(1, { duration: 1500, easing: Easing.in(Easing.ease) })
+          withTiming(1, { duration: 1500, easing: Easing.in(Easing.ease) }),
         ),
         -1,
-        false
+        false,
       );
     }
   }, [recordingState]);
 
   // Duration timer
   useEffect(() => {
-    if (recordingState === 'recording') {
+    if (recordingState === "recording") {
       durationIntervalRef.current = setInterval(() => {
         setDuration((prev) => {
           recordingDurationRef.current = prev + 1;
@@ -216,8 +266,8 @@ export default function SpeakScreen() {
   useEffect(() => {
     const checkPermission = async () => {
       const result = await voiceActions.requestPermission();
-      if (result.status === 'denied' && !result.canAskAgain) {
-        console.log('Microphone permission permanently denied');
+      if (result.status === "denied" && !result.canAskAgain) {
+        console.log("Microphone permission permanently denied");
       }
     };
     checkPermission();
@@ -226,7 +276,7 @@ export default function SpeakScreen() {
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const startRecording = async () => {
@@ -237,14 +287,14 @@ export default function SpeakScreen() {
     }
     try {
       heavyHaptic();
-      setRecordingState('listening');
+      setRecordingState("listening");
       setDuration(0);
 
       // Request permission immediately
       const permissionResult = await voiceActions.requestPermission();
 
-      if (permissionResult.status !== 'granted') {
-        setRecordingState('permission_denied');
+      if (permissionResult.status !== "granted") {
+        setRecordingState("permission_denied");
         errorHaptic();
         return;
       }
@@ -254,12 +304,12 @@ export default function SpeakScreen() {
 
       // Transition to recording after a brief listening period
       setTimeout(() => {
-        setRecordingState('recording');
+        setRecordingState("recording");
         tapHaptic();
       }, 500);
     } catch (error) {
-      console.error('Failed to start recording:', error);
-      setRecordingState('idle');
+      console.error("Failed to start recording:", error);
+      setRecordingState("idle");
       errorHaptic();
     }
   };
@@ -267,7 +317,7 @@ export default function SpeakScreen() {
   const stopRecording = async () => {
     try {
       heavyHaptic();
-      setRecordingState('processing');
+      setRecordingState("processing");
 
       const finalDuration = recordingDurationRef.current;
 
@@ -276,8 +326,8 @@ export default function SpeakScreen() {
 
       // Get the recording URI
       const audioUri = voiceActions.getRecordingUri();
-      console.log('[Journal] Recording stopped - audioUri:', audioUri);
-      console.log('[Journal] Transcript length:', finalTranscript?.length || 0);
+      console.log("[Journal] Recording stopped - audioUri:", audioUri);
+      console.log("[Journal] Transcript length:", finalTranscript?.length || 0);
 
       if (finalTranscript && finalTranscript.trim().length > 0) {
         try {
@@ -285,7 +335,11 @@ export default function SpeakScreen() {
           const personalizationContext = buildPersonalizationPrompt();
 
           // Analyze transcript for emotion suggestions (with personalization bias)
-          const analysis = await analyzeTranscript(finalTranscript, undefined, personalizationContext);
+          const analysis = await analyzeTranscript(
+            finalTranscript,
+            undefined,
+            personalizationContext,
+          );
 
           // Store data for reflection screen
           setReflectionTranscript(finalTranscript);
@@ -297,28 +351,65 @@ export default function SpeakScreen() {
           setInitialArousal(analysis.arousal);
           setInitialDistress(analysis.distressLevel);
 
-          setRecordingState('idle');
-          setShowReflection(true);
+          setRecordingState("idle");
+
+          const mode = useSettingsStore.getState().emotionReflectionMode;
+          if (mode === "off") {
+            // Skip reflection, create entry directly
+            const entry = await createEntryMutation.mutateAsync({
+              audioUri: audioUri || undefined,
+              transcript: finalTranscript,
+              duration: finalDuration,
+              conversationTopic: selectedTopic,
+              conversationPrompt: currentQuestion,
+              reflectionOverride: {
+                emotions: analysis.emotions,
+                primaryEmotion: analysis.emotions[0] ?? "trust",
+                valence: analysis.valence,
+                arousal: analysis.arousal,
+                alexithymiaFlag: false,
+                distressLevel: analysis.distressLevel,
+              },
+            });
+            successHaptic();
+            voiceActions.reset();
+            if (entry?.id) router.push(`/entry-detail?id=${entry.id}`);
+          } else {
+            // Route to hybrid reflection flow
+            useReflectionStore.getState().setPending({
+              transcript: finalTranscript,
+              audioUri: audioUri || undefined,
+              duration: finalDuration,
+              suggestedEmotions: analysis.emotions,
+              suggestedBodySensations: analysis.suggestedBodySensations,
+              initialValence: analysis.valence,
+              initialArousal: analysis.arousal,
+              initialDistress: analysis.distressLevel,
+              conversationTopic: selectedTopic,
+              conversationPrompt: currentQuestion,
+            });
+            router.push("/reflection");
+          }
         } catch (error) {
-          console.error('Failed to analyze recording:', error);
-          setRecordingState('idle');
+          console.error("Failed to analyze recording:", error);
+          setRecordingState("idle");
           errorHaptic();
         }
       } else {
-        console.log('No transcript available');
-        setRecordingState('idle');
+        console.log("No transcript available");
+        setRecordingState("idle");
         warningHaptic();
       }
     } catch (error) {
-      console.error('Failed to stop recording:', error);
-      setRecordingState('idle');
+      console.error("Failed to stop recording:", error);
+      setRecordingState("idle");
       errorHaptic();
     }
   };
 
   const handleReflectionComplete = async (result: ReflectionResult) => {
     setShowReflection(false);
-    setRecordingState('processing');
+    setRecordingState("processing");
 
     try {
       const entry = await createEntryMutation.mutateAsync({
@@ -345,14 +436,14 @@ export default function SpeakScreen() {
         router.push(`/entry-detail?id=${entry.id}`);
       }
     } catch (entryError) {
-      console.error('Failed to save entry:', entryError);
-      setRecordingState('idle');
+      console.error("Failed to save entry:", entryError);
+      setRecordingState("idle");
       errorHaptic();
     }
   };
 
   const handleMicPress = () => {
-    if (recordingState === 'idle' || recordingState === 'permission_denied') {
+    if (recordingState === "idle" || recordingState === "permission_denied") {
       startRecording();
     }
   };
@@ -361,9 +452,9 @@ export default function SpeakScreen() {
     try {
       tapHaptic();
       await voiceActions.pauseRecording();
-      setRecordingState('paused');
+      setRecordingState("paused");
     } catch (error) {
-      console.error('Failed to pause recording:', error);
+      console.error("Failed to pause recording:", error);
     }
   };
 
@@ -371,9 +462,9 @@ export default function SpeakScreen() {
     try {
       tapHaptic();
       await voiceActions.resumeRecording();
-      setRecordingState('recording');
+      setRecordingState("recording");
     } catch (error) {
-      console.error('Failed to resume recording:', error);
+      console.error("Failed to resume recording:", error);
     }
   };
 
@@ -404,7 +495,7 @@ export default function SpeakScreen() {
     if (!selectedTopic) return;
     const questions = CONVERSATION_STARTERS[selectedTopic];
     // Get a different random question
-    const currentIndex = questions.indexOf(currentQuestion ?? '');
+    const currentIndex = questions.indexOf(currentQuestion ?? "");
     let newIndex = Math.floor(Math.random() * questions.length);
     // Ensure we get a different question if there's more than one
     if (questions.length > 1) {
@@ -430,7 +521,7 @@ export default function SpeakScreen() {
     const animatedColor = interpolateColor(
       buttonBackgroundColor.value,
       [0, 1],
-      [Colors.primary, '#FFFFFF']
+      [Colors.primary, "#FFFFFF"],
     );
     return {
       backgroundColor: animatedColor,
@@ -442,7 +533,7 @@ export default function SpeakScreen() {
       <View className="flex-1" style={{ backgroundColor: Colors.background }}>
         <LinearGradient
           colors={Gradients.background}
-          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
         />
@@ -450,20 +541,23 @@ export default function SpeakScreen() {
     );
   }
 
-  const isRecording = recordingState === 'recording' || recordingState === 'listening';
-  const isPaused = recordingState === 'paused';
+  const isRecording =
+    recordingState === "recording" || recordingState === "listening";
+  const isPaused = recordingState === "paused";
   const isActiveSession = isRecording || isPaused;
-  const isProcessing = recordingState === 'processing' || voiceState.isTranscribing;
-  const isPermissionDenied = recordingState === 'permission_denied';
-  const hasTranscript = voiceState.transcript && voiceState.transcript.trim().length > 0;
+  const isProcessing =
+    recordingState === "processing" || voiceState.isTranscribing;
+  const isPermissionDenied = recordingState === "permission_denied";
+  const hasTranscript =
+    voiceState.transcript && voiceState.transcript.trim().length > 0;
 
   // Get permission message
   const getPermissionMessage = () => {
-    if (voiceState.permissionStatus === 'denied' && !voiceState.canAskAgain) {
-      return 'Microphone access is permanently blocked. Please enable it in your device settings to use voice recording.';
+    if (voiceState.permissionStatus === "denied" && !voiceState.canAskAgain) {
+      return "Microphone access is permanently blocked. Please enable it in your device settings to use voice recording.";
     }
-    if (voiceState.permissionStatus === 'denied') {
-      return 'Microphone access is required for voice recording. Tap the button to grant permission.';
+    if (voiceState.permissionStatus === "denied") {
+      return "Microphone access is required for voice recording. Tap the button to grant permission.";
     }
     return null;
   };
@@ -477,7 +571,7 @@ export default function SpeakScreen() {
     <View className="flex-1" style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
-        style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
       />
@@ -494,15 +588,28 @@ export default function SpeakScreen() {
         {/* Header */}
         <Animated.View className="items-center">
           <Text
-            style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22 }}
+            style={{
+              fontFamily: "Inter_700Bold",
+              color: "#FFFFFF",
+              fontSize: 22,
+            }}
             className="mb-2 text-center"
           >
-            {isProcessing ? 'Processing...' : isPaused ? 'Recording paused' : isRecording ? 'Listening...' : 'Speak your mind'}
+            {isProcessing
+              ? "Processing..."
+              : isPaused
+                ? "Recording paused"
+                : isRecording
+                  ? "Listening..."
+                  : "Speak your mind"}
           </Text>
           {!isRecording ? (
             <Pressable onPress={!isProcessing ? cyclePrompt : undefined}>
               <Text
-                style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255, 255, 255, 0.8)",
+                }}
                 className="text-base text-center px-4"
               >
                 {currentPrompt || "What's on your mind today?"}
@@ -513,26 +620,29 @@ export default function SpeakScreen() {
 
         {/* Permission Denied Warning */}
         {permissionMessage && permissionMessage.trim().length > 0 ? (
-          <Animated.View
-            exiting={FadeOut.duration(300)}
-            className="w-full"
-          >
+          <Animated.View exiting={FadeOut.duration(300)} className="w-full">
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: 'transparent',
+                backgroundColor: "transparent",
                 borderWidth: 0,
               }}
             >
               <View className="p-4">
                 <View className="flex-row items-start">
-                  <AlertCircle size={20} color="#FFFFFF" strokeWidth={2} style={{ marginRight: 12, marginTop: 2 }} />
+                  <AlertCircle
+                    size={20}
+                    color="#FFFFFF"
+                    strokeWidth={2}
+                    style={{ marginRight: 12, marginTop: 2 }}
+                  />
                   <View className="flex-1">
-                    {permissionMessage && permissionMessage.trim().length > 0 ? (
+                    {permissionMessage &&
+                    permissionMessage.trim().length > 0 ? (
                       <Text
                         style={{
-                          fontFamily: 'Inter_600SemiBold',
-                          color: '#FFFFFF',
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
                           fontSize: 13,
                           lineHeight: 22,
                           marginBottom: 8,
@@ -545,14 +655,14 @@ export default function SpeakScreen() {
                       <Pressable
                         onPress={handleOpenSettings}
                         className="rounded-full py-2 px-4 items-center justify-center"
-                        style={{ backgroundColor: '#EF4444' }}
+                        style={{ backgroundColor: "#EF4444" }}
                       >
                         <View className="flex-row items-center">
                           <Settings size={14} color="#FFFFFF" strokeWidth={2} />
                           <Text
                             style={{
-                              fontFamily: 'Inter_600SemiBold',
-                              color: '#FFFFFF',
+                              fontFamily: "Inter_600SemiBold",
+                              color: "#FFFFFF",
                               fontSize: 12,
                               marginLeft: 6,
                             }}
@@ -571,41 +681,40 @@ export default function SpeakScreen() {
 
         {/* Usage limit / near-limit banner */}
         {(isAtLimit || isNearLimit) && !isRecording && !isProcessing ? (
-          <Animated.View
-            exiting={FadeOut.duration(300)}
-            className="w-full"
-          >
+          <Animated.View exiting={FadeOut.duration(300)} className="w-full">
             <View
               className="rounded-3xl p-4"
               style={{
                 backgroundColor: isAtLimit
-                  ? 'rgba(255, 60, 60, 0.18)'
-                  : 'rgba(255, 185, 50, 0.15)',
+                  ? "rgba(255, 60, 60, 0.18)"
+                  : "rgba(255, 185, 50, 0.15)",
                 borderWidth: 1,
                 borderColor: isAtLimit
-                  ? 'rgba(255, 100, 100, 0.45)'
-                  : 'rgba(255, 210, 80, 0.4)',
+                  ? "rgba(255, 100, 100, 0.45)"
+                  : "rgba(255, 210, 80, 0.4)",
               }}
             >
               <View className="flex-row items-start">
                 <Text style={{ fontSize: 18, marginRight: 10 }}>
-                  {isAtLimit ? '🔒' : '⚠️'}
+                  {isAtLimit ? "🔒" : "⚠️"}
                 </Text>
                 <View className="flex-1">
                   <Text
                     style={{
-                      fontFamily: 'Inter_700Bold',
-                      color: '#FFFFFF',
+                      fontFamily: "Inter_700Bold",
+                      color: "#FFFFFF",
                       fontSize: 13,
                       marginBottom: 3,
                     }}
                   >
-                    {isAtLimit ? 'Monthly limit reached' : 'Almost at your limit'}
+                    {isAtLimit
+                      ? "Monthly limit reached"
+                      : "Almost at your limit"}
                   </Text>
                   <Text
                     style={{
-                      fontFamily: 'Inter_400Regular',
-                      color: 'rgba(255,255,255,0.75)',
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.75)",
                       fontSize: 12,
                       lineHeight: 22,
                     }}
@@ -620,13 +729,13 @@ export default function SpeakScreen() {
               {/* Mini progress bar */}
               <View
                 className="h-1.5 rounded-full mt-3"
-                style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+                style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
               >
                 <View
                   className="h-full rounded-full"
                   style={{
                     width: `${Math.min(100, usagePct * 100)}%`,
-                    backgroundColor: isAtLimit ? '#FF5050' : '#FFB830',
+                    backgroundColor: isAtLimit ? "#FF5050" : "#FFB830",
                   }}
                 />
               </View>
@@ -635,29 +744,40 @@ export default function SpeakScreen() {
         ) : null}
 
         {/* Error Message */}
-        {errorMessage && typeof errorMessage === 'string' && errorMessage.trim().length > 0 && !permissionMessage ? (
-          <Animated.View
-            exiting={FadeOut.duration(300)}
-            className="w-full"
-          >
+        {errorMessage &&
+        typeof errorMessage === "string" &&
+        errorMessage.trim().length > 0 &&
+        !permissionMessage ? (
+          <Animated.View exiting={FadeOut.duration(300)} className="w-full">
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: isDarkMode ? 'rgba(251, 191, 36, 0.15)' : 'rgba(254, 243, 199, 1)',
+                backgroundColor: isDarkMode
+                  ? "rgba(251, 191, 36, 0.15)"
+                  : "rgba(254, 243, 199, 1)",
                 borderWidth: 1,
-                borderColor: isDarkMode ? 'rgba(251, 191, 36, 0.3)' : 'rgba(251, 191, 36, 0.2)',
+                borderColor: isDarkMode
+                  ? "rgba(251, 191, 36, 0.3)"
+                  : "rgba(251, 191, 36, 0.2)",
                 ...Shadows.medium,
               }}
             >
               <View className="p-4">
                 <View className="flex-row items-start">
-                  <AlertCircle size={20} color="#F59E0B" strokeWidth={2} style={{ marginRight: 12, marginTop: 2 }} />
+                  <AlertCircle
+                    size={20}
+                    color="#F59E0B"
+                    strokeWidth={2}
+                    style={{ marginRight: 12, marginTop: 2 }}
+                  />
                   <View className="flex-1">
-                    {errorMessage && typeof errorMessage === 'string' && errorMessage.trim().length > 0 ? (
+                    {errorMessage &&
+                    typeof errorMessage === "string" &&
+                    errorMessage.trim().length > 0 ? (
                       <Text
                         style={{
-                          fontFamily: 'Inter_600SemiBold',
-                          color: isDarkMode ? '#FCD34D' : '#92400E',
+                          fontFamily: "Inter_600SemiBold",
+                          color: isDarkMode ? "#FCD34D" : "#92400E",
                           fontSize: 13,
                           lineHeight: 22,
                         }}
@@ -673,7 +793,11 @@ export default function SpeakScreen() {
         ) : null}
 
         {/* Conversation Starter */}
-        {!isRecording && !isProcessing && !hasTranscript && !permissionMessage && !errorMessage ? (
+        {!isRecording &&
+        !isProcessing &&
+        !hasTranscript &&
+        !permissionMessage &&
+        !errorMessage ? (
           <Animated.View
             exiting={FadeOut.duration(300)}
             className="w-full"
@@ -682,9 +806,9 @@ export default function SpeakScreen() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderColor: "rgba(255, 255, 255, 0.2)",
                 ...Shadows.medium,
               }}
             >
@@ -692,7 +816,10 @@ export default function SpeakScreen() {
                 {/* Topic Selector */}
                 <View className="flex-row items-center justify-between mb-3">
                   <Text
-                    style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255, 255, 255, 0.8)' }}
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "rgba(255, 255, 255, 0.8)",
+                    }}
                     className="text-xs uppercase tracking-wide"
                   >
                     Warm-up Question
@@ -703,15 +830,25 @@ export default function SpeakScreen() {
                       setShowTopicDropdown(!showTopicDropdown);
                     }}
                     className="flex-row items-center rounded-full px-3 py-2.5"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+                    style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
                   >
                     <Text
-                      style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF' }}
+                      style={{
+                        fontFamily: "Inter_500Medium",
+                        color: "#FFFFFF",
+                      }}
                       className="text-xs"
                     >
-                      {selectedTopic ? TOPIC_LABELS[selectedTopic] : 'Select Topic'}
+                      {selectedTopic
+                        ? TOPIC_LABELS[selectedTopic]
+                        : "Select Topic"}
                     </Text>
-                    <ChevronDown size={12} color="#FFFFFF" strokeWidth={2} style={{ marginLeft: 4 }} />
+                    <ChevronDown
+                      size={12}
+                      color="#FFFFFF"
+                      strokeWidth={2}
+                      style={{ marginLeft: 4 }}
+                    />
                   </Pressable>
                 </View>
 
@@ -721,44 +858,51 @@ export default function SpeakScreen() {
                     exiting={FadeOut.duration(200)}
                     className="mb-3 rounded-2xl overflow-hidden"
                     style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
                       borderWidth: 1,
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                      borderColor: "rgba(255, 255, 255, 0.2)",
                     }}
                   >
-                    {(Object.keys(TOPIC_LABELS) as TopicCategory[]).map((topic) => (
-                      <Pressable
-                        key={topic}
-                        onPress={() => handleTopicChange(topic)}
-                        className="px-4 py-3"
-                        style={{
-                          backgroundColor: selectedTopic === topic ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                          borderBottomWidth: 1,
-                          borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-                        }}
-                      >
-                        <Text
+                    {(Object.keys(TOPIC_LABELS) as TopicCategory[]).map(
+                      (topic) => (
+                        <Pressable
+                          key={topic}
+                          onPress={() => handleTopicChange(topic)}
+                          className="px-4 py-3"
                           style={{
-                            fontFamily: 'Inter_500Medium',
-                            fontSize: 14,
-                            color: '#FFFFFF',
+                            backgroundColor:
+                              selectedTopic === topic
+                                ? "rgba(255, 255, 255, 0.15)"
+                                : "transparent",
+                            borderBottomWidth: 1,
+                            borderBottomColor: "rgba(255, 255, 255, 0.1)",
                           }}
                         >
-                          {TOPIC_LABELS[topic]}
-                        </Text>
-                      </Pressable>
-                    ))}
+                          <Text
+                            style={{
+                              fontFamily: "Inter_500Medium",
+                              fontSize: 14,
+                              color: "#FFFFFF",
+                            }}
+                          >
+                            {TOPIC_LABELS[topic]}
+                          </Text>
+                        </Pressable>
+                      ),
+                    )}
                   </Animated.View>
                 ) : null}
 
                 {/* Question Display - Only show after topic selection */}
-                {selectedTopic && currentQuestion && currentQuestion.trim().length > 0 ? (
+                {selectedTopic &&
+                currentQuestion &&
+                currentQuestion.trim().length > 0 ? (
                   <View className="flex-row items-start">
                     <View className="flex-1" style={{ marginRight: 10 }}>
                       <Text
                         style={{
-                          fontFamily: 'Inter_400Regular',
-                          color: '#FFFFFF',
+                          fontFamily: "Inter_400Regular",
+                          color: "#FFFFFF",
                           lineHeight: 22,
                         }}
                         className="text-sm"
@@ -769,7 +913,7 @@ export default function SpeakScreen() {
                     <Pressable
                       onPress={refreshQuestion}
                       className="w-8 h-8 rounded-full items-center justify-center"
-                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+                      style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
                     >
                       <RefreshCw size={14} color="#FFFFFF" strokeWidth={2} />
                     </Pressable>
@@ -786,7 +930,7 @@ export default function SpeakScreen() {
             exiting={FadeOut.duration(300)}
             className="w-full rounded-3xl overflow-hidden"
             style={{
-              backgroundColor: 'transparent',
+              backgroundColor: "transparent",
               ...Shadows.medium,
               maxHeight: 220,
             }}
@@ -800,19 +944,40 @@ export default function SpeakScreen() {
                 <View className="flex-row items-center">
                   <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
                   <Text
-                    style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#FFFFFF",
+                    }}
                     className="text-sm ml-2"
                   >
-                    {isPaused ? 'Paused' : voiceState.isStreaming ? 'Live Transcription' : 'Recording...'}
+                    {isPaused
+                      ? "Paused"
+                      : voiceState.isStreaming
+                        ? "Live Transcription"
+                        : "Recording..."}
                   </Text>
                   <View className="ml-2 flex-row items-center">
-                    <LiveIndicator primaryColor={voiceState.isStreaming ? '#22C55E' : '#FFFFFF'} />
+                    <LiveIndicator
+                      primaryColor={
+                        voiceState.isStreaming ? "#22C55E" : "#FFFFFF"
+                      }
+                    />
                   </View>
                 </View>
                 {voiceState.isStreaming ? (
-                  <View className="flex-row items-center px-2 py-1 rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
+                  <View
+                    className="flex-row items-center px-2 py-1 rounded-full"
+                    style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                  >
                     <Radio size={10} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF', fontSize: 10, marginLeft: 4 }}>
+                    <Text
+                      style={{
+                        fontFamily: "Inter_500Medium",
+                        color: "#FFFFFF",
+                        fontSize: 10,
+                        marginLeft: 4,
+                      }}
+                    >
                       LIVE
                     </Text>
                   </View>
@@ -820,33 +985,34 @@ export default function SpeakScreen() {
               </View>
 
               {/* Live transcript display */}
-              {voiceState.transcript && voiceState.transcript.trim().length > 0 ? (
+              {voiceState.transcript &&
+              voiceState.transcript.trim().length > 0 ? (
                 <Text
                   style={{
-                    fontFamily: 'Inter_400Regular',
-                    color: '#FFFFFF',
+                    fontFamily: "Inter_400Regular",
+                    color: "#FFFFFF",
                     lineHeight: 22,
                     fontSize: 14,
                   }}
                 >
                   {voiceState.transcript}
                   {!voiceState.isFinal ? (
-                    <Text style={{ color: 'rgba(255, 255, 255, 0.5)' }}>|</Text>
+                    <Text style={{ color: "rgba(255, 255, 255, 0.5)" }}>|</Text>
                   ) : null}
                 </Text>
               ) : (
                 <Text
                   style={{
-                    fontFamily: 'Inter_400Regular',
-                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255, 255, 255, 0.7)",
                     lineHeight: 22,
                     fontSize: 13,
-                    fontStyle: 'italic',
+                    fontStyle: "italic",
                   }}
                 >
                   {voiceState.isStreaming
-                    ? 'Start speaking... Your words will appear here in real-time.'
-                    : 'Keep speaking... Your words will be transcribed after you stop recording.'}
+                    ? "Start speaking... Your words will appear here in real-time."
+                    : "Keep speaking... Your words will be transcribed after you stop recording."}
                 </Text>
               )}
             </ScrollView>
@@ -872,7 +1038,7 @@ export default function SpeakScreen() {
               <View className="flex-row items-center mb-3">
                 <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
                 <Text
-                  style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   className="text-sm ml-2"
                 >
                   Your Recording
@@ -880,11 +1046,12 @@ export default function SpeakScreen() {
               </View>
 
               <View>
-                {voiceState.transcript && voiceState.transcript.trim().length > 0 ? (
+                {voiceState.transcript &&
+                voiceState.transcript.trim().length > 0 ? (
                   <Text
                     style={{
-                      fontFamily: 'Inter_400Regular',
-                      color: '#FFFFFF',
+                      fontFamily: "Inter_400Regular",
+                      color: "#FFFFFF",
                       lineHeight: 22,
                       fontSize: 14,
                     }}
@@ -900,10 +1067,22 @@ export default function SpeakScreen() {
         {/* Duration Display — shown while recording or paused */}
         {isActiveSession ? (
           <Animated.View style={{ marginTop: 16 }} className="items-center">
-            <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }} className="text-3xl">
+            <Text
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+              className="text-3xl"
+            >
               {formatDuration(duration)}
               {isPaused ? (
-                <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.55)', fontSize: 18 }}> paused</Text>
+                <Text
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255,255,255,0.55)",
+                    fontSize: 18,
+                  }}
+                >
+                  {" "}
+                  paused
+                </Text>
               ) : null}
             </Text>
           </Animated.View>
@@ -915,7 +1094,10 @@ export default function SpeakScreen() {
             <View className="flex-row items-center justify-center">
               {[0, 1, 2].map((i) => (
                 <View key={i} style={{ marginHorizontal: 4 }}>
-                  <ProcessingDot delay={i * 200} primaryColor={Colors.primary} />
+                  <ProcessingDot
+                    delay={i * 200}
+                    primaryColor={Colors.primary}
+                  />
                 </View>
               ))}
             </View>
@@ -931,55 +1113,101 @@ export default function SpeakScreen() {
           {isActiveSession ? (
             /* Recording or Paused — two-button layout */
             <Animated.View className="items-center">
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 32 }}>
-
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 32 }}
+              >
                 {/* Pause / Resume button */}
                 <View className="items-center" style={{ gap: 6 }}>
                   <Pressable
-                    onPressIn={() => { buttonScale.value = withSpring(0.92); }}
-                    onPressOut={() => { buttonScale.value = withSpring(1); }}
+                    onPressIn={() => {
+                      buttonScale.value = withSpring(0.92);
+                    }}
+                    onPressOut={() => {
+                      buttonScale.value = withSpring(1);
+                    }}
                     onPress={isPaused ? handleResume : handlePause}
                   >
                     <Animated.View style={buttonAnimatedStyle}>
                       {isPaused ? (
                         <LinearGradient
                           colors={[Colors.gradientEnd, Colors.gradientStart]}
-                          style={{ width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', ...Shadows.large }}
-                          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                          style={{
+                            width: 88,
+                            height: 88,
+                            borderRadius: 44,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            ...Shadows.large,
+                          }}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 0, y: 1 }}
                         >
                           <MicTabIcon size={38} color="#FFFFFF" filled />
                         </LinearGradient>
                       ) : (
-                        <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)', alignItems: 'center', justifyContent: 'center', ...Shadows.medium }}>
-                          <Pause size={30} color="#FFFFFF" fill="#FFFFFF" strokeWidth={0} />
+                        <View
+                          style={{
+                            width: 88,
+                            height: 88,
+                            borderRadius: 44,
+                            backgroundColor: "rgba(255,255,255,0.18)",
+                            borderWidth: 1.5,
+                            borderColor: "rgba(255,255,255,0.35)",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            ...Shadows.medium,
+                          }}
+                        >
+                          <Pause
+                            size={30}
+                            color="#FFFFFF"
+                            fill="#FFFFFF"
+                            strokeWidth={0}
+                          />
                         </View>
                       )}
                     </Animated.View>
                   </Pressable>
-                  <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 11 }}>
-                    {isPaused ? 'Resume' : 'Pause'}
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.85)",
+                      fontSize: 11,
+                    }}
+                  >
+                    {isPaused ? "Resume" : "Pause"}
                   </Text>
                 </View>
 
                 {/* Save & Analyze button */}
                 <View className="items-center" style={{ gap: 6 }}>
-                  <Pressable
-                    onPress={stopRecording}
-                    disabled={isProcessing}
-                  >
+                  <Pressable onPress={stopRecording} disabled={isProcessing}>
                     <LinearGradient
-                      colors={['#EF4444', '#DC2626']}
-                      style={{ width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', ...Shadows.large }}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                      colors={["#EF4444", "#DC2626"]}
+                      style={{
+                        width: 88,
+                        height: 88,
+                        borderRadius: 44,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        ...Shadows.large,
+                      }}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
                     >
                       <Check size={36} color="#FFFFFF" strokeWidth={3} />
                     </LinearGradient>
                   </Pressable>
-                  <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)', fontSize: 11 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.85)",
+                      fontSize: 11,
+                    }}
+                  >
                     Save
                   </Text>
                 </View>
-
               </View>
             </Animated.View>
           ) : (
@@ -987,8 +1215,12 @@ export default function SpeakScreen() {
             <>
               <MicButton
                 onPress={handleMicPress}
-                onPressIn={() => { buttonScale.value = withSpring(0.92); }}
-                onPressOut={() => { buttonScale.value = withSpring(1); }}
+                onPressIn={() => {
+                  buttonScale.value = withSpring(0.92);
+                }}
+                onPressOut={() => {
+                  buttonScale.value = withSpring(1);
+                }}
                 disabled={isProcessing || isAtLimit}
                 isAtLimit={isAtLimit}
                 micButtonGradient={Gradients.micButton}
@@ -996,10 +1228,17 @@ export default function SpeakScreen() {
                 scale={buttonScale}
               />
               <Text
-                style={{ fontFamily: 'Inter_400Regular', color: isAtLimit ? 'rgba(255,120,120,0.9)' : '#FFFFFF' }}
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: isAtLimit ? "rgba(255,120,120,0.9)" : "#FFFFFF",
+                }}
                 className="text-xs mt-3"
               >
-                {isProcessing ? 'Please wait...' : isAtLimit ? 'Monthly limit reached' : `Tap to start · ${Math.floor(remainingMinutes)} min left`}
+                {isProcessing
+                  ? "Please wait..."
+                  : isAtLimit
+                    ? "Monthly limit reached"
+                    : `Tap to start · ${Math.floor(remainingMinutes)} min left`}
               </Text>
             </>
           )}
@@ -1018,7 +1257,7 @@ export default function SpeakScreen() {
         onComplete={handleReflectionComplete}
         onDismiss={() => {
           setShowReflection(false);
-          setRecordingState('idle');
+          setRecordingState("idle");
           voiceActions.reset();
         }}
         onGrounding={() => setShowGrounding(true)}
@@ -1047,18 +1286,18 @@ function ProcessingDot({ delay, primaryColor }: ProcessingDotProps) {
     scale.value = withRepeat(
       withSequence(
         withTiming(1.2, { duration: 400 }),
-        withTiming(0.8, { duration: 400 })
+        withTiming(0.8, { duration: 400 }),
       ),
       -1,
-      false
+      false,
     );
     opacity.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 400 }),
-        withTiming(0.4, { duration: 400 })
+        withTiming(0.4, { duration: 400 }),
       ),
       -1,
-      false
+      false,
     );
   }, []);
 
@@ -1094,10 +1333,10 @@ function LiveIndicator({ primaryColor }: LiveIndicatorProps) {
     opacity.value = withRepeat(
       withSequence(
         withTiming(0.3, { duration: 800 }),
-        withTiming(1, { duration: 800 })
+        withTiming(1, { duration: 800 }),
       ),
       -1,
-      false
+      false,
     );
   }, []);
 
@@ -1112,7 +1351,7 @@ function LiveIndicator({ primaryColor }: LiveIndicatorProps) {
           width: 6,
           height: 6,
           borderRadius: 3,
-          backgroundColor: '#EF4444',
+          backgroundColor: "#EF4444",
           marginLeft: 6,
         },
         animatedStyle,

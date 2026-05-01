@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,17 @@ import {
   Modal,
   Alert,
   LayoutChangeEvent,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-} from '@expo-google-fonts/inter';
+} from "@expo-google-fonts/inter";
 import {
   ArrowLeft,
   Calendar,
@@ -43,25 +43,43 @@ import {
   Heart,
   AlertTriangle,
   Wind,
-} from 'lucide-react-native';
-import Animated, {
-  FadeInDown,
-  FadeIn,
-  FadeOut,
-} from 'react-native-reanimated';
-import { tapHaptic, selectHaptic, successHaptic, confirmHaptic } from '@/lib/haptics';
-import * as Speech from 'expo-speech';
-import { getThemeColors, getThemeGradients, getThemeShadows } from '@/lib/theme';
-import useJournalStore from '@/lib/state/journal-store';
-import useOnboardingStore from '@/lib/state/onboarding-store';
-import useSettingsStore from '@/lib/state/settings-store';
-import { useDeleteEntry } from '@/lib/hooks';
-import { formatShortDuration, EMOTION_COLORS, EmotionType, EmotionScores, getEmotionSubLabel } from '@/lib/types';
-import { AudioPlayer } from '@/components/AudioPlayer';
+} from "lucide-react-native";
+import Animated, { FadeInDown, FadeIn, FadeOut } from "react-native-reanimated";
+import {
+  tapHaptic,
+  selectHaptic,
+  successHaptic,
+  confirmHaptic,
+} from "@/lib/haptics";
+import * as Speech from "expo-speech";
+import {
+  getThemeColors,
+  getThemeGradients,
+  getThemeShadows,
+} from "@/lib/theme";
+import useJournalStore from "@/lib/state/journal-store";
+import useOnboardingStore from "@/lib/state/onboarding-store";
+import useSettingsStore from "@/lib/state/settings-store";
+import { useDeleteEntry } from "@/lib/hooks";
+import {
+  formatShortDuration,
+  EMOTION_COLORS,
+  EmotionType,
+  EmotionScores,
+  getEmotionSubLabel,
+  BODY_REGION_EMOJIS,
+} from "@/lib/types";
+import { AudioPlayer } from "@/components/AudioPlayer";
 
 const ALL_EMOTIONS: EmotionType[] = [
-  'happiness', 'trust', 'anticipation', 'surprise',
-  'fear', 'sadness', 'disgust', 'anger',
+  "happiness",
+  "trust",
+  "anticipation",
+  "surprise",
+  "fear",
+  "sadness",
+  "disgust",
+  "anger",
 ];
 
 export default function EntryDetailScreen() {
@@ -70,10 +88,12 @@ export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTranscript, setEditedTranscript] = useState('');
-  const [editedTitle, setEditedTitle] = useState('');
+  const [editedTranscript, setEditedTranscript] = useState("");
+  const [editedTitle, setEditedTitle] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<'emotions' | 'analysis' | 'reflection' | null>('emotions');
+  const [expandedSection, setExpandedSection] = useState<
+    "emotions" | "analysis" | "reflection" | null
+  >("emotions");
   const [transcriptExpanded, setTranscriptExpanded] = useState(false);
   const [barContainerWidth, setBarContainerWidth] = useState(0);
   const onBarContainerLayout = useCallback((e: LayoutChangeEvent) => {
@@ -107,7 +127,7 @@ export default function EntryDetailScreen() {
     if (isSpeaking) Speech.stop();
     if (isEditing) {
       setIsEditing(false);
-      setEditedTranscript('');
+      setEditedTranscript("");
     } else {
       router.back();
     }
@@ -126,15 +146,15 @@ export default function EntryDetailScreen() {
     successHaptic();
     updateEntry(entry.id, { transcript: editedTranscript, title: editedTitle });
     setIsEditing(false);
-    setEditedTranscript('');
-    setEditedTitle('');
+    setEditedTranscript("");
+    setEditedTitle("");
   };
 
   const handleCancelEdit = () => {
     tapHaptic();
     setIsEditing(false);
-    setEditedTranscript('');
-    setEditedTitle('');
+    setEditedTranscript("");
+    setEditedTitle("");
   };
 
   const handleDeletePress = () => {
@@ -156,7 +176,7 @@ export default function EntryDetailScreen() {
     setShowDeleteModal(false);
   };
 
-  const toggleSection = (section: 'emotions' | 'analysis' | 'reflection') => {
+  const toggleSection = (section: "emotions" | "analysis" | "reflection") => {
     tapHaptic();
     setExpandedSection(expandedSection === section ? null : section);
   };
@@ -170,7 +190,7 @@ export default function EntryDetailScreen() {
     } else {
       setIsSpeaking(true);
       Speech.speak(entry.aiReflection, {
-        language: 'en-US',
+        language: "en-US",
         pitch: 1.0,
         rate: 0.9,
         onDone: () => setIsSpeaking(false),
@@ -192,12 +212,12 @@ export default function EntryDetailScreen() {
       >
         <LinearGradient
           colors={Gradients.background}
-          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
         />
         <Text
-          style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+          style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
           className="text-lg"
         >
           Entry not found
@@ -208,26 +228,26 @@ export default function EntryDetailScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    if (timeFormat === '24h') {
-      return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
+    if (timeFormat === "24h") {
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
         hour12: false,
       });
     }
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
   };
@@ -236,7 +256,7 @@ export default function EntryDetailScreen() {
     <View className="flex-1" style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
-        style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
       />
@@ -249,7 +269,7 @@ export default function EntryDetailScreen() {
         <Pressable
           onPress={handleBack}
           className="w-10 h-10 rounded-full items-center justify-center"
-          style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+          style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
         >
           <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
         </Pressable>
@@ -260,14 +280,14 @@ export default function EntryDetailScreen() {
               <Pressable
                 onPress={handleEdit}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
               >
                 <Edit3 size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
               <Pressable
                 onPress={handleDeletePress}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: 'transparent' }}
+                style={{ backgroundColor: "transparent" }}
               >
                 <Trash2 size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
@@ -278,14 +298,14 @@ export default function EntryDetailScreen() {
               <Pressable
                 onPress={handleCancelEdit}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
               >
                 <X size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
               <Pressable
                 onPress={handleSave}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
               >
                 <Save size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
@@ -309,29 +329,32 @@ export default function EntryDetailScreen() {
               value={editedTitle}
               onChangeText={setEditedTitle}
               style={{
-                fontFamily: 'Inter_700Bold',
-                color: '#FFFFFF',
+                fontFamily: "Inter_700Bold",
+                color: "#FFFFFF",
                 fontSize: 24,
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
                 borderRadius: 12,
                 padding: 12,
                 marginBottom: 8,
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.25)',
+                borderColor: "rgba(255, 255, 255, 0.25)",
               }}
               placeholderTextColor="rgba(255, 255, 255, 0.5)"
               placeholder="Entry title..."
             />
           ) : (
             <Text
-              style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
+              style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}
               className="text-2xl mb-2"
             >
               {entry.title}
             </Text>
           )}
           <Text
-            style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+            style={{
+              fontFamily: "Inter_400Regular",
+              color: "rgba(255, 255, 255, 0.8)",
+            }}
             className="text-sm mb-4"
           >
             {formatDate(entry.createdAt)}
@@ -340,11 +363,15 @@ export default function EntryDetailScreen() {
           {/* Meta Info */}
           <View className="flex-row items-center mb-2" style={{ gap: 16 }}>
             <View className="flex-row items-center">
-              <Calendar size={16} color="rgba(255, 255, 255, 0.8)" strokeWidth={2} />
+              <Calendar
+                size={16}
+                color="rgba(255, 255, 255, 0.8)"
+                strokeWidth={2}
+              />
               <Text
                 style={{
-                  fontFamily: 'Inter_400Regular',
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255, 255, 255, 0.8)",
                 }}
                 className="text-sm ml-2"
               >
@@ -352,11 +379,15 @@ export default function EntryDetailScreen() {
               </Text>
             </View>
             <View className="flex-row items-center">
-              <Clock size={16} color="rgba(255, 255, 255, 0.8)" strokeWidth={2} />
+              <Clock
+                size={16}
+                color="rgba(255, 255, 255, 0.8)"
+                strokeWidth={2}
+              />
               <Text
                 style={{
-                  fontFamily: 'Inter_400Regular',
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255, 255, 255, 0.8)",
                 }}
                 className="text-sm ml-2"
               >
@@ -364,11 +395,15 @@ export default function EntryDetailScreen() {
               </Text>
             </View>
             <View className="flex-row items-center">
-              <Activity size={16} color="rgba(255, 255, 255, 0.8)" strokeWidth={2} />
+              <Activity
+                size={16}
+                color="rgba(255, 255, 255, 0.8)"
+                strokeWidth={2}
+              />
               <Text
                 style={{
-                  fontFamily: 'Inter_400Regular',
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255, 255, 255, 0.8)",
                 }}
                 className="text-sm ml-2"
               >
@@ -380,14 +415,17 @@ export default function EntryDetailScreen() {
 
         {/* AI Reflection (TTS) - shown when available from OpenRouter */}
         {entry.aiReflection && entry.aiReflection.trim().length > 0 && (
-          <Animated.View entering={FadeInDown.delay(150).duration(600)} className="mb-6">
+          <Animated.View
+            entering={FadeInDown.delay(150).duration(600)}
+            className="mb-6"
+          >
             <Pressable
-              onPress={() => toggleSection('reflection')}
+              onPress={() => toggleSection("reflection")}
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.25)',
+                borderColor: "rgba(255, 255, 255, 0.25)",
               }}
             >
               <View className="p-5">
@@ -395,34 +433,46 @@ export default function EntryDetailScreen() {
                   <View className="flex-row items-center">
                     <Volume2 size={18} color="#FFFFFF" strokeWidth={2} />
                     <Text
-                      style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                      }}
                       className="text-base ml-2"
                     >
                       AI Reflection
                     </Text>
                     <View
                       className="ml-2 px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                      style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
                     >
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
+                          fontSize: 9,
+                        }}
+                      >
                         OPENROUTER
                       </Text>
                     </View>
                   </View>
-                  {expandedSection === 'reflection' ? (
+                  {expandedSection === "reflection" ? (
                     <ChevronUp size={20} color="#FFFFFF" strokeWidth={2} />
                   ) : (
                     <ChevronDown size={20} color="#FFFFFF" strokeWidth={2} />
                   )}
                 </View>
 
-                {expandedSection === 'reflection' && (
-                  <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+                {expandedSection === "reflection" && (
+                  <Animated.View
+                    entering={FadeIn.duration(300)}
+                    exiting={FadeOut.duration(200)}
+                  >
                     <Text
                       style={{
-                        fontFamily: 'Inter_400Regular',
+                        fontFamily: "Inter_400Regular",
                         lineHeight: 24,
-                        color: 'rgba(255, 255, 255, 0.95)',
+                        color: "rgba(255, 255, 255, 0.95)",
                         marginBottom: 16,
                       }}
                       className="text-sm"
@@ -436,12 +486,12 @@ export default function EntryDetailScreen() {
                       className="flex-row items-center justify-center rounded-2xl py-3 px-5"
                       style={{
                         backgroundColor: isSpeaking
-                          ? 'rgba(239, 68, 68, 0.25)'
-                          : 'rgba(255, 255, 255, 0.2)',
+                          ? "rgba(239, 68, 68, 0.25)"
+                          : "rgba(255, 255, 255, 0.2)",
                         borderWidth: 1,
                         borderColor: isSpeaking
-                          ? 'rgba(239, 68, 68, 0.5)'
-                          : 'rgba(255, 255, 255, 0.3)',
+                          ? "rgba(239, 68, 68, 0.5)"
+                          : "rgba(255, 255, 255, 0.3)",
                       }}
                     >
                       {isSpeaking ? (
@@ -451,13 +501,13 @@ export default function EntryDetailScreen() {
                       )}
                       <Text
                         style={{
-                          fontFamily: 'Inter_600SemiBold',
-                          color: '#FFFFFF',
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
                           fontSize: 13,
                           marginLeft: 8,
                         }}
                       >
-                        {isSpeaking ? 'Stop Reading' : 'Listen to Reflection'}
+                        {isSpeaking ? "Stop Reading" : "Listen to Reflection"}
                       </Text>
                     </Pressable>
                   </Animated.View>
@@ -469,21 +519,28 @@ export default function EntryDetailScreen() {
 
         {/* Conversation Prompt */}
         {entry.conversationPrompt && (
-          <Animated.View entering={FadeInDown.delay(200).duration(600)} className="mb-6">
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(600)}
+            className="mb-6"
+          >
             <View
               className="rounded-2xl p-4"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.15)',
+                borderColor: "rgba(255, 255, 255, 0.15)",
               }}
             >
               <View className="flex-row items-center mb-2">
-                <MessageSquare size={16} color="rgba(255, 255, 255, 0.8)" strokeWidth={2} />
+                <MessageSquare
+                  size={16}
+                  color="rgba(255, 255, 255, 0.8)"
+                  strokeWidth={2}
+                />
                 <Text
                   style={{
-                    fontFamily: 'Inter_600SemiBold',
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontFamily: "Inter_600SemiBold",
+                    color: "rgba(255, 255, 255, 0.8)",
                   }}
                   className="text-xs uppercase ml-2"
                 >
@@ -492,8 +549,8 @@ export default function EntryDetailScreen() {
               </View>
               <Text
                 style={{
-                  fontFamily: 'Inter_400Regular',
-                  color: '#FFFFFF',
+                  fontFamily: "Inter_400Regular",
+                  color: "#FFFFFF",
                   lineHeight: 22,
                 }}
                 className="text-sm italic"
@@ -509,14 +566,14 @@ export default function EntryDetailScreen() {
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
               borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.2)',
+              borderColor: "rgba(255, 255, 255, 0.2)",
             }}
           >
             <View className="p-5">
               <Text
-                style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                 className="text-base mb-3"
               >
                 Full Transcript
@@ -529,11 +586,11 @@ export default function EntryDetailScreen() {
                   numberOfLines={10}
                   textAlignVertical="top"
                   style={{
-                    fontFamily: 'Inter_400Regular',
+                    fontFamily: "Inter_400Regular",
                     fontSize: 14,
                     lineHeight: 24,
-                    color: '#FFFFFF',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    color: "#FFFFFF",
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
                     borderRadius: 12,
                     padding: 12,
                     minHeight: 200,
@@ -544,9 +601,9 @@ export default function EntryDetailScreen() {
                 <View>
                   <Text
                     style={{
-                      fontFamily: 'Inter_400Regular',
+                      fontFamily: "Inter_400Regular",
                       lineHeight: 24,
-                      color: 'rgba(255, 255, 255, 0.95)',
+                      color: "rgba(255, 255, 255, 0.95)",
                     }}
                     className="text-sm"
                     numberOfLines={transcriptExpanded ? undefined : 2}
@@ -555,18 +612,34 @@ export default function EntryDetailScreen() {
                   </Text>
                   {entry.transcript && entry.transcript.length > 120 && (
                     <Pressable
-                      onPress={() => { tapHaptic(); setTranscriptExpanded(!transcriptExpanded); }}
+                      onPress={() => {
+                        tapHaptic();
+                        setTranscriptExpanded(!transcriptExpanded);
+                      }}
                       className="flex-row items-center mt-2"
                     >
                       {transcriptExpanded ? (
-                        <ChevronUp size={14} color={Colors.primary} strokeWidth={2} />
+                        <ChevronUp
+                          size={14}
+                          color={Colors.primary}
+                          strokeWidth={2}
+                        />
                       ) : (
-                        <ChevronDown size={14} color={Colors.primary} strokeWidth={2} />
+                        <ChevronDown
+                          size={14}
+                          color={Colors.primary}
+                          strokeWidth={2}
+                        />
                       )}
                       <Text
-                        style={{ fontFamily: 'Inter_500Medium', color: Colors.primary, fontSize: 13, marginLeft: 4 }}
+                        style={{
+                          fontFamily: "Inter_500Medium",
+                          color: Colors.primary,
+                          fontSize: 13,
+                          marginLeft: 4,
+                        }}
                       >
-                        {transcriptExpanded ? 'Show less' : 'Read more'}
+                        {transcriptExpanded ? "Show less" : "Read more"}
                       </Text>
                     </Pressable>
                   )}
@@ -578,18 +651,21 @@ export default function EntryDetailScreen() {
 
         {/* Audio Playback */}
         {entry.audioUri && (
-          <Animated.View entering={FadeInDown.delay(350).duration(600)} className="mb-6">
+          <Animated.View
+            entering={FadeInDown.delay(350).duration(600)}
+            className="mb-6"
+          >
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderColor: "rgba(255, 255, 255, 0.2)",
               }}
             >
               <View className="p-5">
                 <Text
-                  style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   className="text-base mb-4"
                 >
                   Recording
@@ -608,12 +684,12 @@ export default function EntryDetailScreen() {
         {/* Emotion Breakdown - Collapsible */}
         <Animated.View entering={FadeInDown.delay(400).duration(600)}>
           <Pressable
-            onPress={() => toggleSection('emotions')}
+            onPress={() => toggleSection("emotions")}
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
               borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.2)',
+              borderColor: "rgba(255, 255, 255, 0.2)",
             }}
           >
             <View className="p-5">
@@ -621,7 +697,10 @@ export default function EntryDetailScreen() {
                 <View className="flex-row items-center">
                   <BarChart2 size={18} color="#FFFFFF" strokeWidth={2} />
                   <Text
-                    style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#FFFFFF",
+                    }}
                     className="text-base ml-2"
                   >
                     Emotion Breakdown
@@ -629,52 +708,67 @@ export default function EntryDetailScreen() {
                   {entry.emotionScores && (
                     <View
                       className="ml-2 px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                      style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
                     >
-                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
+                          fontSize: 9,
+                        }}
+                      >
                         TOP 4
                       </Text>
                     </View>
                   )}
                 </View>
-                {expandedSection === 'emotions' ? (
+                {expandedSection === "emotions" ? (
                   <ChevronUp size={20} color="#FFFFFF" strokeWidth={2} />
                 ) : (
                   <ChevronDown size={20} color="#FFFFFF" strokeWidth={2} />
                 )}
               </View>
 
-              {expandedSection === 'emotions' && (
-                <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+              {expandedSection === "emotions" && (
+                <Animated.View
+                  entering={FadeIn.duration(300)}
+                  exiting={FadeOut.duration(200)}
+                >
                   {entry.emotionScores ? (
                     /* Top 4 emotions by score — Plutchik intensity labels */
                     <View style={{ gap: 10 }} onLayout={onBarContainerLayout}>
                       <Text
                         style={{
-                          fontFamily: 'Inter_600SemiBold',
-                          color: 'rgba(255, 255, 255, 0.6)',
+                          fontFamily: "Inter_600SemiBold",
+                          color: "rgba(255, 255, 255, 0.6)",
                           fontSize: 10,
-                          textTransform: 'uppercase',
+                          textTransform: "uppercase",
                           letterSpacing: 0.8,
                           marginBottom: 4,
                         }}
                       >
                         Top Emotions — Plutchik Intensity
                       </Text>
-                      {ALL_EMOTIONS
-                        .map((emotion) => ({ emotion, score: entry.emotionScores![emotion] ?? 0 }))
+                      {ALL_EMOTIONS.map((emotion) => ({
+                        emotion,
+                        score: entry.emotionScores![emotion] ?? 0,
+                      }))
                         .sort((a, b) => b.score - a.score)
                         .slice(0, 4)
                         .map(({ emotion, score }, rank) => {
                           const isPrimary = emotion === entry.primaryEmotion;
-                          const barWidth = barContainerWidth > 0 ? (score / 100) * barContainerWidth : 0;
+                          const barWidth =
+                            barContainerWidth > 0
+                              ? (score / 100) * barContainerWidth
+                              : 0;
                           // Prefer user override, then saved AI label, then compute from score
                           const intensityLabel =
                             entry.userOverrideLabels?.[emotion] ??
                             entry.emotionIntensityLabels?.[emotion] ??
                             getEmotionSubLabel(emotion, score);
                           const subLabelMatchesBase =
-                            intensityLabel.toLowerCase() === emotion.toLowerCase();
+                            intensityLabel.toLowerCase() ===
+                            emotion.toLowerCase();
                           // Opacity steps: 1 → 0.75 → 0.55 → 0.4 for visual hierarchy
                           const barOpacity = [1, 0.75, 0.55, 0.4][rank];
                           return (
@@ -684,8 +778,10 @@ export default function EntryDetailScreen() {
                                   <View>
                                     <Text
                                       style={{
-                                        fontFamily: isPrimary ? 'Inter_600SemiBold' : 'Inter_400Regular',
-                                        color: '#FFFFFF',
+                                        fontFamily: isPrimary
+                                          ? "Inter_600SemiBold"
+                                          : "Inter_400Regular",
+                                        color: "#FFFFFF",
                                         fontSize: 13,
                                       }}
                                     >
@@ -694,10 +790,10 @@ export default function EntryDetailScreen() {
                                     {!subLabelMatchesBase && (
                                       <Text
                                         style={{
-                                          fontFamily: 'Inter_400Regular',
-                                          color: 'rgba(255,255,255,0.4)',
+                                          fontFamily: "Inter_400Regular",
+                                          color: "rgba(255,255,255,0.4)",
                                           fontSize: 9,
-                                          textTransform: 'uppercase',
+                                          textTransform: "uppercase",
                                           letterSpacing: 0.5,
                                         }}
                                       >
@@ -708,9 +804,17 @@ export default function EntryDetailScreen() {
                                   {isPrimary && (
                                     <View
                                       className="ml-2 px-2 py-0.5 rounded-full"
-                                      style={{ backgroundColor: `${Colors.primary}40` }}
+                                      style={{
+                                        backgroundColor: `${Colors.primary}40`,
+                                      }}
                                     >
-                                      <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 9 }}>
+                                      <Text
+                                        style={{
+                                          fontFamily: "Inter_600SemiBold",
+                                          color: "#FFFFFF",
+                                          fontSize: 9,
+                                        }}
+                                      >
                                         PRIMARY
                                       </Text>
                                     </View>
@@ -718,8 +822,8 @@ export default function EntryDetailScreen() {
                                 </View>
                                 <Text
                                   style={{
-                                    fontFamily: 'Inter_700Bold',
-                                    color: 'rgba(255,255,255,0.8)',
+                                    fontFamily: "Inter_700Bold",
+                                    color: "rgba(255,255,255,0.8)",
                                     fontSize: 13,
                                   }}
                                 >
@@ -728,7 +832,9 @@ export default function EntryDetailScreen() {
                               </View>
                               <View
                                 className="h-2 rounded-full"
-                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                                style={{
+                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                }}
                               >
                                 <View
                                   className="h-full rounded-full"
@@ -748,8 +854,8 @@ export default function EntryDetailScreen() {
                     <View onLayout={onBarContainerLayout}>
                       <Text
                         style={{
-                          fontFamily: 'Inter_600SemiBold',
-                          color: 'rgba(255, 255, 255, 0.8)',
+                          fontFamily: "Inter_600SemiBold",
+                          color: "rgba(255, 255, 255, 0.8)",
                         }}
                         className="text-xs uppercase mb-3"
                       >
@@ -760,12 +866,18 @@ export default function EntryDetailScreen() {
                           const isPrimary = emotion === entry.primaryEmotion;
                           const intensity = isPrimary
                             ? entry.emotionIntensity
-                            : Math.round(entry.emotionIntensity * (0.7 - index * 0.1));
-                          const barWidth = barContainerWidth > 0 ? (intensity / 100) * barContainerWidth : 0;
+                            : Math.round(
+                                entry.emotionIntensity * (0.7 - index * 0.1),
+                              );
+                          const barWidth =
+                            barContainerWidth > 0
+                              ? (intensity / 100) * barContainerWidth
+                              : 0;
                           // Prefer user override, then saved AI label, then compute
-                          const subLabel = entry.userOverrideLabels?.[emotion]
-                            ?? entry.emotionIntensityLabels?.[emotion]
-                            ?? getEmotionSubLabel(emotion, intensity);
+                          const subLabel =
+                            entry.userOverrideLabels?.[emotion] ??
+                            entry.emotionIntensityLabels?.[emotion] ??
+                            getEmotionSubLabel(emotion, intensity);
                           const subLabelMatchesBase =
                             subLabel.toLowerCase() === emotion.toLowerCase();
 
@@ -776,8 +888,10 @@ export default function EntryDetailScreen() {
                                   <View>
                                     <Text
                                       style={{
-                                        fontFamily: isPrimary ? 'Inter_600SemiBold' : 'Inter_400Regular',
-                                        color: '#FFFFFF',
+                                        fontFamily: isPrimary
+                                          ? "Inter_600SemiBold"
+                                          : "Inter_400Regular",
+                                        color: "#FFFFFF",
                                         fontSize: 13,
                                       }}
                                     >
@@ -786,10 +900,10 @@ export default function EntryDetailScreen() {
                                     {!subLabelMatchesBase && (
                                       <Text
                                         style={{
-                                          fontFamily: 'Inter_400Regular',
-                                          color: 'rgba(255,255,255,0.4)',
+                                          fontFamily: "Inter_400Regular",
+                                          color: "rgba(255,255,255,0.4)",
                                           fontSize: 9,
-                                          textTransform: 'uppercase',
+                                          textTransform: "uppercase",
                                           letterSpacing: 0.5,
                                         }}
                                       >
@@ -801,13 +915,14 @@ export default function EntryDetailScreen() {
                                     <View
                                       className="ml-2 px-2 py-0.5 rounded-full"
                                       style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                        backgroundColor:
+                                          "rgba(255, 255, 255, 0.2)",
                                       }}
                                     >
                                       <Text
                                         style={{
-                                          fontFamily: 'Inter_600SemiBold',
-                                          color: '#FFFFFF',
+                                          fontFamily: "Inter_600SemiBold",
+                                          color: "#FFFFFF",
                                           fontSize: 9,
                                         }}
                                       >
@@ -818,8 +933,8 @@ export default function EntryDetailScreen() {
                                 </View>
                                 <Text
                                   style={{
-                                    fontFamily: 'Inter_700Bold',
-                                    color: '#FFFFFF',
+                                    fontFamily: "Inter_700Bold",
+                                    color: "#FFFFFF",
                                     fontSize: 13,
                                   }}
                                 >
@@ -828,7 +943,9 @@ export default function EntryDetailScreen() {
                               </View>
                               <View
                                 className="h-2 rounded-full"
-                                style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                                style={{
+                                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                                }}
                               >
                                 <View
                                   className="h-full rounded-full"
@@ -851,14 +968,17 @@ export default function EntryDetailScreen() {
         </Animated.View>
 
         {/* Your Reflection Card — valence/arousal, body sensation, grounding */}
-        {(entry.valence !== undefined || entry.arousal !== undefined || entry.bodySensation || entry.groundingUsed) && (
+        {(entry.valence !== undefined ||
+          entry.arousal !== undefined ||
+          entry.bodySensation ||
+          entry.groundingUsed) && (
           <Animated.View entering={FadeInDown.delay(450).duration(600)}>
             <View
               className="rounded-3xl overflow-hidden mb-6"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderColor: "rgba(255, 255, 255, 0.2)",
               }}
             >
               <View className="p-5">
@@ -866,7 +986,10 @@ export default function EntryDetailScreen() {
                   <View className="flex-row items-center">
                     <Heart size={18} color="#FFFFFF" strokeWidth={2} />
                     <Text
-                      style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                      }}
                       className="text-base ml-2"
                     >
                       Your Reflection
@@ -876,13 +999,13 @@ export default function EntryDetailScreen() {
                   {entry.userValidated ? (
                     <View
                       className="flex-row items-center px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: 'rgba(34, 197, 94, 0.25)' }}
+                      style={{ backgroundColor: "rgba(34, 197, 94, 0.25)" }}
                     >
                       <CheckCircle2 size={12} color="#22C55E" strokeWidth={2} />
                       <Text
                         style={{
-                          fontFamily: 'Inter_600SemiBold',
-                          color: '#22C55E',
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#22C55E",
                           fontSize: 10,
                           marginLeft: 4,
                         }}
@@ -893,13 +1016,13 @@ export default function EntryDetailScreen() {
                   ) : entry.aiCorrected ? (
                     <View
                       className="flex-row items-center px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: 'rgba(234, 179, 8, 0.25)' }}
+                      style={{ backgroundColor: "rgba(234, 179, 8, 0.25)" }}
                     >
                       <RefreshCw size={12} color="#EAB308" strokeWidth={2} />
                       <Text
                         style={{
-                          fontFamily: 'Inter_600SemiBold',
-                          color: '#EAB308',
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#EAB308",
                           fontSize: 10,
                           marginLeft: 4,
                         }}
@@ -911,7 +1034,8 @@ export default function EntryDetailScreen() {
                 </View>
 
                 {/* Valence & Arousal Bars */}
-                {(entry.valence !== undefined || entry.arousal !== undefined) && (
+                {(entry.valence !== undefined ||
+                  entry.arousal !== undefined) && (
                   <View style={{ gap: 12, marginBottom: 16 }}>
                     {/* Valence */}
                     {entry.valence !== undefined && (
@@ -919,8 +1043,8 @@ export default function EntryDetailScreen() {
                         <View className="flex-row items-center justify-between mb-1.5">
                           <Text
                             style={{
-                              fontFamily: 'Inter_500Medium',
-                              color: 'rgba(255, 255, 255, 0.8)',
+                              fontFamily: "Inter_500Medium",
+                              color: "rgba(255, 255, 255, 0.8)",
                               fontSize: 12,
                             }}
                           >
@@ -928,32 +1052,51 @@ export default function EntryDetailScreen() {
                           </Text>
                           <Text
                             style={{
-                              fontFamily: 'Inter_600SemiBold',
-                              color: '#FFFFFF',
+                              fontFamily: "Inter_600SemiBold",
+                              color: "#FFFFFF",
                               fontSize: 12,
                             }}
                           >
-                            {entry.valence > 0 ? '+' : ''}{entry.valence}
+                            {entry.valence > 0 ? "+" : ""}
+                            {entry.valence}
                           </Text>
                         </View>
                         <View
                           className="h-2.5 rounded-full overflow-hidden"
-                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                          style={{
+                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                          }}
                         >
                           <View
                             className="h-full rounded-full"
                             style={{
                               width: `${Math.abs(entry.valence)}%`,
-                              backgroundColor: entry.valence >= 0 ? '#22C55E' : '#EF4444',
-                              marginLeft: entry.valence < 0 ? `${100 - Math.abs(entry.valence)}%` : 0,
+                              backgroundColor:
+                                entry.valence >= 0 ? "#22C55E" : "#EF4444",
+                              marginLeft:
+                                entry.valence < 0
+                                  ? `${100 - Math.abs(entry.valence)}%`
+                                  : 0,
                             }}
                           />
                         </View>
                         <View className="flex-row justify-between mt-1">
-                          <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                          <Text
+                            style={{
+                              fontFamily: "Inter_400Regular",
+                              color: "rgba(255,255,255,0.4)",
+                              fontSize: 10,
+                            }}
+                          >
                             Unpleasant
                           </Text>
-                          <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                          <Text
+                            style={{
+                              fontFamily: "Inter_400Regular",
+                              color: "rgba(255,255,255,0.4)",
+                              fontSize: 10,
+                            }}
+                          >
                             Pleasant
                           </Text>
                         </View>
@@ -965,8 +1108,8 @@ export default function EntryDetailScreen() {
                         <View className="flex-row items-center justify-between mb-1.5">
                           <Text
                             style={{
-                              fontFamily: 'Inter_500Medium',
-                              color: 'rgba(255, 255, 255, 0.8)',
+                              fontFamily: "Inter_500Medium",
+                              color: "rgba(255, 255, 255, 0.8)",
                               fontSize: 12,
                             }}
                           >
@@ -974,8 +1117,8 @@ export default function EntryDetailScreen() {
                           </Text>
                           <Text
                             style={{
-                              fontFamily: 'Inter_600SemiBold',
-                              color: '#FFFFFF',
+                              fontFamily: "Inter_600SemiBold",
+                              color: "#FFFFFF",
                               fontSize: 12,
                             }}
                           >
@@ -984,7 +1127,9 @@ export default function EntryDetailScreen() {
                         </View>
                         <View
                           className="h-2.5 rounded-full overflow-hidden"
-                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                          style={{
+                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                          }}
                         >
                           <View
                             className="h-full rounded-full"
@@ -995,10 +1140,22 @@ export default function EntryDetailScreen() {
                           />
                         </View>
                         <View className="flex-row justify-between mt-1">
-                          <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                          <Text
+                            style={{
+                              fontFamily: "Inter_400Regular",
+                              color: "rgba(255,255,255,0.4)",
+                              fontSize: 10,
+                            }}
+                          >
                             Calm
                           </Text>
-                          <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
+                          <Text
+                            style={{
+                              fontFamily: "Inter_400Regular",
+                              color: "rgba(255,255,255,0.4)",
+                              fontSize: 10,
+                            }}
+                          >
                             Activated
                           </Text>
                         </View>
@@ -1013,22 +1170,26 @@ export default function EntryDetailScreen() {
                     <View
                       className="flex-row items-center px-3 py-2 rounded-full"
                       style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        backgroundColor: "rgba(255, 255, 255, 0.15)",
                         borderWidth: 1,
-                        borderColor: 'rgba(255, 255, 255, 0.25)',
+                        borderColor: "rgba(255, 255, 255, 0.25)",
                       }}
                     >
-                      <AlertTriangle size={12} color="#FFFFFF" strokeWidth={2} />
+                      <AlertTriangle
+                        size={12}
+                        color="#FFFFFF"
+                        strokeWidth={2}
+                      />
                       <Text
                         style={{
-                          fontFamily: 'Inter_500Medium',
-                          color: '#FFFFFF',
+                          fontFamily: "Inter_500Medium",
+                          color: "#FFFFFF",
                           fontSize: 11,
                           marginLeft: 6,
-                          textTransform: 'capitalize',
+                          textTransform: "capitalize",
                         }}
                       >
-                        {entry.bodySensation.replace(/_/g, ' ')}
+                        {entry.bodySensation.replace(/_/g, " ")}
                       </Text>
                     </View>
                   )}
@@ -1044,8 +1205,8 @@ export default function EntryDetailScreen() {
                       <Wind size={12} color={Colors.primary} strokeWidth={2} />
                       <Text
                         style={{
-                          fontFamily: 'Inter_500Medium',
-                          color: '#FFFFFF',
+                          fontFamily: "Inter_500Medium",
+                          color: "#FFFFFF",
                           fontSize: 11,
                           marginLeft: 6,
                         }}
@@ -1059,38 +1220,115 @@ export default function EntryDetailScreen() {
                       className="flex-row items-center px-3 py-2 rounded-full"
                       style={{
                         backgroundColor:
-                          entry.distressLevel === 'high'
-                            ? 'rgba(239, 68, 68, 0.2)'
-                            : entry.distressLevel === 'moderate'
-                            ? 'rgba(234, 179, 8, 0.2)'
-                            : 'rgba(34, 197, 94, 0.2)',
+                          entry.distressLevel === "high"
+                            ? "rgba(239, 68, 68, 0.2)"
+                            : entry.distressLevel === "moderate"
+                              ? "rgba(234, 179, 8, 0.2)"
+                              : "rgba(34, 197, 94, 0.2)",
                         borderWidth: 1,
                         borderColor:
-                          entry.distressLevel === 'high'
-                            ? 'rgba(239, 68, 68, 0.4)'
-                            : entry.distressLevel === 'moderate'
-                            ? 'rgba(234, 179, 8, 0.4)'
-                            : 'rgba(34, 197, 94, 0.4)',
+                          entry.distressLevel === "high"
+                            ? "rgba(239, 68, 68, 0.4)"
+                            : entry.distressLevel === "moderate"
+                              ? "rgba(234, 179, 8, 0.4)"
+                              : "rgba(34, 197, 94, 0.4)",
                       }}
                     >
                       <Text
                         style={{
-                          fontFamily: 'Inter_500Medium',
+                          fontFamily: "Inter_500Medium",
                           color:
-                            entry.distressLevel === 'high'
-                              ? '#EF4444'
-                              : entry.distressLevel === 'moderate'
-                              ? '#EAB308'
-                              : '#22C55E',
+                            entry.distressLevel === "high"
+                              ? "#EF4444"
+                              : entry.distressLevel === "moderate"
+                                ? "#EAB308"
+                                : "#22C55E",
                           fontSize: 11,
-                          textTransform: 'capitalize',
+                          textTransform: "capitalize",
                         }}
                       >
                         {entry.distressLevel} distress
                       </Text>
                     </View>
                   )}
+                  {entry.userValidated && (
+                    <View
+                      className="flex-row items-center px-3 py-2 rounded-full"
+                      style={{
+                        backgroundColor: "rgba(34, 197, 94, 0.2)",
+                        borderWidth: 1,
+                        borderColor: "rgba(34, 197, 94, 0.4)",
+                      }}
+                    >
+                      <CheckCircle2 size={12} color="#22C55E" strokeWidth={2} />
+                      <Text
+                        style={{
+                          fontFamily: "Inter_500Medium",
+                          color: "#22C55E",
+                          fontSize: 11,
+                          marginLeft: 6,
+                        }}
+                      >
+                        Validated
+                      </Text>
+                    </View>
+                  )}
                 </View>
+
+                {/* Body Region Map Results */}
+                {entry.bodyRegions && entry.bodyRegions.length > 0 && (
+                  <View style={{ marginTop: 12 }}>
+                    <Text
+                      style={{
+                        fontFamily: "Inter_500Medium",
+                        color: "rgba(255, 255, 255, 0.6)",
+                        fontSize: 11,
+                        marginBottom: 6,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      Body regions
+                    </Text>
+                    <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                      {entry.bodyRegions.map((br) => (
+                        <View
+                          key={br.region}
+                          className="flex-row items-center px-2.5 py-1.5 rounded-full"
+                          style={{
+                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            borderWidth: 1,
+                            borderColor: "rgba(255, 255, 255, 0.2)",
+                          }}
+                        >
+                          <Text style={{ fontSize: 10, marginRight: 4 }}>
+                            {BODY_REGION_EMOJIS[br.region]}
+                          </Text>
+                          <Text
+                            style={{
+                              fontFamily: "Inter_500Medium",
+                              color: "#FFFFFF",
+                              fontSize: 10,
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {br.region}
+                          </Text>
+                          <Text
+                            style={{
+                              fontFamily: "Inter_600SemiBold",
+                              color: "rgba(255, 255, 255, 0.6)",
+                              fontSize: 9,
+                              marginLeft: 4,
+                            }}
+                          >
+                            {"●".repeat(br.intensity)}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
               </View>
             </View>
           </Animated.View>
@@ -1098,32 +1336,35 @@ export default function EntryDetailScreen() {
 
         {/* Refine Analysis Button */}
         {!entry.userValidated && (
-          <Animated.View entering={FadeInDown.delay(480).duration(600)} className="mb-6">
+          <Animated.View
+            entering={FadeInDown.delay(480).duration(600)}
+            className="mb-6"
+          >
             <Pressable
               onPress={() => {
                 selectHaptic();
                 // Route to reflection screen with entry data for re-analysis
                 router.push({
-                  pathname: '/reflection',
+                  pathname: "/reflection",
                   params: {
                     entryId: entry.id,
                     transcript: entry.transcript,
-                    mode: 'refine',
+                    mode: "refine",
                   },
                 });
               }}
               className="flex-row items-center justify-center rounded-2xl py-3.5 px-5"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.25)',
+                borderColor: "rgba(255, 255, 255, 0.25)",
               }}
             >
               <RefreshCw size={16} color="#FFFFFF" strokeWidth={2} />
               <Text
                 style={{
-                  fontFamily: 'Inter_600SemiBold',
-                  color: '#FFFFFF',
+                  fontFamily: "Inter_600SemiBold",
+                  color: "#FFFFFF",
                   fontSize: 13,
                   marginLeft: 8,
                 }}
@@ -1138,12 +1379,12 @@ export default function EntryDetailScreen() {
         {entry.aiAnalysis && entry.aiAnalysis.trim().length > 1 && (
           <Animated.View entering={FadeInDown.delay(500).duration(600)}>
             <Pressable
-              onPress={() => toggleSection('analysis')}
+              onPress={() => toggleSection("analysis")}
               className="rounded-3xl overflow-hidden mb-6"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
                 borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderColor: "rgba(255, 255, 255, 0.2)",
               }}
             >
               <View className="p-5">
@@ -1151,7 +1392,10 @@ export default function EntryDetailScreen() {
                   <View className="flex-row items-center">
                     <Lightbulb size={18} color="#FFFFFF" strokeWidth={2} />
                     <Text
-                      style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                      }}
                       className="text-base ml-2"
                     >
                       AI Analysis
@@ -1159,28 +1403,37 @@ export default function EntryDetailScreen() {
                     {entry.aiCorrected && (
                       <View
                         className="ml-2 px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: 'rgba(234, 179, 8, 0.25)' }}
+                        style={{ backgroundColor: "rgba(234, 179, 8, 0.25)" }}
                       >
-                        <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#EAB308', fontSize: 9 }}>
+                        <Text
+                          style={{
+                            fontFamily: "Inter_600SemiBold",
+                            color: "#EAB308",
+                            fontSize: 9,
+                          }}
+                        >
                           ADJUSTED
                         </Text>
                       </View>
                     )}
                   </View>
-                  {expandedSection === 'analysis' ? (
+                  {expandedSection === "analysis" ? (
                     <ChevronUp size={20} color="#FFFFFF" strokeWidth={2} />
                   ) : (
                     <ChevronDown size={20} color="#FFFFFF" strokeWidth={2} />
                   )}
                 </View>
 
-                {expandedSection === 'analysis' && (
-                  <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+                {expandedSection === "analysis" && (
+                  <Animated.View
+                    entering={FadeIn.duration(300)}
+                    exiting={FadeOut.duration(200)}
+                  >
                     <Text
                       style={{
-                        fontFamily: 'Inter_400Regular',
+                        fontFamily: "Inter_400Regular",
                         lineHeight: 24,
-                        color: 'rgba(255, 255, 255, 0.95)',
+                        color: "rgba(255, 255, 255, 0.95)",
                       }}
                       className="text-sm"
                     >
@@ -1194,55 +1447,60 @@ export default function EntryDetailScreen() {
         )}
 
         {/* Topics */}
-        {entry.topics && entry.topics.length > 0 && entry.topics.some((t) => t && t.trim().length > 0) && (
-          <Animated.View entering={FadeInDown.delay(600).duration(600)}>
-            <View
-              className="rounded-3xl overflow-hidden mb-6"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.2)',
-              }}
-            >
-              <View className="p-5">
-                <View className="flex-row items-center mb-3">
-                  <Target size={18} color="#FFFFFF" strokeWidth={2} />
-                  <Text
-                    style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
-                    className="text-base ml-2"
-                  >
-                    Topics
-                  </Text>
-                </View>
-                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                  {entry.topics
-                    .filter((t) => t && t.trim().length > 0)
-                    .map((topic, index) => (
-                      <View
-                        key={index}
-                        className="px-3 py-2 rounded-full"
-                        style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                          borderWidth: 1,
-                          borderColor: 'rgba(255, 255, 255, 0.25)',
-                        }}
-                      >
-                        <Text
+        {entry.topics &&
+          entry.topics.length > 0 &&
+          entry.topics.some((t) => t && t.trim().length > 0) && (
+            <Animated.View entering={FadeInDown.delay(600).duration(600)}>
+              <View
+                className="rounded-3xl overflow-hidden mb-6"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  borderWidth: 1,
+                  borderColor: "rgba(255, 255, 255, 0.2)",
+                }}
+              >
+                <View className="p-5">
+                  <View className="flex-row items-center mb-3">
+                    <Target size={18} color="#FFFFFF" strokeWidth={2} />
+                    <Text
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                      }}
+                      className="text-base ml-2"
+                    >
+                      Topics
+                    </Text>
+                  </View>
+                  <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                    {entry.topics
+                      .filter((t) => t && t.trim().length > 0)
+                      .map((topic, index) => (
+                        <View
+                          key={index}
+                          className="px-3 py-2 rounded-full"
                           style={{
-                            fontFamily: 'Inter_500Medium',
-                            color: '#FFFFFF',
+                            backgroundColor: "rgba(255, 255, 255, 0.15)",
+                            borderWidth: 1,
+                            borderColor: "rgba(255, 255, 255, 0.25)",
                           }}
-                          className="text-xs capitalize"
                         >
-                          {topic}
-                        </Text>
-                      </View>
-                    ))}
+                          <Text
+                            style={{
+                              fontFamily: "Inter_500Medium",
+                              color: "#FFFFFF",
+                            }}
+                            className="text-xs capitalize"
+                          >
+                            {topic}
+                          </Text>
+                        </View>
+                      ))}
+                  </View>
                 </View>
               </View>
-            </View>
-          </Animated.View>
-        )}
+            </Animated.View>
+          )}
       </ScrollView>
 
       {/* Delete Confirmation Modal */}
@@ -1261,26 +1519,36 @@ export default function EntryDetailScreen() {
               colors={Gradients.background}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
-              style={{ padding: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+              style={{
+                padding: 24,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.2)",
+              }}
             >
               <View className="items-center mb-4">
                 <View
                   className="w-16 h-16 rounded-full items-center justify-center mb-4"
-                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
+                  style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
                 >
                   <Trash2 size={32} color="#EF4444" strokeWidth={2} />
                 </View>
                 <Text
                   className="text-2xl font-bold mb-2 text-center"
-                  style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF' }}
+                  style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}
                 >
                   Delete Entry?
                 </Text>
                 <Text
                   className="text-center text-base"
-                  style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)', lineHeight: 22 }}
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255, 255, 255, 0.8)",
+                    lineHeight: 22,
+                  }}
                 >
-                  This will permanently delete this journal entry. This action cannot be undone.
+                  This will permanently delete this journal entry. This action
+                  cannot be undone.
                 </Text>
               </View>
 
@@ -1290,14 +1558,14 @@ export default function EntryDetailScreen() {
                   className="rounded-2xl overflow-hidden"
                 >
                   <LinearGradient
-                    colors={['#EF4444', '#DC2626']}
+                    colors={["#EF4444", "#DC2626"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={{ padding: 16, alignItems: 'center' }}
+                    style={{ padding: 16, alignItems: "center" }}
                   >
                     <Text
                       className="text-white text-base font-bold"
-                      style={{ fontFamily: 'Inter_700Bold' }}
+                      style={{ fontFamily: "Inter_700Bold" }}
                     >
                       Delete Entry
                     </Text>
@@ -1310,12 +1578,15 @@ export default function EntryDetailScreen() {
                   style={{
                     borderWidth: 2,
                     borderColor: Colors.primary,
-                    backgroundColor: 'transparent',
+                    backgroundColor: "transparent",
                   }}
                 >
                   <Text
                     className="text-base font-bold"
-                    style={{ fontFamily: 'Inter_700Bold', color: Colors.primary }}
+                    style={{
+                      fontFamily: "Inter_700Bold",
+                      color: Colors.primary,
+                    }}
                   >
                     Cancel
                   </Text>
