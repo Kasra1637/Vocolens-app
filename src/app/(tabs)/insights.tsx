@@ -1,62 +1,164 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState, useCallback, useMemo } from "react";
+import { View, Text, ScrollView, Pressable } from "react-native";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-} from '@expo-google-fonts/inter';
-import { Flame, Award, TrendingUp, Sun, Moon, Sunset, CloudMoon, Smile, Frown, AlertTriangle, Zap, Eye, ShieldAlert, Heart, Sparkles, BarChart3, Lightbulb, TrendingDown, Shield, Target, MessageCircle, Laugh, Meh, Angry, Sunrise, Handshake, Star, Zap as Shock, Heart as HeartFace, Clock } from 'lucide-react-native';
+} from "@expo-google-fonts/inter";
+import {
+  Flame,
+  Award,
+  TrendingUp,
+  Sun,
+  Moon,
+  Sunset,
+  CloudMoon,
+  Smile,
+  Frown,
+  AlertTriangle,
+  Zap,
+  Eye,
+  ShieldAlert,
+  Heart,
+  Sparkles,
+  BarChart3,
+  Lightbulb,
+  TrendingDown,
+  Shield,
+  Target,
+  MessageCircle,
+  Laugh,
+  Meh,
+  Angry,
+  Sunrise,
+  Handshake,
+  Star,
+  Zap as Shock,
+  Heart as HeartFace,
+  Clock,
+} from "lucide-react-native";
 import Animated, {
   FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withDelay,
-} from 'react-native-reanimated';
-import { selectHaptic, tapHaptic, selectionHaptic } from '@/lib/haptics';
-import { BorderRadius, getThemeColors, getThemeGradients, getThemeShadows } from '@/lib/theme';
-import { ThemeProvider, useTheme } from '@/lib/theme-context';
-import useJournalStore from '@/lib/state/journal-store';
-import useUserStatsStore from '@/lib/state/user-stats-store';
-import { useUsageMinutes, useRemainingMinutes, USAGE_LIMIT_MINUTES } from '@/lib/state/user-stats-store';
-import useBadgesStore from '@/lib/state/badges-store';
-import useOnboardingStore from '@/lib/state/onboarding-store';
-import useSettingsStore from '@/lib/state/settings-store';
-import { useMoodTrend, useInsights, useEmotionData, usePriorityInsights, useTriggerDetection } from '@/lib/hooks';
-import { EmotionType } from '@/lib/types';
-import { populateDummyData } from '@/lib/populate-dummy-data';
-import { EmotionalCompanion } from '@/components/EmotionalCompanion';
+} from "react-native-reanimated";
+import { selectHaptic, tapHaptic, selectionHaptic } from "@/lib/haptics";
+import {
+  BorderRadius,
+  getThemeColors,
+  getThemeGradients,
+  getThemeShadows,
+} from "@/lib/theme";
+import { ThemeProvider, useTheme } from "@/lib/theme-context";
+import useJournalStore from "@/lib/state/journal-store";
+import useUserStatsStore from "@/lib/state/user-stats-store";
+import {
+  useUsageMinutes,
+  useRemainingMinutes,
+  USAGE_LIMIT_MINUTES,
+} from "@/lib/state/user-stats-store";
+import useBadgesStore from "@/lib/state/badges-store";
+import useOnboardingStore from "@/lib/state/onboarding-store";
+import useSettingsStore from "@/lib/state/settings-store";
+import {
+  useMoodTrend,
+  useInsights,
+  useEmotionData,
+  usePriorityInsights,
+  useTriggerDetection,
+} from "@/lib/hooks";
+import { EmotionType } from "@/lib/types";
+import { populateDummyData } from "@/lib/populate-dummy-data";
+import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import {
   TriggerInsightCard,
   TriggerEmptyState,
   TriggerSectionHeader,
-} from '@/components/TriggerInsightCard';
-import { WeeklyReflectionCard } from '@/components/WeeklyReflectionCard';
-import { StreakCalendar } from '@/components/StreakCalendar';
-import { MoodStoryTimeline } from '@/components/MoodStoryTimeline';
-import ValenceArousalChart from '@/components/ValenceArousalChart';
+} from "@/components/TriggerInsightCard";
+import { WeeklyReflectionCard } from "@/components/WeeklyReflectionCard";
+import { StreakCalendar } from "@/components/StreakCalendar";
+import { MoodStoryTimeline } from "@/components/MoodStoryTimeline";
+import ValenceArousalChart from "@/components/ValenceArousalChart";
 
 // Core emotions with icons and emojis - 8 Plutchik emotions
 // Row 1: Happiness, Sadness, Anger, Anticipation
 // Row 2: Fear, Surprise, Disgust, Trust
 const CORE_EMOTIONS = [
-  { id: 'happiness' as EmotionType, label: 'Happiness', icon: Smile, color: '#FFD93D', emoji: '😊', faceIcon: Laugh },
-  { id: 'sadness' as EmotionType, label: 'Sadness', icon: Frown, color: '#6B8DD6', emoji: '😢', faceIcon: Frown },
-  { id: 'anger' as EmotionType, label: 'Anger', icon: Zap, color: '#FF6B6B', emoji: '😤', faceIcon: Angry },
-  { id: 'anticipation' as EmotionType, label: 'Anticipation', icon: Sunrise, color: '#FFB74D', emoji: '🤩', faceIcon: Star },
-  { id: 'fear' as EmotionType, label: 'Fear', icon: AlertTriangle, color: '#9575CD', emoji: '😰', faceIcon: Meh },
-  { id: 'surprise' as EmotionType, label: 'Surprise', icon: Shock, color: '#FF8A65', emoji: '😮', faceIcon: Star },
-  { id: 'disgust' as EmotionType, label: 'Disgust', icon: ShieldAlert, color: '#7CB342', emoji: '🤢', faceIcon: Meh },
-  { id: 'trust' as EmotionType, label: 'Trust', icon: Handshake, color: '#4DB6AC', emoji: '🤝', faceIcon: HeartFace },
+  {
+    id: "happiness" as EmotionType,
+    label: "Happiness",
+    icon: Smile,
+    color: "#FFD93D",
+    emoji: "😊",
+    faceIcon: Laugh,
+  },
+  {
+    id: "sadness" as EmotionType,
+    label: "Sadness",
+    icon: Frown,
+    color: "#6B8DD6",
+    emoji: "😢",
+    faceIcon: Frown,
+  },
+  {
+    id: "anger" as EmotionType,
+    label: "Anger",
+    icon: Zap,
+    color: "#FF6B6B",
+    emoji: "😤",
+    faceIcon: Angry,
+  },
+  {
+    id: "anticipation" as EmotionType,
+    label: "Anticipation",
+    icon: Sunrise,
+    color: "#FFB74D",
+    emoji: "🤩",
+    faceIcon: Star,
+  },
+  {
+    id: "fear" as EmotionType,
+    label: "Fear",
+    icon: AlertTriangle,
+    color: "#9575CD",
+    emoji: "😰",
+    faceIcon: Meh,
+  },
+  {
+    id: "surprise" as EmotionType,
+    label: "Surprise",
+    icon: Shock,
+    color: "#FF8A65",
+    emoji: "😮",
+    faceIcon: Star,
+  },
+  {
+    id: "disgust" as EmotionType,
+    label: "Disgust",
+    icon: ShieldAlert,
+    color: "#7CB342",
+    emoji: "🤢",
+    faceIcon: Meh,
+  },
+  {
+    id: "trust" as EmotionType,
+    label: "Trust",
+    icon: Handshake,
+    color: "#4DB6AC",
+    emoji: "🤝",
+    faceIcon: HeartFace,
+  },
 ] as const;
 
-type TimeRange = '7D' | '14D' | '30D';
-type ViewMode = 'overall' | 'emotion';
+type TimeRange = "7D" | "14D" | "30D";
+type ViewMode = "overall" | "emotion";
 
 export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
@@ -75,8 +177,14 @@ export default function InsightsScreen() {
   );
 }
 
-function InsightsContent({ insets }: { insets: { top: number; bottom: number; left: number; right: number } }) {
-  const [triggerTimeWindow, setTriggerTimeWindow] = useState<'7D' | '14D' | '30D'>('30D');
+function InsightsContent({
+  insets,
+}: {
+  insets: { top: number; bottom: number; left: number; right: number };
+}) {
+  const [triggerTimeWindow, setTriggerTimeWindow] = useState<
+    "7D" | "14D" | "30D"
+  >("30D");
 
   // Get theme from context
   const { Colors, Gradients, Shadows } = useTheme();
@@ -91,7 +199,8 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
 
   // Get mood trend data using React Query
   const { data: insightsData } = useInsights(30);
-  const { data: priorityInsights, isLoading: insightsLoading } = usePriorityInsights();
+  const { data: priorityInsights, isLoading: insightsLoading } =
+    usePriorityInsights();
   const { data: triggerData } = useTriggerDetection(triggerTimeWindow);
 
   // Find next badge to unlock
@@ -112,7 +221,7 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
       };
     }
     return {
-      name: 'All badges unlocked!',
+      name: "All badges unlocked!",
       progress: 1,
     };
   }, [getAllBadges]);
@@ -143,7 +252,14 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
 
   // Get time of day patterns with actual computed moods
   const timeOfDayPatterns = useMemo(() => {
-    const patterns: Record<string, { totalIntensity: number; entries: number; dominantEmotion: Record<string, number> }> = {
+    const patterns: Record<
+      string,
+      {
+        totalIntensity: number;
+        entries: number;
+        dominantEmotion: Record<string, number>;
+      }
+    > = {
       Morning: { totalIntensity: 0, entries: 0, dominantEmotion: {} },
       Afternoon: { totalIntensity: 0, entries: 0, dominantEmotion: {} },
       Evening: { totalIntensity: 0, entries: 0, dominantEmotion: {} },
@@ -153,78 +269,132 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
     entries.forEach((entry) => {
       const hour = new Date(entry.createdAt).getHours();
       let period: string;
-      if (hour >= 5 && hour < 12) period = 'Morning';
-      else if (hour >= 12 && hour < 17) period = 'Afternoon';
-      else if (hour >= 17 && hour < 21) period = 'Evening';
-      else period = 'Night';
+      if (hour >= 5 && hour < 12) period = "Morning";
+      else if (hour >= 12 && hour < 17) period = "Afternoon";
+      else if (hour >= 17 && hour < 21) period = "Evening";
+      else period = "Night";
 
       patterns[period].entries++;
       patterns[period].totalIntensity += entry.emotionIntensity;
       // Track dominant emotion
       const emotion = entry.primaryEmotion;
       if (emotion) {
-        patterns[period].dominantEmotion[emotion] = (patterns[period].dominantEmotion[emotion] || 0) + 1;
+        patterns[period].dominantEmotion[emotion] =
+          (patterns[period].dominantEmotion[emotion] || 0) + 1;
       }
     });
 
     // Helper to get mood label based on average intensity and dominant emotion
-    const getMoodLabel = (period: string, avgIntensity: number, dominantEmotions: Record<string, number>): string => {
+    const getMoodLabel = (
+      period: string,
+      avgIntensity: number,
+      dominantEmotions: Record<string, number>,
+    ): string => {
       if (Object.keys(dominantEmotions).length === 0) {
         // Default labels when no data
-        const defaults: Record<string, string> = { Morning: 'Energized', Afternoon: 'Focused', Evening: 'Reflective', Night: 'Calm' };
-        return defaults[period] || 'Neutral';
+        const defaults: Record<string, string> = {
+          Morning: "Energized",
+          Afternoon: "Focused",
+          Evening: "Reflective",
+          Night: "Calm",
+        };
+        return defaults[period] || "Neutral";
       }
 
       // Find the most common emotion for this time period
-      const topEmotion = Object.entries(dominantEmotions).sort((a, b) => b[1] - a[1])[0]?.[0];
+      const topEmotion = Object.entries(dominantEmotions).sort(
+        (a, b) => b[1] - a[1],
+      )[0]?.[0];
 
       // Map emotions to mood labels based on intensity
       const emotionMoodMap: Record<string, { high: string; low: string }> = {
-        happiness: { high: 'Joyful', low: 'Content' },
-        sadness: { high: 'Melancholic', low: 'Pensive' },
-        anger: { high: 'Frustrated', low: 'Irritated' },
-        fear: { high: 'Anxious', low: 'Uneasy' },
-        surprise: { high: 'Amazed', low: 'Curious' },
-        disgust: { high: 'Disturbed', low: 'Uncomfortable' },
-        trust: { high: 'Confident', low: 'Secure' },
-        anticipation: { high: 'Excited', low: 'Hopeful' },
+        happiness: { high: "Joyful", low: "Content" },
+        sadness: { high: "Melancholic", low: "Pensive" },
+        anger: { high: "Frustrated", low: "Irritated" },
+        fear: { high: "Anxious", low: "Uneasy" },
+        surprise: { high: "Amazed", low: "Curious" },
+        disgust: { high: "Disturbed", low: "Uncomfortable" },
+        trust: { high: "Confident", low: "Secure" },
+        anticipation: { high: "Excited", low: "Hopeful" },
       };
 
       const moodConfig = emotionMoodMap[topEmotion];
       if (moodConfig) {
         return avgIntensity >= 60 ? moodConfig.high : moodConfig.low;
       }
-      return avgIntensity >= 60 ? 'Energized' : 'Calm';
+      return avgIntensity >= 60 ? "Energized" : "Calm";
     };
 
     return [
       {
-        period: 'Morning',
+        period: "Morning",
         icon: Sun,
         entries: patterns.Morning.entries,
-        mood: getMoodLabel('Morning', patterns.Morning.entries > 0 ? patterns.Morning.totalIntensity / patterns.Morning.entries : 0, patterns.Morning.dominantEmotion),
-        avgIntensity: patterns.Morning.entries > 0 ? Math.round(patterns.Morning.totalIntensity / patterns.Morning.entries) : null,
+        mood: getMoodLabel(
+          "Morning",
+          patterns.Morning.entries > 0
+            ? patterns.Morning.totalIntensity / patterns.Morning.entries
+            : 0,
+          patterns.Morning.dominantEmotion,
+        ),
+        avgIntensity:
+          patterns.Morning.entries > 0
+            ? Math.round(
+                patterns.Morning.totalIntensity / patterns.Morning.entries,
+              )
+            : null,
       },
       {
-        period: 'Afternoon',
+        period: "Afternoon",
         icon: Sunset,
         entries: patterns.Afternoon.entries,
-        mood: getMoodLabel('Afternoon', patterns.Afternoon.entries > 0 ? patterns.Afternoon.totalIntensity / patterns.Afternoon.entries : 0, patterns.Afternoon.dominantEmotion),
-        avgIntensity: patterns.Afternoon.entries > 0 ? Math.round(patterns.Afternoon.totalIntensity / patterns.Afternoon.entries) : null,
+        mood: getMoodLabel(
+          "Afternoon",
+          patterns.Afternoon.entries > 0
+            ? patterns.Afternoon.totalIntensity / patterns.Afternoon.entries
+            : 0,
+          patterns.Afternoon.dominantEmotion,
+        ),
+        avgIntensity:
+          patterns.Afternoon.entries > 0
+            ? Math.round(
+                patterns.Afternoon.totalIntensity / patterns.Afternoon.entries,
+              )
+            : null,
       },
       {
-        period: 'Evening',
+        period: "Evening",
         icon: Moon,
         entries: patterns.Evening.entries,
-        mood: getMoodLabel('Evening', patterns.Evening.entries > 0 ? patterns.Evening.totalIntensity / patterns.Evening.entries : 0, patterns.Evening.dominantEmotion),
-        avgIntensity: patterns.Evening.entries > 0 ? Math.round(patterns.Evening.totalIntensity / patterns.Evening.entries) : null,
+        mood: getMoodLabel(
+          "Evening",
+          patterns.Evening.entries > 0
+            ? patterns.Evening.totalIntensity / patterns.Evening.entries
+            : 0,
+          patterns.Evening.dominantEmotion,
+        ),
+        avgIntensity:
+          patterns.Evening.entries > 0
+            ? Math.round(
+                patterns.Evening.totalIntensity / patterns.Evening.entries,
+              )
+            : null,
       },
       {
-        period: 'Night',
+        period: "Night",
         icon: CloudMoon,
         entries: patterns.Night.entries,
-        mood: getMoodLabel('Night', patterns.Night.entries > 0 ? patterns.Night.totalIntensity / patterns.Night.entries : 0, patterns.Night.dominantEmotion),
-        avgIntensity: patterns.Night.entries > 0 ? Math.round(patterns.Night.totalIntensity / patterns.Night.entries) : null,
+        mood: getMoodLabel(
+          "Night",
+          patterns.Night.entries > 0
+            ? patterns.Night.totalIntensity / patterns.Night.entries
+            : 0,
+          patterns.Night.dominantEmotion,
+        ),
+        avgIntensity:
+          patterns.Night.entries > 0
+            ? Math.round(patterns.Night.totalIntensity / patterns.Night.entries)
+            : null,
       },
     ];
   }, [entries]);
@@ -241,7 +411,7 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
       <View className="flex-1" style={{ backgroundColor: Colors.background }}>
         <LinearGradient
           colors={Gradients.background}
-          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
         />
@@ -250,7 +420,7 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
   }
 
   const user = {
-    name: 'Friend',
+    name: "Friend",
     streak: stats.currentStreak,
     nextBadge,
     usageMinutes,
@@ -270,7 +440,7 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
     <View className="flex-1" style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
-        style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
       />
@@ -295,15 +465,15 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
                 ...Shadows.medium,
                 borderWidth: 2,
                 borderColor: Colors.primary,
-                borderStyle: 'dashed',
+                borderStyle: "dashed",
               }}
             >
               <View className="flex-row items-center justify-center">
                 <Sparkles size={20} color="#FFFFFF" strokeWidth={2} />
                 <Text
                   style={{
-                    fontFamily: 'Inter_600SemiBold',
-                    color: '#FFFFFF',
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#FFFFFF",
                     fontSize: 15,
                     marginLeft: 8,
                   }}
@@ -313,10 +483,10 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
               </View>
               <Text
                 style={{
-                  fontFamily: 'Inter_400Regular',
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255, 255, 255, 0.8)",
                   fontSize: 12,
-                  textAlign: 'center',
+                  textAlign: "center",
                   marginTop: 6,
                 }}
               >
@@ -334,7 +504,10 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
         {/* Weekly Reflection Summary */}
         {entries.length >= 1 && (
           <Animated.View>
-            <WeeklyReflectionCard primaryColor={Colors.primary} isDarkMode={isDarkMode} />
+            <WeeklyReflectionCard
+              primaryColor={Colors.primary}
+              isDarkMode={isDarkMode}
+            />
           </Animated.View>
         )}
 
@@ -359,21 +532,135 @@ function InsightsContent({ insets }: { insets: { top: number; bottom: number; le
           <ValenceArousalChart entries={entries} days={30} />
         </Animated.View>
 
+        {/* Where You Feel Things — Body Frequency Card */}
+        {entries.length >= 3 &&
+          (() => {
+            const freq: Record<
+              string,
+              { count: number; totalIntensity: number }
+            > = {};
+            entries.forEach((e) => {
+              if (e.bodySensation && e.bodySensation !== "none") {
+                if (!freq[e.bodySensation])
+                  freq[e.bodySensation] = { count: 0, totalIntensity: 0 };
+                freq[e.bodySensation].count++;
+                freq[e.bodySensation].totalIntensity += e.emotionIntensity;
+              }
+              if (e.bodyRegions) {
+                e.bodyRegions.forEach((br) => {
+                  const key = br.region;
+                  if (!freq[key]) freq[key] = { count: 0, totalIntensity: 0 };
+                  freq[key].count++;
+                  freq[key].totalIntensity += br.intensity;
+                });
+              }
+            });
+            const sorted = Object.entries(freq)
+              .sort(([, a], [, b]) => b.count - a.count)
+              .slice(0, 6);
+            if (sorted.length === 0) return null;
+            return (
+              <Animated.View style={{ marginBottom: 24 }}>
+                <View
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    borderWidth: 1,
+                    borderColor: "rgba(255, 255, 255, 0.2)",
+                    borderRadius: BorderRadius.xxlarge,
+                    padding: 20,
+                    ...Shadows.medium,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 16,
+                    }}
+                  >
+                    <Text style={{ fontSize: 16 }}>🗺️</Text>
+                    <Text
+                      style={{
+                        fontFamily: "Inter_700Bold",
+                        color: "#FFFFFF",
+                        fontSize: 15,
+                        marginLeft: 8,
+                      }}
+                    >
+                      Where You Feel Things
+                    </Text>
+                  </View>
+                  {sorted.map(([label, data]) => {
+                    const avgIntensity = Math.round(
+                      data.totalIntensity / data.count,
+                    );
+                    const intensityLabel =
+                      avgIntensity <= 2
+                        ? "mild"
+                        : avgIntensity <= 3
+                          ? "moderate"
+                          : "intense";
+                    return (
+                      <View
+                        key={label}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          paddingVertical: 8,
+                          borderBottomWidth:
+                            sorted.indexOf([label, data] as any) <
+                            sorted.length - 1
+                              ? 1
+                              : 0,
+                          borderBottomColor: "rgba(255, 255, 255, 0.08)",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "Inter_500Medium",
+                            color: "#FFFFFF",
+                            fontSize: 13,
+                            textTransform: "capitalize",
+                            flex: 1,
+                          }}
+                        >
+                          {label.replace(/_/g, " ")}
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: "Inter_600SemiBold",
+                            color: "rgba(255, 255, 255, 0.6)",
+                            fontSize: 12,
+                          }}
+                        >
+                          {data.count}x {intensityLabel}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </Animated.View>
+            );
+          })()}
+
         {/* Deep Insights */}
-        {entries.length >= 5 && priorityInsights && priorityInsights.length > 0 && (
-          <Animated.View>
-            <DeepInsightsSection insights={priorityInsights} />
-          </Animated.View>
-        )}
+        {entries.length >= 5 &&
+          priorityInsights &&
+          priorityInsights.length > 0 && (
+            <Animated.View>
+              <DeepInsightsSection insights={priorityInsights} />
+            </Animated.View>
+          )}
 
         {/* Trigger Detection Section */}
         <Animated.View>
           <View
             className="mb-6"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
               borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.2)',
+              borderColor: "rgba(255, 255, 255, 0.2)",
               borderRadius: BorderRadius.xxlarge,
               ...Shadows.medium,
             }}
@@ -451,10 +738,13 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   }, [user.nextBadge.progress, progressWidth]);
 
   React.useEffect(() => {
-    usageWidth.value = withDelay(200, withSpring(usagePct * 100, {
-      damping: 15,
-      stiffness: 80,
-    }));
+    usageWidth.value = withDelay(
+      200,
+      withSpring(usagePct * 100, {
+        damping: 15,
+        stiffness: 80,
+      }),
+    );
   }, [usagePct, usageWidth]);
 
   const progressStyle = useAnimatedStyle(() => ({
@@ -466,10 +756,10 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   }));
 
   const usageBarColor = isAtLimit
-    ? '#FF5050'
+    ? "#FF5050"
     : isNearLimit
-    ? '#FFB830'
-    : Colors.primary;
+      ? "#FFB830"
+      : Colors.primary;
 
   return (
     <View className="mb-6">
@@ -484,13 +774,16 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
 
       {/* Greeting */}
       <Text
-        style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 22 }}
+        style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 22 }}
         className="mb-1 text-center"
       >
         Hello, {user.name}
       </Text>
       <Text
-        style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+        style={{
+          fontFamily: "Inter_400Regular",
+          color: "rgba(255, 255, 255, 0.8)",
+        }}
         className="text-base mb-5 text-center"
       >
         Here are your journaling insights
@@ -499,9 +792,9 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
       {/* Streak & Badge Card */}
       <View
         style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: "rgba(255, 255, 255, 0.1)",
           borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderColor: "rgba(255, 255, 255, 0.2)",
           borderRadius: BorderRadius.xxlarge,
           ...Shadows.medium,
         }}
@@ -514,9 +807,9 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 width: 48,
                 height: 48,
                 borderRadius: BorderRadius.large,
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                alignItems: 'center',
-                justifyContent: 'center',
+                backgroundColor: "rgba(255, 255, 255, 0.15)",
+                alignItems: "center",
+                justifyContent: "center",
                 marginRight: 12,
               }}
             >
@@ -524,34 +817,43 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
             </View>
             <View>
               <Text
-                style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+                style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                 className="text-xl"
               >
-                {user.streak} {user.streak === 1 ? 'Day' : 'Days'} Streak
+                {user.streak} {user.streak === 1 ? "Day" : "Days"} Streak
               </Text>
               <Text
-                style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255, 255, 255, 0.8)' }}
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255, 255, 255, 0.8)",
+                }}
                 className="text-sm"
               >
                 {user.streak === 0
-                  ? 'Record today to start!'
+                  ? "Record today to start!"
                   : user.streak < 3
-                  ? 'Next: 3-Day Streak'
-                  : user.streak < 7
-                  ? 'Next: 7-Day Streak'
-                  : user.streak < 14
-                  ? 'Next: 14-Day Streak'
-                  : user.streak < 30
-                  ? 'Next: 30-Day Streak'
-                  : user.streak < 100
-                  ? 'Next: 100-Day Streak'
-                  : 'Amazing streak!'}
+                    ? "Next: 3-Day Streak"
+                    : user.streak < 7
+                      ? "Next: 7-Day Streak"
+                      : user.streak < 14
+                        ? "Next: 14-Day Streak"
+                        : user.streak < 30
+                          ? "Next: 30-Day Streak"
+                          : user.streak < 100
+                            ? "Next: 100-Day Streak"
+                            : "Amazing streak!"}
               </Text>
             </View>
           </View>
 
           {/* Divider */}
-          <View style={{ height: 1, backgroundColor: 'rgba(255, 255, 255, 0.2)', marginVertical: 12 }} />
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              marginVertical: 12,
+            }}
+          />
 
           {/* Next Badge */}
           <View className="flex-row items-center">
@@ -560,9 +862,9 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 width: 48,
                 height: 48,
                 borderRadius: BorderRadius.large,
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                alignItems: 'center',
-                justifyContent: 'center',
+                backgroundColor: "rgba(255, 255, 255, 0.15)",
+                alignItems: "center",
+                justifyContent: "center",
                 marginRight: 12,
               }}
             >
@@ -570,7 +872,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
             </View>
             <View className="flex-1">
               <Text
-                style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF' }}
+                style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF" }}
                 className="text-base mb-2"
               >
                 Next: {user.nextBadge.name}
@@ -580,8 +882,8 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 style={{
                   height: 8,
                   borderRadius: BorderRadius.round,
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  overflow: 'hidden',
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  overflow: "hidden",
                 }}
               >
                 <Animated.View style={[progressStyle]}>
@@ -589,7 +891,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                     colors={Gradients.primary}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={{ height: '100%', borderRadius: BorderRadius.round }}
+                    style={{ height: "100%", borderRadius: BorderRadius.round }}
                   />
                 </Animated.View>
               </View>
@@ -597,7 +899,13 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
           </View>
 
           {/* Divider */}
-          <View style={{ height: 1, backgroundColor: 'rgba(255, 255, 255, 0.2)', marginVertical: 12 }} />
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              marginVertical: 12,
+            }}
+          />
 
           {/* Monthly Usage */}
           <View className="flex-row items-center">
@@ -607,12 +915,12 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 height: 48,
                 borderRadius: BorderRadius.large,
                 backgroundColor: isAtLimit
-                  ? 'rgba(255, 80, 80, 0.25)'
+                  ? "rgba(255, 80, 80, 0.25)"
                   : isNearLimit
-                  ? 'rgba(255, 185, 50, 0.25)'
-                  : 'rgba(255, 255, 255, 0.15)',
-                alignItems: 'center',
-                justifyContent: 'center',
+                    ? "rgba(255, 185, 50, 0.25)"
+                    : "rgba(255, 255, 255, 0.15)",
+                alignItems: "center",
+                justifyContent: "center",
                 marginRight: 12,
               }}
             >
@@ -621,23 +929,33 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
             <View className="flex-1">
               <View className="flex-row items-center justify-between mb-1.5">
                 <Text
-                  style={{ fontFamily: 'Inter_500Medium', color: '#FFFFFF', fontSize: 14 }}
+                  style={{
+                    fontFamily: "Inter_500Medium",
+                    color: "#FFFFFF",
+                    fontSize: 14,
+                  }}
                 >
                   Monthly Minutes
                 </Text>
                 <Text
                   style={{
-                    fontFamily: 'Inter_700Bold',
+                    fontFamily: "Inter_700Bold",
                     color: isAtLimit
-                      ? '#FF8080'
+                      ? "#FF8080"
                       : isNearLimit
-                      ? '#FFD080'
-                      : 'rgba(255,255,255,0.9)',
+                        ? "#FFD080"
+                        : "rgba(255,255,255,0.9)",
                     fontSize: 13,
                   }}
                 >
-                  {Math.floor(user.usageMinutes)}{' '}
-                  <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
+                  {Math.floor(user.usageMinutes)}{" "}
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.5)",
+                      fontSize: 11,
+                    }}
+                  >
                     / {USAGE_LIMIT_MINUTES} min
                   </Text>
                 </Text>
@@ -647,24 +965,33 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 style={{
                   height: 8,
                   borderRadius: BorderRadius.round,
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  overflow: 'hidden',
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  overflow: "hidden",
                 }}
               >
-                <Animated.View style={[usageBarStyle, { height: '100%', borderRadius: BorderRadius.round, backgroundColor: usageBarColor }]} />
+                <Animated.View
+                  style={[
+                    usageBarStyle,
+                    {
+                      height: "100%",
+                      borderRadius: BorderRadius.round,
+                      backgroundColor: usageBarColor,
+                    },
+                  ]}
+                />
               </View>
               <Text
                 style={{
-                  fontFamily: 'Inter_400Regular',
+                  fontFamily: "Inter_400Regular",
                   color: isAtLimit
-                    ? 'rgba(255,160,160,0.9)'
-                    : 'rgba(255,255,255,0.7)',
+                    ? "rgba(255,160,160,0.9)"
+                    : "rgba(255,255,255,0.7)",
                   fontSize: 10,
                   marginTop: 5,
                 }}
               >
                 {isAtLimit
-                  ? 'Limit reached · Resets next month'
+                  ? "Limit reached · Resets next month"
                   : `${Math.floor(user.remainingMinutes)} min remaining this month`}
               </Text>
             </View>
@@ -680,29 +1007,38 @@ interface EmotionSelectorProps {
   onEmotionSelect: (emotionId: EmotionType) => void;
 }
 
-function EmotionSelector({ selectedEmotion, onEmotionSelect }: EmotionSelectorProps) {
+function EmotionSelector({
+  selectedEmotion,
+  onEmotionSelect,
+}: EmotionSelectorProps) {
   const { Colors } = useTheme();
   return (
-    <View className="mb-4" style={{ backgroundColor: 'transparent' }}>
+    <View className="mb-4" style={{ backgroundColor: "transparent" }}>
       <Text
         style={{
-          fontFamily: 'Inter_500Medium',
-          color: '#FFFFFF',
+          fontFamily: "Inter_500Medium",
+          color: "#FFFFFF",
           fontSize: 12,
           marginBottom: 10,
         }}
       >
         Select Emotion
       </Text>
-      <View style={{ borderRadius: BorderRadius.medium, overflow: 'hidden', backgroundColor: 'transparent' }}>
+      <View
+        style={{
+          borderRadius: BorderRadius.medium,
+          overflow: "hidden",
+          backgroundColor: "transparent",
+        }}
+      >
         <View
           className="flex-row flex-wrap"
           style={{
             gap: 8,
             padding: 12,
-            backgroundColor: 'transparent',
+            backgroundColor: "transparent",
             borderWidth: 0,
-            borderColor: 'transparent',
+            borderColor: "transparent",
           }}
         >
           {CORE_EMOTIONS.map((emotion) => {
@@ -718,32 +1054,39 @@ function EmotionSelector({ selectedEmotion, onEmotionSelect }: EmotionSelectorPr
                 }}
                 style={{
                   flex: 1,
-                  minWidth: '23%',
-                  maxWidth: '24%',
-                  backgroundColor: 'transparent',
+                  minWidth: "23%",
+                  maxWidth: "24%",
+                  backgroundColor: "transparent",
                 }}
               >
                 <Animated.View
                   style={{
-                    backgroundColor: 'transparent',
+                    backgroundColor: "transparent",
                     borderRadius: BorderRadius.medium,
                     borderWidth: isSelected ? 2 : 0,
-                    borderColor: 'transparent',
+                    borderColor: "transparent",
                     padding: 10,
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    alignItems: "center",
+                    justifyContent: "center",
                     aspectRatio: 1,
                   }}
                 >
-                  <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, backgroundColor: 'transparent' }}>
+                  <View
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flex: 1,
+                      backgroundColor: "transparent",
+                    }}
+                  >
                     <FaceIcon size={20} color="#FFFFFF" strokeWidth={2} />
                     <Text
                       style={{
-                        fontFamily: 'Inter_500Medium',
+                        fontFamily: "Inter_500Medium",
                         fontSize: 8,
-                        color: '#FFFFFF',
+                        color: "#FFFFFF",
                         marginTop: 2,
-                        textAlign: 'center',
+                        textAlign: "center",
                       }}
                       numberOfLines={2}
                     >
@@ -775,15 +1118,17 @@ function SentimentTimeline({
 }: SentimentTimelineProps) {
   const { Colors, Gradients, Shadows } = useTheme();
   const entries = useJournalStore((s) => s.entries);
-  const selectedEmotionData = selectedEmotion ? CORE_EMOTIONS.find(e => e.id === selectedEmotion) : null;
+  const selectedEmotionData = selectedEmotion
+    ? CORE_EMOTIONS.find((e) => e.id === selectedEmotion)
+    : null;
 
   return (
     <View
       className="mb-6"
       style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderColor: "rgba(255, 255, 255, 0.2)",
         borderRadius: BorderRadius.xxlarge,
         ...Shadows.medium,
       }}
@@ -794,10 +1139,12 @@ function SentimentTimeline({
           <View className="flex-row items-center">
             <TrendingUp size={20} color="#FFFFFF" strokeWidth={2} />
             <Text
-              style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
               className="text-lg ml-2"
             >
-              {viewMode === 'overall' ? 'Sentiment Timeline' : `${selectedEmotionData?.label || 'Emotion'} Focus`}
+              {viewMode === "overall"
+                ? "Sentiment Timeline"
+                : `${selectedEmotionData?.label || "Emotion"} Focus`}
             </Text>
           </View>
         </View>
@@ -805,22 +1152,25 @@ function SentimentTimeline({
         {/* Mode Switch */}
         <View
           className="flex-row mb-4 p-1"
-          style={{ borderRadius: BorderRadius.large, backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
+          style={{
+            borderRadius: BorderRadius.large,
+            backgroundColor: "rgba(255, 255, 255, 0.15)",
+          }}
         >
           <Pressable
-            onPress={() => onModeSwitch('overall')}
+            onPress={() => onModeSwitch("overall")}
             className="flex-1 py-2 items-center"
             style={{
               borderRadius: BorderRadius.medium,
             }}
           >
-            {viewMode === 'overall' ? (
+            {viewMode === "overall" ? (
               <LinearGradient
                 colors={Gradients.button}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   left: 0,
                   right: 0,
                   top: 0,
@@ -831,8 +1181,8 @@ function SentimentTimeline({
             ) : null}
             <Text
               style={{
-                fontFamily: 'Inter_500Medium',
-                color: '#FFFFFF',
+                fontFamily: "Inter_500Medium",
+                color: "#FFFFFF",
                 fontSize: 13,
               }}
             >
@@ -841,19 +1191,19 @@ function SentimentTimeline({
           </Pressable>
 
           <Pressable
-            onPress={() => onModeSwitch('emotion')}
+            onPress={() => onModeSwitch("emotion")}
             className="flex-1 py-2 items-center"
             style={{
               borderRadius: BorderRadius.medium,
             }}
           >
-            {viewMode === 'emotion' ? (
+            {viewMode === "emotion" ? (
               <LinearGradient
                 colors={Gradients.button}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   left: 0,
                   right: 0,
                   top: 0,
@@ -864,8 +1214,8 @@ function SentimentTimeline({
             ) : null}
             <Text
               style={{
-                fontFamily: 'Inter_500Medium',
-                color: '#FFFFFF',
+                fontFamily: "Inter_500Medium",
+                color: "#FFFFFF",
                 fontSize: 13,
               }}
             >
@@ -875,7 +1225,7 @@ function SentimentTimeline({
         </View>
 
         {/* Emotion Selector - only show when in emotion mode */}
-        {viewMode === 'emotion' && (
+        {viewMode === "emotion" && (
           <Animated.View exiting={FadeOut.duration(200)}>
             <EmotionSelector
               selectedEmotion={selectedEmotion}
@@ -885,27 +1235,33 @@ function SentimentTimeline({
         )}
 
         {/* Overall Mood Mode - Show dominant emotion for each timeframe */}
-        {viewMode === 'overall' && (
+        {viewMode === "overall" && (
           <Animated.View>
             <OverallMoodDisplay />
           </Animated.View>
         )}
 
         {/* Emotion Focus Mode - Show selected emotion intensity across timeframes */}
-        {viewMode === 'emotion' && selectedEmotion && (
+        {viewMode === "emotion" && selectedEmotion && (
           <Animated.View>
             <EmotionIntensityDisplay emotion={selectedEmotion} />
           </Animated.View>
         )}
 
         {/* Emotion Focus Empty State */}
-        {viewMode === 'emotion' && !selectedEmotion && (
-          <View style={{ paddingVertical: 32, alignItems: 'center', justifyContent: 'center' }}>
+        {viewMode === "emotion" && !selectedEmotion && (
+          <View
+            style={{
+              paddingVertical: 32,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Text
               style={{
-                fontFamily: 'Inter_400Regular',
-                color: 'rgba(255, 255, 255, 0.8)',
-                textAlign: 'center',
+                fontFamily: "Inter_400Regular",
+                color: "rgba(255, 255, 255, 0.8)",
+                textAlign: "center",
               }}
             >
               Select an emotion to view its intensity over time
@@ -914,14 +1270,24 @@ function SentimentTimeline({
         )}
 
         {/* Overall Empty State */}
-        {entries.length === 0 && viewMode === 'overall' && (
-          <View style={{ paddingVertical: 32, alignItems: 'center', justifyContent: 'center' }}>
-            <BarChart3 size={40} color='rgba(255, 255, 255, 0.5)' strokeWidth={1.5} />
+        {entries.length === 0 && viewMode === "overall" && (
+          <View
+            style={{
+              paddingVertical: 32,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <BarChart3
+              size={40}
+              color="rgba(255, 255, 255, 0.5)"
+              strokeWidth={1.5}
+            />
             <Text
               style={{
-                fontFamily: 'Inter_400Regular',
-                color: 'rgba(255, 255, 255, 0.8)',
-                textAlign: 'center',
+                fontFamily: "Inter_400Regular",
+                color: "rgba(255, 255, 255, 0.8)",
+                textAlign: "center",
                 marginTop: 12,
               }}
             >
@@ -945,7 +1311,7 @@ function OverallMoodDisplay() {
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
     const recentEntries = entries.filter(
-      (e) => new Date(e.createdAt) >= cutoffDate
+      (e) => new Date(e.createdAt) >= cutoffDate,
     );
 
     if (recentEntries.length === 0) return null;
@@ -986,9 +1352,9 @@ function OverallMoodDisplay() {
   const thirtyDayData = getDominantEmotion(30);
 
   const timeframes = [
-    { label: '7 Days', data: sevenDayData },
-    { label: '14 Days', data: fourteenDayData },
-    { label: '30 Days', data: thirtyDayData },
+    { label: "7 Days", data: sevenDayData },
+    { label: "14 Days", data: fourteenDayData },
+    { label: "30 Days", data: thirtyDayData },
   ];
 
   return (
@@ -1002,9 +1368,9 @@ function OverallMoodDisplay() {
           <Animated.View
             key={timeframe.label}
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
               borderWidth: 1,
-              borderColor: 'rgba(255, 255, 255, 0.2)',
+              borderColor: "rgba(255, 255, 255, 0.2)",
               borderRadius: BorderRadius.large,
               padding: 16,
               marginBottom: index < 2 ? 12 : 0,
@@ -1014,9 +1380,9 @@ function OverallMoodDisplay() {
               <View className="flex-1">
                 <Text
                   style={{
-                    fontFamily: 'Inter_500Medium',
+                    fontFamily: "Inter_500Medium",
                     fontSize: 13,
-                    color: '#FFFFFF',
+                    color: "#FFFFFF",
                     marginBottom: 4,
                   }}
                 >
@@ -1026,9 +1392,9 @@ function OverallMoodDisplay() {
                   <>
                     <Text
                       style={{
-                        fontFamily: 'Inter_600SemiBold',
+                        fontFamily: "Inter_600SemiBold",
                         fontSize: 18,
-                        color: '#FFFFFF',
+                        color: "#FFFFFF",
                         marginBottom: 6,
                       }}
                     >
@@ -1036,20 +1402,21 @@ function OverallMoodDisplay() {
                     </Text>
                     <Text
                       style={{
-                        fontFamily: 'Inter_400Regular',
+                        fontFamily: "Inter_400Regular",
                         fontSize: 12,
-                        color: 'rgba(255, 255, 255, 0.8)',
+                        color: "rgba(255, 255, 255, 0.8)",
                       }}
                     >
-                      Appeared in {timeframe.data!.count} of {timeframe.data!.totalEntries} entries
+                      Appeared in {timeframe.data!.count} of{" "}
+                      {timeframe.data!.totalEntries} entries
                     </Text>
                   </>
                 ) : (
                   <Text
                     style={{
-                      fontFamily: 'Inter_400Regular',
+                      fontFamily: "Inter_400Regular",
                       fontSize: 14,
-                      color: 'rgba(255, 255, 255, 0.8)',
+                      color: "rgba(255, 255, 255, 0.8)",
                     }}
                   >
                     No data available
@@ -1058,24 +1425,24 @@ function OverallMoodDisplay() {
               </View>
 
               {emotionData && (
-                <View style={{ alignItems: 'center' }}>
+                <View style={{ alignItems: "center" }}>
                   <View
                     style={{
                       width: 64,
                       height: 64,
                       borderRadius: 32,
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      backgroundColor: "rgba(255, 255, 255, 0.15)",
+                      alignItems: "center",
+                      justifyContent: "center",
                       borderWidth: 3,
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                      borderColor: "rgba(255, 255, 255, 0.3)",
                     }}
                   >
                     <Text
                       style={{
-                        fontFamily: 'Inter_700Bold',
+                        fontFamily: "Inter_700Bold",
                         fontSize: 18,
-                        color: '#FFFFFF',
+                        color: "#FFFFFF",
                       }}
                     >
                       {timeframe.data!.intensity}%
@@ -1083,9 +1450,9 @@ function OverallMoodDisplay() {
                   </View>
                   <Text
                     style={{
-                      fontFamily: 'Inter_500Medium',
+                      fontFamily: "Inter_500Medium",
                       fontSize: 10,
-                      color: 'rgba(255, 255, 255, 0.8)',
+                      color: "rgba(255, 255, 255, 0.8)",
                       marginTop: 4,
                     }}
                   >
@@ -1114,7 +1481,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
     const recentEntries = entries.filter(
-      (e) => new Date(e.createdAt) >= cutoffDate
+      (e) => new Date(e.createdAt) >= cutoffDate,
     );
 
     if (recentEntries.length === 0) return null;
@@ -1123,12 +1490,16 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
     const scoredEntries = recentEntries.filter((e) => e.emotionScores);
     if (scoredEntries.length > 0) {
       const avgScore = Math.round(
-        scoredEntries.reduce((sum, e) => sum + (e.emotionScores![emotion] ?? 0), 0) /
-          scoredEntries.length
+        scoredEntries.reduce(
+          (sum, e) => sum + (e.emotionScores![emotion] ?? 0),
+          0,
+        ) / scoredEntries.length,
       );
       return {
         intensity: avgScore,
-        count: scoredEntries.filter((e) => (e.emotionScores![emotion] ?? 0) >= 30).length,
+        count: scoredEntries.filter(
+          (e) => (e.emotionScores![emotion] ?? 0) >= 30,
+        ).length,
         totalEntries: recentEntries.length,
         usedScores: true,
       };
@@ -1136,10 +1507,12 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
 
     // Fallback: count how many entries contain this emotion
     const entriesWithEmotion = recentEntries.filter((entry) =>
-      entry.emotions.includes(emotion)
+      entry.emotions.includes(emotion),
     ).length;
 
-    const intensity = Math.round((entriesWithEmotion / recentEntries.length) * 100);
+    const intensity = Math.round(
+      (entriesWithEmotion / recentEntries.length) * 100,
+    );
 
     return {
       intensity,
@@ -1157,9 +1530,9 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
   if (!emotionData) return null;
 
   const timeframes = [
-    { label: '7 Days', data: sevenDayData },
-    { label: '14 Days', data: fourteenDayData },
-    { label: '30 Days', data: thirtyDayData },
+    { label: "7 Days", data: sevenDayData },
+    { label: "14 Days", data: fourteenDayData },
+    { label: "30 Days", data: thirtyDayData },
   ];
 
   return (
@@ -1168,9 +1541,9 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
         <Animated.View
           key={timeframe.label}
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
             borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderColor: "rgba(255, 255, 255, 0.2)",
             borderRadius: BorderRadius.large,
             padding: 16,
             marginBottom: index < 2 ? 12 : 0,
@@ -1180,9 +1553,9 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
             <View className="flex-1">
               <Text
                 style={{
-                  fontFamily: 'Inter_500Medium',
+                  fontFamily: "Inter_500Medium",
                   fontSize: 13,
-                  color: '#FFFFFF',
+                  color: "#FFFFFF",
                   marginBottom: 8,
                 }}
               >
@@ -1191,9 +1564,9 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
               {timeframe.data ? (
                 <Text
                   style={{
-                    fontFamily: 'Inter_400Regular',
+                    fontFamily: "Inter_400Regular",
                     fontSize: 12,
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    color: "rgba(255, 255, 255, 0.8)",
                   }}
                 >
                   {timeframe.data.usedScores
@@ -1203,9 +1576,9 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
               ) : (
                 <Text
                   style={{
-                    fontFamily: 'Inter_400Regular',
+                    fontFamily: "Inter_400Regular",
                     fontSize: 14,
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    color: "rgba(255, 255, 255, 0.8)",
                   }}
                 >
                   No data available
@@ -1213,39 +1586,40 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
               )}
             </View>
 
-              {timeframe.data && (
-              <View style={{ alignItems: 'center' }}>
+            {timeframe.data && (
+              <View style={{ alignItems: "center" }}>
                 <View
                   style={{
                     width: 64,
                     height: 64,
                     borderRadius: 32,
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    alignItems: "center",
+                    justifyContent: "center",
                     borderWidth: 3,
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    borderColor: "rgba(255, 255, 255, 0.3)",
                   }}
                 >
                   <Text
                     style={{
-                      fontFamily: 'Inter_700Bold',
+                      fontFamily: "Inter_700Bold",
                       fontSize: 18,
-                      color: '#FFFFFF',
+                      color: "#FFFFFF",
                     }}
                   >
-                    {timeframe.data.intensity}{timeframe.data.usedScores ? '' : '%'}
+                    {timeframe.data.intensity}
+                    {timeframe.data.usedScores ? "" : "%"}
                   </Text>
                 </View>
                 <Text
                   style={{
-                    fontFamily: 'Inter_500Medium',
+                    fontFamily: "Inter_500Medium",
                     fontSize: 10,
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    color: "rgba(255, 255, 255, 0.8)",
                     marginTop: 4,
                   }}
                 >
-                  {timeframe.data.usedScores ? 'Score' : 'Intensity'}
+                  {timeframe.data.usedScores ? "Score" : "Intensity"}
                 </Text>
               </View>
             )}
@@ -1266,16 +1640,16 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderColor: "rgba(255, 255, 255, 0.2)",
         borderRadius: BorderRadius.xxlarge,
         ...Shadows.medium,
       }}
     >
       <View className="p-5">
         <Text
-          style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+          style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
           className="text-lg mb-4"
         >
           Emotional Themes
@@ -1283,10 +1657,12 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
 
         <View className="flex-row flex-wrap" style={{ gap: 10 }}>
           {themes.map((theme, index) => (
-            <Animated.View
-              key={theme.label}
-            >
-              <ThemeChip label={theme.label} count={theme.count} index={index} />
+            <Animated.View key={theme.label}>
+              <ThemeChip
+                label={theme.label}
+                count={theme.count}
+                index={index}
+              />
             </Animated.View>
           ))}
         </View>
@@ -1331,20 +1707,24 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
       <Animated.View
         style={[
           {
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
             borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderColor: "rgba(255, 255, 255, 0.2)",
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderRadius: BorderRadius.large,
-            flexDirection: 'row',
-            alignItems: 'center',
+            flexDirection: "row",
+            alignItems: "center",
           },
           animatedStyle,
         ]}
       >
         <Text
-          style={{ fontFamily: 'Inter_500Medium', fontSize: 14, color: '#FFFFFF' }}
+          style={{
+            fontFamily: "Inter_500Medium",
+            fontSize: 14,
+            color: "#FFFFFF",
+          }}
         >
           {label}
         </Text>
@@ -1354,11 +1734,15 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
             paddingHorizontal: 8,
             paddingVertical: 2,
             borderRadius: BorderRadius.round,
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
           }}
         >
           <Text
-            style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#FFFFFF' }}
+            style={{
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 12,
+              color: "#FFFFFF",
+            }}
           >
             {count}
           </Text>
@@ -1369,7 +1753,12 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
 }
 
 interface TimeOfDayPatternsProps {
-  patterns: { period: string; icon: typeof Sun; mood: string; entries: number }[];
+  patterns: {
+    period: string;
+    icon: typeof Sun;
+    mood: string;
+    entries: number;
+  }[];
 }
 
 function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
@@ -1378,16 +1767,16 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderColor: "rgba(255, 255, 255, 0.2)",
         borderRadius: BorderRadius.xxlarge,
         ...Shadows.medium,
       }}
     >
       <View className="p-5">
         <Text
-          style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
+          style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
           className="text-lg mb-4"
         >
           Time of Day Patterns
@@ -1395,10 +1784,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
 
         <View className="flex-row flex-wrap" style={{ gap: 12 }}>
           {patterns.map((pattern, index) => (
-            <Animated.View
-              key={pattern.period}
-              style={{ width: '47%' }}
-            >
+            <Animated.View key={pattern.period} style={{ width: "47%" }}>
               <TimeOfDayCard pattern={pattern} />
             </Animated.View>
           ))}
@@ -1442,9 +1828,9 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
       <Animated.View
         style={[
           {
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
             borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderColor: "rgba(255, 255, 255, 0.2)",
             borderRadius: BorderRadius.large,
             padding: 16,
           },
@@ -1456,9 +1842,9 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
             width: 40,
             height: 40,
             borderRadius: BorderRadius.medium,
-            backgroundColor: 'rgba(255, 255, 255, 0.15)',
-            alignItems: 'center',
-            justifyContent: 'center',
+            backgroundColor: "rgba(255, 255, 255, 0.15)",
+            alignItems: "center",
+            justifyContent: "center",
             marginBottom: 12,
           }}
         >
@@ -1466,9 +1852,9 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
         </View>
         <Text
           style={{
-            fontFamily: 'Inter_600SemiBold',
+            fontFamily: "Inter_600SemiBold",
             fontSize: 16,
-            color: '#FFFFFF',
+            color: "#FFFFFF",
             marginBottom: 4,
           }}
         >
@@ -1476,9 +1862,9 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
         </Text>
         <Text
           style={{
-            fontFamily: 'Inter_400Regular',
+            fontFamily: "Inter_400Regular",
             fontSize: 14,
-            color: 'rgba(255, 255, 255, 0.8)',
+            color: "rgba(255, 255, 255, 0.8)",
             marginBottom: 8,
           }}
         >
@@ -1486,12 +1872,12 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
         </Text>
         <Text
           style={{
-            fontFamily: 'Inter_500Medium',
+            fontFamily: "Inter_500Medium",
             fontSize: 12,
-            color: 'rgba(255, 255, 255, 0.7)',
+            color: "rgba(255, 255, 255, 0.7)",
           }}
         >
-          {pattern.entries} {pattern.entries === 1 ? 'entry' : 'entries'}
+          {pattern.entries} {pattern.entries === 1 ? "entry" : "entries"}
         </Text>
       </Animated.View>
     </Pressable>
@@ -1500,11 +1886,16 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
 
 interface DeepInsightsSectionProps {
   insights: Array<{
-    category: 'self_awareness' | 'growth' | 'warning' | 'strength' | 'recommendation';
+    category:
+      | "self_awareness"
+      | "growth"
+      | "warning"
+      | "strength"
+      | "recommendation";
     title: string;
     message: string;
     evidence: string[];
-    priority: 'high' | 'medium' | 'low';
+    priority: "high" | "medium" | "low";
     emoji: string;
   }>;
 }
@@ -1514,15 +1905,15 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'self_awareness':
+      case "self_awareness":
         return Eye;
-      case 'growth':
+      case "growth":
         return TrendingUp;
-      case 'warning':
+      case "warning":
         return AlertTriangle;
-      case 'strength':
+      case "strength":
         return Shield;
-      case 'recommendation':
+      case "recommendation":
         return Lightbulb;
       default:
         return Sparkles;
@@ -1531,16 +1922,16 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'self_awareness':
-        return '#A88AFF';
-      case 'growth':
-        return '#7BD97B';
-      case 'warning':
-        return '#FFB347';
-      case 'strength':
-        return '#8E6BFF';
-      case 'recommendation':
-        return '#FFA8D5';
+      case "self_awareness":
+        return "#A88AFF";
+      case "growth":
+        return "#7BD97B";
+      case "warning":
+        return "#FFB347";
+      case "strength":
+        return "#8E6BFF";
+      case "recommendation":
+        return "#FFA8D5";
       default:
         return Colors.primary;
     }
@@ -1548,14 +1939,14 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
 
   const getPriorityLabel = (priority: string) => {
     switch (priority) {
-      case 'high':
-        return 'Key Insight';
-      case 'medium':
-        return 'Notable';
-      case 'low':
-        return 'Observation';
+      case "high":
+        return "Key Insight";
+      case "medium":
+        return "Notable";
+      case "low":
+        return "Observation";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -1566,199 +1957,207 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderColor: "rgba(255, 255, 255, 0.2)",
         borderRadius: BorderRadius.xxlarge,
         ...Shadows.medium,
       }}
     >
-    <View className="p-5">
-      {/* Header */}
-      <View style={{ marginBottom: 16 }}>
-        <View className="flex-row items-center mb-4">
+      <View className="p-5">
+        {/* Header */}
+        <View style={{ marginBottom: 16 }}>
+          <View className="flex-row items-center mb-4">
+            <Text
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+              className="text-lg"
+            >
+              Deep Insights
+            </Text>
+          </View>
           <Text
-            style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}
-            className="text-lg"
+            style={{
+              fontFamily: "Inter_400Regular",
+              color: "rgba(255, 255, 255, 0.7)",
+              fontSize: 12,
+              lineHeight: 22,
+            }}
           >
-            Deep Insights
+            AI-powered analysis of your emotional patterns and growth
           </Text>
         </View>
-        <Text
-          style={{
-            fontFamily: 'Inter_400Regular',
-            color: 'rgba(255, 255, 255, 0.7)',
-            fontSize: 12,
-            lineHeight: 22,
-          }}
-        >
-          AI-powered analysis of your emotional patterns and growth
-        </Text>
-      </View>
 
-      {/* Insight Cards */}
-      {topInsights.map((insight, index) => {
-        return (
-          <Animated.View
-            key={`${insight.category}-${index}`}
-            className="mb-4"
-          >
-            <Pressable
-              onPress={() => tapHaptic()}
+        {/* Insight Cards */}
+        {topInsights.map((insight, index) => {
+          return (
+            <Animated.View
+              key={`${insight.category}-${index}`}
+              className="mb-4"
             >
-              <View
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: BorderRadius.xxlarge,
-                  borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.2)',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Subtle gradient accent */}
-                <LinearGradient
-                  colors={['rgba(255, 255, 255, 0.06)', 'rgba(255, 255, 255, 0.01)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+              <Pressable onPress={() => tapHaptic()}>
+                <View
                   style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    borderRadius: BorderRadius.xxlarge,
+                    borderWidth: 1,
+                    borderColor: "rgba(255, 255, 255, 0.2)",
+                    overflow: "hidden",
                   }}
-                />
-
-                <View style={{ padding: 18 }}>
-                  {/* Title */}
-                  <Text
+                >
+                  {/* Subtle gradient accent */}
+                  <LinearGradient
+                    colors={[
+                      "rgba(255, 255, 255, 0.06)",
+                      "rgba(255, 255, 255, 0.01)",
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={{
-                      fontFamily: 'Inter_600SemiBold',
-                      fontSize: 16,
-                      color: '#FFFFFF',
-                      marginBottom: 8,
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
                     }}
-                  >
-                    {insight.title}
-                  </Text>
+                  />
 
-                  {/* Priority Badge */}
-                  <View
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 3,
-                      borderRadius: 6,
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      alignSelf: 'flex-start',
-                      marginBottom: 12,
-                    }}
-                  >
+                  <View style={{ padding: 18 }}>
+                    {/* Title */}
                     <Text
                       style={{
-                        fontFamily: 'Inter_600SemiBold',
-                        fontSize: 9,
-                        color: '#FFFFFF',
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
+                        fontFamily: "Inter_600SemiBold",
+                        fontSize: 16,
+                        color: "#FFFFFF",
+                        marginBottom: 8,
                       }}
                     >
-                      {getPriorityLabel(insight.priority)}
+                      {insight.title}
                     </Text>
-                  </View>
 
-                  {/* Message */}
-                  <Text
-                    style={{
-                      fontFamily: 'Inter_400Regular',
-                      fontSize: 13,
-                      color: 'rgba(255, 255, 255, 0.95)',
-                      lineHeight: 22,
-                      marginBottom: 16,
-                    }}
-                  >
-                    {insight.message}
-                  </Text>
-
-                  {/* Evidence */}
-                  {insight.evidence.length > 0 && (
+                    {/* Priority Badge */}
                     <View
                       style={{
-                        paddingTop: 14,
-                        borderTopWidth: 1,
-                        borderTopColor: 'rgba(255, 255, 255, 0.1)',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: 6,
+                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                        alignSelf: "flex-start",
+                        marginBottom: 12,
                       }}
                     >
                       <Text
                         style={{
-                          fontFamily: 'Inter_500Medium',
-                          fontSize: 11,
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          marginBottom: 8,
+                          fontFamily: "Inter_600SemiBold",
+                          fontSize: 9,
+                          color: "#FFFFFF",
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
                         }}
                       >
-                        Evidence
+                        {getPriorityLabel(insight.priority)}
                       </Text>
-                      {insight.evidence.slice(0, 2).map((evidence, i) => (
-                        <View key={i} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: i === 0 ? 6 : 0 }}>
-                          <Text
-                            style={{
-                              fontFamily: 'Inter_400Regular',
-                              fontSize: 11,
-                              color: 'rgba(255, 255, 255, 0.7)',
-                              marginRight: 6,
-                              marginTop: 2,
-                            }}
-                          >
-                            •
-                          </Text>
-                          <Text
-                            style={{
-                              fontFamily: 'Inter_400Regular',
-                              fontSize: 11,
-                              color: 'rgba(255, 255, 255, 0.8)',
-                              flex: 1,
-                              lineHeight: 16,
-                            }}
-                          >
-                            {evidence}
-                          </Text>
-                        </View>
-                      ))}
                     </View>
-                  )}
-                </View>
-              </View>
-            </Pressable>
-          </Animated.View>
-        );
-      })}
 
-      {/* View All Insights */}
-      {insights.length > 3 && (
-        <Pressable
-          onPress={() => tapHaptic()}
-          style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.15)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
-            borderRadius: BorderRadius.large,
-            padding: 12,
-            alignItems: 'center',
-            marginTop: 8,
-          }}
-        >
-          <Text
+                    {/* Message */}
+                    <Text
+                      style={{
+                        fontFamily: "Inter_400Regular",
+                        fontSize: 13,
+                        color: "rgba(255, 255, 255, 0.95)",
+                        lineHeight: 22,
+                        marginBottom: 16,
+                      }}
+                    >
+                      {insight.message}
+                    </Text>
+
+                    {/* Evidence */}
+                    {insight.evidence.length > 0 && (
+                      <View
+                        style={{
+                          paddingTop: 14,
+                          borderTopWidth: 1,
+                          borderTopColor: "rgba(255, 255, 255, 0.1)",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "Inter_500Medium",
+                            fontSize: 11,
+                            color: "rgba(255, 255, 255, 0.7)",
+                            marginBottom: 8,
+                          }}
+                        >
+                          Evidence
+                        </Text>
+                        {insight.evidence.slice(0, 2).map((evidence, i) => (
+                          <View
+                            key={i}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "flex-start",
+                              marginBottom: i === 0 ? 6 : 0,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontFamily: "Inter_400Regular",
+                                fontSize: 11,
+                                color: "rgba(255, 255, 255, 0.7)",
+                                marginRight: 6,
+                                marginTop: 2,
+                              }}
+                            >
+                              •
+                            </Text>
+                            <Text
+                              style={{
+                                fontFamily: "Inter_400Regular",
+                                fontSize: 11,
+                                color: "rgba(255, 255, 255, 0.8)",
+                                flex: 1,
+                                lineHeight: 16,
+                              }}
+                            >
+                              {evidence}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </Pressable>
+            </Animated.View>
+          );
+        })}
+
+        {/* View All Insights */}
+        {insights.length > 3 && (
+          <Pressable
+            onPress={() => tapHaptic()}
             style={{
-              fontFamily: 'Inter_500Medium',
-              fontSize: 13,
-              color: '#FFFFFF',
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              borderWidth: 1,
+              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderRadius: BorderRadius.large,
+              padding: 12,
+              alignItems: "center",
+              marginTop: 8,
             }}
           >
-            View {insights.length - 3} more insights
-          </Text>
-        </Pressable>
-      )}
-    </View>
+            <Text
+              style={{
+                fontFamily: "Inter_500Medium",
+                fontSize: 13,
+                color: "#FFFFFF",
+              }}
+            >
+              View {insights.length - 3} more insights
+            </Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
