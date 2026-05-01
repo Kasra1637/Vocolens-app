@@ -37,6 +37,7 @@ import {
   AlertTriangle,
   Trash2,
   Download,
+  Globe,
 } from "lucide-react-native";
 import Animated from "react-native-reanimated";
 import {
@@ -76,6 +77,7 @@ import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store"
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { removePin } from "@/lib/auth-service";
 import { exportAllDataAsCsv } from "@/lib/export-data";
+import { getLanguageByCode } from "@/lib/languages";
 
 export default function SettingsScreen() {
   const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
@@ -114,6 +116,10 @@ export default function SettingsScreen() {
   const setEmotionReflectionMode = useSettingsStore(
     (s) => s.setEmotionReflectionMode,
   );
+  const selectedLanguage = useOnboardingStore(
+    (s) => s.selectedTranscriptionLanguage,
+  );
+  const currentLang = getLanguageByCode(selectedLanguage);
 
   // Usage tracking
   const usageMinutes = useUsageMinutes();
@@ -906,6 +912,75 @@ export default function SettingsScreen() {
                   </View>
                 </Pressable>
               </View>
+            </Animated.View>
+
+            {/* Transcription Language */}
+            <Animated.View className="mb-6">
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                >
+                  <Text style={{ fontSize: 18 }}>{currentLang.flag}</Text>
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  Transcription Language
+                </Text>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  tapHaptic();
+                  router.push("/language-picker");
+                }}
+                className="rounded-3xl overflow-hidden active:opacity-70"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  borderWidth: 1,
+                  borderColor: "rgba(255, 255, 255, 0.2)",
+                }}
+              >
+                <View
+                  className="p-5"
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View className="flex-1">
+                    <Text
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                        fontSize: 15,
+                        marginBottom: 2,
+                      }}
+                    >
+                      {currentLang.flag} {currentLang.name}
+                    </Text>
+                    <Text
+                      style={{
+                        color: "rgba(255, 255, 255, 0.7)",
+                        fontSize: 13,
+                      }}
+                    >
+                      Used for all voice transcriptions
+                    </Text>
+                  </View>
+                  <ChevronRight
+                    size={20}
+                    color="rgba(255, 255, 255, 0.6)"
+                    strokeWidth={2}
+                  />
+                </View>
+              </Pressable>
             </Animated.View>
 
             {/* Privacy & Security */}

@@ -62,6 +62,14 @@ function RootLayoutNav({
           options={{ headerShown: false, presentation: "card" }}
         />
         <Stack.Screen
+          name="language-picker"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
           name="legal"
           options={{ headerShown: false, presentation: "card" }}
         />
