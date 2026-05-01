@@ -62,6 +62,41 @@ function RootLayoutNav({
           options={{ headerShown: false, presentation: "card" }}
         />
         <Stack.Screen
+          name="language-picker"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="legal"
+          options={{ headerShown: false, presentation: "card" }}
+        />
+        <Stack.Screen
+          name="language-picker"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="legal"
+          options={{ headerShown: false, presentation: "card" }}
+        />
+        <Stack.Screen
+<<<<<<< HEAD
+=======
+          name="language-picker"
+          options={{
+            headerShown: false,
+            presentation: "fullScreenModal",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+>>>>>>> session/agent_0041444f-c843-4858-b44e-057c65bc9634
           name="legal"
           options={{ headerShown: false, presentation: "card" }}
         />
