@@ -2,16 +2,21 @@
 
 // Emotion types - 8 core emotions based on Plutchik's wheel of emotions
 export type EmotionType =
-  | 'happiness'
-  | 'sadness'
-  | 'anger'
-  | 'disgust'
-  | 'fear'
-  | 'surprise'
-  | 'trust'
-  | 'anticipation';
+  | "happiness"
+  | "sadness"
+  | "anger"
+  | "disgust"
+  | "fear"
+  | "surprise"
+  | "trust"
+  | "anticipation";
 
-export type TopicCategory = 'emotional' | 'goals' | 'reflection' | 'decision' | 'manifestation';
+export type TopicCategory =
+  | "emotional"
+  | "goals"
+  | "reflection"
+  | "decision"
+  | "manifestation";
 
 // Emotion scores - individual 0-100 scores for all 8 core emotions
 export interface EmotionScores {
@@ -38,26 +43,84 @@ export interface EmotionIntensityLabels {
 }
 
 // Distress level based on valence-arousal composite
-export type DistressLevel = 'low' | 'moderate' | 'high';
+export type DistressLevel = "low" | "moderate" | "high";
+
+// Body regions for the tap-map body scan (9 regions)
+export type BodyRegion =
+  | "head"
+  | "face"
+  | "neck"
+  | "chest"
+  | "stomach"
+  | "back"
+  | "arms"
+  | "hands"
+  | "legs";
+
+export interface BodyRegionSensation {
+  region: BodyRegion;
+  intensity: 1 | 2 | 3 | 4 | 5;
+  sensation?: string;
+}
+
+export const ALL_BODY_REGIONS: BodyRegion[] = [
+  "head",
+  "face",
+  "neck",
+  "chest",
+  "stomach",
+  "back",
+  "arms",
+  "hands",
+  "legs",
+];
+
+export const BODY_REGION_LABELS: Record<BodyRegion, string> = {
+  head: "Head",
+  face: "Face",
+  neck: "Neck",
+  chest: "Chest",
+  stomach: "Stomach",
+  back: "Back",
+  arms: "Arms",
+  hands: "Hands",
+  legs: "Legs",
+};
+
+export const BODY_REGION_EMOJIS: Record<BodyRegion, string> = {
+  head: "🧠",
+  face: "😶",
+  neck: "🗣",
+  chest: "🫁",
+  stomach: "🫃",
+  back: "🔙",
+  arms: "💪",
+  hands: "🤲",
+  legs: "🦵",
+};
+
+// Valence-Arousal range aliases for clarity
+export type ValenceRange = number; // -100 to +100
+export type ArousalRange = number; // 0 to 100
 
 // Body sensations users can report when they struggle to name emotions
 export type BodySensation =
-  | 'chest tightness'
-  | 'knot in stomach'
-  | 'racing heart'
-  | 'heavy limbs'
-  | 'tension in shoulders'
-  | 'lightness'
-  | 'warmth'
-  | 'coldness'
-  | 'tingling'
-  | 'numbness'
-  | 'restlessness'
-  | 'fatigue'
-  | 'head pressure'
-  | 'throat constriction'
-  | 'breathlessness'
-  | 'none';
+  | "chest tightness"
+  | "knot in stomach"
+  | "racing heart"
+  | "heavy limbs"
+  | "tension in shoulders"
+  | "lightness"
+  | "warmth"
+  | "coldness"
+  | "tingling"
+  | "numbness"
+  | "restlessness"
+  | "fatigue"
+  | "head pressure"
+  | "throat constriction"
+  | "breathlessness"
+  | "none";
 
 // Journal Entry
 export interface JournalEntry {
@@ -78,6 +141,7 @@ export interface JournalEntry {
   arousal: number; // 0 (calm) to 100 (activated)
   // Alexithymia support
   bodySensation?: BodySensation; // where the user feels this in their body
+  bodyRegions?: BodyRegionSensation[]; // 9-region body map with intensity
   alexithymiaFlag?: boolean; // user chose "I don't know" for emotions
   // Grounding support
   distressLevel: DistressLevel;
@@ -122,8 +186,14 @@ export interface UserStats {
 }
 
 // Achievement/Badge Types
-export type BadgeCategory = 'streak' | 'entries' | 'consistency' | 'mood' | 'time' | 'special';
-export type BadgeRarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type BadgeCategory =
+  | "streak"
+  | "entries"
+  | "consistency"
+  | "mood"
+  | "time"
+  | "special";
+export type BadgeRarity = "common" | "rare" | "epic" | "legendary";
 
 export interface Badge {
   id: string;
@@ -165,7 +235,7 @@ export interface RecordingState {
 export interface AppSettings {
   notifications: boolean;
   reminderTime: string; // HH:mm format
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   haptics: boolean;
   autoSave: boolean;
   privacyMode: boolean;
@@ -173,25 +243,25 @@ export interface AppSettings {
 
 // Emotion mapping utilities
 export const EMOTION_EMOJIS: Record<EmotionType, string> = {
-  happiness: '😊',
-  sadness: '😢',
-  anger: '😤',
-  disgust: '🤢',
-  fear: '😰',
-  surprise: '😮',
-  trust: '🤝',
-  anticipation: '🤩',
+  happiness: "😊",
+  sadness: "😢",
+  anger: "😤",
+  disgust: "🤢",
+  fear: "😰",
+  surprise: "😮",
+  trust: "🤝",
+  anticipation: "🤩",
 };
 
 export const EMOTION_COLORS: Record<EmotionType, string> = {
-  happiness: '#FFD93D',
-  sadness: '#6B8DD6',
-  anger: '#FF6B6B',
-  disgust: '#7CB342',
-  fear: '#9575CD',
-  surprise: '#FF8A65',
-  trust: '#4DB6AC',
-  anticipation: '#FFB74D',
+  happiness: "#FFD93D",
+  sadness: "#6B8DD6",
+  anger: "#FF6B6B",
+  disgust: "#7CB342",
+  fear: "#9575CD",
+  surprise: "#FF8A65",
+  trust: "#4DB6AC",
+  anticipation: "#FFB74D",
 };
 
 // ─── Plutchik Wheel Intensity Labels ─────────────────────────────────────────
@@ -199,14 +269,14 @@ export const EMOTION_COLORS: Record<EmotionType, string> = {
 // Thresholds: low = 0–33, mid = 34–66, high = 67–100
 
 export const PLUTCHIK_LABELS: Record<EmotionType, [string, string, string]> = {
-  happiness:    ['Serenity',     'Joy',          'Ecstasy'],
-  trust:        ['Acceptance',   'Trust',        'Admiration'],
-  fear:         ['Apprehension', 'Fear',         'Terror'],
-  surprise:     ['Distraction',  'Surprise',     'Amazement'],
-  sadness:      ['Pensiveness',  'Sadness',      'Grief'],
-  disgust:      ['Boredom',      'Disgust',      'Loathing'],
-  anger:        ['Annoyance',    'Anger',        'Rage'],
-  anticipation: ['Interest',     'Anticipation', 'Vigilance'],
+  happiness: ["Serenity", "Joy", "Ecstasy"],
+  trust: ["Acceptance", "Trust", "Admiration"],
+  fear: ["Apprehension", "Fear", "Terror"],
+  surprise: ["Distraction", "Surprise", "Amazement"],
+  sadness: ["Pensiveness", "Sadness", "Grief"],
+  disgust: ["Boredom", "Disgust", "Loathing"],
+  anger: ["Annoyance", "Anger", "Rage"],
+  anticipation: ["Interest", "Anticipation", "Vigilance"],
 };
 
 /**
@@ -215,7 +285,10 @@ export const PLUTCHIK_LABELS: Record<EmotionType, [string, string, string]> = {
  *   Mid  (34–66) : core form  (e.g. Joy, Anger, Fear)
  *   High (67–100): intense form (e.g. Ecstasy, Rage, Terror)
  */
-export function getEmotionSubLabel(emotion: EmotionType, intensity: number): string {
+export function getEmotionSubLabel(
+  emotion: EmotionType,
+  intensity: number,
+): string {
   const labels = PLUTCHIK_LABELS[emotion];
   if (!labels) return emotion.charAt(0).toUpperCase() + emotion.slice(1);
   if (intensity <= 33) return labels[0];
@@ -227,16 +300,18 @@ export function getEmotionSubLabel(emotion: EmotionType, intensity: number): str
  * Builds a full EmotionIntensityLabels map from an EmotionScores map.
  * Uses each emotion's own score as its intensity.
  */
-export function buildIntensityLabels(scores: EmotionScores): EmotionIntensityLabels {
+export function buildIntensityLabels(
+  scores: EmotionScores,
+): EmotionIntensityLabels {
   return {
-    happiness:    getEmotionSubLabel('happiness',    scores.happiness),
-    trust:        getEmotionSubLabel('trust',        scores.trust),
-    fear:         getEmotionSubLabel('fear',         scores.fear),
-    surprise:     getEmotionSubLabel('surprise',     scores.surprise),
-    sadness:      getEmotionSubLabel('sadness',      scores.sadness),
-    disgust:      getEmotionSubLabel('disgust',      scores.disgust),
-    anger:        getEmotionSubLabel('anger',        scores.anger),
-    anticipation: getEmotionSubLabel('anticipation', scores.anticipation),
+    happiness: getEmotionSubLabel("happiness", scores.happiness),
+    trust: getEmotionSubLabel("trust", scores.trust),
+    fear: getEmotionSubLabel("fear", scores.fear),
+    surprise: getEmotionSubLabel("surprise", scores.surprise),
+    sadness: getEmotionSubLabel("sadness", scores.sadness),
+    disgust: getEmotionSubLabel("disgust", scores.disgust),
+    anger: getEmotionSubLabel("anger", scores.anger),
+    anticipation: getEmotionSubLabel("anticipation", scores.anticipation),
   };
 }
 
