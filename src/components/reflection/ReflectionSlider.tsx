@@ -6,8 +6,8 @@ interface Props {
   min: number;
   max: number;
   onChange: (v: number) => void;
-  positiveColor?: string;
-  negativeColor?: string;
+  /** Color for the active fill and thumb border */
+  accentColor?: string;
   trackColor?: string;
 }
 
@@ -16,9 +16,8 @@ export default function ReflectionSlider({
   min,
   max,
   onChange,
-  positiveColor = "#22C55E",
-  negativeColor = "#EF4444",
-  trackColor = "rgba(255,255,255,0.2)",
+  accentColor = "rgba(255,255,255,0.85)",
+  trackColor = "rgba(255,255,255,0.15)",
 }: Props) {
   const trackW = useRef(0);
 
@@ -46,10 +45,8 @@ export default function ReflectionSlider({
   ).current;
 
   const normalized = (value - min) / (max - min);
-  const isPositive = value >= (max + min) / 2;
   const fillPct =
     min < 0 ? (Math.abs(value) / (max - min)) * 100 * 2 : normalized * 100;
-  const fillLeft = min < 0 && value < 0;
 
   return (
     <View
@@ -67,10 +64,10 @@ export default function ReflectionSlider({
               style={[
                 s.fill,
                 {
-                  backgroundColor: isPositive ? positiveColor : negativeColor,
+                  backgroundColor: accentColor,
                   width: `${fillPct / 2}%`,
-                  left: isPositive ? "50%" : undefined,
-                  right: isPositive ? undefined : "50%",
+                  left: value >= 0 ? "50%" : undefined,
+                  right: value >= 0 ? undefined : "50%",
                 },
               ]}
             />
@@ -79,7 +76,7 @@ export default function ReflectionSlider({
           <View
             style={[
               s.fill,
-              { backgroundColor: positiveColor, width: `${fillPct}%` },
+              { backgroundColor: accentColor, width: `${fillPct}%` },
             ]}
           />
         )}
@@ -87,10 +84,7 @@ export default function ReflectionSlider({
       <View
         style={[
           s.thumb,
-          {
-            left: `${normalized * 100}%`,
-            borderColor: isPositive ? positiveColor : negativeColor,
-          },
+          { left: `${normalized * 100}%`, borderColor: accentColor },
         ]}
       />
     </View>
@@ -112,7 +106,7 @@ const s = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 3,
-    backgroundColor: "rgba(255,255,255,0.35)",
+    backgroundColor: "rgba(255,255,255,0.3)",
     zIndex: 2,
   },
   thumb: {

@@ -9,11 +9,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, {
-  FadeIn,
-  FadeInUp,
-  FadeInDown,
-} from "react-native-reanimated";
+import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import {
   X,
   Check,
@@ -35,7 +31,7 @@ import { tapHaptic, successHaptic } from "@/lib/haptics";
 import useReflectionStore from "@/lib/state/reflection-store";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
-import { getThemeColors } from "@/lib/theme";
+import { getThemeColors, getThemeGradients } from "@/lib/theme";
 import { useCreateEntry } from "@/lib/hooks";
 import ReflectionSlider from "@/components/reflection/ReflectionSlider";
 import BodyRegionMap from "@/components/reflection/BodyRegionMap";
@@ -55,6 +51,18 @@ const ALL_EMOTIONS: EmotionType[] = [
   "anticipation",
 ];
 
+// Plutchik-based emotion accent colors
+const EMOTION_COLORS: Record<EmotionType, string> = {
+  happiness: "#FBBF24",
+  sadness: "#60A5FA",
+  anger: "#F87171",
+  disgust: "#A3E635",
+  fear: "#C084FC",
+  surprise: "#FB923C",
+  trust: "#34D399",
+  anticipation: "#FCD34D",
+};
+
 export default function ReflectionScreen() {
   const insets = useSafeAreaInsets();
   const pending = useReflectionStore((s) => s.pending);
@@ -65,6 +73,7 @@ export default function ReflectionScreen() {
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   const reflectionMode = useSettingsStore((s) => s.emotionReflectionMode);
   const Colors = getThemeColors(selectedTheme, isDarkMode);
+  const Gradients = getThemeGradients(selectedTheme, isDarkMode);
 
   const [step, setStep] = useState<Step>("summary");
   const [emotions, setEmotions] = useState<EmotionType[]>([]);
@@ -90,6 +99,12 @@ export default function ReflectionScreen() {
     );
     return () => handler.remove();
   }, []);
+
+  // Primary emotion accent color for sliders and accents
+  const primaryEmotionColor = useMemo(() => {
+    const top = emotions[0];
+    return top ? EMOTION_COLORS[top] : "rgba(255,255,255,0.85)";
+  }, [emotions]);
 
   const distress = useMemo(
     () => distressFromVA(valence, arousal),
@@ -181,8 +196,10 @@ export default function ReflectionScreen() {
     return (
       <View style={[s.container, { backgroundColor: Colors.background }]}>
         <LinearGradient
-          colors={[Colors.gradientStart, Colors.gradientEnd]}
+          colors={Gradients.background}
           style={s.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
         />
         <View style={[s.center, { paddingTop: insets.top + 100 }]}>
           <Text style={s.white}>No pending reflection</Text>
@@ -208,25 +225,19 @@ export default function ReflectionScreen() {
   return (
     <View style={s.container}>
       <LinearGradient
-        colors={[Colors.gradientStart, Colors.gradientEnd]}
+        colors={Gradients.background}
         style={s.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
       />
 
+      {/* Header — only X and Skip, no title */}
       <View style={[s.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={handleDismiss} style={s.headerBtn}>
-          <X size={22} color="#FFFFFF" />
+          <X size={22} color="rgba(255,255,255,0.75)" />
         </Pressable>
-        <Text style={s.headerTitle}>
-          {step === "summary"
-            ? "Your Emotions"
-            : step === "sliders"
-              ? "How it felt"
-              : step === "body"
-                ? "Body Scan"
-                : "Grounding"}
-        </Text>
         <Pressable onPress={skipStep} style={s.headerBtn}>
-          <SkipForward size={18} color="rgba(255,255,255,0.7)" />
+          <SkipForward size={18} color="rgba(255,255,255,0.55)" />
         </Pressable>
       </View>
 
@@ -243,7 +254,7 @@ export default function ReflectionScreen() {
               {ALL_EMOTIONS.map((emotion) => {
                 const def = getEmotionDefinition(emotion);
                 const sel = emotions.includes(emotion);
-                const isTop = topEmotions.includes(emotion);
+                const accentColor = EMOTION_COLORS[emotion];
                 return (
                   <Pressable
                     key={emotion}
@@ -254,16 +265,22 @@ export default function ReflectionScreen() {
                         selectedEmotionDef === emotion ? null : emotion,
                       );
                     }}
-                    style={[s.emotionChip, sel && s.emotionChipSelected]}
+                    style={[
+                      s.emotionChip,
+                      sel && {
+                        borderColor: accentColor,
+                        backgroundColor: `${accentColor}22`,
+                      },
+                    ]}
                   >
                     <Text style={s.emotionEmoji}>{def.emoji}</Text>
-                    <Text
-                      style={[s.emotionLabel, sel && s.emotionLabelSelected]}
-                    >
+                    <Text style={[s.emotionLabel, sel && { color: "#FFFFFF" }]}>
                       {emotion}
                     </Text>
                     {sel && (
-                      <View style={s.checkBadge}>
+                      <View
+                        style={[s.checkBadge, { backgroundColor: accentColor }]}
+                      >
                         <Check size={10} color="#1F2937" strokeWidth={3} />
                       </View>
                     )}
@@ -292,10 +309,13 @@ export default function ReflectionScreen() {
             )}
 
             <Text style={s.hint}>
-              Tap to toggle • Long-press for Plutchik definition
+              Tap to toggle · Long-press for Plutchik definition
             </Text>
 
-            <Pressable onPress={nextStep} style={s.nextBtn}>
+            <Pressable
+              onPress={nextStep}
+              style={[s.nextBtn, { borderColor: `${primaryEmotionColor}55` }]}
+            >
               <Text style={s.nextBtnText}>Next</Text>
               <ChevronRight size={18} color="#FFFFFF" />
             </Pressable>
@@ -313,7 +333,7 @@ export default function ReflectionScreen() {
             <View style={s.sliderCard}>
               <View style={s.sliderHeader}>
                 <Text style={s.sliderTitle}>Pleasant ↔ Unpleasant</Text>
-                <Text style={s.sliderValue}>
+                <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
                   {valence > 0 ? "+" : ""}
                   {valence}
                 </Text>
@@ -323,6 +343,7 @@ export default function ReflectionScreen() {
                 min={-100}
                 max={100}
                 onChange={setValence}
+                accentColor={primaryEmotionColor}
               />
               <View style={s.sliderLabels}>
                 <Text style={s.sliderHint}>Unpleasant</Text>
@@ -330,18 +351,19 @@ export default function ReflectionScreen() {
               </View>
             </View>
 
-            <View style={[s.sliderCard, { marginTop: 20 }]}>
+            <View style={[s.sliderCard, { marginTop: 16 }]}>
               <View style={s.sliderHeader}>
                 <Text style={s.sliderTitle}>Calm ↔ Activated</Text>
-                <Text style={s.sliderValue}>{arousal}%</Text>
+                <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
+                  {arousal}%
+                </Text>
               </View>
               <ReflectionSlider
                 value={arousal}
                 min={0}
                 max={100}
                 onChange={setArousal}
-                positiveColor={Colors.primary}
-                negativeColor="rgba(255,255,255,0.3)"
+                accentColor={primaryEmotionColor}
               />
               <View style={s.sliderLabels}>
                 <Text style={s.sliderHint}>Calm</Text>
@@ -350,22 +372,19 @@ export default function ReflectionScreen() {
             </View>
 
             {distress !== "low" && (
-              <Animated.View
-                entering={FadeIn}
-                style={[
-                  s.distressBanner,
-                  distress === "high" ? s.distressHigh : s.distressMod,
-                ]}
-              >
+              <Animated.View entering={FadeIn} style={s.distressBanner}>
                 <Text style={s.distressText}>
                   {distress === "high"
-                    ? "High distress detected — grounding may help"
-                    : "Moderate distress — take a moment if you need"}
+                    ? "⚠️  High distress detected — grounding may help"
+                    : "🌿  Moderate distress — take a moment if you need"}
                 </Text>
               </Animated.View>
             )}
 
-            <Pressable onPress={nextStep} style={s.nextBtn}>
+            <Pressable
+              onPress={nextStep}
+              style={[s.nextBtn, { borderColor: `${primaryEmotionColor}55` }]}
+            >
               <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
               {isLast ? (
                 <Sparkles size={16} color="#FFFFFF" />
@@ -383,11 +402,14 @@ export default function ReflectionScreen() {
         {step === "body" && (
           <Animated.View entering={FadeInUp}>
             <Text style={s.sectionLabel}>Where do you feel it?</Text>
-            <Text style={s.bodySub}>Tap a region, then rate intensity 1-5</Text>
+            <Text style={s.bodySub}>Tap a region, then rate intensity 1–5</Text>
             <BodyRegionMap selected={bodyRegions} onChange={setBodyRegions} />
             <Pressable
               onPress={nextStep}
-              style={[s.nextBtn, { marginTop: 28 }]}
+              style={[
+                s.nextBtn,
+                { marginTop: 28, borderColor: `${primaryEmotionColor}55` },
+              ]}
             >
               <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
               {isLast ? (
@@ -436,7 +458,7 @@ export default function ReflectionScreen() {
           </Animated.View>
         )}
 
-        {/* ── Sub-step: Breathing (rendered as overlay within grounding) ── */}
+        {/* ── Sub-step: Breathing ── */}
         {step === ("breathe" as any) && (
           <BreathingExercise
             onComplete={() => {
@@ -468,29 +490,36 @@ export default function ReflectionScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1 },
-  gradient: { ...StyleSheet.absoluteFillObject, opacity: 0.9 },
+  gradient: { ...StyleSheet.absoluteFillObject },
   flex: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  white: { color: "#FFFFFF", fontSize: 16 },
+  white: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontFamily: "Inter_400Regular",
+  },
   backBtn: {
     marginTop: 16,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
-  headerBtn: { padding: 8, borderRadius: 12 },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#FFFFFF" },
+  headerBtn: {
+    padding: 10,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
   sectionLabel: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 22,
+    fontFamily: "Fraunces_700Bold",
     color: "#FFFFFF",
     marginBottom: 16,
   },
@@ -503,38 +532,32 @@ const s = StyleSheet.create({
   emotionChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.2)",
+    backgroundColor: "rgba(255,255,255,0.08)",
     borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.15)",
     borderRadius: 24,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  emotionChipSelected: {
-    borderColor: "rgba(255,255,255,0.6)",
-    backgroundColor: "rgba(255,255,255,0.12)",
-  },
   emotionEmoji: { fontSize: 18, marginRight: 6 },
   emotionLabel: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.7)",
+    fontFamily: "Inter_600SemiBold",
+    color: "rgba(255,255,255,0.65)",
     textTransform: "capitalize",
   },
-  emotionLabelSelected: { color: "#FFFFFF" },
   checkBadge: {
     marginLeft: 6,
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
   defCard: {
     flexDirection: "row",
-    backgroundColor: "rgba(0,0,0,0.25)",
-    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 20,
     padding: 16,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
@@ -544,20 +567,27 @@ const s = StyleSheet.create({
   defContent: { flex: 1 },
   defTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: "Fraunces_700Bold",
     color: "#FFFFFF",
     marginBottom: 4,
   },
-  defDesc: { fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 18 },
+  defDesc: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.8)",
+    lineHeight: 18,
+  },
   defExample: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.55)",
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.5)",
     fontStyle: "italic",
     marginTop: 6,
   },
   hint: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.45)",
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.4)",
     marginTop: 8,
     textAlign: "center",
   },
@@ -565,66 +595,85 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 24,
     paddingVertical: 16,
     marginTop: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.35)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.25)",
   },
   nextBtnText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
     color: "#FFFFFF",
     marginRight: 6,
   },
   skipBtnWrap: { alignItems: "center", paddingVertical: 12, marginTop: 8 },
-  skipText: { fontSize: 14, color: "rgba(255,255,255,0.55)" },
+  skipText: {
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.45)",
+  },
   sliderCard: {
-    backgroundColor: "rgba(0,0,0,0.2)",
-    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 24,
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderColor: "rgba(255,255,255,0.12)",
   },
   sliderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    alignItems: "center",
+    marginBottom: 12,
   },
-  sliderTitle: { fontSize: 14, fontWeight: "600", color: "#FFFFFF" },
-  sliderValue: { fontSize: 14, fontWeight: "700", color: "#FFFFFF" },
+  sliderTitle: {
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    color: "rgba(255,255,255,0.8)",
+  },
+  sliderValue: {
+    fontSize: 20,
+    fontFamily: "Inter_700Bold",
+    color: "#FFFFFF",
+  },
   sliderLabels: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 6,
+    marginTop: 8,
   },
-  sliderHint: { fontSize: 11, color: "rgba(255,255,255,0.4)" },
+  sliderHint: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.35)",
+  },
   distressBanner: {
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
     marginTop: 16,
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
   },
-  distressHigh: {
-    backgroundColor: "rgba(239,68,68,0.15)",
-    borderColor: "rgba(239,68,68,0.35)",
+  distressText: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    color: "#FFFFFF",
+    textAlign: "center",
+    lineHeight: 20,
   },
-  distressMod: {
-    backgroundColor: "rgba(234,179,8,0.15)",
-    borderColor: "rgba(234,179,8,0.35)",
-  },
-  distressText: { fontSize: 13, color: "#FFFFFF", textAlign: "center" },
   bodySub: {
     fontSize: 13,
+    fontFamily: "Inter_400Regular",
     color: "rgba(255,255,255,0.6)",
     marginBottom: 20,
-    marginTop: -10,
+    marginTop: -8,
   },
   groundingChoice: { gap: 12 },
   groundingBtn: {
-    backgroundColor: "rgba(0,0,0,0.2)",
-    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 24,
     padding: 24,
     alignItems: "center",
     borderWidth: 1,
@@ -633,16 +682,24 @@ const s = StyleSheet.create({
   groundingEmoji: { fontSize: 36, marginBottom: 8 },
   groundingTitle: {
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: "Fraunces_700Bold",
     color: "#FFFFFF",
     marginBottom: 4,
   },
-  groundingDesc: { fontSize: 13, color: "rgba(255,255,255,0.65)" },
+  groundingDesc: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.6)",
+  },
   savingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     alignItems: "center",
     justifyContent: "center",
   },
-  savingText: { fontSize: 18, fontWeight: "700", color: "#FFFFFF" },
+  savingText: {
+    fontSize: 18,
+    fontFamily: "Fraunces_700Bold",
+    color: "#FFFFFF",
+  },
 });
