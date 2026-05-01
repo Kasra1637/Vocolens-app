@@ -6,10 +6,10 @@
  * Uses expo-crypto for encryption and expo-secure-store for secure key storage.
  */
 
-import * as SecureStore from 'expo-secure-store';
-import * as Crypto from 'expo-crypto';
+import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
 
-const ENCRYPTION_KEY_NAME = 'app_encryption_key';
+const ENCRYPTION_KEY_NAME = "app_encryption_key";
 
 /**
  * Generate or retrieve the encryption key
@@ -22,8 +22,8 @@ async function getEncryptionKey(): Promise<string> {
     // Generate a new 256-bit encryption key
     const randomBytes = await Crypto.getRandomBytesAsync(32);
     key = Array.from(randomBytes)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
     await SecureStore.setItemAsync(ENCRYPTION_KEY_NAME, key);
   }
 
@@ -36,8 +36,8 @@ async function getEncryptionKey(): Promise<string> {
  * This provides basic encryption that works across all platforms
  */
 function encrypt(text: string, key: string): string {
-  const keyBytes = key.split('').map(c => c.charCodeAt(0));
-  const textBytes = text.split('').map(c => c.charCodeAt(0));
+  const keyBytes = key.split("").map((c) => c.charCodeAt(0));
+  const textBytes = text.split("").map((c) => c.charCodeAt(0));
 
   const encrypted = textBytes.map((byte, i) => {
     const keyByte = keyBytes[i % keyBytes.length];
@@ -55,10 +55,10 @@ function decrypt(encryptedText: string, key: string): string {
   try {
     // Decode from base64
     const encryptedBytes = atob(encryptedText)
-      .split('')
-      .map(c => c.charCodeAt(0));
+      .split("")
+      .map((c) => c.charCodeAt(0));
 
-    const keyBytes = key.split('').map(c => c.charCodeAt(0));
+    const keyBytes = key.split("").map((c) => c.charCodeAt(0));
 
     const decrypted = encryptedBytes.map((byte, i) => {
       const keyByte = keyBytes[i % keyBytes.length];
@@ -67,8 +67,8 @@ function decrypt(encryptedText: string, key: string): string {
 
     return String.fromCharCode(...decrypted);
   } catch (error) {
-    console.error('Decryption error:', error);
-    throw new Error('Failed to decrypt data');
+    console.error("Decryption error:", error);
+    throw new Error("Failed to decrypt data");
   }
 }
 
@@ -81,8 +81,8 @@ export async function secureSetItem(key: string, value: string): Promise<void> {
     const encrypted = encrypt(value, encryptionKey);
     await SecureStore.setItemAsync(key, encrypted);
   } catch (error) {
-    console.error('Secure storage error:', error);
-    throw new Error('Failed to securely store data');
+    console.error("Secure storage error:", error);
+    throw new Error("Failed to securely store data");
   }
 }
 
@@ -97,7 +97,7 @@ export async function secureGetItem(key: string): Promise<string | null> {
     const encryptionKey = await getEncryptionKey();
     return decrypt(encrypted, encryptionKey);
   } catch (error) {
-    console.error('Secure retrieval error:', error);
+    console.error("Secure retrieval error:", error);
     return null;
   }
 }
@@ -109,8 +109,20 @@ export async function secureRemoveItem(key: string): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(key);
   } catch (error) {
-    console.error('Secure removal error:', error);
-    throw new Error('Failed to remove secure data');
+    // Ignore errors when the key doesn't exist — this is normal
+    // during reset if the user never set a PIN or auth
+    const msg = error instanceof Error ? error.message : String(error);
+    if (
+      msg.includes("No") ||
+      msg.includes("not found") ||
+      msg.includes("exist") ||
+      msg.includes("empty")
+    ) {
+      console.warn(`SecureStore key "${key}" not found, skipping removal.`);
+      return;
+    }
+    console.error("Secure removal error:", error);
+    throw new Error("Failed to remove secure data");
   }
 }
 
@@ -124,7 +136,7 @@ export async function clearAllSecureData(): Promise<void> {
     // This is handled by the stores that use secure storage
     await SecureStore.deleteItemAsync(ENCRYPTION_KEY_NAME);
   } catch (error) {
-    console.error('Clear secure data error:', error);
-    throw new Error('Failed to clear secure data');
+    console.error("Clear secure data error:", error);
+    throw new Error("Failed to clear secure data");
   }
 }
