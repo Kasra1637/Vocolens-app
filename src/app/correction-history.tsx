@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, ScrollView, Pressable, Share, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
@@ -80,6 +81,13 @@ export default function CorrectionHistoryScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background }}>
+      <LinearGradient
+        colors={Gradients.background}
+        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
+
       {/* Header */}
       <View
         style={{
