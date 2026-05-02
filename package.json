@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 EXPO_NO_DEV_CLIENT=true EXPO_TUNNEL=0 npx expo start --web --port 3000 --no-dev-client --clear",
-    "start": "EXPO_TUNNEL=0 expo start --localhost",
-    "android": "EXPO_TUNNEL=0 expo start --android --no-dev-client",
-    "ios": "EXPO_TUNNEL=0 expo start --ios --no-dev-client",
-    "web": "DARK_MODE=class EXPO_NO_DEV_CLIENT=true EXPO_TUNNEL=0 expo start --web --no-dev-client --clear",
+    "dev": "EXPO_NO_TELEMETRY=1 EXPO_TUNNEL=none npx expo start --web --port 3000 --localhost --clear",
+    "start": "EXPO_TUNNEL=none expo start --localhost",
+    "android": "EXPO_TUNNEL=none expo start --android --localhost",
+    "ios": "EXPO_TUNNEL=none expo start --ios --localhost",
+    "web": "EXPO_TUNNEL=none npx expo start --web --localhost --clear",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit"
   },
