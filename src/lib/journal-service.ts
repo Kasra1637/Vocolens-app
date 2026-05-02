@@ -608,7 +608,31 @@ export async function createJournalEntry(
     analysis = {
       emotions: reflectionOverride.emotions,
       primaryEmotion: reflectionOverride.primaryEmotion,
-      emotionIntensity: 50, // placeholder — could compute from V-A
+      // Compute intensity from emotion scores (avg of top-3) when available,
+      // otherwise derive from V-A: arousal drives intensity, absolute valence amplifies it
+      emotionIntensity: (() => {
+        if (reflectionOverride.emotionScores) {
+          const topScores = (
+            Object.values(reflectionOverride.emotionScores) as number[]
+          )
+            .sort((a, b) => b - a)
+            .slice(0, 3);
+          return Math.round(
+            topScores.reduce((s, v) => s + v, 0) / topScores.length,
+          );
+        }
+        // Fallback: blend of arousal (60%) and absolute valence (40%)
+        return Math.min(
+          100,
+          Math.max(
+            10,
+            Math.round(
+              reflectionOverride.arousal * 0.6 +
+                Math.abs(reflectionOverride.valence) * 0.4,
+            ),
+          ),
+        );
+      })(),
       emotionScores: reflectionOverride.emotionScores,
       emotionIntensityLabels: reflectionOverride.emotionIntensityLabels,
       topics: ["reflection"],
