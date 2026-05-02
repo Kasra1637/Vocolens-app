@@ -28,6 +28,9 @@
       "eas": {
         "projectId": "your-project-id-here"
       }
+    },
+    "web": {
+      "bundler": "metro"
     }
   }
 }

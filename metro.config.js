@@ -9,6 +9,22 @@ const config = getDefaultConfig(__dirname);
 // Disable Watchman for file watching.
 config.resolver.useWatchman = false;
 
+// Improve stability and prevent tunnel timeouts
+config.server = {
+  ...config.server,
+  port: 8081,
+  enhanceMiddleware: (middleware) => {
+    return (req, res, next) => {
+      // Add timeout handling
+      res.setTimeout(30000); // 30 second timeout
+      return middleware(req, res, next);
+    };
+  },
+};
+
+// Increase max workers for better performance
+config.maxWorkers = 2;
+
 // Configure asset and source extensions.
 const { assetExts, sourceExts } = config.resolver;
 
