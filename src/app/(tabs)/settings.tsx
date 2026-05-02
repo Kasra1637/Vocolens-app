@@ -37,10 +37,7 @@ import {
   AlertTriangle,
   Trash2,
   Download,
-<<<<<<< HEAD
-=======
   Globe,
->>>>>>> session/agent_0041444f-c843-4858-b44e-057c65bc9634
 } from "lucide-react-native";
 import Animated from "react-native-reanimated";
 import {
@@ -80,10 +77,7 @@ import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store"
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { removePin } from "@/lib/auth-service";
 import { exportAllDataAsCsv } from "@/lib/export-data";
-<<<<<<< HEAD
-=======
 import { getLanguageByCode } from "@/lib/languages";
->>>>>>> session/agent_0041444f-c843-4858-b44e-057c65bc9634
 
 export default function SettingsScreen() {
   const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
@@ -122,13 +116,10 @@ export default function SettingsScreen() {
   const setEmotionReflectionMode = useSettingsStore(
     (s) => s.setEmotionReflectionMode,
   );
-<<<<<<< HEAD
-=======
   const selectedLanguage = useOnboardingStore(
     (s) => s.selectedTranscriptionLanguage,
   );
   const currentLang = getLanguageByCode(selectedLanguage);
->>>>>>> session/agent_0041444f-c843-4858-b44e-057c65bc9634
 
   // Usage tracking
   const usageMinutes = useUsageMinutes();
@@ -972,7 +963,7 @@ export default function SettingsScreen() {
                         marginBottom: 2,
                       }}
                     >
-                      {currentLang.flag}  {currentLang.name}
+                      {currentLang.flag} {currentLang.name}
                     </Text>
                     <Text
                       style={{
@@ -998,10 +989,8 @@ export default function SettingsScreen() {
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
                   style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
-<<<<<<< HEAD
-=======
                 >
-                  <Text style={{ fontSize: 18 }}>{currentLang.flag}</Text>
+                  <Shield size={20} color="#FFFFFF" />
                 </View>
                 <Text
                   className="text-xl font-bold"
@@ -1010,7 +999,7 @@ export default function SettingsScreen() {
                     color: "#FFFFFF",
                   }}
                 >
-                  Transcription Language
+                  Privacy & Security
                 </Text>
               </View>
 
@@ -1069,7 +1058,6 @@ export default function SettingsScreen() {
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
                   style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
->>>>>>> session/agent_0041444f-c843-4858-b44e-057c65bc9634
                 >
                   <Shield size={20} color="#FFFFFF" />
                 </View>
