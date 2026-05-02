@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 EXPO_NO_DEV_CLIENT=true npx expo start --web --port 3000 --no-dev-client --clear",
-    "start": "expo start --localhost",
-    "android": "expo start --android --no-dev-client",
-    "ios": "expo start --ios --no-dev-client",
-    "web": "DARK_MODE=class EXPO_NO_DEV_CLIENT=true expo start --web --no-dev-client --clear",
+    "dev": "EXPO_NO_TELEMETRY=1 EXPO_NO_DEV_CLIENT=true EXPO_TUNNEL=0 npx expo start --web --port 3000 --no-dev-client --clear",
+    "start": "EXPO_TUNNEL=0 expo start --localhost",
+    "android": "EXPO_TUNNEL=0 expo start --android --no-dev-client",
+    "ios": "EXPO_TUNNEL=0 expo start --ios --no-dev-client",
+    "web": "DARK_MODE=class EXPO_NO_DEV_CLIENT=true EXPO_TUNNEL=0 expo start --web --no-dev-client --clear",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit"
   },
@@ -168,7 +168,7 @@
     "prettier": "^3.3.3",
     "react-native-svg-transformer": "^1.5.1",
     "react-test-renderer": "19.0.0",
-    "typescript": "^6.0.3"
+    "typescript": "~5.8.3"
   },
   "expo": {
     "install": {
