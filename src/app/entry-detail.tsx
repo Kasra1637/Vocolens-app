@@ -61,6 +61,7 @@ import useJournalStore from "@/lib/state/journal-store";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { useDeleteEntry } from "@/lib/hooks";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 import {
   formatShortDuration,
   EMOTION_COLORS,
@@ -275,7 +276,7 @@ export default function EntryDetailScreen() {
         <Pressable
           onPress={handleBack}
           className="w-10 h-10 rounded-full items-center justify-center"
-          style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+          style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
         >
           <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
         </Pressable>
@@ -286,7 +287,7 @@ export default function EntryDetailScreen() {
               <Pressable
                 onPress={handleEdit}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
               >
                 <Edit3 size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
@@ -304,14 +305,14 @@ export default function EntryDetailScreen() {
               <Pressable
                 onPress={handleCancelEdit}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
               >
                 <X size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
               <Pressable
                 onPress={handleSave}
                 className="w-10 h-10 rounded-full items-center justify-center"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
               >
                 <Save size={18} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
@@ -338,12 +339,12 @@ export default function EntryDetailScreen() {
                 fontFamily: "Fraunces_700Bold",
                 color: "#FFFFFF",
                 fontSize: 24,
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
                 borderRadius: 12,
                 padding: 12,
                 marginBottom: 8,
                 borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.25)",
+                borderColor: hexToRgba(Colors.primary, 0.2),
               }}
               placeholderTextColor="rgba(255, 255, 255, 0.5)"
               placeholder="Entry title..."
@@ -429,11 +430,13 @@ export default function EntryDetailScreen() {
               onPress={() => toggleSection("reflection")}
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                backgroundColor: hexToRgba(Colors.primary, 0.12),
                 borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.25)",
+                borderColor: hexToRgba(Colors.primary, 0.15),
+                overflow: "hidden",
               }}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               <View className="p-5">
                 <View className="flex-row items-center justify-between mb-3">
                   <View className="flex-row items-center">
@@ -449,7 +452,9 @@ export default function EntryDetailScreen() {
                     </Text>
                     <View
                       className="ml-2 px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                      style={{
+                        backgroundColor: hexToRgba(Colors.primary, 0.2),
+                      }}
                     >
                       <Text
                         style={{
@@ -493,11 +498,11 @@ export default function EntryDetailScreen() {
                       style={{
                         backgroundColor: isSpeaking
                           ? "rgba(239, 68, 68, 0.25)"
-                          : "rgba(255, 255, 255, 0.2)",
+                          : hexToRgba(Colors.primary, 0.2),
                         borderWidth: 1,
                         borderColor: isSpeaking
                           ? "rgba(239, 68, 68, 0.5)"
-                          : "rgba(255, 255, 255, 0.3)",
+                          : hexToRgba(Colors.primary, 0.25),
                       }}
                     >
                       {isSpeaking ? (
@@ -532,11 +537,13 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-2xl p-4"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                backgroundColor: hexToRgba(Colors.primary, 0.08),
                 borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.15)",
+                borderColor: hexToRgba(Colors.primary, 0.15),
+                overflow: "hidden",
               }}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={16} />
               <View className="flex-row items-center mb-2">
                 <MessageSquare
                   size={16}
@@ -572,11 +579,13 @@ export default function EntryDetailScreen() {
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
               borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: hexToRgba(Colors.primary, 0.15),
+              overflow: "hidden",
             }}
           >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
             <View className="p-5">
               <Text
                 style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -596,7 +605,7 @@ export default function EntryDetailScreen() {
                     fontSize: 14,
                     lineHeight: 24,
                     color: "#FFFFFF",
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
                     borderRadius: 12,
                     padding: 12,
                     minHeight: 200,
@@ -664,11 +673,13 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
                 borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.2)",
+                borderColor: hexToRgba(Colors.primary, 0.15),
+                overflow: "hidden",
               }}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               <View className="p-5">
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -693,11 +704,13 @@ export default function EntryDetailScreen() {
             onPress={() => toggleSection("emotions")}
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
               borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: hexToRgba(Colors.primary, 0.15),
+              overflow: "hidden",
             }}
           >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
             <View className="p-5">
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center">
@@ -714,7 +727,9 @@ export default function EntryDetailScreen() {
                   {entry.emotionScores && (
                     <View
                       className="ml-2 px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                      style={{
+                        backgroundColor: hexToRgba(Colors.primary, 0.2),
+                      }}
                     >
                       <Text
                         style={{
@@ -839,7 +854,10 @@ export default function EntryDetailScreen() {
                               <View
                                 className="h-2 rounded-full"
                                 style={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                  backgroundColor: hexToRgba(
+                                    Colors.primary,
+                                    0.1,
+                                  ),
                                 }}
                               >
                                 <View
@@ -921,8 +939,10 @@ export default function EntryDetailScreen() {
                                     <View
                                       className="ml-2 px-2 py-0.5 rounded-full"
                                       style={{
-                                        backgroundColor:
-                                          "rgba(255, 255, 255, 0.2)",
+                                        backgroundColor: hexToRgba(
+                                          Colors.primary,
+                                          0.2,
+                                        ),
                                       }}
                                     >
                                       <Text
@@ -950,7 +970,10 @@ export default function EntryDetailScreen() {
                               <View
                                 className="h-2 rounded-full"
                                 style={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                                  backgroundColor: hexToRgba(
+                                    Colors.primary,
+                                    0.1,
+                                  ),
                                 }}
                               >
                                 <View
@@ -982,11 +1005,13 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-3xl overflow-hidden mb-6"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
                 borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.2)",
+                borderColor: hexToRgba(Colors.primary, 0.15),
+                overflow: "hidden",
               }}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               <View className="p-5">
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center">
@@ -1070,7 +1095,7 @@ export default function EntryDetailScreen() {
                         <View
                           className="h-2.5 rounded-full overflow-hidden"
                           style={{
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            backgroundColor: hexToRgba(Colors.primary, 0.1),
                           }}
                         >
                           <View
@@ -1134,7 +1159,7 @@ export default function EntryDetailScreen() {
                         <View
                           className="h-2.5 rounded-full overflow-hidden"
                           style={{
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            backgroundColor: hexToRgba(Colors.primary, 0.1),
                           }}
                         >
                           <View
@@ -1176,9 +1201,9 @@ export default function EntryDetailScreen() {
                     <View
                       className="flex-row items-center px-3 py-2 rounded-full"
                       style={{
-                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                        backgroundColor: hexToRgba(Colors.primary, 0.15),
                         borderWidth: 1,
-                        borderColor: "rgba(255, 255, 255, 0.25)",
+                        borderColor: hexToRgba(Colors.primary, 0.2),
                       }}
                     >
                       <AlertTriangle
@@ -1302,9 +1327,9 @@ export default function EntryDetailScreen() {
                           key={br.region}
                           className="flex-row items-center px-2.5 py-1.5 rounded-full"
                           style={{
-                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            backgroundColor: hexToRgba(Colors.primary, 0.1),
                             borderWidth: 1,
-                            borderColor: "rgba(255, 255, 255, 0.2)",
+                            borderColor: hexToRgba(Colors.primary, 0.15),
                           }}
                         >
                           <Text style={{ fontSize: 10, marginRight: 4 }}>
@@ -1353,9 +1378,9 @@ export default function EntryDetailScreen() {
               }}
               className="flex-row items-center justify-center rounded-2xl py-3.5 px-5"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                backgroundColor: hexToRgba(Colors.primary, 0.12),
                 borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.25)",
+                borderColor: hexToRgba(Colors.primary, 0.2),
               }}
             >
               <RefreshCw size={16} color="#FFFFFF" strokeWidth={2} />
@@ -1380,11 +1405,13 @@ export default function EntryDetailScreen() {
               onPress={() => toggleSection("analysis")}
               className="rounded-3xl overflow-hidden mb-6"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
                 borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.2)",
+                borderColor: hexToRgba(Colors.primary, 0.15),
+                overflow: "hidden",
               }}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               <View className="p-5">
                 <View className="flex-row items-center justify-between mb-3">
                   <View className="flex-row items-center">
@@ -1452,11 +1479,13 @@ export default function EntryDetailScreen() {
               <View
                 className="rounded-3xl overflow-hidden mb-6"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: hexToRgba(Colors.primary, 0.15),
+                  overflow: "hidden",
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                 <View className="p-5">
                   <View className="flex-row items-center mb-3">
                     <Target size={18} color="#FFFFFF" strokeWidth={2} />
@@ -1478,9 +1507,9 @@ export default function EntryDetailScreen() {
                           key={index}
                           className="px-3 py-2 rounded-full"
                           style={{
-                            backgroundColor: "rgba(255, 255, 255, 0.15)",
+                            backgroundColor: hexToRgba(Colors.primary, 0.15),
                             borderWidth: 1,
-                            borderColor: "rgba(255, 255, 255, 0.25)",
+                            borderColor: hexToRgba(Colors.primary, 0.2),
                           }}
                         >
                           <Text
@@ -1513,6 +1542,7 @@ export default function EntryDetailScreen() {
             entering={FadeIn.duration(200)}
             className="rounded-3xl overflow-hidden w-full max-w-sm"
           >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <LinearGradient
               colors={Gradients.background}
               start={{ x: 0, y: 0 }}
@@ -1521,7 +1551,7 @@ export default function EntryDetailScreen() {
                 padding: 24,
                 borderRadius: 24,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.2)",
+                borderColor: hexToRgba(Colors.primary, 0.15),
               }}
             >
               <View className="items-center mb-4">

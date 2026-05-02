@@ -71,6 +71,7 @@ import useUserStatsStore from "@/lib/state/user-stats-store";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { Badge, BadgeCategory, BadgeRarity } from "@/lib/types";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 60) / 2;
@@ -351,17 +352,23 @@ interface StatsOverviewProps {
 }
 
 function StatsOverview({ stats, isDarkMode = false }: StatsOverviewProps) {
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const darkMode = useSettingsStore((s) => s.isDarkMode);
+  const Colors = getThemeColors(selectedTheme, darkMode);
+
   return (
     <View
       className="mb-6"
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
+        overflow: "hidden",
         ...StaticShadows.medium,
       }}
     >
+      <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
       <View className="p-5">
         <View className="flex-row justify-between">
           <StatItem
@@ -406,6 +413,10 @@ function StatItem({
   color,
   isDarkMode = false,
 }: StatItemProps) {
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const darkMode = useSettingsStore((s) => s.isDarkMode);
+  const Colors = getThemeColors(selectedTheme, darkMode);
+
   return (
     <View className="items-center flex-1">
       <View
@@ -413,7 +424,7 @@ function StatItem({
           width: 48,
           height: 48,
           borderRadius: BorderRadius.large,
-          backgroundColor: "rgba(255, 255, 255, 0.15)",
+          backgroundColor: hexToRgba(Colors.primary, 0.15),
           alignItems: "center",
           justifyContent: "center",
           marginBottom: 8,
@@ -460,22 +471,28 @@ function CategoryDropdown({
 }: CategoryDropdownProps) {
   const Icon = selectedOption.icon;
 
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const darkMode = useSettingsStore((s) => s.isDarkMode);
+  const Colors = getThemeColors(selectedTheme, darkMode);
+
   return (
     <View style={{ position: "relative", zIndex: 100 }}>
       <Pressable
         onPress={onToggle}
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          backgroundColor: hexToRgba(Colors.primary, 0.1),
           borderWidth: 1,
-          borderColor: "rgba(255, 255, 255, 0.2)",
+          borderColor: hexToRgba(Colors.primary, 0.15),
           borderRadius: BorderRadius.large,
           padding: 14,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
+          overflow: "hidden",
           ...StaticShadows.small,
         }}
       >
+        <GlassLayers primaryColor={Colors.primary} borderRadius={16} />
         <View className="flex-row items-center">
           <Icon size={20} color="#FFFFFF" strokeWidth={2} />
           <Text
@@ -498,12 +515,13 @@ function CategoryDropdown({
           exiting={FadeOut.duration(200)}
           className="mt-2 rounded-2xl overflow-hidden"
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            backgroundColor: hexToRgba(Colors.primary, 0.1),
             borderWidth: 1,
-            borderColor: "rgba(255, 255, 255, 0.2)",
+            borderColor: hexToRgba(Colors.primary, 0.15),
             ...StaticShadows.small,
           }}
         >
+          <GlassLayers primaryColor={Colors.primary} borderRadius={16} />
           {options.map((option) => {
             const OptionIcon = option.icon;
             const isSelected = option.value === selectedOption.value;
@@ -514,10 +532,10 @@ function CategoryDropdown({
                 className="px-3 py-3"
                 style={{
                   backgroundColor: isSelected
-                    ? "rgba(255, 255, 255, 0.15)"
+                    ? hexToRgba(Colors.primary, 0.15)
                     : "transparent",
                   borderBottomWidth: 1,
-                  borderBottomColor: "rgba(255, 255, 255, 0.1)",
+                  borderBottomColor: hexToRgba(Colors.primary, 0.1),
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -590,15 +608,17 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
       >
         <View
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            backgroundColor: hexToRgba(Colors.primary, 0.1),
             borderWidth: 1,
-            borderColor: "rgba(255, 255, 255, 0.2)",
+            borderColor: hexToRgba(Colors.primary, 0.15),
             borderRadius: BorderRadius.xlarge,
             padding: 16,
             opacity: 1,
+            overflow: "hidden",
             ...StaticShadows.medium,
           }}
         >
+          <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
           {/* Badge Icon */}
           <View className="items-center mb-3">
             <View
@@ -624,7 +644,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                     width: 64,
                     height: 64,
                     borderRadius: 32,
-                    backgroundColor: "rgba(255, 255, 255, 0.2)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.2),
                   }}
                 />
                 <View style={{ zIndex: 1 }}>
@@ -646,7 +666,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                   justifyContent: "center",
                   borderWidth: 2,
                   borderColor: isDarkMode
-                    ? "rgba(255, 255, 255, 0.2)"
+                    ? hexToRgba(Colors.primary, 0.2)
                     : "#FFFFFF",
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 1 },
@@ -714,7 +734,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 style={{
                   height: 6,
                   borderRadius: 3,
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.15),
                   overflow: "hidden",
                 }}
               >
@@ -798,16 +818,18 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
       >
         <Animated.View
           style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: hexToRgba(Colors.primary, 0.1),
             borderRadius: BorderRadius.xxlarge,
             padding: 28,
             width: "100%",
             maxWidth: 400,
             borderWidth: 1,
-            borderColor: StaticColors.purple200,
+            borderColor: hexToRgba(Colors.primary, 0.15),
+            overflow: "hidden",
             ...StaticShadows.large,
           }}
         >
+          <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
           {/* Close Button */}
           <Pressable
             onPress={onClose}
@@ -825,7 +847,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
               borderWidth: 0,
             }}
           >
-            <X size={20} color="#000000" strokeWidth={2.5} />
+            <X size={20} color="#FFFFFF" strokeWidth={2.5} />
           </Pressable>
 
           {/* Badge Icon with Glow */}
@@ -868,7 +890,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
-              color: StaticColors.textPrimary,
+              color: "#FFFFFF",
               textAlign: "center",
               fontSize: 24,
               marginBottom: 8,
@@ -879,7 +901,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           <Text
             style={{
               fontFamily: "Inter_500Medium",
-              color: "#000000",
+              color: "rgba(255, 255, 255, 0.8)",
               textAlign: "center",
               fontSize: 14,
               marginBottom: 16,
@@ -892,7 +914,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           <Text
             style={{
               fontFamily: "Inter_400Regular",
-              color: StaticColors.textSecondary,
+              color: "rgba(255, 255, 255, 0.7)",
               textAlign: "center",
               fontSize: 15,
               lineHeight: 22,
@@ -909,13 +931,13 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
               padding: 14,
               marginBottom: 16,
               borderWidth: 1,
-              borderColor: StaticColors.purple200,
+              borderColor: hexToRgba(Colors.primary, 0.15),
             }}
           >
             <Text
               style={{
                 fontFamily: "Inter_600SemiBold",
-                color: "#000000",
+                color: "rgba(255, 255, 255, 0.8)",
                 fontSize: 10,
                 letterSpacing: 0.5,
                 marginBottom: 6,
@@ -926,7 +948,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
             <Text
               style={{
                 fontFamily: "Inter_600SemiBold",
-                color: "#2D1B4E",
+                color: "rgba(255, 255, 255, 0.9)",
                 fontSize: 15,
                 lineHeight: 22,
               }}
@@ -938,14 +960,14 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           {/* Tip */}
           <View
             style={{
-              backgroundColor: "#FEFBFF",
+              backgroundColor: hexToRgba(Colors.primary, 0.08),
               borderRadius: BorderRadius.large,
               padding: 14,
               marginBottom: 20,
               borderLeftWidth: 4,
               borderLeftColor: Colors.primary,
               borderWidth: 1,
-              borderColor: StaticColors.purple100,
+              borderColor: hexToRgba(Colors.primary, 0.1),
             }}
           >
             <Text
@@ -962,7 +984,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
             <Text
               style={{
                 fontFamily: "Inter_500Medium",
-                color: "#3B2463",
+                color: "rgba(255, 255, 255, 0.9)",
                 fontSize: 13,
                 lineHeight: 21,
               }}

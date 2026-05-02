@@ -45,6 +45,7 @@ import { transcribeAudioFile } from "@/lib/deepgram-transcription-service";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeColors } from "@/lib/theme";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const ALL_EMOTIONS: EmotionType[] = [
@@ -278,7 +279,7 @@ export default function EmotionCorrectionModal({
               paddingTop: 16,
               paddingBottom: 12,
               borderBottomWidth: 1,
-              borderBottomColor: "rgba(255,255,255,0.2)",
+              borderBottomColor: hexToRgba(Colors.primary, 0.15),
             }}
           >
             <Pressable onPress={onDismiss} style={{ padding: 8 }}>
@@ -314,14 +315,19 @@ export default function EmotionCorrectionModal({
                 </Text>
                 <View
                   style={{
-                    backgroundColor: "rgba(0,0,0,0.25)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
                     borderRadius: 16,
                     padding: 20,
                     borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.2)",
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                     marginBottom: 24,
+                    overflow: "hidden",
                   }}
                 >
+                  <GlassLayers
+                    primaryColor={Colors.primary}
+                    borderRadius={16}
+                  />
                   <View
                     style={{
                       flexDirection: "row",
@@ -371,7 +377,7 @@ export default function EmotionCorrectionModal({
                           style={{
                             width: 60,
                             height: 4,
-                            backgroundColor: "rgba(255,255,255,0.2)",
+                            backgroundColor: hexToRgba(Colors.primary, 0.15),
                             borderRadius: 2,
                             overflow: "hidden",
                           }}
@@ -405,7 +411,7 @@ export default function EmotionCorrectionModal({
                           style={{
                             width: 60,
                             height: 4,
-                            backgroundColor: "rgba(255,255,255,0.2)",
+                            backgroundColor: hexToRgba(Colors.primary, 0.15),
                             borderRadius: 2,
                             overflow: "hidden",
                           }}
@@ -450,9 +456,9 @@ export default function EmotionCorrectionModal({
                         key={emotion}
                         onPress={() => handleSelectReplacement(emotion)}
                         style={{
-                          backgroundColor: "rgba(0,0,0,0.25)",
+                          backgroundColor: hexToRgba(Colors.primary, 0.08),
                           borderWidth: 1,
-                          borderColor: "rgba(255,255,255,0.2)",
+                          borderColor: hexToRgba(Colors.primary, 0.15),
                           borderRadius: 24,
                           paddingHorizontal: 16,
                           paddingVertical: 10,
@@ -518,14 +524,19 @@ export default function EmotionCorrectionModal({
 
                 <View
                   style={{
-                    backgroundColor: "rgba(0,0,0,0.25)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
                     borderRadius: 16,
                     padding: 20,
                     borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.2)",
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                     marginBottom: 24,
+                    overflow: "hidden",
                   }}
                 >
+                  <GlassLayers
+                    primaryColor={Colors.primary}
+                    borderRadius={16}
+                  />
                   <View style={{ marginBottom: 20 }}>
                     <View
                       style={{
@@ -559,6 +570,7 @@ export default function EmotionCorrectionModal({
                       max={100}
                       onChange={setValence}
                       positive={valence >= 0}
+                      primaryColor={Colors.primary}
                     />
                   </View>
 
@@ -595,6 +607,7 @@ export default function EmotionCorrectionModal({
                       max={100}
                       onChange={setArousal}
                       positive={arousal >= 50}
+                      primaryColor={Colors.primary}
                     />
                   </View>
                 </View>
@@ -618,15 +631,20 @@ export default function EmotionCorrectionModal({
                     </Text>
                     <View
                       style={{
-                        backgroundColor: "rgba(0,0,0,0.25)",
+                        backgroundColor: hexToRgba(Colors.primary, 0.08),
                         borderRadius: 16,
                         padding: 16,
                         borderWidth: 1,
-                        borderColor: "rgba(255,255,255,0.3)",
+                        borderColor: hexToRgba(Colors.primary, 0.15),
                         flexDirection: "row",
                         alignItems: "center",
+                        overflow: "hidden",
                       }}
                     >
+                      <GlassLayers
+                        primaryColor={Colors.primary}
+                        borderRadius={16}
+                      />
                       <Text style={{ fontSize: 28, marginRight: 12 }}>
                         {getEmotionDefinition(selectedEmotion).emoji}
                       </Text>
@@ -665,18 +683,21 @@ export default function EmotionCorrectionModal({
                     icon={<Mic size={14} color="#FFFFFF" />}
                     active={correctionMode === "voice"}
                     onPress={handleVoiceReason}
+                    primaryColor={Colors.primary}
                   />
                   <ReasonChip
                     label="Quick note"
                     icon={<Brain size={14} color="#FFFFFF" />}
                     active={correctionMode === "text"}
                     onPress={handleTextReason}
+                    primaryColor={Colors.primary}
                   />
                   <ReasonChip
                     label="Just the emotion"
                     icon={<Check size={14} color="#FFFFFF" />}
                     active={correctionMode === "slider"}
                     onPress={() => setCorrectionMode("slider")}
+                    primaryColor={Colors.primary}
                   />
                 </View>
 
@@ -692,7 +713,7 @@ export default function EmotionCorrectionModal({
                       value={reason}
                       onChangeText={setReason}
                       style={{
-                        backgroundColor: "rgba(0,0,0,0.25)",
+                        backgroundColor: hexToRgba(Colors.primary, 0.08),
                         borderRadius: 12,
                         padding: 14,
                         fontSize: 15,
@@ -700,7 +721,7 @@ export default function EmotionCorrectionModal({
                         minHeight: 80,
                         textAlignVertical: "top",
                         borderWidth: 1,
-                        borderColor: "rgba(255,255,255,0.2)",
+                        borderColor: hexToRgba(Colors.primary, 0.15),
                       }}
                     />
                   </Animated.View>
@@ -710,13 +731,18 @@ export default function EmotionCorrectionModal({
                   <Animated.View
                     entering={FadeIn.delay(100)}
                     style={{
-                      backgroundColor: "rgba(0,0,0,0.25)",
+                      backgroundColor: hexToRgba(Colors.primary, 0.08),
                       borderRadius: 12,
                       padding: 16,
                       alignItems: "center",
                       marginBottom: 16,
+                      overflow: "hidden",
                     }}
                   >
+                    <GlassLayers
+                      primaryColor={Colors.primary}
+                      borderRadius={12}
+                    />
                     {isRecordingVoice ? (
                       <Pressable onPress={stopVoiceRecording}>
                         <ActivityIndicator size="small" color="#FFFFFF" />
@@ -785,14 +811,21 @@ export default function EmotionCorrectionModal({
               bottom: 0,
               left: 0,
               right: 0,
-              backgroundColor: "rgba(0,0,0,0.35)",
+              backgroundColor: hexToRgba(Colors.primary, 0.12),
               borderTopWidth: 1,
-              borderTopColor: "rgba(255,255,255,0.2)",
+              borderTopColor: hexToRgba(Colors.primary, 0.15),
               paddingHorizontal: 20,
               paddingVertical: 16,
               paddingBottom: 32,
+              overflow: "hidden",
             }}
           >
+            <GlassLayers
+              primaryColor={Colors.primary}
+              borderRadius={0}
+              blur={true}
+              blurIntensity={80}
+            />
             {step === "initial" && (
               <View style={{ flexDirection: "row", gap: 12 }}>
                 <Pressable
@@ -962,12 +995,14 @@ function Slider({
   max,
   onChange,
   positive,
+  primaryColor,
 }: {
   value: number;
   min: number;
   max: number;
   onChange: (v: number) => void;
   positive: boolean;
+  primaryColor: string;
 }) {
   const [localVal, setLocalVal] = useState(value);
   const trackWidth = SCREEN_W - 64;
@@ -988,7 +1023,7 @@ function Slider({
       <View
         style={{
           height: 6,
-          backgroundColor: "rgba(255,255,255,0.2)",
+          backgroundColor: hexToRgba(primaryColor, 0.15),
           borderRadius: 3,
           overflow: "hidden",
         }}
@@ -1030,11 +1065,13 @@ function ReasonChip({
   icon,
   active,
   onPress,
+  primaryColor,
 }: {
   label: string;
   icon: React.ReactNode;
   active: boolean;
   onPress: () => void;
+  primaryColor: string;
 }) {
   return (
     <Pressable
@@ -1045,11 +1082,13 @@ function ReasonChip({
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: active ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.25)",
+        backgroundColor: active
+          ? hexToRgba(primaryColor, 0.3)
+          : hexToRgba(primaryColor, 0.08),
         borderWidth: 1,
         borderColor: active
-          ? "rgba(255,255,255,0.6)"
-          : "rgba(255,255,255,0.15)",
+          ? hexToRgba(primaryColor, 0.6)
+          : hexToRgba(primaryColor, 0.15),
       }}
     >
       <Text

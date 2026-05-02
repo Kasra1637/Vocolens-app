@@ -77,6 +77,7 @@ import {
 import { EmotionType } from "@/lib/types";
 import { populateDummyData } from "@/lib/populate-dummy-data";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 import {
   TriggerInsightCard,
   TriggerEmptyState,
@@ -566,14 +567,19 @@ function InsightsContent({
               <Animated.View style={{ marginBottom: 24 }}>
                 <View
                   style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
                     borderWidth: 1,
-                    borderColor: "rgba(255, 255, 255, 0.2)",
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                     borderRadius: BorderRadius.xxlarge,
                     padding: 20,
+                    overflow: "hidden",
                     ...Shadows.medium,
                   }}
                 >
+                  <GlassLayers
+                    primaryColor={Colors.primary}
+                    borderRadius={BorderRadius.xxlarge}
+                  />
                   <View
                     style={{
                       flexDirection: "row",
@@ -616,7 +622,7 @@ function InsightsContent({
                             sorted.length - 1
                               ? 1
                               : 0,
-                          borderBottomColor: "rgba(255, 255, 255, 0.08)",
+                          borderBottomColor: hexToRgba(Colors.primary, 0.08),
                         }}
                       >
                         <Text
@@ -661,13 +667,18 @@ function InsightsContent({
           <View
             className="mb-6"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
               borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: hexToRgba(Colors.primary, 0.15),
               borderRadius: BorderRadius.xxlarge,
+              overflow: "hidden",
               ...Shadows.medium,
             }}
           >
+            <GlassLayers
+              primaryColor={Colors.primary}
+              borderRadius={BorderRadius.xxlarge}
+            />
             <View className="p-5">
               <TriggerSectionHeader
                 timeWindow={triggerTimeWindow}
@@ -799,13 +810,18 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
       {/* Streak & Badge Card */}
       <View
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          backgroundColor: hexToRgba(Colors.primary, 0.1),
           borderWidth: 1,
-          borderColor: "rgba(255, 255, 255, 0.2)",
+          borderColor: hexToRgba(Colors.primary, 0.15),
           borderRadius: BorderRadius.xxlarge,
+          overflow: "hidden",
           ...Shadows.medium,
         }}
       >
+        <GlassLayers
+          primaryColor={Colors.primary}
+          borderRadius={BorderRadius.xxlarge}
+        />
         <View className="p-5">
           {/* Streak */}
           <View className="flex-row items-center mb-4">
@@ -814,7 +830,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 width: 48,
                 height: 48,
                 borderRadius: BorderRadius.large,
-                backgroundColor: "rgba(255, 255, 255, 0.15)",
+                backgroundColor: hexToRgba(Colors.primary, 0.15),
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 12,
@@ -857,7 +873,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
           <View
             style={{
               height: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: hexToRgba(Colors.primary, 0.15),
               marginVertical: 12,
             }}
           />
@@ -869,7 +885,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 width: 48,
                 height: 48,
                 borderRadius: BorderRadius.large,
-                backgroundColor: "rgba(255, 255, 255, 0.15)",
+                backgroundColor: hexToRgba(Colors.primary, 0.15),
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 12,
@@ -889,7 +905,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 style={{
                   height: 8,
                   borderRadius: BorderRadius.round,
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.15),
                   overflow: "hidden",
                 }}
               >
@@ -909,7 +925,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
           <View
             style={{
               height: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: hexToRgba(Colors.primary, 0.15),
               marginVertical: 12,
             }}
           />
@@ -925,7 +941,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                   ? "rgba(255, 80, 80, 0.25)"
                   : isNearLimit
                     ? "rgba(255, 185, 50, 0.25)"
-                    : "rgba(255, 255, 255, 0.15)",
+                    : hexToRgba(Colors.primary, 0.15),
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 12,
@@ -972,7 +988,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 style={{
                   height: 8,
                   borderRadius: BorderRadius.round,
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.15),
                   overflow: "hidden",
                 }}
               >
@@ -1133,13 +1149,18 @@ function SentimentTimeline({
     <View
       className="mb-6"
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
+        overflow: "hidden",
         ...Shadows.medium,
       }}
     >
+      <GlassLayers
+        primaryColor={Colors.primary}
+        borderRadius={BorderRadius.xxlarge}
+      />
       <View className="p-5">
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
@@ -1161,7 +1182,7 @@ function SentimentTimeline({
           className="flex-row mb-4 p-1"
           style={{
             borderRadius: BorderRadius.large,
-            backgroundColor: "rgba(255, 255, 255, 0.15)",
+            backgroundColor: hexToRgba(Colors.primary, 0.15),
           }}
         >
           <Pressable
@@ -1375,14 +1396,19 @@ function OverallMoodDisplay() {
           <Animated.View
             key={timeframe.label}
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
               borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: hexToRgba(Colors.primary, 0.15),
               borderRadius: BorderRadius.large,
               padding: 16,
+              overflow: "hidden",
               marginBottom: index < 2 ? 12 : 0,
             }}
           >
+            <GlassLayers
+              primaryColor={Colors.primary}
+              borderRadius={BorderRadius.large}
+            />
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <Text
@@ -1438,11 +1464,11 @@ function OverallMoodDisplay() {
                       width: 64,
                       height: 64,
                       borderRadius: 32,
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
+                      backgroundColor: hexToRgba(Colors.primary, 0.15),
                       alignItems: "center",
                       justifyContent: "center",
                       borderWidth: 3,
-                      borderColor: "rgba(255, 255, 255, 0.3)",
+                      borderColor: hexToRgba(Colors.primary, 0.25),
                     }}
                   >
                     <Text
@@ -1548,14 +1574,19 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
         <Animated.View
           key={timeframe.label}
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            backgroundColor: hexToRgba(Colors.primary, 0.1),
             borderWidth: 1,
-            borderColor: "rgba(255, 255, 255, 0.2)",
+            borderColor: hexToRgba(Colors.primary, 0.15),
             borderRadius: BorderRadius.large,
             padding: 16,
+            overflow: "hidden",
             marginBottom: index < 2 ? 12 : 0,
           }}
         >
+          <GlassLayers
+            primaryColor={Colors.primary}
+            borderRadius={BorderRadius.large}
+          />
           <View className="flex-row items-center justify-between">
             <View className="flex-1">
               <Text
@@ -1600,11 +1631,11 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
                     width: 64,
                     height: 64,
                     borderRadius: 32,
-                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.15),
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 3,
-                    borderColor: "rgba(255, 255, 255, 0.3)",
+                    borderColor: hexToRgba(Colors.primary, 0.25),
                   }}
                 >
                   <Text
@@ -1647,13 +1678,18 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
+        overflow: "hidden",
         ...Shadows.medium,
       }}
     >
+      <GlassLayers
+        primaryColor={Colors.primary}
+        borderRadius={BorderRadius.xxlarge}
+      />
       <View className="p-5">
         <Text
           style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -1714,9 +1750,9 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
       <Animated.View
         style={[
           {
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            backgroundColor: hexToRgba(Colors.primary, 0.1),
             borderWidth: 1,
-            borderColor: "rgba(255, 255, 255, 0.2)",
+            borderColor: hexToRgba(Colors.primary, 0.15),
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderRadius: BorderRadius.large,
@@ -1741,7 +1777,7 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
             paddingHorizontal: 8,
             paddingVertical: 2,
             borderRadius: BorderRadius.round,
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            backgroundColor: hexToRgba(Colors.primary, 0.15),
           }}
         >
           <Text
@@ -1774,13 +1810,18 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
+        overflow: "hidden",
         ...Shadows.medium,
       }}
     >
+      <GlassLayers
+        primaryColor={Colors.primary}
+        borderRadius={BorderRadius.xxlarge}
+      />
       <View className="p-5">
         <Text
           style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -1835,9 +1876,9 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
       <Animated.View
         style={[
           {
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            backgroundColor: hexToRgba(Colors.primary, 0.1),
             borderWidth: 1,
-            borderColor: "rgba(255, 255, 255, 0.2)",
+            borderColor: hexToRgba(Colors.primary, 0.15),
             borderRadius: BorderRadius.large,
             padding: 16,
           },
@@ -1849,7 +1890,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
             width: 40,
             height: 40,
             borderRadius: BorderRadius.medium,
-            backgroundColor: "rgba(255, 255, 255, 0.15)",
+            backgroundColor: hexToRgba(Colors.primary, 0.15),
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 12,
@@ -1964,13 +2005,18 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
+        overflow: "hidden",
         ...Shadows.medium,
       }}
     >
+      <GlassLayers
+        primaryColor={Colors.primary}
+        borderRadius={BorderRadius.xxlarge}
+      />
       <View className="p-5">
         {/* Header */}
         <View style={{ marginBottom: 16 }}>
@@ -2004,18 +2050,18 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
               <Pressable onPress={() => tapHaptic()}>
                 <View
                   style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
                     borderRadius: BorderRadius.xxlarge,
                     borderWidth: 1,
-                    borderColor: "rgba(255, 255, 255, 0.2)",
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                     overflow: "hidden",
                   }}
                 >
                   {/* Subtle gradient accent */}
                   <LinearGradient
                     colors={[
-                      "rgba(255, 255, 255, 0.06)",
-                      "rgba(255, 255, 255, 0.01)",
+                      hexToRgba(Colors.primary, 0.06),
+                      hexToRgba(Colors.primary, 0.01),
                     ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -2047,7 +2093,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                         paddingHorizontal: 8,
                         paddingVertical: 3,
                         borderRadius: 6,
-                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                        backgroundColor: hexToRgba(Colors.primary, 0.15),
                         alignSelf: "flex-start",
                         marginBottom: 12,
                       }}
@@ -2084,7 +2130,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                         style={{
                           paddingTop: 14,
                           borderTopWidth: 1,
-                          borderTopColor: "rgba(255, 255, 255, 0.1)",
+                          borderTopColor: hexToRgba(Colors.primary, 0.1),
                         }}
                       >
                         <Text
@@ -2144,9 +2190,9 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
           <Pressable
             onPress={() => tapHaptic()}
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              backgroundColor: hexToRgba(Colors.primary, 0.15),
               borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: hexToRgba(Colors.primary, 0.15),
               borderRadius: BorderRadius.large,
               padding: 12,
               alignItems: "center",

@@ -61,6 +61,7 @@ import {
   getEmotionSubLabel,
 } from "@/lib/types";
 import { AudioPlayer } from "@/components/AudioPlayer";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 // Display types for UI (capitalized versions)
 type DisplayEmotion = "Happiness" | "Sadness" | "Anger" | "Disgust";
@@ -274,11 +275,12 @@ export default function EntriesScreen() {
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
               borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: hexToRgba(Colors.primary, 0.15),
             }}
           >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <View className="p-4">
               {/* Section Header */}
               <View className="flex-row items-center mb-3">
@@ -294,7 +296,7 @@ export default function EntriesScreen() {
               {/* Search Bar */}
               <View
                 className="flex-row items-center rounded-xl px-4 py-3 mb-3"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
               >
                 <Search size={18} color="#FFFFFF" strokeWidth={2} />
                 <TextInput
@@ -326,7 +328,7 @@ export default function EntriesScreen() {
                     setShowEmotionDropdown(false);
                   }}
                   className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
                 >
                   <Text
                     style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF" }}
@@ -345,7 +347,7 @@ export default function EntriesScreen() {
                     setShowSortDropdown(false);
                   }}
                   className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
                 >
                   <Text
                     style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF" }}
@@ -365,11 +367,15 @@ export default function EntriesScreen() {
                   exiting={FadeOut.duration(200)}
                   className="mt-2 rounded-2xl overflow-hidden"
                   style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
                     borderWidth: 1,
-                    borderColor: "rgba(255, 255, 255, 0.2)",
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                   }}
                 >
+                  <GlassLayers
+                    primaryColor={Colors.primary}
+                    borderRadius={16}
+                  />
                   {SORT_OPTIONS.map((sort) => (
                     <Pressable
                       key={sort}
@@ -382,10 +388,10 @@ export default function EntriesScreen() {
                       style={{
                         backgroundColor:
                           selectedSort === sort
-                            ? "rgba(255, 255, 255, 0.15)"
+                            ? hexToRgba(Colors.primary, 0.15)
                             : "transparent",
                         borderBottomWidth: 1,
-                        borderBottomColor: "rgba(255, 255, 255, 0.1)",
+                        borderBottomColor: hexToRgba(Colors.primary, 0.1),
                       }}
                     >
                       <Text
@@ -408,11 +414,15 @@ export default function EntriesScreen() {
                   exiting={FadeOut.duration(200)}
                   className="mt-2 rounded-2xl overflow-hidden"
                   style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
                     borderWidth: 1,
-                    borderColor: "rgba(255, 255, 255, 0.2)",
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                   }}
                 >
+                  <GlassLayers
+                    primaryColor={Colors.primary}
+                    borderRadius={16}
+                  />
                   <View
                     style={{
                       flexDirection: "row",
@@ -428,10 +438,10 @@ export default function EntriesScreen() {
                         className="px-3 py-3 rounded-full"
                         style={{
                           backgroundColor: selectedEmotions.includes(emotion)
-                            ? "rgba(255, 255, 255, 0.15)"
+                            ? hexToRgba(Colors.primary, 0.15)
                             : "transparent",
                           borderBottomWidth: 1,
-                          borderBottomColor: "rgba(255, 255, 255, 0.1)",
+                          borderBottomColor: hexToRgba(Colors.primary, 0.1),
                         }}
                       >
                         <Text
@@ -502,6 +512,7 @@ export default function EntriesScreen() {
             entering={FadeIn.duration(200)}
             className="rounded-3xl overflow-hidden w-full max-w-sm"
           >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <LinearGradient
               colors={Gradients.background}
               start={{ x: 0, y: 0 }}
@@ -510,7 +521,7 @@ export default function EntriesScreen() {
                 padding: 24,
                 borderRadius: 24,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.2)",
+                borderColor: hexToRgba(Colors.primary, 0.15),
               }}
             >
               <View className="items-center mb-4">
@@ -666,9 +677,9 @@ function EntryCard({
       <Animated.View
         style={[
           {
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            backgroundColor: hexToRgba(primaryColor, 0.1),
             borderWidth: 1,
-            borderColor: "rgba(255, 255, 255, 0.2)",
+            borderColor: hexToRgba(primaryColor, 0.15),
             borderRadius: 24,
             marginBottom: 16,
             shadowColor: "#000",
@@ -680,6 +691,7 @@ function EntryCard({
           animatedStyle,
         ]}
       >
+        <GlassLayers primaryColor={primaryColor} borderRadius={24} />
         <View className="p-5">
           {/* Header */}
           <View className="flex-row items-start justify-between mb-2">
@@ -754,7 +766,10 @@ function EntryCard({
             <View className="mb-3">
               <View
                 className="px-3 py-1.5 rounded-full self-start flex-row items-center"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.15)", gap: 6 }}
+                style={{
+                  backgroundColor: hexToRgba(primaryColor, 0.15),
+                  gap: 6,
+                }}
               >
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -786,7 +801,7 @@ function EntryCard({
             <View className="mb-3">
               <View
                 className="p-2 rounded-lg"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.08)" }}
+                style={{ backgroundColor: hexToRgba(primaryColor, 0.08) }}
               >
                 <Text
                   style={{
@@ -858,7 +873,9 @@ function EntryCard({
                       <View
                         key={index}
                         className="px-2 py-1 rounded-full"
-                        style={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                        style={{
+                          backgroundColor: hexToRgba(primaryColor, 0.1),
+                        }}
                       >
                         <Text
                           style={{
@@ -875,7 +892,7 @@ function EntryCard({
                     3 && (
                     <View
                       className="px-2 py-1 rounded-full"
-                      style={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                      style={{ backgroundColor: hexToRgba(primaryColor, 0.1) }}
                     >
                       <Text
                         style={{
@@ -900,9 +917,9 @@ function EntryCard({
               <View
                 className="p-3 rounded-lg"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  backgroundColor: hexToRgba(primaryColor, 0.08),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.15)",
+                  borderColor: hexToRgba(primaryColor, 0.12),
                 }}
               >
                 <Text

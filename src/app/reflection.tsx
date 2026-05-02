@@ -37,6 +37,7 @@ import ReflectionSlider from "@/components/reflection/ReflectionSlider";
 import BodyRegionMap from "@/components/reflection/BodyRegionMap";
 import BreathingExercise from "@/components/reflection/BreathingExercise";
 import GroundingSenses from "@/components/reflection/GroundingSenses";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 type Step = "summary" | "sliders" | "body" | "grounding" | "done";
 
@@ -205,7 +206,10 @@ export default function ReflectionScreen() {
           <Text style={s.white}>No pending reflection</Text>
           <Pressable
             onPress={() => router.replace("/(tabs)")}
-            style={s.backBtn}
+            style={[
+              s.backBtn,
+              { backgroundColor: hexToRgba(Colors.primary, 0.12) },
+            ]}
           >
             <Text style={s.white}>Go Home</Text>
           </Pressable>
@@ -233,10 +237,22 @@ export default function ReflectionScreen() {
 
       {/* Header — only X and Skip, no title */}
       <View style={[s.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable onPress={handleDismiss} style={s.headerBtn}>
+        <Pressable
+          onPress={handleDismiss}
+          style={[
+            s.headerBtn,
+            { backgroundColor: hexToRgba(Colors.primary, 0.1) },
+          ]}
+        >
           <X size={22} color="rgba(255,255,255,0.75)" />
         </Pressable>
-        <Pressable onPress={skipStep} style={s.headerBtn}>
+        <Pressable
+          onPress={skipStep}
+          style={[
+            s.headerBtn,
+            { backgroundColor: hexToRgba(Colors.primary, 0.1) },
+          ]}
+        >
           <SkipForward size={18} color="rgba(255,255,255,0.55)" />
         </Pressable>
       </View>
@@ -250,7 +266,8 @@ export default function ReflectionScreen() {
         {step === "summary" && (
           <Animated.View entering={FadeIn}>
             <Text style={s.sectionLabel}>AI detected these emotions</Text>
-            <View style={s.emotionGrid}>
+            <View style={[s.emotionGrid, { overflow: "hidden" }]}>
+              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               {ALL_EMOTIONS.map((emotion) => {
                 const def = getEmotionDefinition(emotion);
                 const sel = emotions.includes(emotion);
@@ -267,6 +284,10 @@ export default function ReflectionScreen() {
                     }}
                     style={[
                       s.emotionChip,
+                      {
+                        backgroundColor: hexToRgba(Colors.primary, 0.08),
+                        borderColor: hexToRgba(Colors.primary, 0.15),
+                      },
                       sel && {
                         borderColor: accentColor,
                         backgroundColor: `${accentColor}22`,
@@ -290,7 +311,18 @@ export default function ReflectionScreen() {
             </View>
 
             {selectedEmotionDef && (
-              <Animated.View entering={FadeIn} style={s.defCard}>
+              <Animated.View
+                entering={FadeIn}
+                style={[
+                  s.defCard,
+                  {
+                    overflow: "hidden",
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
+                    borderColor: hexToRgba(Colors.primary, 0.15),
+                  },
+                ]}
+              >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                 <Text style={s.defEmoji}>
                   {getEmotionDefinition(selectedEmotionDef).emoji}
                 </Text>
@@ -314,7 +346,13 @@ export default function ReflectionScreen() {
 
             <Pressable
               onPress={nextStep}
-              style={[s.nextBtn, { borderColor: `${primaryEmotionColor}55` }]}
+              style={[
+                s.nextBtn,
+                {
+                  backgroundColor: hexToRgba(Colors.primary, 0.12),
+                  borderColor: hexToRgba(Colors.primary, 0.2),
+                },
+              ]}
             >
               <Text style={s.nextBtnText}>Next</Text>
               <ChevronRight size={18} color="#FFFFFF" />
@@ -330,7 +368,17 @@ export default function ReflectionScreen() {
           <Animated.View entering={FadeInUp}>
             <Text style={s.sectionLabel}>Adjust how it felt</Text>
 
-            <View style={s.sliderCard}>
+            <View
+              style={[
+                s.sliderCard,
+                {
+                  overflow: "hidden",
+                  backgroundColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: hexToRgba(Colors.primary, 0.12),
+                },
+              ]}
+            >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View style={s.sliderHeader}>
                 <Text style={s.sliderTitle}>Pleasant ↔ Unpleasant</Text>
                 <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
@@ -351,7 +399,18 @@ export default function ReflectionScreen() {
               </View>
             </View>
 
-            <View style={[s.sliderCard, { marginTop: 16 }]}>
+            <View
+              style={[
+                s.sliderCard,
+                {
+                  marginTop: 16,
+                  overflow: "hidden",
+                  backgroundColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: hexToRgba(Colors.primary, 0.12),
+                },
+              ]}
+            >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View style={s.sliderHeader}>
                 <Text style={s.sliderTitle}>Calm ↔ Activated</Text>
                 <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
@@ -372,7 +431,18 @@ export default function ReflectionScreen() {
             </View>
 
             {distress !== "low" && (
-              <Animated.View entering={FadeIn} style={s.distressBanner}>
+              <Animated.View
+                entering={FadeIn}
+                style={[
+                  s.distressBanner,
+                  {
+                    overflow: "hidden",
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
+                    borderColor: hexToRgba(Colors.primary, 0.2),
+                  },
+                ]}
+              >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.distressText}>
                   {distress === "high"
                     ? "⚠️  High distress detected — grounding may help"
@@ -383,7 +453,13 @@ export default function ReflectionScreen() {
 
             <Pressable
               onPress={nextStep}
-              style={[s.nextBtn, { borderColor: `${primaryEmotionColor}55` }]}
+              style={[
+                s.nextBtn,
+                {
+                  backgroundColor: hexToRgba(Colors.primary, 0.12),
+                  borderColor: hexToRgba(Colors.primary, 0.2),
+                },
+              ]}
             >
               <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
               {isLast ? (
@@ -408,7 +484,11 @@ export default function ReflectionScreen() {
               onPress={nextStep}
               style={[
                 s.nextBtn,
-                { marginTop: 28, borderColor: `${primaryEmotionColor}55` },
+                {
+                  marginTop: 28,
+                  backgroundColor: hexToRgba(Colors.primary, 0.12),
+                  borderColor: hexToRgba(Colors.primary, 0.2),
+                },
               ]}
             >
               <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
@@ -434,8 +514,16 @@ export default function ReflectionScreen() {
                   setGroundingUsed(true);
                   setStep("breathe" as any);
                 }}
-                style={s.groundingBtn}
+                style={[
+                  s.groundingBtn,
+                  {
+                    overflow: "hidden",
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
+                    borderColor: hexToRgba(Colors.primary, 0.15),
+                  },
+                ]}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.groundingEmoji}>🫁</Text>
                 <Text style={s.groundingTitle}>4-7-8 Breathing</Text>
                 <Text style={s.groundingDesc}>Calm your nervous system</Text>
@@ -445,8 +533,16 @@ export default function ReflectionScreen() {
                   setGroundingUsed(true);
                   setStep("senses" as any);
                 }}
-                style={s.groundingBtn}
+                style={[
+                  s.groundingBtn,
+                  {
+                    overflow: "hidden",
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
+                    borderColor: hexToRgba(Colors.primary, 0.15),
+                  },
+                ]}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.groundingEmoji}>🌿</Text>
                 <Text style={s.groundingTitle}>5-4-3-2-1 Senses</Text>
                 <Text style={s.groundingDesc}>Return to the present</Text>

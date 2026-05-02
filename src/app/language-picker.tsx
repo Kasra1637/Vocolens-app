@@ -22,9 +22,10 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { X, Search, Globe } from "lucide-react-native";
 import { router } from "expo-router";
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import useOnboardingStore from "@/lib/state/onboarding-store";
+import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeGradients } from "@/lib/theme";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 import { LANGUAGES } from "@/lib/languages";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -32,6 +33,8 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 export default function LanguagePickerModal() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
+  const theme = THEME_COLORS[selectedTheme];
+  const primaryColor = theme.primary;
   const selectedLanguage = useOnboardingStore(
     (s) => s.selectedTranscriptionLanguage,
   );
@@ -64,9 +67,9 @@ export default function LanguagePickerModal() {
   };
 
   const accentColor = "#FFFFFF";
-  const surfaceBg = "rgba(255,255,255,0.1)";
-  const selectedBg = "rgba(255,255,255,0.22)";
-  const borderSel = "rgba(255,255,255,0.55)";
+  const surfaceBg = hexToRgba(primaryColor, 0.1);
+  const selectedBg = hexToRgba(primaryColor, 0.22);
+  const borderSel = hexToRgba(primaryColor, 0.55);
 
   return (
     <View style={{ flex: 1 }}>
@@ -106,7 +109,7 @@ export default function LanguagePickerModal() {
                 width: 36,
                 height: 36,
                 borderRadius: 18,
-                backgroundColor: "rgba(255,255,255,0.15)",
+                backgroundColor: hexToRgba(primaryColor, 0.15),
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -131,15 +134,17 @@ export default function LanguagePickerModal() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: surfaceBg,
+              backgroundColor: hexToRgba(primaryColor, 0.1),
               borderRadius: 14,
               paddingHorizontal: 14,
               paddingVertical: 10,
               borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.15)",
+              borderColor: hexToRgba(primaryColor, 0.15),
               marginBottom: 16,
+              overflow: "hidden",
             }}
           >
+            <GlassLayers primaryColor={primaryColor} borderRadius={14} />
             <Search size={15} color="rgba(255,255,255,0.55)" />
             <TextInput
               value={query}

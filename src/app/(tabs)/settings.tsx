@@ -78,6 +78,7 @@ import useSubscriptionStore from "@/lib/state/subscription-store";
 import { removePin } from "@/lib/auth-service";
 import { exportAllDataAsCsv } from "@/lib/export-data";
 import { getLanguageByCode } from "@/lib/languages";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 export default function SettingsScreen() {
   const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
@@ -388,15 +389,16 @@ export default function SettingsScreen() {
                     ? "rgba(255, 80, 80, 0.18)"
                     : isNearLimit
                       ? "rgba(255, 180, 50, 0.15)"
-                      : "rgba(255, 255, 255, 0.1)",
+                      : hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
                   borderColor: isAtLimit
                     ? "rgba(255, 100, 100, 0.5)"
                     : isNearLimit
                       ? "rgba(255, 200, 80, 0.4)"
-                      : "rgba(255, 255, 255, 0.2)",
+                      : hexToRgba(Colors.primary, 0.15),
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View className="p-5">
                   {/* Header row */}
                   <View className="flex-row items-center justify-between mb-4">
@@ -406,7 +408,7 @@ export default function SettingsScreen() {
                         style={{
                           backgroundColor: isAtLimit
                             ? "rgba(255, 100, 100, 0.3)"
-                            : "rgba(255, 255, 255, 0.2)",
+                            : hexToRgba(Colors.primary, 0.2),
                         }}
                       >
                         <Text style={{ fontSize: 17 }}>
@@ -440,7 +442,7 @@ export default function SettingsScreen() {
                           ? "rgba(255, 100, 100, 0.35)"
                           : isNearLimit
                             ? "rgba(255, 200, 80, 0.3)"
-                            : "rgba(255, 255, 255, 0.15)",
+                            : hexToRgba(Colors.primary, 0.15),
                       }}
                     >
                       <Text
@@ -458,7 +460,7 @@ export default function SettingsScreen() {
                   {/* Progress bar */}
                   <View
                     className="h-3 rounded-full mb-3"
-                    style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
+                    style={{ backgroundColor: hexToRgba(Colors.primary, 0.12) }}
                   >
                     <View
                       className="h-full rounded-full"
@@ -498,7 +500,7 @@ export default function SettingsScreen() {
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
                 >
                   <Palette size={20} color="#FFFFFF" />
                 </View>
@@ -516,11 +518,12 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View
                   style={{
                     flexDirection: "row",
@@ -652,7 +655,7 @@ export default function SettingsScreen() {
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
                 >
                   <Bell size={20} color="#FFFFFF" />
                 </View>
@@ -670,11 +673,12 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1 mr-4">
                     <Text
@@ -710,7 +714,7 @@ export default function SettingsScreen() {
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
                 >
                   <Clock size={20} color="#FFFFFF" />
                 </View>
@@ -728,11 +732,12 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1 mr-4">
                     <Text
@@ -770,7 +775,7 @@ export default function SettingsScreen() {
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
                 >
                   <Brain size={20} color="#FFFFFF" />
                 </View>
@@ -785,16 +790,17 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View
                   className="p-5"
                   style={{
                     borderBottomWidth: 1,
-                    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+                    borderBottomColor: hexToRgba(Colors.primary, 0.1),
                   }}
                 >
                   <Text
@@ -905,7 +911,9 @@ export default function SettingsScreen() {
                     </View>
                     <View
                       className="w-8 h-8 rounded-full items-center justify-center"
-                      style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                      style={{
+                        backgroundColor: hexToRgba(Colors.primary, 0.2),
+                      }}
                     >
                       <BarChart3 size={16} color="#FFFFFF" />
                     </View>
@@ -919,7 +927,7 @@ export default function SettingsScreen() {
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
                 >
                   <Text style={{ fontSize: 18 }}>{currentLang.flag}</Text>
                 </View>
@@ -941,11 +949,12 @@ export default function SettingsScreen() {
                 }}
                 className="rounded-3xl overflow-hidden active:opacity-70"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View
                   className="p-5"
                   style={{
@@ -988,7 +997,7 @@ export default function SettingsScreen() {
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
                 >
                   <Shield size={20} color="#FFFFFF" />
                 </View>
@@ -1010,9 +1019,9 @@ export default function SettingsScreen() {
                 }}
                 className="rounded-3xl overflow-hidden active:opacity-70"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <View
@@ -1057,7 +1066,7 @@ export default function SettingsScreen() {
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
                 >
                   <Shield size={20} color="#FFFFFF" />
                 </View>
@@ -1075,17 +1084,18 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Pressable
                   onPress={handleOpenPinChange}
                   className="p-5 active:opacity-70"
                   style={{
                     borderBottomWidth: 1,
-                    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+                    borderBottomColor: hexToRgba(Colors.primary, 0.1),
                   }}
                 >
                   <View className="flex-row items-center justify-between">
@@ -1110,7 +1120,9 @@ export default function SettingsScreen() {
                     </View>
                     <View
                       className="w-8 h-8 rounded-full items-center justify-center"
-                      style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+                      style={{
+                        backgroundColor: hexToRgba(Colors.primary, 0.2),
+                      }}
                     >
                       <Lock size={16} color="#FFFFFF" />
                     </View>
@@ -1125,7 +1137,7 @@ export default function SettingsScreen() {
                   className="p-5 active:opacity-70"
                   style={{
                     borderBottomWidth: 1,
-                    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+                    borderBottomColor: hexToRgba(Colors.primary, 0.1),
                   }}
                 >
                   <View className="flex-row items-center justify-between">
@@ -1194,9 +1206,9 @@ export default function SettingsScreen() {
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "center",
-                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                        backgroundColor: hexToRgba(Colors.primary, 0.15),
                         borderWidth: 1,
-                        borderColor: "rgba(255, 255, 255, 0.25)",
+                        borderColor: hexToRgba(Colors.primary, 0.2),
                         borderRadius: 16,
                       }}
                     >
@@ -1304,6 +1316,7 @@ export default function SettingsScreen() {
               ...Shadows.large,
             }}
           >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             {/* Header with centered title */}
             <View
               style={{
@@ -1586,6 +1599,7 @@ export default function SettingsScreen() {
               ...Shadows.large,
             }}
           >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <View className="items-center mb-4">
               <View
                 className="w-16 h-16 rounded-full items-center justify-center mb-4"
@@ -1667,6 +1681,7 @@ export default function SettingsScreen() {
               ...Shadows.large,
             }}
           >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <View className="items-center mb-4">
               <View
                 className="w-16 h-16 rounded-full items-center justify-center mb-4"

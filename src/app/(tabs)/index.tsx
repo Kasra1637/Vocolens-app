@@ -65,6 +65,7 @@ import {
   useIsAtLimit,
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -692,8 +693,10 @@ export default function SpeakScreen() {
                 borderColor: isAtLimit
                   ? "rgba(255, 100, 100, 0.45)"
                   : "rgba(255, 210, 80, 0.4)",
+                overflow: "hidden",
               }}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View className="flex-row items-start">
                 <Text style={{ fontSize: 18, marginRight: 10 }}>
                   {isAtLimit ? "🔒" : "⚠️"}
@@ -729,7 +732,7 @@ export default function SpeakScreen() {
               {/* Mini progress bar */}
               <View
                 className="h-1.5 rounded-full mt-3"
-                style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
+                style={{ backgroundColor: hexToRgba(Colors.primary, 0.12) }}
               >
                 <View
                   className="h-full rounded-full"
@@ -806,12 +809,13 @@ export default function SpeakScreen() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
                 borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.2)",
+                borderColor: hexToRgba(Colors.primary, 0.15),
                 ...Shadows.medium,
               }}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View className="p-4">
                 {/* Topic Selector */}
                 <View className="flex-row items-center justify-between mb-3">
@@ -830,7 +834,7 @@ export default function SpeakScreen() {
                       setShowTopicDropdown(!showTopicDropdown);
                     }}
                     className="flex-row items-center rounded-full px-3 py-2.5"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                    style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
                   >
                     <Text
                       style={{
@@ -858,11 +862,15 @@ export default function SpeakScreen() {
                     exiting={FadeOut.duration(200)}
                     className="mb-3 rounded-2xl overflow-hidden"
                     style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      backgroundColor: hexToRgba(Colors.primary, 0.1),
                       borderWidth: 1,
-                      borderColor: "rgba(255, 255, 255, 0.2)",
+                      borderColor: hexToRgba(Colors.primary, 0.15),
                     }}
                   >
+                    <GlassLayers
+                      primaryColor={Colors.primary}
+                      borderRadius={16}
+                    />
                     {(Object.keys(TOPIC_LABELS) as TopicCategory[]).map(
                       (topic) => (
                         <Pressable
@@ -872,10 +880,10 @@ export default function SpeakScreen() {
                           style={{
                             backgroundColor:
                               selectedTopic === topic
-                                ? "rgba(255, 255, 255, 0.15)"
+                                ? hexToRgba(Colors.primary, 0.15)
                                 : "transparent",
                             borderBottomWidth: 1,
-                            borderBottomColor: "rgba(255, 255, 255, 0.1)",
+                            borderBottomColor: hexToRgba(Colors.primary, 0.1),
                           }}
                         >
                           <Text
@@ -913,7 +921,9 @@ export default function SpeakScreen() {
                     <Pressable
                       onPress={refreshQuestion}
                       className="w-8 h-8 rounded-full items-center justify-center"
-                      style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                      style={{
+                        backgroundColor: hexToRgba(Colors.primary, 0.15),
+                      }}
                     >
                       <RefreshCw size={14} color="#FFFFFF" strokeWidth={2} />
                     </Pressable>
@@ -967,7 +977,7 @@ export default function SpeakScreen() {
                 {voiceState.isStreaming ? (
                   <View
                     className="flex-row items-center px-2 py-1 rounded-full"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                    style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
                   >
                     <Radio size={10} color="#FFFFFF" strokeWidth={2} />
                     <Text
@@ -1150,9 +1160,9 @@ export default function SpeakScreen() {
                             width: 88,
                             height: 88,
                             borderRadius: 44,
-                            backgroundColor: "rgba(255,255,255,0.18)",
+                            backgroundColor: hexToRgba(Colors.primary, 0.18),
                             borderWidth: 1.5,
-                            borderColor: "rgba(255,255,255,0.35)",
+                            borderColor: hexToRgba(Colors.primary, 0.3),
                             alignItems: "center",
                             justifyContent: "center",
                             ...Shadows.medium,

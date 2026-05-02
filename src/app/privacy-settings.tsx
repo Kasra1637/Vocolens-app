@@ -37,6 +37,7 @@ import { PinEntryModal } from "@/components/PinEntryModal";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeColors, getThemeGradients, BorderRadius } from "@/lib/theme";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 export default function PrivacySettingsScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
@@ -221,12 +222,17 @@ export default function PrivacySettingsScreen() {
           >
             <View
               style={{
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: hexToRgba(themeColors.primary, 0.1),
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.2)",
+                borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
+                overflow: "hidden",
               }}
             >
+              <GlassLayers
+                primaryColor={themeColors.primary}
+                borderRadius={BorderRadius.xlarge}
+              />
               <View className="p-5">
                 <View className="flex-row items-center mb-3">
                   <View
@@ -234,7 +240,7 @@ export default function PrivacySettingsScreen() {
                       width: 44,
                       height: 44,
                       borderRadius: BorderRadius.medium,
-                      backgroundColor: "rgba(255,255,255,0.15)",
+                      backgroundColor: hexToRgba(themeColors.primary, 0.15),
                       alignItems: "center",
                       justifyContent: "center",
                       marginRight: 12,
@@ -269,9 +275,9 @@ export default function PrivacySettingsScreen() {
                   onPress={handleExportData}
                   className="active:opacity-70"
                   style={{
-                    backgroundColor: "rgba(255,255,255,0.2)",
+                    backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.3)",
+                    borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
@@ -298,12 +304,17 @@ export default function PrivacySettingsScreen() {
           >
             <View
               style={{
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: hexToRgba(themeColors.primary, 0.1),
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.2)",
+                borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
+                overflow: "hidden",
               }}
             >
+              <GlassLayers
+                primaryColor={themeColors.primary}
+                borderRadius={BorderRadius.xlarge}
+              />
               <View className="p-5">
                 <View className="flex-row items-center mb-3">
                   <View
@@ -311,7 +322,7 @@ export default function PrivacySettingsScreen() {
                       width: 44,
                       height: 44,
                       borderRadius: BorderRadius.medium,
-                      backgroundColor: "rgba(255,255,255,0.15)",
+                      backgroundColor: hexToRgba(themeColors.primary, 0.15),
                       alignItems: "center",
                       justifyContent: "center",
                       marginRight: 12,
@@ -346,9 +357,9 @@ export default function PrivacySettingsScreen() {
                   onPress={handleDeleteEntries}
                   className="active:opacity-70"
                   style={{
-                    backgroundColor: "rgba(255,255,255,0.2)",
+                    backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.3)",
+                    borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
@@ -372,12 +383,17 @@ export default function PrivacySettingsScreen() {
           <Animated.View entering={FadeInDown.delay(180).duration(500)}>
             <View
               style={{
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: hexToRgba(themeColors.primary, 0.1),
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.2)",
+                borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
+                overflow: "hidden",
               }}
             >
+              <GlassLayers
+                primaryColor={themeColors.primary}
+                borderRadius={BorderRadius.xlarge}
+              />
               <View className="p-5">
                 <View className="flex-row items-center mb-3">
                   <View
@@ -385,7 +401,7 @@ export default function PrivacySettingsScreen() {
                       width: 44,
                       height: 44,
                       borderRadius: BorderRadius.medium,
-                      backgroundColor: "rgba(255,255,255,0.15)",
+                      backgroundColor: hexToRgba(themeColors.primary, 0.15),
                       alignItems: "center",
                       justifyContent: "center",
                       marginRight: 12,
@@ -421,9 +437,9 @@ export default function PrivacySettingsScreen() {
                   onPress={handleDeleteAccount}
                   className="active:opacity-70"
                   style={{
-                    backgroundColor: "rgba(255,255,255,0.2)",
+                    backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.3)",
+                    borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
@@ -460,7 +476,7 @@ export default function PrivacySettingsScreen() {
             style={{
               backgroundColor: themeColors.surface,
               borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.2)",
+              borderColor: hexToRgba(themeColors.primary, 0.15),
               borderRadius: BorderRadius.xxlarge,
               padding: 24,
               width: "100%",
@@ -517,9 +533,9 @@ export default function PrivacySettingsScreen() {
                 onPress={() => setShowDeleteConfirm(false)}
                 className="active:opacity-70"
                 style={{
-                  backgroundColor: "rgba(255,255,255,0.12)",
+                  backgroundColor: hexToRgba(themeColors.primary, 0.12),
                   borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.2)",
+                  borderColor: hexToRgba(themeColors.primary, 0.15),
                   borderRadius: BorderRadius.medium,
                   paddingVertical: 14,
                   alignItems: "center",
@@ -613,9 +629,9 @@ export default function PrivacySettingsScreen() {
                 onPress={() => setShowDeleteAccountConfirm(false)}
                 className="active:opacity-70"
                 style={{
-                  backgroundColor: "rgba(255,255,255,0.12)",
+                  backgroundColor: hexToRgba(themeColors.primary, 0.12),
                   borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.2)",
+                  borderColor: hexToRgba(themeColors.primary, 0.15),
                   borderRadius: BorderRadius.medium,
                   paddingVertical: 14,
                   alignItems: "center",
