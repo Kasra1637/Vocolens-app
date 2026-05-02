@@ -1,0 +1,305 @@
+"use strict";
+
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { TSEventEmitter } from '@dominicstop/ts-event-emitter';
+import { RNIDetachedView, RNIDetachedViewContent } from 'react-native-ios-utilities';
+import { RNIContextMenuView } from "../../native_components/RNIContextMenuView/index.js";
+import { ContextMenuViewContext } from "../../context/ContextMenuViewContext.js";
+import { LIB_ENV } from "../../constants/LibEnv.js";
+import * as Helpers from "../../functions/Helpers.js";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+export const NATIVE_ID_KEYS = {
+  detachedView: 'detachedView',
+  contextMenuPreview: 'contextMenuPreview',
+  contextMenuAuxiliaryPreview: 'contextMenuAuxiliaryPreview'
+};
+export class ContextMenuView extends React.PureComponent {
+  static defaultProps = {
+    useActionSheetFallback: !LIB_ENV.isContextMenuViewSupported
+  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      menuVisible: false,
+      mountPreview: false
+    };
+    this.emitter = new TSEventEmitter();
+  }
+  getProps = () => {
+    const {
+      menuConfig,
+      previewConfig,
+      auxiliaryPreviewConfig,
+      shouldUseDiscoverabilityTitleAsFallbackValueForSubtitle,
+      shouldWaitForMenuToHideBeforeFiringOnPressMenuItem,
+      shouldEnableAggressiveCleanup,
+      shouldCleanupOnComponentWillUnmountForMenuPreview,
+      shouldCleanupOnComponentWillUnmountForAuxPreview,
+      isAuxiliaryPreviewEnabled,
+      isContextMenuEnabled,
+      shouldPreventLongPressGestureFromPropagating,
+      // internal
+      debugShouldEnableLogging,
+      // event props
+      onMenuWillShow,
+      onMenuWillHide,
+      onMenuWillCancel,
+      onMenuDidShow,
+      onMenuDidHide,
+      onMenuDidCancel,
+      onRequestDeferredElement,
+      onMenuAuxiliaryPreviewWillShow,
+      onMenuAuxiliaryPreviewDidShow,
+      onPressMenuItem,
+      onPressMenuPreview,
+      lazyPreview,
+      // render props
+      renderPreview,
+      renderAuxiliaryPreview: renderAuxillaryPreview,
+      ...viewProps
+    } = this.props;
+    return {
+      // A. Provide default values to props...
+      lazyPreview: lazyPreview ?? true,
+      shouldUseDiscoverabilityTitleAsFallbackValueForSubtitle: shouldUseDiscoverabilityTitleAsFallbackValueForSubtitle ?? true,
+      shouldWaitForMenuToHideBeforeFiringOnPressMenuItem: shouldWaitForMenuToHideBeforeFiringOnPressMenuItem ?? true,
+      shouldEnableAggressiveCleanup: shouldEnableAggressiveCleanup ?? true,
+      isAuxiliaryPreviewEnabled: isAuxiliaryPreviewEnabled ?? true,
+      isContextMenuEnabled: isContextMenuEnabled ?? true,
+      shouldPreventLongPressGestureFromPropagating: shouldPreventLongPressGestureFromPropagating ?? true,
+      debugShouldEnableLogging: debugShouldEnableLogging ?? LIB_ENV.shouldEnableLogging,
+      // B. Pass down props...
+      shouldCleanupOnComponentWillUnmountForMenuPreview,
+      shouldCleanupOnComponentWillUnmountForAuxPreview,
+      menuConfig,
+      previewConfig,
+      auxiliaryPreviewConfig,
+      // C. Pass down, and group event props...
+      eventProps: {
+        onMenuWillShow,
+        onMenuWillHide,
+        onMenuWillCancel,
+        onMenuDidShow,
+        onMenuDidHide,
+        onMenuDidCancel,
+        onRequestDeferredElement,
+        onMenuAuxiliaryPreviewWillShow,
+        onMenuAuxiliaryPreviewDidShow,
+        onPressMenuItem,
+        onPressMenuPreview
+      },
+      // D. Pass down, and group render props
+      renderProps: {
+        renderPreview,
+        renderAuxillaryPreview
+      },
+      // E. Move all the default view-related
+      //    props here...
+      viewProps
+    };
+  };
+  dismissMenu = async () => {
+    if (!LIB_ENV.isContextMenuViewSupported) return;
+    await this.nativeRef.dismissMenu();
+  };
+  provideDeferredElements = async (deferredID, menuItems) => {
+    if (!LIB_ENV.isContextMenuViewSupported) return;
+    await this.nativeRef.provideDeferredElements(deferredID, menuItems);
+  };
+  presentMenu = async () => {
+    if (!LIB_ENV.isContextMenuViewSupported) return;
+    await this.nativeRef.presentMenu();
+  };
+  showAuxiliaryPreviewAsPopover = async () => {
+    if (!LIB_ENV.isContextMenuViewSupported) return;
+    await Helpers.setStateAsync(this, () => ({
+      mountPreview: true
+    }));
+    await this.nativeRef.showAuxiliaryPreviewAsPopover();
+  };
+  _handleGetRefToContextMenuView = () => {
+    return this;
+  };
+  _handleOnMenuWillCreate = event => {
+    this.setState({
+      mountPreview: true
+    });
+    event.stopPropagation();
+  };
+  _handleOnMenuWillShow = event => {
+    this.props.onMenuWillShow?.(event);
+    event.stopPropagation();
+    this.setState({
+      menuVisible: true,
+      mountPreview: true
+    });
+  };
+  _handleOnMenuWillHide = event => {
+    this.props.onMenuWillHide?.(event);
+    event.stopPropagation();
+    this.setState({
+      menuVisible: false
+    });
+  };
+  _handleOnMenuWillCancel = event => {
+    this.props.onMenuWillCancel?.(event);
+    event.stopPropagation();
+  };
+  _handleOnMenuDidShow = event => {
+    this.props.onMenuDidShow?.(event);
+    event.stopPropagation();
+  };
+  _handleOnMenuDidHide = event => {
+    this.props.onMenuDidHide?.(event);
+    this.emitter.emit('onMenuDidHide', event);
+    event.stopPropagation();
+    event.persist();
+    this.setState({
+      mountPreview: false
+    });
+  };
+  _handleOnMenuDidCancel = event => {
+    this.props.onMenuDidCancel?.(event);
+
+    // guard: event is a native event
+    if (event.isUsingActionSheetFallback) return;
+    event.stopPropagation();
+  };
+  _handleOnRequestDeferredElement = event => {
+    const {
+      onRequestDeferredElement
+    } = this.props;
+    const {
+      deferredID
+    } = event.nativeEvent;
+    onRequestDeferredElement?.(deferredID, items => {
+      this.provideDeferredElements(deferredID, items);
+    });
+  };
+  _handleOnMenuAuxiliaryPreviewWillShow = event => {
+    this.props.onMenuAuxiliaryPreviewWillShow?.(event);
+    event.stopPropagation();
+  };
+  _handleOnMenuAuxiliaryPreviewDidShow = event => {
+    this.props.onMenuAuxiliaryPreviewDidShow?.(event);
+    event.stopPropagation();
+  };
+  _handleOnPressMenuItem = async event => {
+    const props = this.getProps();
+    const eventProps = props.eventProps;
+    event.stopPropagation();
+    event.persist();
+    const isKeepsMenuPresentedEnabled = event.nativeEvent.menuAttributes?.includes('keepsMenuPresented');
+    const shouldWaitForMenuToHide = !isKeepsMenuPresentedEnabled && props.shouldWaitForMenuToHideBeforeFiringOnPressMenuItem;
+    try {
+      if (shouldWaitForMenuToHide) {
+        // wait for `onMenuDidHide`
+        await Helpers.promiseWithTimeout(1000, new Promise(resolve => {
+          this.emitter.once('onMenuDidHide', () => {
+            resolve();
+          });
+        }));
+        eventProps.onPressMenuItem?.(event);
+      } else {
+        eventProps.onPressMenuItem?.(event);
+      }
+      ;
+    } catch (error) {
+      eventProps.onPressMenuItem?.(event);
+      console.log('_handleOnPressMenuItem - Promise waiting for `onMenuDidHide`' + ' has timed out');
+    }
+    ;
+  };
+  _handleOnPressMenuPreview = event => {
+    this.props.onPressMenuPreview?.(event);
+    event.stopPropagation();
+  };
+  render() {
+    const props = this.getProps();
+    const state = this.state;
+    const shouldUseContextMenuView = LIB_ENV.isContextMenuViewSupported;
+    const isUsingCustomPreview = props.renderProps.renderPreview != null;
+    const shouldMountPreviewContent = state.mountPreview || !props.lazyPreview;
+    const isUsingAuxillaryPreview = props.renderProps.renderAuxillaryPreview != null;
+    const shouldMountAuxPreviewContent = state.mountPreview || !props.lazyPreview;
+    const shouldMountDetachedView = isUsingCustomPreview || isUsingAuxillaryPreview;
+    props.debugShouldEnableLogging && console.log("ContextMenuView.render", `\n - isUsingCustomPreview: ${isUsingCustomPreview}`, `\n - shouldMountPreviewContent: ${shouldMountPreviewContent}`, `\n - isUsingAuxillaryPreview: ${isUsingAuxillaryPreview}`, `\n - shouldMountAuxPreviewContent: ${shouldMountAuxPreviewContent}`, `\n - shouldMountDetachedView: ${shouldMountDetachedView}`, `\n`);
+    const contents = shouldUseContextMenuView ?
+    /*#__PURE__*/
+    // A - Use Context Menu View
+    _jsxs(RNIContextMenuView, {
+      ...props.viewProps,
+      ref: ref => {
+        this.nativeRef = ref;
+      },
+      style: [styles.menuView, props.viewProps.style],
+      menuConfig: props.menuConfig,
+      previewConfig: props.previewConfig,
+      auxiliaryPreviewConfig: props.auxiliaryPreviewConfig,
+      isContextMenuEnabled: props.isContextMenuEnabled,
+      shouldUseDiscoverabilityTitleAsFallbackValueForSubtitle: props.shouldUseDiscoverabilityTitleAsFallbackValueForSubtitle,
+      isAuxiliaryPreviewEnabled: props.isAuxiliaryPreviewEnabled,
+      shouldPreventLongPressGestureFromPropagating: props.shouldPreventLongPressGestureFromPropagating,
+      debugShouldEnableLogging: props.debugShouldEnableLogging
+
+      // Events: `onPress`-Related
+      ,
+      onMenuWillShow: this._handleOnMenuWillShow,
+      onMenuWillHide: this._handleOnMenuWillHide,
+      onMenuWillCancel: this._handleOnMenuWillCancel,
+      onMenuDidShow: this._handleOnMenuDidShow,
+      onMenuDidHide: this._handleOnMenuDidHide,
+      onMenuDidCancel: this._handleOnMenuDidCancel,
+      onRequestDeferredElement: this._handleOnRequestDeferredElement,
+      onMenuWillCreate: this._handleOnMenuWillCreate
+
+      // Events: "Aux. Preview"-Related
+      ,
+      onMenuAuxiliaryPreviewWillShow: this._handleOnMenuAuxiliaryPreviewWillShow,
+      onMenuAuxiliaryPreviewDidShow: this._handleOnMenuAuxiliaryPreviewDidShow
+
+      // Events: `onPress`-Related
+      ,
+      onPressMenuItem: this._handleOnPressMenuItem,
+      onPressMenuPreview: this._handleOnPressMenuPreview,
+      children: [shouldMountDetachedView && /*#__PURE__*/_jsxs(RNIDetachedView, {
+        nativeID: NATIVE_ID_KEYS.detachedView,
+        shouldImmediatelyDetach: true,
+        children: [/*#__PURE__*/_jsx(React.Fragment, {
+          children: isUsingCustomPreview && /*#__PURE__*/_jsx(RNIDetachedViewContent, {
+            nativeID: NATIVE_ID_KEYS.contextMenuPreview,
+            children: shouldMountPreviewContent && props.renderProps.renderPreview?.()
+          })
+        }), /*#__PURE__*/_jsx(React.Fragment, {
+          children: isUsingAuxillaryPreview && /*#__PURE__*/_jsx(RNIDetachedViewContent, {
+            nativeID: NATIVE_ID_KEYS.contextMenuAuxiliaryPreview,
+            children: shouldMountAuxPreviewContent && props.renderProps.renderAuxillaryPreview?.()
+          })
+        })]
+      }), /*#__PURE__*/_jsx(View, {
+        children: props.viewProps.children
+      })]
+    }) :
+    /*#__PURE__*/
+    // B - Use Regular View
+    _jsx(View, {
+      ...props.viewProps,
+      children: this.props.children
+    });
+    return /*#__PURE__*/_jsx(ContextMenuViewContext.Provider, {
+      value: {
+        getRefToContextMenuView: this._handleGetRefToContextMenuView,
+        isMenuVisible: state.menuVisible
+      },
+      children: contents
+    });
+  }
+}
+;
+const styles = StyleSheet.create({
+  menuView: {
+    backgroundColor: 'transparent'
+  }
+});
+//# sourceMappingURL=ContextMenuView.js.map

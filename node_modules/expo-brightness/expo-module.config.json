@@ -1,0 +1,15 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["BrightnessModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.brightness.BrightnessModule"],
+    "publication": {
+      "groupId": "host.exp.exponent",
+      "artifactId": "expo.modules.brightness",
+      "version": "13.1.4",
+      "repository": "local-maven-repo"
+    }
+  }
+}

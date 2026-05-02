@@ -1,0 +1,103 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "host.exp.exponent",
+    "module": "expo.modules.battery",
+    "version": "9.1.4",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.13"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseVariantReleaseApiPublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.legacy",
+          "module": "legacy-support-v4",
+          "version": {
+            "requires": "1.0.0"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "expo.modules.battery-9.1.4.aar",
+          "url": "expo.modules.battery-9.1.4.aar",
+          "size": 24452,
+          "sha512": "12f222b3af2badd594c175e73f1c217e1575db5f026884fa06ab54ebf9ff93476eb17abb71b889bda01c3274c56adefb654eb48451557c86e78f24626c6b39e4",
+          "sha256": "165263f700e19b4bab48657f167c41509617669f5d88ebbf29973090e304a964",
+          "sha1": "13e0155018e341cb45a2cfd59b7a67f12f9d1b95",
+          "md5": "8f511ac14bcba0deb862bb4d141ab99d"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseRuntimePublication",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.libraryelements": "aar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk7",
+          "version": {
+            "requires": "2.0.21"
+          }
+        },
+        {
+          "group": "androidx.legacy",
+          "module": "legacy-support-v4",
+          "version": {
+            "requires": "1.0.0"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "expo.modules.battery-9.1.4.aar",
+          "url": "expo.modules.battery-9.1.4.aar",
+          "size": 24452,
+          "sha512": "12f222b3af2badd594c175e73f1c217e1575db5f026884fa06ab54ebf9ff93476eb17abb71b889bda01c3274c56adefb654eb48451557c86e78f24626c6b39e4",
+          "sha256": "165263f700e19b4bab48657f167c41509617669f5d88ebbf29973090e304a964",
+          "sha1": "13e0155018e341cb45a2cfd59b7a67f12f9d1b95",
+          "md5": "8f511ac14bcba0deb862bb4d141ab99d"
+        }
+      ]
+    },
+    {
+      "name": "releaseVariantReleaseSourcePublication",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "expo.modules.battery-9.1.4-sources.jar",
+          "url": "expo.modules.battery-9.1.4-sources.jar",
+          "size": 4611,
+          "sha512": "367057ca7cc9b69b1651926457c37e5c8bb1debd65e8615a41f4508cc3b71f808a228e53beee0d4956c4fa68a5816bb1ea8739cce40a88f642e4626708e85365",
+          "sha256": "a52199e6dfafc67e260ecfbaf87931a58e52ef9c67568583b95da56fa6cbe499",
+          "sha1": "8aebb98e07465536de72f92271cfaa39d28d9b74",
+          "md5": "0b14b040e55ece65f445cf7a618bf68f"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  create: true
+};
+Object.defineProperty(exports, "create", {
+  enumerable: true,
+  get: function () {
+    return _menu.create;
+  }
+});
+
+var _dropdownMenu = require("./dropdown-menu");
+
+Object.keys(_dropdownMenu).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _dropdownMenu[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _dropdownMenu[key];
+    }
+  });
+});
+
+var _menu = require("../menu");
+//# sourceMappingURL=index.js.map

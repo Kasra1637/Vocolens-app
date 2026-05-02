@@ -1,0 +1,1 @@
+{"version":3,"file":"CardTitle.d.ts","sourceRoot":"","sources":["../../../../src/example_components/CardTitle.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAK/B;;;;;;;;;GASG;AACH,wBAAgB,SAAS,CAAC,KAAK,EAAE;IAC/B,cAAc,CAAC,EAAE,MAAM,CAAC;IAExB,KAAK,CAAC,EAAE,MAAM,CAAC;IACf,SAAS,CAAC,EAAE,MAAM,CAAC;IACnB,QAAQ,CAAC,EAAE,MAAM,CAAC;CACnB,qBAkCA"}

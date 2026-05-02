@@ -1,0 +1,1 @@
+{"version":3,"names":["default","RNIWrapperViewNativeComponent","RNIWrapperNativeView"],"sourceRoot":"../../../../src","sources":["native_components/RNIWrapperView/RNIWrapperNativeView.ts"],"mappings":"AAEA,SACEA,OAAO,IAAIC,6BAA6B,QAEnC,iCAAiC;AAwBxC,OAAO,MAAMC,oBAAoB,GAC/BD,6BAAoF","ignoreList":[]}

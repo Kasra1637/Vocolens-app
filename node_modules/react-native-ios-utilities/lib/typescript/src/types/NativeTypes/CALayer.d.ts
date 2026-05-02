@@ -1,0 +1,2 @@
+export type CACornerMask = 'layerMinXMinYCorner' | 'layerMaxXMinYCorner' | 'layerMinXMaxYCorner' | 'layerMaxXMaxYCorner' | 'allCorners' | 'topCorners' | 'bottomCorners' | 'leftCorners' | 'rightCorners';
+//# sourceMappingURL=CALayer.d.ts.map

@@ -1,0 +1,1 @@
+{"version":3,"names":["IS_USING_NEW_ARCH","exports","_global","global","nativeFabricUIManager"],"sourceRoot":"../../../src","sources":["constants/LibEnv.ts"],"mappings":";;;;;;;AACO,MAAMA,iBAAiB,GAAAC,OAAA,CAAAD,iBAAA,GAC5B,EAAAE,OAAA,GAACC,MAAM,cAAAD,OAAA,uBAAPA,OAAA,CAAiBE,qBAAqB,KAAI,IAAI","ignoreList":[]}

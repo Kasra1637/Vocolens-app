@@ -1,0 +1,1 @@
+{"version":3,"names":["default","RNIDummyTestViewNativeComponent","RNIDummyTestNativeView"],"sourceRoot":"../../../../src","sources":["native_components/RNIDummyTestView/RNIDummyTestNativeView.ts"],"mappings":"AASA,SAASA,OAAO,IAAIC,+BAA+B,QAAQ,mCAAmC;AAqC7F;AAMD,OAAO,MAAMC,sBAAsB,GACjCD,+BAAwF","ignoreList":[]}

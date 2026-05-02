@@ -1,0 +1,1 @@
+{"version":3,"names":["React","ContextMenuViewContext","createContext"],"sourceRoot":"../../../src","sources":["context/ContextMenuViewContext.ts"],"mappings":";;AAAA,OAAOA,KAAK,MAAM,OAAO;AASzB,OAAO,MAAMC,sBAAsB,gBACjCD,KAAK,CAACE,aAAa,CAAuC,CAAC,CAAC,CAAC","ignoreList":[]}

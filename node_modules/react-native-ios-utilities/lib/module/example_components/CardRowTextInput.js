@@ -1,0 +1,38 @@
+import * as React from 'react';
+import { StyleSheet, TextInput } from 'react-native';
+import { Colors } from '../misc/Colors';
+export class CardRowTextInput extends React.PureComponent {
+  state = {
+    textInput: ''
+  };
+  getText = () => {
+    return this.state.textInput;
+  };
+  _handleOnChangeText = text => {
+    this.setState({
+      textInput: text
+    });
+  };
+  render() {
+    const props = this.props;
+    return /*#__PURE__*/React.createElement(TextInput, {
+      style: styles.cardRowTextInput,
+      onChangeText: this._handleOnChangeText,
+      placeholder: props.placeholder,
+      placeholderTextColor: Colors.INDIGO[300]
+    });
+  }
+}
+;
+const styles = StyleSheet.create({
+  cardRowTextInput: {
+    backgroundColor: Colors.INDIGO[100],
+    fontSize: 12,
+    color: Colors.INDIGO[900],
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    marginTop: 12
+  }
+});
+//# sourceMappingURL=CardRowTextInput.js.map

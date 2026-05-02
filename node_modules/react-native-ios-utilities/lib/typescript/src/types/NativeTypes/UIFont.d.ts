@@ -1,0 +1,2 @@
+export type UIFontTextStyle = 'body' | 'callout' | 'caption1' | 'caption2' | 'footnote' | 'headline' | 'subheadline' | 'largeTitle' | 'extraLargeTitle' | 'extraLargeTitle2' | 'title1' | 'title2' | 'title3';
+//# sourceMappingURL=UIFont.d.ts.map

@@ -1,0 +1,92 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should match snapshot 1`] = `
+<View
+  style={
+    [
+      {
+        "alignSelf": "center",
+      },
+      {
+        "height": 50,
+        "width": 50,
+      },
+    ]
+  }
+>
+  <Image
+    onError={[Function]}
+    source={
+      {
+        "testUri": "../../../src/assets/default.png",
+      }
+    }
+    style={
+      [
+        {
+          "height": "100%",
+          "width": "100%",
+        },
+        {
+          "backgroundColor": "#aeaeb2",
+          "borderRadius": 25,
+        },
+        undefined,
+      ]
+    }
+  />
+  <View
+    collapsable={false}
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#ff3b30",
+        "borderRadius": 10,
+        "elevation": 1,
+        "flexDirection": "row",
+        "height": 20,
+        "justifyContent": "center",
+        "minWidth": 20,
+        "position": "absolute",
+        "right": -2.5,
+        "shadowColor": "#000",
+        "shadowOffset": {
+          "height": 1,
+          "width": 0,
+        },
+        "shadowOpacity": 0.2,
+        "shadowRadius": 1,
+        "top": -2.5,
+        "transform": [
+          {
+            "scale": 1,
+          },
+        ],
+        "zIndex": 1,
+      }
+    }
+  >
+    <Text
+      ellipsizeMode="clip"
+      numberOfLines={1}
+      style={
+        [
+          {
+            "backgroundColor": "transparent",
+            "color": "#fff",
+            "fontFamily": "System",
+            "fontSize": 12,
+            "fontWeight": "400",
+            "includeFontPadding": false,
+            "marginHorizontal": 6,
+            "textAlignVertical": "center",
+          },
+          undefined,
+        ]
+      }
+    >
+      35
+    </Text>
+  </View>
+</View>
+`;

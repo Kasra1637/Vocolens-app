@@ -1,0 +1,1 @@
+{"version":3,"names":["codegenNativeComponent","excludedPlatforms","interfaceOnly"],"sourceRoot":"../../../../src","sources":["native_components/RNIDummyTestView/RNIDummyTestViewNativeComponent.ts"],"mappings":"AAAA,OAAOA,sBAAsB,MAAM,yDAAyD;;AAK5F;;AAoBA,eAAeA,sBAAsB,CAAc,kBAAkB,EAAE;EACrEC,iBAAiB,EAAE,CAAC,SAAS,CAAC;EAC9BC,aAAa,EAAE;AACjB,CAAC,CAAC","ignoreList":[]}

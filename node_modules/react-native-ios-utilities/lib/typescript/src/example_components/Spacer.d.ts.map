@@ -1,0 +1,1 @@
+{"version":3,"file":"Spacer.d.ts","sourceRoot":"","sources":["../../../../src/example_components/Spacer.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAK/B,wBAAgB,MAAM,CAAC,KAAK,EAAE;IAC5B,KAAK,CAAC,EAAE,MAAM,CAAC;CAChB,qBAIA;AAED,wBAAgB,UAAU,CAAC,KAAK,EAAE;IAChC,KAAK,CAAC,EAAE,MAAM,CAAC;IACf,aAAa,CAAC,EAAE,MAAM,CAAC;CACxB,qBAWA"}

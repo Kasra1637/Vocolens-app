@@ -1,0 +1,15 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["InsightsModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.insights.ExpoInsightsModule"],
+    "publication": {
+      "groupId": "host.exp.exponent",
+      "artifactId": "expo.modules.insights",
+      "version": "0.9.3",
+      "repository": "local-maven-repo"
+    }
+  }
+}

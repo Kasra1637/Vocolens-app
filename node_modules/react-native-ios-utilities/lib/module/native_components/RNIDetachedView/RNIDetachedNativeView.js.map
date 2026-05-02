@@ -1,0 +1,1 @@
+{"version":3,"names":["default","RNIDetachedViewNativeComponent","RNIDetachedNativeView"],"sourceRoot":"../../../../src","sources":["native_components/RNIDetachedView/RNIDetachedNativeView.ts"],"mappings":"AAEA,SACEA,OAAO,IAAIC,8BAA8B,QAEpC,kCAAkC;AA4BzC,OAAO,MAAMC,qBAAqB,GAChCD,8BAAsF","ignoreList":[]}

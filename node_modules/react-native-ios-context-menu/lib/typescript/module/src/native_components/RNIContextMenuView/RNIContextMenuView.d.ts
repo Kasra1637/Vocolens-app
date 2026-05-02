@@ -1,0 +1,6 @@
+import * as React from 'react';
+import type { RNIContextMenuViewRef } from './RNIContextMenuViewTypes';
+export declare const RNIContextMenuView: React.ForwardRefExoticComponent<Partial<Pick<import("./RNIContextMenuNativeView").RNIContextMenuNativeViewProps, "onDidSetViewID" | "menuConfig" | "previewConfig" | "auxiliaryPreviewConfig">> & Required<Pick<import("./RNIContextMenuNativeView").RNIContextMenuNativeViewProps, "shouldUseDiscoverabilityTitleAsFallbackValueForSubtitle" | "isContextMenuEnabled" | "isAuxiliaryPreviewEnabled" | "shouldPreventLongPressGestureFromPropagating" | "onMenuWillShow" | "onMenuDidShow" | "onMenuWillHide" | "onMenuDidHide" | "onMenuWillCancel" | "onMenuDidCancel" | "onMenuWillCreate" | "onRequestDeferredElement" | "onPressMenuItem" | "onPressMenuPreview" | "onMenuAuxiliaryPreviewWillShow" | "onMenuAuxiliaryPreviewDidShow">> & import("./RNIContextMenuViewTypes").RNIContextMenuViewBaseProps & import("react-native").ViewProps & {
+    children?: React.ReactNode | undefined;
+} & React.RefAttributes<RNIContextMenuViewRef>>;
+//# sourceMappingURL=RNIContextMenuView.d.ts.map

@@ -1,0 +1,9 @@
+import { type RNIUtilitiesModule } from "react-native-ios-utilities";
+export declare function getRNIUtilitiesModule(): typeof RNIUtilitiesModule;
+export declare function setStateAsync<T extends {}>(that: React.Component, newState: T | ((prevState: T) => T)): Promise<void>;
+/** wrapper for timeout that returns a promise */
+export declare function timeout(ms: number): Promise<void>;
+/** Wraps a promise that will reject if not not resolved in <ms> milliseconds */
+export declare function promiseWithTimeout<T>(ms: number, promise: Promise<T>): Promise<Awaited<T>>;
+export declare function pad(num: number | string, places?: number): string;
+//# sourceMappingURL=Helpers.d.ts.map

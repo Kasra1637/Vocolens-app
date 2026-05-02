@@ -1,0 +1,1 @@
+{"version":3,"names":["DEFAULT_DETACHED_SUBVIEW_ENTRY","exports","Object","freeze","didDetachFromOriginalParent"],"sourceRoot":"../../../../src","sources":["native_components/RNIDetachedView/DetachedSubviewsMap.ts"],"mappings":";;;;;;AASO,MAAMA,8BAAoD,GAAAC,OAAA,CAAAD,8BAAA,GAAGE,MAAM,CAACC,MAAM,CAAC;EAChFC,2BAA2B,EAAE;AAC/B,CAAC,CAAC","ignoreList":[]}

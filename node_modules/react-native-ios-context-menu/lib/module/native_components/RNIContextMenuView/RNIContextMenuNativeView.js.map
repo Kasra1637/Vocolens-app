@@ -1,0 +1,1 @@
+{"version":3,"names":["default","RNIContextMenuViewNativeComponent","RNIContextMenuNativeView"],"sourceRoot":"../../../../src","sources":["native_components/RNIContextMenuView/RNIContextMenuNativeView.ts"],"mappings":";;AAGA,SACEA,OAAO,IAAIC,iCAAiC,QAEvC,wCAAqC;AAuE5C,OAAO,MAAMC,wBAAwB,GACnCD,iCAA4F","ignoreList":[]}

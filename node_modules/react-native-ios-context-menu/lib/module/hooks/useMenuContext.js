@@ -1,0 +1,14 @@
+"use strict";
+
+import { useContext } from 'react';
+import { ContextMenuViewContext } from "../context/ContextMenuViewContext.js";
+export function useMenuContext() {
+  const context = useContext(ContextMenuViewContext);
+  if (context == null) {
+    throw new Error("unable to get ContextMenuViewContext");
+  }
+  ;
+  return context;
+}
+;
+//# sourceMappingURL=useMenuContext.js.map
