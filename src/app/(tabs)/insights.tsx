@@ -529,7 +529,10 @@ function InsightsContent({
 
         {/* Valence-Arousal Emotional Landscape */}
         <Animated.View style={{ marginBottom: 24 }}>
-          <ValenceArousalChart entries={entries} days={30} />
+          <ValenceArousalChart
+            entries={entries}
+            primaryColor={Colors.primary}
+          />
         </Animated.View>
 
         {/* Where You Feel Things — Body Frequency Card */}
