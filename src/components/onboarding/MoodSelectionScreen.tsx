@@ -19,6 +19,8 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 
 interface MoodOption {
   id: MoodType;
@@ -69,7 +71,7 @@ export function MoodSelectionScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <ScreenWrapper>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         style={{ flex: 1 }}
@@ -83,7 +85,8 @@ export function MoodSelectionScreen() {
 
           <View className="flex-1 px-6 py-3">
             {/* Character at Top */}
-            <View
+            <Animated.View
+              entering={getStaggeredFadeIn(0)}
               className="items-center justify-center"
               style={{ height: 120 }}
             >
@@ -92,11 +95,11 @@ export function MoodSelectionScreen() {
                 size={120}
                 themeColor={themeColors.primary}
               />
-            </View>
+            </Animated.View>
 
             {/* Title */}
             <Animated.View
-              entering={FadeInUp.delay(400).duration(600)}
+              entering={getStaggeredFadeIn(1)}
               className="items-center mb-5"
             >
               <Text
@@ -114,19 +117,14 @@ export function MoodSelectionScreen() {
             </Animated.View>
 
             {/* Mood Options */}
-            <Animated.View
-              entering={FadeInDown.delay(600).duration(600)}
-              style={{ marginBottom: 16 }}
-            >
+            <View style={{ marginBottom: 16 }}>
               <View className="gap-2">
                 {MOOD_OPTIONS.map((mood, index) => {
                   const isSelected = selectedMood === mood.id;
                   return (
                     <Animated.View
                       key={mood.id}
-                      entering={FadeInDown.delay(700 + index * 80).duration(
-                        400,
-                      )}
+                      entering={getStaggeredFadeIn(2 + index)}
                     >
                       <Pressable
                         onPress={() => handleMoodSelect(mood.id)}
@@ -139,9 +137,9 @@ export function MoodSelectionScreen() {
                           borderColor: isSelected
                             ? "rgba(255,255,255,0.6)"
                             : "rgba(255,255,255,0.2)",
-                          shadowColor: "#000",
+                          shadowColor: themeColors.primary,
                           shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: isSelected ? 0.15 : 0.08,
+                          shadowOpacity: isSelected ? 0.25 : 0.08,
                           shadowRadius: 8,
                         }}
                       >
@@ -163,17 +161,19 @@ export function MoodSelectionScreen() {
                   );
                 })}
               </View>
-            </Animated.View>
+            </View>
 
             {/* Continue — sits directly below mood options */}
             <Animated.View
-              entering={FadeInUp.delay(400).duration(500)}
+              entering={getStaggeredFadeIn(2 + MOOD_OPTIONS.length)}
               className="pb-6"
             >
               <OnboardingCTAButton
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedMood}
+                pulse
+                primaryColor={themeColors.primary}
               />
             </Animated.View>
 
@@ -182,6 +182,7 @@ export function MoodSelectionScreen() {
           </View>
         </SafeAreaView>
       </LinearGradient>
-    </View>
+    </ScreenWrapper>
+  );
   );
 }

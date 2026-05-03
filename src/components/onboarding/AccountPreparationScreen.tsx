@@ -11,8 +11,6 @@ import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -28,6 +26,8 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 
 export function AccountPreparationScreen() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
@@ -110,7 +110,7 @@ export function AccountPreparationScreen() {
   }, milestones[0]);
 
   return (
-    <View className="flex-1">
+    <ScreenWrapper>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         start={{ x: 0, y: 0 }}
@@ -125,7 +125,8 @@ export function AccountPreparationScreen() {
 
           <View className="flex-1 px-6">
             {/* Character */}
-            <View
+            <Animated.View
+              entering={getStaggeredFadeIn(0)}
               className="items-center justify-center"
               style={{ height: 120 }}
             >
@@ -134,17 +135,17 @@ export function AccountPreparationScreen() {
                 size={120}
                 themeColor={themeColors.primary}
               />
-            </View>
+            </Animated.View>
 
             {/* Header */}
             <Animated.View
-              entering={FadeInDown.delay(100).duration(600)}
+              entering={getStaggeredFadeIn(1)}
               className="items-center mt-4 mb-8"
             >
               <Text
                 style={{
                   color: "#FFFFFF",
-                  fontFamily: "Inter_700Bold",
+                  fontFamily: "Fraunces_700Bold",
                   fontSize: 24,
                   textAlign: "center",
                   marginBottom: 10,
@@ -156,7 +157,7 @@ export function AccountPreparationScreen() {
 
             {/* Progress Card */}
             <Animated.View
-              entering={FadeInUp.delay(200).duration(500)}
+              entering={getStaggeredFadeIn(2)}
               className="rounded-3xl px-5 py-4 mb-4"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.12)",
@@ -236,7 +237,7 @@ export function AccountPreparationScreen() {
 
             {/* Plutchik Model Note */}
             <Animated.View
-              entering={FadeInUp.delay(350).duration(500)}
+              entering={getStaggeredFadeIn(3)}
               className="rounded-2xl px-5 py-4 mb-4"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.08)",
@@ -293,14 +294,13 @@ export function AccountPreparationScreen() {
             </Animated.View>
 
             {/* Continue Button */}
-            <Animated.View
-              entering={FadeInUp.delay(400).duration(500)}
-              className="pb-6"
-            >
+            <Animated.View entering={getStaggeredFadeIn(4)} className="pb-6">
               <OnboardingCTAButton
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!isComplete}
+                pulse
+                primaryColor={themeColors.primary}
               />
             </Animated.View>
             {/* Spacer */}
@@ -308,6 +308,6 @@ export function AccountPreparationScreen() {
           </View>
         </SafeAreaView>
       </LinearGradient>
-    </View>
+    </ScreenWrapper>
   );
 }

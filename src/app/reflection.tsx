@@ -38,6 +38,12 @@ import BodyRegionMap from "@/components/reflection/BodyRegionMap";
 import BreathingExercise from "@/components/reflection/BreathingExercise";
 import GroundingSenses from "@/components/reflection/GroundingSenses";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import {
+  getStaggeredFadeIn,
+  BUTTON_PRESS_SCALE,
+  BUTTON_RELEASE_DURATION,
+} from "@/lib/animations";
 
 type Step = "summary" | "sliders" | "body" | "grounding" | "done";
 
@@ -227,7 +233,7 @@ export default function ReflectionScreen() {
     .slice(0, 3);
 
   return (
-    <View style={s.container}>
+    <ScreenWrapper>
       <LinearGradient
         colors={Gradients.background}
         style={s.gradient}
@@ -264,51 +270,55 @@ export default function ReflectionScreen() {
       >
         {/* ── Step: Summary ── */}
         {step === "summary" && (
-          <Animated.View entering={FadeIn}>
-            <Text style={s.sectionLabel}>AI detected these emotions</Text>
-            <View style={[s.emotionGrid, { overflow: "hidden" }]}>
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
-              {ALL_EMOTIONS.map((emotion) => {
-                const def = getEmotionDefinition(emotion);
-                const sel = emotions.includes(emotion);
-                const accentColor = EMOTION_COLORS[emotion];
-                return (
-                  <Pressable
-                    key={emotion}
-                    onPress={() => toggleEmotion(emotion)}
-                    onLongPress={() => {
-                      tapHaptic();
-                      setSelectedEmotionDef(
-                        selectedEmotionDef === emotion ? null : emotion,
-                      );
-                    }}
-                    style={[
-                      s.emotionChip,
-                      {
-                        backgroundColor: hexToRgba(Colors.primary, 0.08),
-                        borderColor: hexToRgba(Colors.primary, 0.15),
-                      },
-                      sel && {
-                        borderColor: accentColor,
-                        backgroundColor: `${accentColor}22`,
-                      },
-                    ]}
-                  >
-                    <Text style={s.emotionEmoji}>{def.emoji}</Text>
-                    <Text style={[s.emotionLabel, sel && { color: "#FFFFFF" }]}>
-                      {emotion}
-                    </Text>
-                    {sel && (
-                      <View
-                        style={[s.checkBadge, { backgroundColor: accentColor }]}
-                      >
-                        <Check size={10} color="#1F2937" strokeWidth={3} />
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
+          <View>
+            <Animated.View entering={getStaggeredFadeIn(0)}>
+              <Text style={s.sectionLabel}>AI detected these emotions</Text>
+            </Animated.View>
+            <Animated.View entering={getStaggeredFadeIn(1)}>
+              <View style={[s.emotionGrid, { overflow: "hidden" }]}>
+                <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
+                {ALL_EMOTIONS.map((emotion) => {
+                  const def = getEmotionDefinition(emotion);
+                  const sel = emotions.includes(emotion);
+                  const accentColor = EMOTION_COLORS[emotion];
+                  return (
+                    <Pressable
+                      key={emotion}
+                      onPress={() => toggleEmotion(emotion)}
+                      onLongPress={() => {
+                        tapHaptic();
+                        setSelectedEmotionDef(
+                          selectedEmotionDef === emotion ? null : emotion,
+                        );
+                      }}
+                      style={[
+                        s.emotionChip,
+                        {
+                          backgroundColor: hexToRgba(Colors.primary, 0.08),
+                          borderColor: hexToRgba(Colors.primary, 0.15),
+                        },
+                        sel && {
+                          borderColor: accentColor,
+                          backgroundColor: `${accentColor}22`,
+                        },
+                      ]}
+                    >
+                      <Text style={s.emotionEmoji}>{def.emoji}</Text>
+                      <Text style={[s.emotionLabel, sel && { color: "#FFFFFF" }]}>
+                        {emotion}
+                      </Text>
+                      {sel && (
+                        <View
+                          style={[s.checkBadge, { backgroundColor: accentColor }]}
+                        >
+                          <Check size={10} color="#1F2937" strokeWidth={3} />
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </Animated.View>
 
             {selectedEmotionDef && (
               <Animated.View
@@ -340,95 +350,105 @@ export default function ReflectionScreen() {
               </Animated.View>
             )}
 
-            <Text style={s.hint}>
-              Tap to toggle · Long-press for Plutchik definition
-            </Text>
+            <Animated.View entering={getStaggeredFadeIn(2)}>
+              <Text style={s.hint}>
+                Tap to toggle · Long-press for Plutchik definition
+              </Text>
+            </Animated.View>
 
-            <Pressable
-              onPress={nextStep}
-              style={[
-                s.nextBtn,
-                {
-                  backgroundColor: hexToRgba(Colors.primary, 0.12),
-                  borderColor: hexToRgba(Colors.primary, 0.2),
-                },
-              ]}
-            >
-              <Text style={s.nextBtnText}>Next</Text>
-              <ChevronRight size={18} color="#FFFFFF" />
-            </Pressable>
-            <Pressable onPress={skipStep} style={s.skipBtnWrap}>
-              <Text style={s.skipText}>Skip reflection</Text>
-            </Pressable>
-          </Animated.View>
+            <Animated.View entering={getStaggeredFadeIn(3)}>
+              <Pressable
+                onPress={nextStep}
+                style={[
+                  s.nextBtn,
+                  {
+                    backgroundColor: hexToRgba(Colors.primary, 0.12),
+                    borderColor: hexToRgba(Colors.primary, 0.2),
+                  },
+                ]}
+              >
+                <Text style={s.nextBtnText}>Next</Text>
+                <ChevronRight size={18} color="#FFFFFF" />
+              </Pressable>
+              <Pressable onPress={skipStep} style={s.skipBtnWrap}>
+                <Text style={s.skipText}>Skip reflection</Text>
+              </Pressable>
+            </Animated.View>
+          </View>
         )}
 
         {/* ── Step: Sliders ── */}
         {step === "sliders" && (
-          <Animated.View entering={FadeInUp}>
-            <Text style={s.sectionLabel}>Adjust how it felt</Text>
+          <View>
+            <Animated.View entering={getStaggeredFadeIn(0)}>
+              <Text style={s.sectionLabel}>Adjust how it felt</Text>
+            </Animated.View>
 
-            <View
-              style={[
-                s.sliderCard,
-                {
-                  overflow: "hidden",
-                  backgroundColor: hexToRgba(Colors.primary, 0.08),
-                  borderColor: hexToRgba(Colors.primary, 0.12),
-                },
-              ]}
-            >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
-              <View style={s.sliderHeader}>
-                <Text style={s.sliderTitle}>Pleasant ↔ Unpleasant</Text>
-                <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
-                  {valence > 0 ? "+" : ""}
-                  {valence}
-                </Text>
+            <Animated.View entering={getStaggeredFadeIn(1)}>
+              <View
+                style={[
+                  s.sliderCard,
+                  {
+                    overflow: "hidden",
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
+                    borderColor: hexToRgba(Colors.primary, 0.12),
+                  },
+                ]}
+              >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
+                <View style={s.sliderHeader}>
+                  <Text style={s.sliderTitle}>Pleasant ↔ Unpleasant</Text>
+                  <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
+                    {valence > 0 ? "+" : ""}
+                    {valence}
+                  </Text>
+                </View>
+                <ReflectionSlider
+                  value={valence}
+                  min={-100}
+                  max={100}
+                  onChange={setValence}
+                  accentColor={primaryEmotionColor}
+                />
+                <View style={s.sliderLabels}>
+                  <Text style={s.sliderHint}>Unpleasant</Text>
+                  <Text style={s.sliderHint}>Pleasant</Text>
+                </View>
               </View>
-              <ReflectionSlider
-                value={valence}
-                min={-100}
-                max={100}
-                onChange={setValence}
-                accentColor={primaryEmotionColor}
-              />
-              <View style={s.sliderLabels}>
-                <Text style={s.sliderHint}>Unpleasant</Text>
-                <Text style={s.sliderHint}>Pleasant</Text>
-              </View>
-            </View>
+            </Animated.View>
 
-            <View
-              style={[
-                s.sliderCard,
-                {
-                  marginTop: 16,
-                  overflow: "hidden",
-                  backgroundColor: hexToRgba(Colors.primary, 0.08),
-                  borderColor: hexToRgba(Colors.primary, 0.12),
-                },
-              ]}
-            >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
-              <View style={s.sliderHeader}>
-                <Text style={s.sliderTitle}>Calm ↔ Activated</Text>
-                <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
-                  {arousal}%
-                </Text>
+            <Animated.View entering={getStaggeredFadeIn(2)}>
+              <View
+                style={[
+                  s.sliderCard,
+                  {
+                    marginTop: 16,
+                    overflow: "hidden",
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
+                    borderColor: hexToRgba(Colors.primary, 0.12),
+                  },
+                ]}
+              >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
+                <View style={s.sliderHeader}>
+                  <Text style={s.sliderTitle}>Calm ↔ Activated</Text>
+                  <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
+                    {arousal}%
+                  </Text>
+                </View>
+                <ReflectionSlider
+                  value={arousal}
+                  min={0}
+                  max={100}
+                  onChange={setArousal}
+                  accentColor={primaryEmotionColor}
+                />
+                <View style={s.sliderLabels}>
+                  <Text style={s.sliderHint}>Calm</Text>
+                  <Text style={s.sliderHint}>Activated</Text>
+                </View>
               </View>
-              <ReflectionSlider
-                value={arousal}
-                min={0}
-                max={100}
-                onChange={setArousal}
-                accentColor={primaryEmotionColor}
-              />
-              <View style={s.sliderLabels}>
-                <Text style={s.sliderHint}>Calm</Text>
-                <Text style={s.sliderHint}>Activated</Text>
-              </View>
-            </View>
+            </Animated.View>
 
             {distress !== "low" && (
               <Animated.View
@@ -451,107 +471,123 @@ export default function ReflectionScreen() {
               </Animated.View>
             )}
 
-            <Pressable
-              onPress={nextStep}
-              style={[
-                s.nextBtn,
-                {
-                  backgroundColor: hexToRgba(Colors.primary, 0.12),
-                  borderColor: hexToRgba(Colors.primary, 0.2),
-                },
-              ]}
-            >
-              <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
-              {isLast ? (
-                <Sparkles size={16} color="#FFFFFF" />
-              ) : (
-                <ChevronRight size={18} color="#FFFFFF" />
-              )}
-            </Pressable>
-            <Pressable onPress={skipStep} style={s.skipBtnWrap}>
-              <Text style={s.skipText}>Skip this step</Text>
-            </Pressable>
-          </Animated.View>
+            <Animated.View entering={getStaggeredFadeIn(3)}>
+              <Pressable
+                onPress={nextStep}
+                style={[
+                  s.nextBtn,
+                  {
+                    backgroundColor: hexToRgba(Colors.primary, 0.12),
+                    borderColor: hexToRgba(Colors.primary, 0.2),
+                  },
+                ]}
+              >
+                <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
+                {isLast ? (
+                  <Sparkles size={16} color="#FFFFFF" />
+                ) : (
+                  <ChevronRight size={18} color="#FFFFFF" />
+                )}
+              </Pressable>
+              <Pressable onPress={skipStep} style={s.skipBtnWrap}>
+                <Text style={s.skipText}>Skip this step</Text>
+              </Pressable>
+            </Animated.View>
+          </View>
         )}
 
         {/* ── Step: Body Scan ── */}
         {step === "body" && (
-          <Animated.View entering={FadeInUp}>
-            <Text style={s.sectionLabel}>Where do you feel it?</Text>
-            <Text style={s.bodySub}>Tap a region, then rate intensity 1–5</Text>
-            <BodyRegionMap selected={bodyRegions} onChange={setBodyRegions} />
-            <Pressable
-              onPress={nextStep}
-              style={[
-                s.nextBtn,
-                {
-                  marginTop: 28,
-                  backgroundColor: hexToRgba(Colors.primary, 0.12),
-                  borderColor: hexToRgba(Colors.primary, 0.2),
-                },
-              ]}
-            >
-              <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
-              {isLast ? (
-                <Sparkles size={16} color="#FFFFFF" />
-              ) : (
-                <ChevronRight size={18} color="#FFFFFF" />
-              )}
-            </Pressable>
-            <Pressable onPress={skipStep} style={s.skipBtnWrap}>
-              <Text style={s.skipText}>Skip body scan</Text>
-            </Pressable>
-          </Animated.View>
+          <View>
+            <Animated.View entering={getStaggeredFadeIn(0)}>
+              <Text style={s.sectionLabel}>Where do you feel it?</Text>
+              <Text style={s.bodySub}>Tap a region, then rate intensity 1–5</Text>
+            </Animated.View>
+            <Animated.View entering={getStaggeredFadeIn(1)}>
+              <BodyRegionMap selected={bodyRegions} onChange={setBodyRegions} />
+            </Animated.View>
+            <Animated.View entering={getStaggeredFadeIn(2)}>
+              <Pressable
+                onPress={nextStep}
+                style={[
+                  s.nextBtn,
+                  {
+                    marginTop: 28,
+                    backgroundColor: hexToRgba(Colors.primary, 0.12),
+                    borderColor: hexToRgba(Colors.primary, 0.2),
+                  },
+                ]}
+              >
+                <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
+                {isLast ? (
+                  <Sparkles size={16} color="#FFFFFF" />
+                ) : (
+                  <ChevronRight size={18} color="#FFFFFF" />
+                )}
+              </Pressable>
+              <Pressable onPress={skipStep} style={s.skipBtnWrap}>
+                <Text style={s.skipText}>Skip body scan</Text>
+              </Pressable>
+            </Animated.View>
+          </View>
         )}
 
         {/* ── Step: Grounding ── */}
         {step === "grounding" && (
-          <Animated.View entering={FadeInUp}>
-            <Text style={s.sectionLabel}>Let's ground together</Text>
+          <View>
+            <Animated.View entering={getStaggeredFadeIn(0)}>
+              <Text style={s.sectionLabel}>Let's ground together</Text>
+            </Animated.View>
             <View style={s.groundingChoice}>
-              <Pressable
-                onPress={() => {
-                  setGroundingUsed(true);
-                  setStep("breathe" as any);
-                }}
-                style={[
-                  s.groundingBtn,
-                  {
-                    overflow: "hidden",
-                    backgroundColor: hexToRgba(Colors.primary, 0.08),
-                    borderColor: hexToRgba(Colors.primary, 0.15),
-                  },
-                ]}
-              >
-                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
-                <Text style={s.groundingEmoji}>🫁</Text>
-                <Text style={s.groundingTitle}>4-7-8 Breathing</Text>
-                <Text style={s.groundingDesc}>Calm your nervous system</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setGroundingUsed(true);
-                  setStep("senses" as any);
-                }}
-                style={[
-                  s.groundingBtn,
-                  {
-                    overflow: "hidden",
-                    backgroundColor: hexToRgba(Colors.primary, 0.08),
-                    borderColor: hexToRgba(Colors.primary, 0.15),
-                  },
-                ]}
-              >
-                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
-                <Text style={s.groundingEmoji}>🌿</Text>
-                <Text style={s.groundingTitle}>5-4-3-2-1 Senses</Text>
-                <Text style={s.groundingDesc}>Return to the present</Text>
-              </Pressable>
+              <Animated.View entering={getStaggeredFadeIn(1)}>
+                <Pressable
+                  onPress={() => {
+                    setGroundingUsed(true);
+                    setStep("breathe" as any);
+                  }}
+                  style={[
+                    s.groundingBtn,
+                    {
+                      overflow: "hidden",
+                      backgroundColor: hexToRgba(Colors.primary, 0.08),
+                      borderColor: hexToRgba(Colors.primary, 0.15),
+                    },
+                  ]}
+                >
+                  <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
+                  <Text style={s.groundingEmoji}>🫁</Text>
+                  <Text style={s.groundingTitle}>4-7-8 Breathing</Text>
+                  <Text style={s.groundingDesc}>Calm your nervous system</Text>
+                </Pressable>
+              </Animated.View>
+              <Animated.View entering={getStaggeredFadeIn(2)}>
+                <Pressable
+                  onPress={() => {
+                    setGroundingUsed(true);
+                    setStep("senses" as any);
+                  }}
+                  style={[
+                    s.groundingBtn,
+                    {
+                      overflow: "hidden",
+                      backgroundColor: hexToRgba(Colors.primary, 0.08),
+                      borderColor: hexToRgba(Colors.primary, 0.15),
+                    },
+                  ]}
+                >
+                  <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
+                  <Text style={s.groundingEmoji}>🌿</Text>
+                  <Text style={s.groundingTitle}>5-4-3-2-1 Senses</Text>
+                  <Text style={s.groundingDesc}>Return to the present</Text>
+                </Pressable>
+              </Animated.View>
             </View>
-            <Pressable onPress={nextStep} style={s.skipBtnWrap}>
-              <Text style={s.skipText}>Skip grounding</Text>
-            </Pressable>
-          </Animated.View>
+            <Animated.View entering={getStaggeredFadeIn(3)}>
+              <Pressable onPress={nextStep} style={s.skipBtnWrap}>
+                <Text style={s.skipText}>Skip grounding</Text>
+              </Pressable>
+            </Animated.View>
+          </View>
         )}
 
         {/* ── Sub-step: Breathing ── */}

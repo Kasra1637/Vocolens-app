@@ -21,7 +21,9 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { ArrowLeft, FileText, Shield } from "lucide-react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
 import {
@@ -60,106 +62,116 @@ export default function LegalScreen() {
   if (!fontsLoaded) return null;
 
   return (
-    <View className="flex-1" style={{ backgroundColor: Colors.background }}>
-      <LinearGradient
-        colors={Gradients.background}
-        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      />
+    <ScreenWrapper>
+      <View className="flex-1" style={{ backgroundColor: Colors.background }}>
+        <LinearGradient
+          colors={Gradients.background}
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        />
 
-      {/* Header */}
-      <View
-        className="flex-row items-center px-5"
-        style={{ paddingTop: insets.top + 12, paddingBottom: 16 }}
-      >
-        <Pressable
-          onPress={() => {
-            tapHaptic();
-            router.back();
-          }}
-          className="w-10 h-10 rounded-full items-center justify-center mr-4"
-          style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
+        {/* Header */}
+        <Animated.View
+          entering={getStaggeredFadeIn(0)}
+          className="flex-row items-center px-5"
+          style={{ paddingTop: insets.top + 12, paddingBottom: 16 }}
         >
-          <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: "Fraunces_700Bold",
-            color: "#FFFFFF",
-            fontSize: 20,
-          }}
-        >
-          Legal
-        </Text>
-      </View>
+          <Pressable
+            onPress={() => {
+              tapHaptic();
+              router.back();
+            }}
+            style={({ pressed }) => ({
+              backgroundColor: hexToRgba(Colors.primary, 0.15),
+              opacity: pressed ? 0.7 : 1,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+            })}
+            className="w-10 h-10 rounded-full items-center justify-center mr-4"
+          >
+            <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </Pressable>
+          <Text
+            style={{
+              fontFamily: "Fraunces_700Bold",
+              color: "#FFFFFF",
+              fontSize: 20,
+            }}
+          >
+            Legal
+          </Text>
+        </Animated.View>
 
-      {/* Tab Switcher */}
-      <View className="px-5 mb-4">
-        <View
-          className="flex-row p-1 rounded-2xl"
-          style={{ backgroundColor: hexToRgba(Colors.primary, 0.12) }}
-        >
-          {(
-            [
-              { key: "privacy", label: "Privacy Policy", icon: Shield },
-              { key: "terms", label: "Terms of Service", icon: FileText },
-            ] as { key: TabType; label: string; icon: typeof Shield }[]
-          ).map(({ key, label, icon: Icon }) => (
-            <Pressable
-              key={key}
-              onPress={() => {
-                selectionHaptic();
-                setActiveTab(key);
-              }}
-              className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
-              style={{
-                backgroundColor:
-                  activeTab === key
-                    ? hexToRgba(Colors.primary, 0.2)
-                    : "transparent",
-              }}
-            >
-              <Icon size={14} color="#FFFFFF" strokeWidth={2} />
-              <Text
-                style={{
-                  fontFamily:
-                    activeTab === key
-                      ? "Inter_600SemiBold"
-                      : "Inter_400Regular",
-                  color: "#FFFFFF",
-                  fontSize: 13,
-                  marginLeft: 6,
+        {/* Tab Switcher */}
+        <Animated.View entering={getStaggeredFadeIn(1)} className="px-5 mb-4">
+          <View
+            className="flex-row p-1 rounded-2xl"
+            style={{ backgroundColor: hexToRgba(Colors.primary, 0.12) }}
+          >
+            {(
+              [
+                { key: "privacy", label: "Privacy Policy", icon: Shield },
+                { key: "terms", label: "Terms of Service", icon: FileText },
+              ] as { key: TabType; label: string; icon: typeof Shield }[]
+            ).map(({ key, label, icon: Icon }) => (
+              <Pressable
+                key={key}
+                onPress={() => {
+                  selectionHaptic();
+                  setActiveTab(key);
                 }}
+                className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
+                style={({ pressed }) => ({
+                  backgroundColor:
+                    activeTab === key
+                      ? hexToRgba(Colors.primary, 0.2)
+                      : "transparent",
+                  opacity: pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                })}
               >
-                {label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
+                <Icon size={14} color="#FFFFFF" strokeWidth={2} />
+                <Text
+                  style={{
+                    fontFamily:
+                      activeTab === key
+                        ? "Inter_600SemiBold"
+                        : "Inter_400Regular",
+                    color: "#FFFFFF",
+                    fontSize: 13,
+                    marginLeft: 6,
+                  }}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </Animated.View>
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingBottom: insets.bottom + 40,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {activeTab === "privacy" ? (
-          <PrivacyPolicy
-            isDarkMode={isDarkMode}
-            primaryColor={Colors.primary}
-          />
-        ) : (
-          <TermsOfService
-            isDarkMode={isDarkMode}
-            primaryColor={Colors.primary}
-          />
-        )}
-      </ScrollView>
-    </View>
+        <Animated.ScrollView
+          entering={getStaggeredFadeIn(2)}
+          className="flex-1"
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingBottom: insets.bottom + 40,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {activeTab === "privacy" ? (
+            <PrivacyPolicy
+              isDarkMode={isDarkMode}
+              primaryColor={Colors.primary}
+            />
+          ) : (
+            <TermsOfService
+              isDarkMode={isDarkMode}
+              primaryColor={Colors.primary}
+            />
+          )}
+        </Animated.ScrollView>
+      </View>
+    </ScreenWrapper>
   );
 }
 
@@ -177,7 +189,7 @@ function Section({
   primaryColor: string;
 }) {
   return (
-    <Animated.View entering={FadeInDown.duration(400)} className="mb-6">
+    <Animated.View entering={getStaggeredFadeIn(0)} className="mb-6">
       <View
         className="rounded-3xl p-5"
         style={{

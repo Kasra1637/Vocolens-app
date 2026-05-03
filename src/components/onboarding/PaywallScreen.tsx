@@ -17,8 +17,6 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -54,6 +52,9 @@ import {
 } from "@/lib/revenuecatClient";
 import type { PurchasesPackage } from "react-native-purchases";
 import { NotificationService } from "@/lib/services/notification-service";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
+import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
 type PricingPlan = "monthly" | "yearly";
 
@@ -487,7 +488,7 @@ export function PaywallScreen() {
       : "Start my journey";
 
   return (
-    <View style={{ flex: 1 }}>
+    <ScreenWrapper>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         start={{ x: 0, y: 0 }}
@@ -507,7 +508,7 @@ export function PaywallScreen() {
           >
             {/* Header */}
             <Animated.View
-              entering={FadeInDown.delay(50).duration(600)}
+              entering={getStaggeredFadeIn(0)}
               style={{
                 paddingHorizontal: 24,
                 paddingTop: 8,
@@ -517,7 +518,7 @@ export function PaywallScreen() {
             >
               <Text
                 style={{
-                  fontFamily: "Inter_700Bold",
+                  fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
                   fontSize: 22,
                   textAlign: "center",
@@ -533,7 +534,7 @@ export function PaywallScreen() {
             {/* Trial timeline — yearly only */}
             {selectedPlan === "yearly" && (
               <Animated.View
-                entering={FadeInUp.delay(150).duration(500)}
+                entering={getStaggeredFadeIn(1)}
                 style={{
                   marginHorizontal: 24,
                   borderRadius: 24,
@@ -621,7 +622,7 @@ export function PaywallScreen() {
 
             {/* Benefits — carousel for yearly, static vertical list for monthly */}
             {selectedPlan === "yearly" ? (
-              <Animated.View entering={FadeInUp.delay(250).duration(500)}>
+              <Animated.View entering={getStaggeredFadeIn(2)}>
                 <BenefitsCarousel themeColors={themeColors} />
               </Animated.View>
             ) : (
@@ -872,49 +873,57 @@ export function PaywallScreen() {
             </View>
 
             {/* CTA button */}
-            <Pressable
+            <OnboardingCTAButton
+              label={isPurchasing ? "Processing…" : ctaLabel}
               onPress={handleContinue}
               disabled={isPurchasing}
-              style={{
-                width: "100%",
-                borderRadius: 16,
-                borderWidth: 2,
-                borderColor: "#FFFFFF",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.25,
-                shadowRadius: 16,
-                elevation: Platform.OS === "android" ? 0 : 8,
-                opacity: isPurchasing ? 0.75 : 1,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingVertical: 16,
-                }}
-              >
-                {isPurchasing ? (
+              pulse={!isPurchasing}
+              primaryColor={themeColors.primary}
+              icon={
+                isPurchasing ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
-                  <>
-                    <Text
-                      style={{
-                        color: "#FFFFFF",
-                        fontSize: 17,
-                        fontFamily: "Inter_700Bold",
-                        marginRight: 6,
-                      }}
-                    >
-                      {ctaLabel}
-                    </Text>
-                    <ChevronRight size={20} color="#FFFFFF" />
-                  </>
-                )}
-              </View>
+                  <ChevronRight size={20} color="#FFFFFF" />
+                )
+              }
+            />
+
+            {/* Fine print */}
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.55)",
+                fontFamily: "Inter_400Regular",
+                fontSize: 11,
+                textAlign: "center",
+                marginTop: 8,
+              }}
+            >
+              {selectedPlan === "yearly"
+                ? `3 days free, then ${YEARLY_PRICE}/yr. Cancel anytime.`
+                : `${MONTHLY_PRICE}/mo. Cancel anytime.`}
+            </Text>
+
+            {/* Restore purchases */}
+            <Pressable
+              onPress={handleRestore}
+              disabled={isRestoring}
+              style={{ marginTop: 10, alignItems: "center" }}
+            >
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.45)",
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 12,
+                }}
+              >
+                {isRestoring ? "Restoring…" : "Restore purchases"}
+              </Text>
             </Pressable>
+          </LinearGradient>
+        </SafeAreaView>
+      </LinearGradient>
+    </ScreenWrapper>
+  );
 
             {/* Fine print */}
             <Text

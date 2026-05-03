@@ -30,6 +30,8 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const THEMES = Object.keys(THEME_COLORS) as ThemeColorType[];
@@ -96,7 +98,7 @@ export function ThemeSelectionScreen() {
   const activeData = THEME_COLORS[THEMES[activeIndex]];
 
   return (
-    <View style={{ flex: 1 }}>
+    <ScreenWrapper>
       {/* Live background — updates with active theme */}
       <LinearGradient
         colors={activeData.backgroundGradient}
@@ -126,7 +128,7 @@ export function ThemeSelectionScreen() {
 
           {/* Title */}
           <Animated.View
-            entering={FadeInDown.delay(60).duration(500)}
+            entering={getStaggeredFadeIn(0)}
             style={{ alignItems: "center", paddingBottom: 20 }}
             pointerEvents="none"
           >
@@ -154,7 +156,10 @@ export function ThemeSelectionScreen() {
           </Animated.View>
 
           {/* Swipe carousel */}
-          <View style={{ flex: 1, justifyContent: "center" }}>
+          <Animated.View 
+            entering={getStaggeredFadeIn(1)}
+            style={{ flex: 1, justifyContent: "center" }}
+          >
             <ScrollView
               ref={scrollRef}
               horizontal
@@ -324,11 +329,11 @@ export function ThemeSelectionScreen() {
                 );
               })}
             </ScrollView>
-          </View>
+          </Animated.View>
 
           {/* Dot indicators + Continue */}
           <Animated.View
-            entering={FadeInUp.delay(200).duration(500)}
+            entering={getStaggeredFadeIn(2)}
             style={{
               paddingHorizontal: 24,
               paddingBottom: 32,
@@ -355,11 +360,17 @@ export function ThemeSelectionScreen() {
             </View>
 
             <View style={{ width: "100%" }}>
-              <OnboardingCTAButton label="Continue" onPress={handleContinue} />
+              <OnboardingCTAButton 
+                label="Continue" 
+                onPress={handleContinue} 
+                pulse
+                primaryColor={activeData.primary}
+              />
             </View>
           </Animated.View>
         </SafeAreaView>
       </View>
-    </View>
+    </ScreenWrapper>
+  );
   );
 }

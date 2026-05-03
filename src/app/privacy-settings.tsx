@@ -13,7 +13,9 @@ import { View, Text, ScrollView, Pressable, Alert, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 import {
   tapHaptic,
   successHaptic,
@@ -157,69 +159,73 @@ export default function PrivacySettingsScreen() {
   };
 
   return (
-    <View
-      className="flex-1"
-      style={{ backgroundColor: themeColors.background }}
-    >
-      {/* Full-screen gradient background */}
-      <LinearGradient
-        colors={themeGradients.background}
-        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      />
+    <ScreenWrapper>
+      <View
+        className="flex-1"
+        style={{ backgroundColor: themeColors.background }}
+      >
+        {/* Full-screen gradient background */}
+        <LinearGradient
+          colors={themeGradients.background}
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        />
 
-      <SafeAreaView edges={["top"]} className="flex-1">
-        {/* Header */}
-        <View className="px-6 pt-2 pb-4">
-          <View
-            className="flex-row items-center justify-center"
-            style={{ minHeight: 44 }}
-          >
-            <Pressable
-              onPress={() => {
-                tapHaptic();
-                router.back();
-              }}
-              className="absolute left-0 active:opacity-60"
-              style={{ padding: 4 }}
-            >
-              <ChevronLeft size={28} color="#FFFFFF" />
-            </Pressable>
-            <View className="items-center">
-              <Text
-                style={{
-                  fontFamily: "Fraunces_700Bold",
-                  fontSize: 22,
-                  color: "#FFFFFF",
-                }}
-              >
-                Privacy & Security
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.7)",
-                  marginTop: 2,
-                }}
-              >
-                Manage your data
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Export Data */}
+        <SafeAreaView edges={["top"]} className="flex-1">
+          {/* Header */}
           <Animated.View
-            entering={FadeInDown.delay(60).duration(500)}
-            className="mb-4"
+            entering={getStaggeredFadeIn(0)}
+            className="px-6 pt-2 pb-4"
           >
+            <View
+              className="flex-row items-center justify-center"
+              style={{ minHeight: 44 }}
+            >
+              <Pressable
+                onPress={() => {
+                  tapHaptic();
+                  router.back();
+                }}
+                className="absolute left-0 active:opacity-60"
+                style={{ padding: 4 }}
+              >
+                <ChevronLeft size={28} color="#FFFFFF" />
+              </Pressable>
+              <View className="items-center">
+                <Text
+                  style={{
+                    fontFamily: "Fraunces_700Bold",
+                    fontSize: 22,
+                    color: "#FFFFFF",
+                  }}
+                >
+                  Privacy & Security
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.7)",
+                    marginTop: 2,
+                  }}
+                >
+                  Manage your data
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Export Data */}
+            <Animated.View
+              entering={getStaggeredFadeIn(1)}
+              className="mb-4"
+            >
             <View
               style={{
                 backgroundColor: hexToRgba(themeColors.primary, 0.1),
@@ -273,15 +279,16 @@ export default function PrivacySettingsScreen() {
                 </Text>
                 <Pressable
                   onPress={handleExportData}
-                  className="active:opacity-70"
-                  style={{
+                  style={({ pressed }) => ({
                     backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
                     borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
-                  }}
+                    opacity: pressed ? 0.7 : 1,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                  })}
                 >
                   <Text
                     style={{
@@ -299,7 +306,7 @@ export default function PrivacySettingsScreen() {
 
           {/* Delete All Entries */}
           <Animated.View
-            entering={FadeInDown.delay(120).duration(500)}
+            entering={getStaggeredFadeIn(2)}
             className="mb-4"
           >
             <View
@@ -355,15 +362,16 @@ export default function PrivacySettingsScreen() {
                 </Text>
                 <Pressable
                   onPress={handleDeleteEntries}
-                  className="active:opacity-70"
-                  style={{
+                  style={({ pressed }) => ({
                     backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
                     borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
-                  }}
+                    opacity: pressed ? 0.7 : 1,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                  })}
                 >
                   <Text
                     style={{
@@ -380,7 +388,7 @@ export default function PrivacySettingsScreen() {
           </Animated.View>
 
           {/* Delete Account */}
-          <Animated.View entering={FadeInDown.delay(180).duration(500)}>
+          <Animated.View entering={getStaggeredFadeIn(3)}>
             <View
               style={{
                 backgroundColor: hexToRgba(themeColors.primary, 0.1),
@@ -435,15 +443,16 @@ export default function PrivacySettingsScreen() {
                 </Text>
                 <Pressable
                   onPress={handleDeleteAccount}
-                  className="active:opacity-70"
-                  style={{
+                  style={({ pressed }) => ({
                     backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
                     borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
-                  }}
+                    opacity: pressed ? 0.7 : 1,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                  })}
                 >
                   <Text
                     style={{
@@ -658,6 +667,6 @@ export default function PrivacySettingsScreen() {
         onSuccess={handlePinVerified}
         onDismiss={() => setShowPinVerify(false)}
       />
-    </View>
+    </ScreenWrapper>
   );
 }

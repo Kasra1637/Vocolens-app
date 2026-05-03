@@ -10,8 +10,6 @@ import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -31,6 +29,8 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 
 const MOOD_LABELS: Record<MoodType, string> = {
   happy: "Happy",
@@ -127,7 +127,7 @@ export function MoodInsightScreen() {
     : "";
 
   return (
-    <View className="flex-1">
+    <ScreenWrapper>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         style={{ flex: 1 }}
@@ -141,7 +141,8 @@ export function MoodInsightScreen() {
 
           <View className="flex-1 px-6 py-3">
             {/* Character with Success State */}
-            <View
+            <Animated.View
+              entering={getStaggeredFadeIn(0)}
               className="items-center justify-center"
               style={{ height: 110 }}
             >
@@ -150,11 +151,11 @@ export function MoodInsightScreen() {
                 size={110}
                 themeColor={themeColors.primary}
               />
-            </View>
+            </Animated.View>
 
             {/* Insight Title */}
             <Animated.View
-              entering={FadeInUp.delay(300).duration(600)}
+              entering={getStaggeredFadeIn(1)}
               className="items-center mb-3"
             >
               <Text
@@ -173,7 +174,7 @@ export function MoodInsightScreen() {
 
             {/* Visual Reflection Card */}
             <Animated.View
-              entering={FadeInDown.delay(500).duration(600)}
+              entering={getStaggeredFadeIn(2)}
               style={{ marginBottom: 12 }}
             >
               <View
@@ -262,16 +263,18 @@ export function MoodInsightScreen() {
             </Animated.View>
 
             {/* Continue Button */}
-            <Animated.View
-              entering={FadeInUp.delay(700).duration(500)}
-              className="pb-6"
-            >
-              <OnboardingCTAButton label="Continue" onPress={handleContinue} />
+            <Animated.View entering={getStaggeredFadeIn(3)} className="pb-6">
+              <OnboardingCTAButton
+                label="Continue"
+                onPress={handleContinue}
+                pulse
+                primaryColor={themeColors.primary}
+              />
             </Animated.View>
             <View style={{ flex: 1 }} />
           </View>
         </SafeAreaView>
       </LinearGradient>
-    </View>
+    </ScreenWrapper>
   );
 }

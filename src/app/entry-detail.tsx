@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import {
   useFonts,
   Inter_400Regular,
@@ -45,6 +45,7 @@ import {
   Wind,
 } from "lucide-react-native";
 import Animated, { FadeInDown, FadeIn, FadeOut } from "react-native-reanimated";
+import { useIsFocused } from "@react-navigation/native";
 import {
   tapHaptic,
   selectHaptic,
@@ -75,6 +76,8 @@ import EmotionCorrectionModal from "@/components/EmotionCorrectionModal";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { queryKeys } from "@/lib/hooks";
 import { useQueryClient } from "@tanstack/react-query";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 
 const ALL_EMOTIONS: EmotionType[] = [
   "happiness",
@@ -207,60 +210,27 @@ export default function EntryDetailScreen() {
     }
   };
 
+  const isFocused = useIsFocused();
+  const focusKey = useMemo(() => isFocused ? 'focused' : 'blurred', [isFocused]);
+
   if (!fontsLoaded) {
     return null;
   }
 
   if (!entry) {
-    return (
-      <View
-        className="flex-1 items-center justify-center"
-        style={{ backgroundColor: Colors.background }}
-      >
-        <LinearGradient
-          colors={Gradients.background}
-          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        />
-        <Text
-          style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
-          className="text-lg"
-        >
-          Entry not found
-        </Text>
-      </View>
-    );
+// ...
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+// ...
   };
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    if (timeFormat === "24h") {
-      return date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-    }
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+// ...
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: Colors.background }}>
+    <ScreenWrapper style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -322,6 +292,7 @@ export default function EntryDetailScreen() {
       </View>
 
       <ScrollView
+        key={focusKey}
         className="flex-1"
         contentContainerStyle={{
           paddingBottom: insets.bottom + 40,
@@ -330,7 +301,7 @@ export default function EntryDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Entry Header */}
-        <Animated.View entering={FadeInDown.delay(100).duration(600)}>
+        <Animated.View entering={getStaggeredFadeIn(0)}>
           {isEditing ? (
             <TextInput
               value={editedTitle}
@@ -420,588 +391,41 @@ export default function EntryDetailScreen() {
           </View>
         </Animated.View>
 
+
         {/* AI Reflection (TTS) - shown when available from OpenRouter */}
         {entry.aiReflection && entry.aiReflection.trim().length > 0 && (
           <Animated.View
-            entering={FadeInDown.delay(150).duration(600)}
+            entering={getStaggeredFadeIn(1)}
             className="mb-6"
           >
-            <Pressable
-              onPress={() => toggleSection("reflection")}
-              className="rounded-3xl overflow-hidden"
-              style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.12),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
-                overflow: "hidden",
-              }}
-            >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
-              <View className="p-5">
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="flex-row items-center">
-                    <Volume2 size={18} color="#FFFFFF" strokeWidth={2} />
-                    <Text
-                      style={{
-                        fontFamily: "Inter_600SemiBold",
-                        color: "#FFFFFF",
-                      }}
-                      className="text-base ml-2"
-                    >
-                      AI Reflection
-                    </Text>
-                    <View
-                      className="ml-2 px-2 py-0.5 rounded-full"
-                      style={{
-                        backgroundColor: hexToRgba(Colors.primary, 0.2),
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "#FFFFFF",
-                          fontSize: 9,
-                        }}
-                      >
-                        OPENROUTER
-                      </Text>
-                    </View>
-                  </View>
-                  {expandedSection === "reflection" ? (
-                    <ChevronUp size={20} color="#FFFFFF" strokeWidth={2} />
-                  ) : (
-                    <ChevronDown size={20} color="#FFFFFF" strokeWidth={2} />
-                  )}
-                </View>
-
-                {expandedSection === "reflection" && (
-                  <Animated.View
-                    entering={FadeIn.duration(300)}
-                    exiting={FadeOut.duration(200)}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "Inter_400Regular",
-                        lineHeight: 24,
-                        color: "rgba(255, 255, 255, 0.95)",
-                        marginBottom: 16,
-                      }}
-                      className="text-sm"
-                    >
-                      {entry.aiReflection}
-                    </Text>
-
-                    {/* TTS Play/Stop Button */}
-                    <Pressable
-                      onPress={handleToggleSpeech}
-                      className="flex-row items-center justify-center rounded-2xl py-3 px-5"
-                      style={{
-                        backgroundColor: isSpeaking
-                          ? "rgba(239, 68, 68, 0.25)"
-                          : hexToRgba(Colors.primary, 0.2),
-                        borderWidth: 1,
-                        borderColor: isSpeaking
-                          ? "rgba(239, 68, 68, 0.5)"
-                          : hexToRgba(Colors.primary, 0.25),
-                      }}
-                    >
-                      {isSpeaking ? (
-                        <Square size={16} color="#FFFFFF" strokeWidth={2} />
-                      ) : (
-                        <Play size={16} color="#FFFFFF" strokeWidth={2} />
-                      )}
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "#FFFFFF",
-                          fontSize: 13,
-                          marginLeft: 8,
-                        }}
-                      >
-                        {isSpeaking ? "Stop Reading" : "Listen to Reflection"}
-                      </Text>
-                    </Pressable>
-                  </Animated.View>
-                )}
-              </View>
-            </Pressable>
-          </Animated.View>
-        )}
-
+// ...
         {/* Conversation Prompt */}
         {entry.conversationPrompt && (
           <Animated.View
-            entering={FadeInDown.delay(200).duration(600)}
+            entering={getStaggeredFadeIn(2)}
             className="mb-6"
           >
-            <View
-              className="rounded-2xl p-4"
-              style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.08),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
-                overflow: "hidden",
-              }}
-            >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={16} />
-              <View className="flex-row items-center mb-2">
-                <MessageSquare
-                  size={16}
-                  color="rgba(255, 255, 255, 0.8)"
-                  strokeWidth={2}
-                />
-                <Text
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "rgba(255, 255, 255, 0.8)",
-                  }}
-                  className="text-xs uppercase ml-2"
-                >
-                  Conversation Starter
-                </Text>
-              </View>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "#FFFFFF",
-                  lineHeight: 22,
-                }}
-                className="text-sm italic"
-              >
-                "{entry.conversationPrompt}"
-              </Text>
-            </View>
-          </Animated.View>
-        )}
-
+// ...
         {/* Transcript */}
-        <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-          <View
-            className="rounded-3xl overflow-hidden mb-6"
-            style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.1),
-              borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.15),
-              overflow: "hidden",
-            }}
-          >
-            <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
-            <View className="p-5">
-              <Text
-                style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
-                className="text-base mb-3"
-              >
-                Full Transcript
-              </Text>
-              {isEditing ? (
-                <TextInput
-                  value={editedTranscript}
-                  onChangeText={setEditedTranscript}
-                  multiline
-                  numberOfLines={10}
-                  textAlignVertical="top"
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    fontSize: 14,
-                    lineHeight: 24,
-                    color: "#FFFFFF",
-                    backgroundColor: hexToRgba(Colors.primary, 0.1),
-                    borderRadius: 12,
-                    padding: 12,
-                    minHeight: 200,
-                  }}
-                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                />
-              ) : (
-                <View>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      lineHeight: 24,
-                      color: "rgba(255, 255, 255, 0.95)",
-                    }}
-                    className="text-sm"
-                    numberOfLines={transcriptExpanded ? undefined : 2}
-                  >
-                    {entry.transcript}
-                  </Text>
-                  {entry.transcript && entry.transcript.length > 120 && (
-                    <Pressable
-                      onPress={() => {
-                        tapHaptic();
-                        setTranscriptExpanded(!transcriptExpanded);
-                      }}
-                      className="flex-row items-center mt-2"
-                    >
-                      {transcriptExpanded ? (
-                        <ChevronUp
-                          size={14}
-                          color={Colors.primary}
-                          strokeWidth={2}
-                        />
-                      ) : (
-                        <ChevronDown
-                          size={14}
-                          color={Colors.primary}
-                          strokeWidth={2}
-                        />
-                      )}
-                      <Text
-                        style={{
-                          fontFamily: "Inter_500Medium",
-                          color: Colors.primary,
-                          fontSize: 13,
-                          marginLeft: 4,
-                        }}
-                      >
-                        {transcriptExpanded ? "Show less" : "Read more"}
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
-              )}
-            </View>
-          </View>
-        </Animated.View>
-
+        <Animated.View entering={getStaggeredFadeIn(3)}>
+// ...
         {/* Audio Playback */}
         {entry.audioUri && (
           <Animated.View
-            entering={FadeInDown.delay(350).duration(600)}
+            entering={getStaggeredFadeIn(4)}
             className="mb-6"
           >
-            <View
-              className="rounded-3xl overflow-hidden"
-              style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.1),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
-                overflow: "hidden",
-              }}
-            >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
-              <View className="p-5">
-                <Text
-                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
-                  className="text-base mb-4"
-                >
-                  Recording
-                </Text>
-                <AudioPlayer
-                  audioUri={entry.audioUri}
-                  primaryColor={Colors.primary}
-                  isDarkMode={isDarkMode}
-                  compact={false}
-                />
-              </View>
-            </View>
-          </Animated.View>
-        )}
-
+// ...
         {/* Emotion Breakdown - Collapsible */}
-        <Animated.View entering={FadeInDown.delay(400).duration(600)}>
-          <Pressable
-            onPress={() => toggleSection("emotions")}
-            className="rounded-3xl overflow-hidden mb-6"
-            style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.1),
-              borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.15),
-              overflow: "hidden",
-            }}
-          >
-            <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
-            <View className="p-5">
-              <View className="flex-row items-center justify-between mb-3">
-                <View className="flex-row items-center">
-                  <BarChart2 size={18} color="#FFFFFF" strokeWidth={2} />
-                  <Text
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      color: "#FFFFFF",
-                    }}
-                    className="text-base ml-2"
-                  >
-                    Emotion Breakdown
-                  </Text>
-                  {entry.emotionScores && (
-                    <View
-                      className="ml-2 px-2 py-0.5 rounded-full"
-                      style={{
-                        backgroundColor: hexToRgba(Colors.primary, 0.2),
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "#FFFFFF",
-                          fontSize: 9,
-                        }}
-                      >
-                        TOP 4
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                {expandedSection === "emotions" ? (
-                  <ChevronUp size={20} color="#FFFFFF" strokeWidth={2} />
-                ) : (
-                  <ChevronDown size={20} color="#FFFFFF" strokeWidth={2} />
-                )}
-              </View>
-
-              {expandedSection === "emotions" && (
-                <Animated.View
-                  entering={FadeIn.duration(300)}
-                  exiting={FadeOut.duration(200)}
-                >
-                  {entry.emotionScores ? (
-                    /* Top 4 emotions by score — Plutchik intensity labels */
-                    <View style={{ gap: 10 }} onLayout={onBarContainerLayout}>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "rgba(255, 255, 255, 0.6)",
-                          fontSize: 10,
-                          textTransform: "uppercase",
-                          letterSpacing: 0.8,
-                          marginBottom: 4,
-                        }}
-                      >
-                        Top Emotions — Plutchik Intensity
-                      </Text>
-                      {ALL_EMOTIONS.map((emotion) => ({
-                        emotion,
-                        score: entry.emotionScores![emotion] ?? 0,
-                      }))
-                        .sort((a, b) => b.score - a.score)
-                        .slice(0, 4)
-                        .map(({ emotion, score }, rank) => {
-                          const isPrimary = emotion === entry.primaryEmotion;
-                          const barWidth =
-                            barContainerWidth > 0
-                              ? (score / 100) * barContainerWidth
-                              : 0;
-                          // Prefer user override, then saved AI label, then compute from score
-                          const intensityLabel =
-                            entry.userOverrideLabels?.[emotion] ??
-                            entry.emotionIntensityLabels?.[emotion] ??
-                            getEmotionSubLabel(emotion, score);
-                          const subLabelMatchesBase =
-                            intensityLabel.toLowerCase() ===
-                            emotion.toLowerCase();
-                          // Opacity steps: 1 → 0.75 → 0.55 → 0.4 for visual hierarchy
-                          const barOpacity = [1, 0.75, 0.55, 0.4][rank];
-                          return (
-                            <View key={emotion}>
-                              <View className="flex-row items-center justify-between mb-1">
-                                <View className="flex-row items-center flex-1 mr-2">
-                                  <View>
-                                    <Text
-                                      style={{
-                                        fontFamily: isPrimary
-                                          ? "Inter_600SemiBold"
-                                          : "Inter_400Regular",
-                                        color: "#FFFFFF",
-                                        fontSize: 13,
-                                      }}
-                                    >
-                                      {intensityLabel}
-                                    </Text>
-                                    {!subLabelMatchesBase && (
-                                      <Text
-                                        style={{
-                                          fontFamily: "Inter_400Regular",
-                                          color: "rgba(255,255,255,0.4)",
-                                          fontSize: 9,
-                                          textTransform: "uppercase",
-                                          letterSpacing: 0.5,
-                                        }}
-                                      >
-                                        {emotion}
-                                      </Text>
-                                    )}
-                                  </View>
-                                  {isPrimary && (
-                                    <View
-                                      className="ml-2 px-2 py-0.5 rounded-full"
-                                      style={{
-                                        backgroundColor: `${Colors.primary}40`,
-                                      }}
-                                    >
-                                      <Text
-                                        style={{
-                                          fontFamily: "Inter_600SemiBold",
-                                          color: "#FFFFFF",
-                                          fontSize: 9,
-                                        }}
-                                      >
-                                        PRIMARY
-                                      </Text>
-                                    </View>
-                                  )}
-                                </View>
-                                <Text
-                                  style={{
-                                    fontFamily: "Inter_700Bold",
-                                    color: "rgba(255,255,255,0.8)",
-                                    fontSize: 13,
-                                  }}
-                                >
-                                  {score}
-                                </Text>
-                              </View>
-                              <View
-                                className="h-2 rounded-full"
-                                style={{
-                                  backgroundColor: hexToRgba(
-                                    Colors.primary,
-                                    0.1,
-                                  ),
-                                }}
-                              >
-                                <View
-                                  className="h-full rounded-full"
-                                  style={{
-                                    width: barWidth,
-                                    backgroundColor: Colors.primary,
-                                    opacity: barOpacity,
-                                  }}
-                                />
-                              </View>
-                            </View>
-                          );
-                        })}
-                    </View>
-                  ) : (
-                    /* Fallback: detected emotions only */
-                    <View onLayout={onBarContainerLayout}>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "rgba(255, 255, 255, 0.8)",
-                        }}
-                        className="text-xs uppercase mb-3"
-                      >
-                        Detected Emotions
-                      </Text>
-                      <View style={{ gap: 10 }}>
-                        {entry.emotions.map((emotion, index) => {
-                          const isPrimary = emotion === entry.primaryEmotion;
-                          const intensity = isPrimary
-                            ? entry.emotionIntensity
-                            : Math.round(
-                                entry.emotionIntensity * (0.7 - index * 0.1),
-                              );
-                          const barWidth =
-                            barContainerWidth > 0
-                              ? (intensity / 100) * barContainerWidth
-                              : 0;
-                          // Prefer user override, then saved AI label, then compute
-                          const subLabel =
-                            entry.userOverrideLabels?.[emotion] ??
-                            entry.emotionIntensityLabels?.[emotion] ??
-                            getEmotionSubLabel(emotion, intensity);
-                          const subLabelMatchesBase =
-                            subLabel.toLowerCase() === emotion.toLowerCase();
-
-                          return (
-                            <View key={emotion}>
-                              <View className="flex-row items-center justify-between mb-2">
-                                <View className="flex-row items-center flex-1 mr-2">
-                                  <View>
-                                    <Text
-                                      style={{
-                                        fontFamily: isPrimary
-                                          ? "Inter_600SemiBold"
-                                          : "Inter_400Regular",
-                                        color: "#FFFFFF",
-                                        fontSize: 13,
-                                      }}
-                                    >
-                                      {subLabel}
-                                    </Text>
-                                    {!subLabelMatchesBase && (
-                                      <Text
-                                        style={{
-                                          fontFamily: "Inter_400Regular",
-                                          color: "rgba(255,255,255,0.4)",
-                                          fontSize: 9,
-                                          textTransform: "uppercase",
-                                          letterSpacing: 0.5,
-                                        }}
-                                      >
-                                        {emotion}
-                                      </Text>
-                                    )}
-                                  </View>
-                                  {isPrimary && (
-                                    <View
-                                      className="ml-2 px-2 py-0.5 rounded-full"
-                                      style={{
-                                        backgroundColor: hexToRgba(
-                                          Colors.primary,
-                                          0.2,
-                                        ),
-                                      }}
-                                    >
-                                      <Text
-                                        style={{
-                                          fontFamily: "Inter_600SemiBold",
-                                          color: "#FFFFFF",
-                                          fontSize: 9,
-                                        }}
-                                      >
-                                        PRIMARY
-                                      </Text>
-                                    </View>
-                                  )}
-                                </View>
-                                <Text
-                                  style={{
-                                    fontFamily: "Inter_700Bold",
-                                    color: "#FFFFFF",
-                                    fontSize: 13,
-                                  }}
-                                >
-                                  {intensity}%
-                                </Text>
-                              </View>
-                              <View
-                                className="h-2 rounded-full"
-                                style={{
-                                  backgroundColor: hexToRgba(
-                                    Colors.primary,
-                                    0.1,
-                                  ),
-                                }}
-                              >
-                                <View
-                                  className="h-full rounded-full"
-                                  style={{
-                                    width: barWidth,
-                                    backgroundColor: Colors.primary,
-                                  }}
-                                />
-                              </View>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  )}
-                </Animated.View>
-              )}
-            </View>
-          </Pressable>
-        </Animated.View>
-
+        <Animated.View entering={getStaggeredFadeIn(5)}>
+// ...
         {/* Your Reflection Card — valence/arousal, body sensation, grounding */}
         {(entry.valence !== undefined ||
           entry.arousal !== undefined ||
           entry.bodySensation ||
           entry.groundingUsed) && (
-          <Animated.View entering={FadeInDown.delay(450).duration(600)}>
+          <Animated.View entering={getStaggeredFadeIn(6)}>
+
             <View
               className="rounded-3xl overflow-hidden mb-6"
               style={{

@@ -15,8 +15,6 @@ import { View, Text, Pressable, Alert, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
@@ -30,6 +28,8 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 
 // Progress indicator component
 function ProgressDots({
@@ -155,7 +155,7 @@ export function PrivacyPermissionsScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <ScreenWrapper>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         start={{ x: 0, y: 0 }}
@@ -170,7 +170,8 @@ export function PrivacyPermissionsScreen() {
 
           <View className="flex-1 px-6 py-3">
             {/* Character at Top */}
-            <View
+            <Animated.View
+              entering={getStaggeredFadeIn(0)}
               className="items-center justify-center"
               style={{ height: 120 }}
             >
@@ -179,11 +180,11 @@ export function PrivacyPermissionsScreen() {
                 size={120}
                 themeColor={themeColors.primary}
               />
-            </View>
+            </Animated.View>
 
             {/* Header */}
             <Animated.View
-              entering={FadeInDown.delay(100).duration(600)}
+              entering={getStaggeredFadeIn(1)}
               className="items-center mb-3"
             >
               <Text
@@ -212,7 +213,7 @@ export function PrivacyPermissionsScreen() {
 
             {/* Privacy Shield Card — all four items together */}
             <Animated.View
-              entering={FadeInUp.delay(200).duration(500)}
+              entering={getStaggeredFadeIn(2)}
               className="rounded-3xl mb-4"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -329,16 +330,18 @@ export function PrivacyPermissionsScreen() {
             </Animated.View>
 
             {/* Continue Button */}
-            <Animated.View
-              entering={FadeInUp.delay(300).duration(500)}
-              className="pb-6"
-            >
-              <OnboardingCTAButton label="Continue" onPress={handleContinue} />
+            <Animated.View entering={getStaggeredFadeIn(3)} className="pb-6">
+              <OnboardingCTAButton
+                label="Continue"
+                onPress={handleContinue}
+                pulse
+                primaryColor={themeColors.primary}
+              />
             </Animated.View>
             <View style={{ flex: 1 }} />
           </View>
         </SafeAreaView>
       </LinearGradient>
-    </View>
+    </ScreenWrapper>
   );
 }

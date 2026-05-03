@@ -7,7 +7,7 @@
  *  "Emotions"   — system-surfaced emotion story, no guessing required
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { View, Text, Pressable, LayoutChangeEvent } from "react-native";
 import Svg, {
   Path,
@@ -23,7 +23,11 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
+  withDelay,
+  Easing,
 } from "react-native-reanimated";
+import { useIsFocused } from "@react-navigation/native";
 import { tapHaptic } from "@/lib/haptics";
 import {
   TrendingUp,
@@ -40,6 +44,9 @@ import {
   EmotionType,
   getEmotionSubLabel,
 } from "@/lib/types";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { BorderRadius } from "@/lib/theme";
+import { PROGRESS_ANIM_CONFIG } from "@/lib/animations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,13 +92,14 @@ export function MoodStoryTimeline({
     <View
       className="mb-6"
       style={{
-        backgroundColor: "rgba(255,255,255,0.08)",
+        backgroundColor: hexToRgba(primaryColor, 0.1),
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.18)",
+        borderColor: hexToRgba(primaryColor, 0.15),
         borderRadius: 24,
         overflow: "hidden",
       }}
     >
+      <GlassLayers primaryColor={primaryColor} borderRadius={24} />
       {/* Header */}
       <View style={{ padding: 20, paddingBottom: 0 }}>
         <View className="flex-row items-center mb-4" style={{ gap: 8 }}>
@@ -111,7 +119,7 @@ export function MoodStoryTimeline({
         <View
           className="flex-row p-1"
           style={{
-            backgroundColor: "rgba(255,255,255,0.07)",
+            backgroundColor: hexToRgba(primaryColor, 0.1),
             borderRadius: 14,
             marginBottom: 20,
           }}
@@ -513,94 +521,27 @@ function PatternsView({
   entries: JournalEntry[];
   primaryColor: string;
 }) {
+  const isFocused = useIsFocused();
+  const animValue = useSharedValue(0);
+
+  useEffect(() => {
+    if (isFocused) {
+      animValue.value = 0;
+      animValue.value = withTiming(1, PROGRESS_ANIM_CONFIG);
+    }
+  }, [isFocused]);
+
   const { weekdayStats, bestDay, worstDay, insight, mostActiveDay } =
     useMemo(() => {
-      // Count last 30 days
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 30);
-
-      const stats: { total: number; count: number; entryCount: number }[] =
-        Array.from({ length: 7 }, () => ({
-          total: 0,
-          count: 0,
-          entryCount: 0,
-        }));
-
-      entries.forEach((e) => {
-        if (new Date(e.createdAt) < cutoff) return;
-        const dow = (new Date(e.createdAt).getDay() + 6) % 7; // 0=Mon
-        stats[dow].total += e.emotionIntensity;
-        stats[dow].count++;
-        stats[dow].entryCount++;
-      });
-
-      const avgs = stats.map((s) =>
-        s.count > 0 ? Math.round(s.total / s.count) : null,
-      );
-
-      const validAvgs = avgs.filter((v) => v !== null) as number[];
-      if (validAvgs.length === 0) {
-        return {
-          weekdayStats: avgs,
-          bestDay: -1,
-          worstDay: -1,
-          insight: "",
-          mostActiveDay: -1,
-        };
-      }
-
-      const max = Math.max(...validAvgs);
-      const min = Math.min(...validAvgs);
-      const bestDay = avgs.indexOf(max);
-      const worstDay = avgs.indexOf(min);
-
-      const maxEntries = Math.max(...stats.map((s) => s.entryCount));
-      const mostActiveDay = stats.findIndex((s) => s.entryCount === maxEntries);
-
-      let insight = "";
-      if (bestDay !== worstDay) {
-        const bestName = WEEKDAYS[bestDay];
-        const worstName = WEEKDAYS[worstDay];
-        insight = `You tend to feel best on ${bestName}s and lowest on ${worstName}s over the last 30 days.`;
-      } else if (mostActiveDay >= 0) {
-        insight = `You journal most consistently on ${WEEKDAYS[mostActiveDay]}s.`;
-      }
-
-      return { weekdayStats: avgs, bestDay, worstDay, insight, mostActiveDay };
-    }, [entries]);
-
-  const hasData = weekdayStats.some((v) => v !== null);
-  const maxVal = hasData
-    ? Math.max(...(weekdayStats.filter((v) => v !== null) as number[]))
-    : 100;
-
-  return (
-    <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-      {!hasData ? (
-        <View style={{ paddingVertical: 32, alignItems: "center" }}>
-          <Text
-            style={{
-              fontFamily: "Inter_400Regular",
-              fontSize: 13,
-              color: "rgba(255,255,255,0.4)",
-              textAlign: "center",
-            }}
-          >
-            Journal for a few weeks to see your patterns
-          </Text>
-        </View>
-      ) : (
-        <>
-          <View style={{ gap: 8 }}>
-            {WEEKDAYS.map((day, i) => {
-              const val = weekdayStats[i];
-              const isBest = i === bestDay;
-              const isWorst = i === worstDay;
-              const barColor = primaryColor;
+// ...
               const barWidth =
                 val !== null
-                  ? `${Math.round((val / Math.max(maxVal, 1)) * 100)}%`
-                  : "0%";
+                  ? Math.round((val / Math.max(maxVal, 1)) * 100)
+                  : 0;
+
+              const barStyle = useAnimatedStyle(() => ({
+                width: `${barWidth * animValue.value}%` as any,
+              }));
 
               return (
                 <Animated.View
@@ -630,23 +571,25 @@ function PatternsView({
                       flex: 1,
                       height: 24,
                       borderRadius: 6,
-                      backgroundColor: "rgba(255,255,255,0.07)",
+                      backgroundColor: hexToRgba(primaryColor, 0.08),
                       overflow: "hidden",
                       justifyContent: "center",
                     }}
                   >
                     {val !== null && (
                       <Animated.View
-                        entering={FadeIn.delay(i * 40 + 100).duration(500)}
-                        style={{
-                          width: barWidth as any,
-                          height: "100%",
-                          borderRadius: 6,
-                          backgroundColor: barColor,
-                          opacity: 0.75,
-                        }}
+                        style={[
+                          {
+                            height: "100%",
+                            borderRadius: 6,
+                            backgroundColor: barColor,
+                            opacity: 0.75,
+                          },
+                          barStyle,
+                        ]}
                       />
                     )}
+
                     {val !== null && (
                       <Text
                         style={{
@@ -711,9 +654,9 @@ function PatternsView({
                 marginTop: 16,
                 padding: 14,
                 borderRadius: 14,
-                backgroundColor: `${primaryColor}18`,
+                backgroundColor: hexToRgba(primaryColor, 0.1),
                 borderWidth: 1,
-                borderColor: `${primaryColor}35`,
+                borderColor: hexToRgba(primaryColor, 0.2),
               }}
             >
               <Text
@@ -944,6 +887,7 @@ function EmotionsView({
           label="This Week's Story"
           description={`${getEmotionSubLabel(dominantCard.emotion, dominantCard.score)} is your dominant emotion this week`}
           points={dominantCard.weeklyIntensitySparkline.length}
+          primaryColor={primaryColor}
         />
       </Animated.View>
 
@@ -960,6 +904,7 @@ function EmotionsView({
             } by ${Math.abs(shiftedCard.delta)} pts vs last week`}
             delta={shiftedCard.delta}
             points={shiftedCard.sparkline.length}
+            primaryColor={primaryColor}
           />
         </Animated.View>
       )}
@@ -977,6 +922,7 @@ function EmotionStoryCard({
   description,
   delta,
   points,
+  primaryColor,
 }: {
   emotion: EmotionType;
   score: number;
@@ -985,6 +931,7 @@ function EmotionStoryCard({
   description: string;
   delta?: number;
   points: number;
+  primaryColor: string;
 }) {
   const color = EMOTION_COLORS[emotion] ?? "#A88AFF";
   const SPARK_H = 36;
@@ -1012,9 +959,9 @@ function EmotionStoryCard({
       style={{
         padding: 16,
         borderRadius: 20,
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backgroundColor: hexToRgba(primaryColor, 0.1),
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.2)",
+        borderColor: hexToRgba(primaryColor, 0.15),
       }}
     >
       <View className="flex-row items-center justify-between">
@@ -1026,7 +973,7 @@ function EmotionStoryCard({
               paddingHorizontal: 8,
               paddingVertical: 3,
               borderRadius: 8,
-              backgroundColor: "rgba(255,255,255,0.1)",
+              backgroundColor: hexToRgba(primaryColor, 0.1),
               marginBottom: 6,
             }}
           >

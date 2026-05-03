@@ -1,8 +1,9 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useIsFocused } from "@react-navigation/native";
 import {
   useFonts,
   Inter_400Regular,
@@ -48,6 +49,7 @@ import Animated, {
   useSharedValue,
   withSpring,
   withDelay,
+  withTiming,
 } from "react-native-reanimated";
 import { selectHaptic, tapHaptic, selectionHaptic } from "@/lib/haptics";
 import {
@@ -87,6 +89,8 @@ import { WeeklyReflectionCard } from "@/components/WeeklyReflectionCard";
 import { StreakCalendar } from "@/components/StreakCalendar";
 import { MoodStoryTimeline } from "@/components/MoodStoryTimeline";
 import ValenceArousalChart from "@/components/ValenceArousalChart";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn, PROGRESS_ANIM_CONFIG } from "@/lib/animations";
 
 // Core emotions with icons and emojis - 8 Plutchik emotions
 // Row 1: Happiness, Sadness, Anger, Anticipation
@@ -437,8 +441,14 @@ function InsightsContent({
     }, 100);
   };
 
+  const isFocused = useIsFocused();
+  const focusKey = useMemo(
+    () => (isFocused ? "focused" : "blurred"),
+    [isFocused],
+  );
+
   return (
-    <View className="flex-1" style={{ backgroundColor: Colors.background }}>
+    <ScreenWrapper style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -446,6 +456,7 @@ function InsightsContent({
         end={{ x: 0, y: 1 }}
       />
       <ScrollView
+        key={focusKey}
         className="flex-1"
         contentContainerStyle={{
           paddingTop: insets.top + 16,
@@ -456,7 +467,7 @@ function InsightsContent({
       >
         {/* Demo Data Button - Remove in production */}
         {entries.length === 0 && (
-          <Animated.View className="mb-4">
+          <Animated.View entering={getStaggeredFadeIn(7)} className="mb-4">
             <Pressable
               onPress={handlePopulateDummyData}
               style={{
@@ -497,14 +508,16 @@ function InsightsContent({
           </Animated.View>
         )}
 
-        {/* Welcome Section */}
-        <Animated.View>
-          <WelcomeSection user={user} totalEntries={stats.totalEntries} />
-        </Animated.View>
+        {/* Welcome Section - Elements staggered internally */}
+        <WelcomeSection
+          user={user}
+          totalEntries={stats.totalEntries}
+          isFocused={isFocused}
+        />
 
         {/* Weekly Reflection Summary */}
         {entries.length >= 1 && (
-          <Animated.View>
+          <Animated.View entering={getStaggeredFadeIn(3)}>
             <WeeklyReflectionCard
               primaryColor={Colors.primary}
               isDarkMode={isDarkMode}
@@ -513,7 +526,7 @@ function InsightsContent({
         )}
 
         {/* Journal Streak Calendar */}
-        <Animated.View>
+        <Animated.View entering={getStaggeredFadeIn(4)}>
           <View className="mb-6">
             <StreakCalendar
               entries={entries}
@@ -524,12 +537,15 @@ function InsightsContent({
         </Animated.View>
 
         {/* Mood Story Timeline */}
-        <Animated.View>
+        <Animated.View entering={getStaggeredFadeIn(5)}>
           <MoodStoryTimeline entries={entries} primaryColor={Colors.primary} />
         </Animated.View>
 
         {/* Valence-Arousal Emotional Landscape */}
-        <Animated.View style={{ marginBottom: 24 }}>
+        <Animated.View
+          entering={getStaggeredFadeIn(6)}
+          style={{ marginBottom: 24 }}
+        >
           <ValenceArousalChart
             entries={entries}
             primaryColor={Colors.primary}
@@ -564,7 +580,10 @@ function InsightsContent({
               .slice(0, 6);
             if (sorted.length === 0) return null;
             return (
-              <Animated.View style={{ marginBottom: 24 }}>
+              <Animated.View
+                entering={getStaggeredFadeIn(7)}
+                style={{ marginBottom: 24 }}
+              >
                 <View
                   style={{
                     backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -657,13 +676,13 @@ function InsightsContent({
         {entries.length >= 5 &&
           priorityInsights &&
           priorityInsights.length > 0 && (
-            <Animated.View>
+            <Animated.View entering={getStaggeredFadeIn(8)}>
               <DeepInsightsSection insights={priorityInsights} />
             </Animated.View>
           )}
 
         {/* Trigger Detection Section */}
-        <Animated.View>
+        <Animated.View entering={getStaggeredFadeIn(9)}>
           <View
             className="mb-6"
             style={{
@@ -692,6 +711,7 @@ function InsightsContent({
                       key={trigger.id}
                       trigger={trigger}
                       index={index}
+                      primaryColor={Colors.primary}
                     />
                   ))}
                 </View>
@@ -707,17 +727,17 @@ function InsightsContent({
 
         {/* Emotional Themes */}
         {topThemes.length > 0 && (
-          <Animated.View>
+          <Animated.View entering={getStaggeredFadeIn(10)}>
             <EmotionalThemes themes={topThemes} />
           </Animated.View>
         )}
 
         {/* Time of Day Patterns */}
-        <Animated.View>
+        <Animated.View entering={getStaggeredFadeIn(11)}>
           <TimeOfDayPatterns patterns={timeOfDayPatterns} />
         </Animated.View>
       </ScrollView>
-    </View>
+    </ScreenWrapper>
   );
 }
 
@@ -733,9 +753,14 @@ interface WelcomeSectionProps {
     remainingMinutes: number;
   };
   totalEntries: number;
+  isFocused?: boolean;
 }
 
-function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
+function WelcomeSection({
+  user,
+  totalEntries,
+  isFocused,
+}: WelcomeSectionProps) {
   const { Colors, Gradients, Shadows } = useTheme();
   const progressWidth = useSharedValue(0);
   const usageWidth = useSharedValue(0);
@@ -744,22 +769,20 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   const isNearLimit = usagePct >= 0.8 && usagePct < 1;
   const isAtLimit = usagePct >= 1;
 
-  React.useEffect(() => {
-    progressWidth.value = withSpring(user.nextBadge.progress * 100, {
-      damping: 15,
-      stiffness: 100,
-    });
-  }, [user.nextBadge.progress, progressWidth]);
-
-  React.useEffect(() => {
-    usageWidth.value = withDelay(
-      200,
-      withSpring(usagePct * 100, {
-        damping: 15,
-        stiffness: 80,
-      }),
-    );
-  }, [usagePct, usageWidth]);
+  useEffect(() => {
+    if (isFocused) {
+      progressWidth.value = 0;
+      usageWidth.value = 0;
+      progressWidth.value = withTiming(
+        user.nextBadge.progress * 100,
+        PROGRESS_ANIM_CONFIG,
+      );
+      usageWidth.value = withDelay(
+        100,
+        withTiming(usagePct * 100, PROGRESS_ANIM_CONFIG),
+      );
+    }
+  }, [user.nextBadge.progress, usagePct, isFocused]);
 
   const progressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
@@ -778,37 +801,46 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   return (
     <View className="mb-6">
       {/* Emotional Companion */}
-      <View className="items-center mb-4">
+      <Animated.View
+        entering={getStaggeredFadeIn(0)}
+        className="items-center mb-4"
+      >
         <EmotionalCompanion
           state="idle"
           size={120}
           themeColor={Colors.primary}
         />
-      </View>
+      </Animated.View>
 
       {/* Greeting */}
-      <Text
-        style={{
-          fontFamily: "Fraunces_700Bold",
-          color: "#FFFFFF",
-          fontSize: 22,
-        }}
-        className="mb-1 text-center"
-      >
-        Hello, {user.name}
-      </Text>
-      <Text
-        style={{
-          fontFamily: "Inter_400Regular",
-          color: "rgba(255, 255, 255, 0.8)",
-        }}
-        className="text-base mb-5 text-center"
-      >
-        Here are your journaling insights
-      </Text>
+      <Animated.View entering={getStaggeredFadeIn(0)}>
+        <Text
+          style={{
+            fontFamily: "Fraunces_700Bold",
+            color: "#FFFFFF",
+            fontSize: 22,
+          }}
+          className="mb-1 text-center"
+        >
+          Hello, {user.name}
+        </Text>
+      </Animated.View>
+
+      <Animated.View entering={getStaggeredFadeIn(1)}>
+        <Text
+          style={{
+            fontFamily: "Inter_400Regular",
+            color: "rgba(255, 255, 255, 0.8)",
+          }}
+          className="text-base mb-5 text-center"
+        >
+          Here are your journaling insights
+        </Text>
+      </Animated.View>
 
       {/* Streak & Badge Card */}
-      <View
+      <Animated.View
+        entering={getStaggeredFadeIn(2)}
         style={{
           backgroundColor: hexToRgba(Colors.primary, 0.1),
           borderWidth: 1,
@@ -1020,7 +1052,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
             </View>
           </View>
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 }

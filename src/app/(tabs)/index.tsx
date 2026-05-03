@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { View, Text, Pressable, Dimensions, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useIsFocused } from "@react-navigation/native";
 import {
   useFonts,
   Inter_400Regular,
@@ -66,6 +67,8 @@ import {
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
+import { getStaggeredFadeIn } from "@/lib/animations";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -529,6 +532,9 @@ export default function SpeakScreen() {
     };
   });
 
+  const isFocused = useIsFocused();
+  const focusKey = useMemo(() => isFocused ? 'focused' : 'blurred', [isFocused]);
+
   if (!fontsLoaded) {
     return (
       <View className="flex-1" style={{ backgroundColor: Colors.background }}>
@@ -569,7 +575,7 @@ export default function SpeakScreen() {
   const errorMessage = voiceState.error;
 
   return (
-    <View className="flex-1" style={{ backgroundColor: Colors.background }}>
+    <ScreenWrapper style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -578,6 +584,7 @@ export default function SpeakScreen() {
       />
 
       <View
+        key={focusKey}
         className="flex-1 items-center"
         style={{
           paddingTop: insets.top + 20,
@@ -587,7 +594,7 @@ export default function SpeakScreen() {
         }}
       >
         {/* Header */}
-        <Animated.View className="items-center">
+        <Animated.View entering={getStaggeredFadeIn(0)} className="items-center">
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
@@ -606,15 +613,17 @@ export default function SpeakScreen() {
           </Text>
           {!isRecording ? (
             <Pressable onPress={!isProcessing ? cyclePrompt : undefined}>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255, 255, 255, 0.8)",
-                }}
-                className="text-base text-center px-4"
-              >
-                {currentPrompt || "What's on your mind today?"}
-              </Text>
+              <Animated.View entering={getStaggeredFadeIn(1)}>
+                <Text
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255, 255, 255, 0.8)",
+                  }}
+                  className="text-base text-center px-4"
+                >
+                  {currentPrompt || "What's on your mind today?"}
+                </Text>
+              </Animated.View>
             </Pressable>
           ) : null}
         </Animated.View>
@@ -802,6 +811,7 @@ export default function SpeakScreen() {
         !permissionMessage &&
         !errorMessage ? (
           <Animated.View
+            entering={getStaggeredFadeIn(2)}
             exiting={FadeOut.duration(300)}
             className="w-full"
             style={{ marginTop: 4 }}
@@ -1119,7 +1129,11 @@ export default function SpeakScreen() {
 
         {/* Microphone Button */}
         {/* ── Recording Controls / Mic Button ── */}
-        <View className="items-center" style={{ marginBottom: 48 }}>
+        <Animated.View 
+          entering={getStaggeredFadeIn(3)}
+          className="items-center" 
+          style={{ marginBottom: 48 }}
+        >
           {isActiveSession ? (
             /* Recording or Paused — two-button layout */
             <Animated.View className="items-center">

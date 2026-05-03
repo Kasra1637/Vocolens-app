@@ -14,7 +14,7 @@
  *  • Quadrant distribution bar + dominant state summary
  */
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -40,8 +40,11 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
+  withDelay,
+  Easing,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { useIsFocused } from "@react-navigation/native";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 import {
   JournalEntry,
@@ -49,6 +52,9 @@ import {
   EMOTION_EMOJIS,
   EmotionType,
 } from "@/lib/types";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { BorderRadius } from "@/lib/theme";
+import { PROGRESS_ANIM_CONFIG } from "@/lib/animations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -133,6 +139,7 @@ export default function ValenceArousalChart({
   entries,
   primaryColor = "#8B5CF6",
 }: ValenceArousalChartProps) {
+  const isFocused = useIsFocused();
   const [range, setRange] = useState<TimeRange>("30D");
   const [selectedPoint, setSelectedPoint] = useState<ChartPoint | null>(null);
   const [chartWidth, setChartWidth] = useState(280);
@@ -229,13 +236,14 @@ export default function ValenceArousalChart({
   return (
     <View
       style={{
-        backgroundColor: "rgba(255,255,255,0.08)",
+        backgroundColor: hexToRgba(primaryColor, 0.1),
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.18)",
+        borderColor: hexToRgba(primaryColor, 0.15),
         borderRadius: 24,
         overflow: "hidden",
       }}
     >
+      <GlassLayers primaryColor={primaryColor} borderRadius={24} />
       {/* Header */}
       <View style={{ padding: 20, paddingBottom: 0 }}>
         <View
@@ -263,7 +271,7 @@ export default function ValenceArousalChart({
           <View
             style={{
               flexDirection: "row",
-              backgroundColor: "rgba(255,255,255,0.07)",
+              backgroundColor: hexToRgba(primaryColor, 0.1),
               borderRadius: 10,
               padding: 3,
             }}
@@ -357,9 +365,9 @@ export default function ValenceArousalChart({
                 marginBottom: 12,
                 padding: 14,
                 borderRadius: 16,
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: hexToRgba(primaryColor, 0.1),
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.2)",
+                borderColor: hexToRgba(primaryColor, 0.15),
               }}
             >
               <View
@@ -408,9 +416,9 @@ export default function ValenceArousalChart({
                       paddingHorizontal: 7,
                       paddingVertical: 3,
                       borderRadius: 8,
-                      backgroundColor: `${primaryColor}30`,
+                      backgroundColor: hexToRgba(primaryColor, 0.18),
                       borderWidth: 1,
-                      borderColor: `${primaryColor}60`,
+                      borderColor: hexToRgba(primaryColor, 0.35),
                     }}
                   >
                     <Text
@@ -455,7 +463,11 @@ export default function ValenceArousalChart({
           )}
 
           {/* Quadrant Distribution */}
-          <QuadrantDistribution counts={quadrantCounts} total={totalPoints} />
+          <QuadrantDistribution
+            counts={quadrantCounts}
+            total={totalPoints}
+            primaryColor={primaryColor}
+          />
 
           {/* Dominant quadrant summary */}
           {dominantQuadrant && (
@@ -777,10 +789,22 @@ function AxisLabels() {
 function QuadrantDistribution({
   counts,
   total,
+  primaryColor,
 }: {
   counts: QuadrantCounts;
   total: number;
+  primaryColor: string;
 }) {
+  const isFocused = useIsFocused();
+  const animValue = useSharedValue(0);
+
+  useEffect(() => {
+    if (isFocused) {
+      animValue.value = 0;
+      animValue.value = withTiming(1, PROGRESS_ANIM_CONFIG);
+    }
+  }, [isFocused]);
+
   if (total === 0) return null;
 
   const sections = QUADRANT_CONFIG.map((q) => ({
@@ -798,20 +822,27 @@ function QuadrantDistribution({
           borderRadius: 3,
           flexDirection: "row",
           overflow: "hidden",
-          backgroundColor: "rgba(255,255,255,0.07)",
+          backgroundColor: hexToRgba(primaryColor, 0.07),
           marginBottom: 10,
         }}
       >
-        {sections.map((s) => (
-          <View
-            key={s.key}
-            style={{
-              flex: s.pct,
-              backgroundColor: s.color,
-              opacity: 0.75,
-            }}
-          />
-        ))}
+        {sections.map((s) => {
+          const animatedStyle = useAnimatedStyle(() => ({
+            flex: s.pct * animValue.value,
+          }));
+          return (
+            <Animated.View
+              key={s.key}
+              style={[
+                {
+                  backgroundColor: s.color,
+                  opacity: 0.75,
+                },
+                animatedStyle,
+              ]}
+            />
+          );
+        })}
       </View>
 
       {/* Legend */}

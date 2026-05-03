@@ -27,6 +27,7 @@ import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
+import { ScreenWrapper } from "@/components/ScreenWrapper";
 
 const EASE_IN_OUT = Easing.inOut(Easing.quad);
 
@@ -69,7 +70,7 @@ export function WelcomeScreen() {
   }, [phase]);
 
   return (
-    <View className="flex-1">
+    <ScreenWrapper>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         style={{ flex: 1 }}
@@ -151,12 +152,15 @@ export function WelcomeScreen() {
                   onPress={handleGetStarted}
                   paddingVertical={18}
                   fontSize={18}
+                  pulse
+                  primaryColor={themeColors.primary}
                 />
               </Animated.View>
             )}
           </View>
         </SafeAreaView>
       </LinearGradient>
-    </View>
+    </ScreenWrapper>
+  );
   );
 }
