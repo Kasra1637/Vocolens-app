@@ -8,6 +8,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "root": "src/app",
+    "updates": {
+      "url": "https://u.expo.dev/your-project-id-here"
+    },
     "ios": {
       "supportsTablet": true
     },
