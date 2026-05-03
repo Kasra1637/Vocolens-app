@@ -147,39 +147,6 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
         {/* Tab Content */}
         <View style={styles.content}>
-          {/* Active Tab Pill */}
-          <Animated.View
-            style={[styles.pill, pillStyle, { backgroundColor: glassTint }]}
-          >
-            {/* Pill blur layer */}
-            <BlurView
-              intensity={95}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
-
-            {/* Pill gradient - theme-colored, stronger than base */}
-            <LinearGradient
-              colors={[pillGradientStart, pillGradientEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-
-            {/* Pill specular highlight (theme-derived) */}
-            <View
-              style={[
-                styles.pillSpecular,
-                { backgroundColor: pillSpecularColor },
-              ]}
-            />
-
-            {/* Pill border (theme-derived) */}
-            <View
-              style={[styles.pillBorder, { borderColor: pillBorderColor }]}
-            />
-          </Animated.View>
-
           {state.routes.map((route, index) => {
             const isFocused = state.index === index;
 
@@ -201,20 +168,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 onPress={onPress}
                 style={styles.tabItem}
               >
-                {/* Icon container with optional glow */}
                 <View style={styles.iconContainer}>
-                  {/* Theme-colored glow behind active icon */}
-                  {isFocused && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
-                        backgroundColor: iconGlowColor,
-                      }}
-                    />
-                  )}
                   {renderIcon(index, isFocused)}
                 </View>
                 <Text
