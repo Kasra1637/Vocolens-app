@@ -67,7 +67,7 @@ import {
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
 import useBadgesStore from "@/lib/state/badges-store";
-import useOnboardingStore from "@/lib/state/onboarding-store";
+import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import {
   useMoodTrend,
@@ -194,6 +194,8 @@ function InsightsContent({
 
   // Get theme from context
   const { Colors, Gradients, Shadows } = useTheme();
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
 
   // Get real data from stores
