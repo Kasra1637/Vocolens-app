@@ -1,0 +1,13 @@
+{
+  "project": "blinkapp-integratio-o79j00ue",
+  "preview": {
+    "enabled": true,
+    "port": 3003,
+    "platform": "web",
+    "tunnel": false
+  },
+  "build": {
+    "output": "dist",
+    "publicPath": "/"
+  }
+}

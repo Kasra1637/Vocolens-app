@@ -34,6 +34,24 @@
     },
     "web": {
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-video",
+      "expo-web-browser",
+      "react-native-edge-to-edge",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          },
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
   }
 }

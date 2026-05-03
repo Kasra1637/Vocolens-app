@@ -13,7 +13,13 @@
     "preview": {
       "distribution": "internal",
       "ios": {
-        "simulator": false
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BLINK_PREVIEW_ENABLED": "true"
       }
     },
     "production": {
@@ -24,4 +30,3 @@
     "production": {}
   }
 }
-

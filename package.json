@@ -8,6 +8,7 @@
     "android": "EXPO_TUNNEL=none expo start --android --offline",
     "ios": "EXPO_TUNNEL=none expo start --ios --offline",
     "web": "EXPO_TUNNEL=none npx expo start --web --offline --clear",
+    "preview": "EXPO_TUNNEL=none npx expo start --web --port 3003 --offline --clear",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit"
   },
