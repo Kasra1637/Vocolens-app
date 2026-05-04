@@ -153,7 +153,7 @@ export function GlassLayers({
       {blur && (
         <BlurView
           intensity={blurIntensity}
-          tint="dark"
+          tint="light"
           style={StyleSheet.absoluteFill}
         />
       )}
@@ -241,7 +241,16 @@ export function GlassCard({
   style,
 }: GlassCardProps) {
   return (
-    <View style={[{ borderRadius, overflow: "hidden" }, style]}>
+    <View
+      style={[
+        {
+          borderRadius,
+          overflow: "hidden",
+          filter: `drop-shadow(0px 8px 16px ${hexToRgba(primaryColor, 0.15)})`,
+        },
+        style,
+      ]}
+    >
       <GlassLayers
         primaryColor={primaryColor}
         tintColor={tintColor}
