@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, Pressable, Dimensions, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useIsFocused } from "@react-navigation/native";
 import {
   useFonts,
   Inter_400Regular,
@@ -58,7 +57,7 @@ import GroundingToolsModal from "@/components/GroundingToolsModal";
 import { analyzeTranscript } from "@/lib/journal-service";
 import { buildPersonalizationPrompt } from "@/lib/personalization";
 import useReflectionStore from "@/lib/state/reflection-store";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import {
   useUsageMinutes,
@@ -67,8 +66,6 @@ import {
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import { getStaggeredFadeIn } from "@/lib/animations";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -193,7 +190,6 @@ export default function SpeakScreen() {
   const Colors = getThemeColors(selectedTheme, isDarkMode);
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   // Usage limit tracking
   const usageMinutes = useUsageMinutes();
@@ -533,9 +529,6 @@ export default function SpeakScreen() {
     };
   });
 
-  const isFocused = useIsFocused();
-  const focusKey = useMemo(() => isFocused ? 'focused' : 'blurred', [isFocused]);
-
   if (!fontsLoaded) {
     return (
       <View className="flex-1" style={{ backgroundColor: Colors.background }}>
@@ -576,7 +569,7 @@ export default function SpeakScreen() {
   const errorMessage = voiceState.error;
 
   return (
-    <ScreenWrapper style={{ backgroundColor: Colors.background }}>
+    <View className="flex-1" style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -585,7 +578,6 @@ export default function SpeakScreen() {
       />
 
       <View
-        key={focusKey}
         className="flex-1 items-center"
         style={{
           paddingTop: insets.top + 20,
@@ -595,7 +587,7 @@ export default function SpeakScreen() {
         }}
       >
         {/* Header */}
-        <Animated.View entering={getStaggeredFadeIn(0)} className="items-center">
+        <Animated.View className="items-center">
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
@@ -614,17 +606,15 @@ export default function SpeakScreen() {
           </Text>
           {!isRecording ? (
             <Pressable onPress={!isProcessing ? cyclePrompt : undefined}>
-              <Animated.View entering={getStaggeredFadeIn(1)}>
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.8)",
-                  }}
-                  className="text-base text-center px-4"
-                >
-                  {currentPrompt || "What's on your mind today?"}
-                </Text>
-              </Animated.View>
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255, 255, 255, 0.8)",
+                }}
+                className="text-base text-center px-4"
+              >
+                {currentPrompt || "What's on your mind today?"}
+              </Text>
             </Pressable>
           ) : null}
         </Animated.View>
@@ -696,18 +686,17 @@ export default function SpeakScreen() {
             <View
               className="rounded-3xl p-4"
               style={{
+                backgroundColor: isAtLimit
+                  ? "rgba(255, 60, 60, 0.18)"
+                  : "rgba(255, 185, 50, 0.15)",
+                borderWidth: 1,
+                borderColor: isAtLimit
+                  ? "rgba(255, 100, 100, 0.45)"
+                  : "rgba(255, 210, 80, 0.4)",
                 overflow: "hidden",
-                shadowColor: isAtLimit ? "#FF5050" : tintColor,
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 12,
-                elevation: 3,
               }}
             >
-              <GlassLayers 
-                primaryColor={Colors.primary} 
-                tintColor={tintColor}
-                borderRadius={24} 
-              />
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View className="flex-row items-start">
                 <Text style={{ fontSize: 18, marginRight: 10 }}>
                   {isAtLimit ? "🔒" : "⚠️"}
@@ -813,7 +802,6 @@ export default function SpeakScreen() {
         !permissionMessage &&
         !errorMessage ? (
           <Animated.View
-            entering={getStaggeredFadeIn(2)}
             exiting={FadeOut.duration(300)}
             className="w-full"
             style={{ marginTop: 4 }}
@@ -821,18 +809,13 @@ export default function SpeakScreen() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                overflow: "hidden",
-                shadowColor: tintColor,
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 12,
-                elevation: 3,
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
+                borderWidth: 1,
+                borderColor: hexToRgba(Colors.primary, 0.15),
+                ...Shadows.medium,
               }}
             >
-              <GlassLayers 
-                primaryColor={Colors.primary} 
-                tintColor={tintColor}
-                borderRadius={24} 
-              />
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View className="p-4">
                 {/* Topic Selector */}
                 <View className="flex-row items-center justify-between mb-3">
@@ -878,10 +861,14 @@ export default function SpeakScreen() {
                   <Animated.View
                     exiting={FadeOut.duration(200)}
                     className="mb-3 rounded-2xl overflow-hidden"
+                    style={{
+                      backgroundColor: hexToRgba(Colors.primary, 0.1),
+                      borderWidth: 1,
+                      borderColor: hexToRgba(Colors.primary, 0.15),
+                    }}
                   >
                     <GlassLayers
                       primaryColor={Colors.primary}
-                      tintColor={tintColor}
                       borderRadius={16}
                     />
                     {(Object.keys(TOPIC_LABELS) as TopicCategory[]).map(
@@ -953,18 +940,11 @@ export default function SpeakScreen() {
             exiting={FadeOut.duration(300)}
             className="w-full rounded-3xl overflow-hidden"
             style={{
-              shadowColor: tintColor,
-              shadowOffset: { width: 0, height: 4 },
-              shadowRadius: 12,
-              elevation: 3,
+              backgroundColor: "transparent",
+              ...Shadows.medium,
               maxHeight: 220,
             }}
           >
-            <GlassLayers 
-              primaryColor={Colors.primary} 
-              tintColor={tintColor}
-              borderRadius={24} 
-            />
             <ScrollView
               className="p-5"
               showsVerticalScrollIndicator={false}
@@ -1139,11 +1119,7 @@ export default function SpeakScreen() {
 
         {/* Microphone Button */}
         {/* ── Recording Controls / Mic Button ── */}
-        <Animated.View 
-          entering={getStaggeredFadeIn(3)}
-          className="items-center" 
-          style={{ marginBottom: 48 }}
-        >
+        <View className="items-center" style={{ marginBottom: 48 }}>
           {isActiveSession ? (
             /* Recording or Paused — two-button layout */
             <Animated.View className="items-center">

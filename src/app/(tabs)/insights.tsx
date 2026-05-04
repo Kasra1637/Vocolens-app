@@ -45,6 +45,7 @@ import {
 } from "lucide-react-native";
 import Animated, {
   FadeOut,
+  FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -67,7 +68,7 @@ import {
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
 import useBadgesStore from "@/lib/state/badges-store";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import {
   useMoodTrend,
@@ -89,8 +90,6 @@ import { WeeklyReflectionCard } from "@/components/WeeklyReflectionCard";
 import { StreakCalendar } from "@/components/StreakCalendar";
 import { MoodStoryTimeline } from "@/components/MoodStoryTimeline";
 import ValenceArousalChart from "@/components/ValenceArousalChart";
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import { getStaggeredFadeIn, PROGRESS_ANIM_CONFIG } from "@/lib/animations";
 
 // Core emotions with icons and emojis - 8 Plutchik emotions
 // Row 1: Happiness, Sadness, Anger, Anticipation
@@ -174,7 +173,6 @@ export default function InsightsScreen() {
   const Colors = getThemeColors(selectedTheme, isDarkMode);
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   return (
     <ThemeProvider Colors={Colors} Gradients={Gradients} Shadows={Shadows}>
@@ -194,9 +192,8 @@ function InsightsContent({
 
   // Get theme from context
   const { Colors, Gradients, Shadows } = useTheme();
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
+  const isFocused = useIsFocused();
 
   // Get real data from stores
   const entries = useJournalStore((s) => s.entries);
@@ -210,6 +207,15 @@ function InsightsContent({
   const { data: priorityInsights, isLoading: insightsLoading } =
     usePriorityInsights();
   const { data: triggerData } = useTriggerDetection(triggerTimeWindow);
+
+  // Animation key for triggering re-animations
+  const [animationKey, setAnimationKey] = useState(0);
+
+  useEffect(() => {
+    if (isFocused) {
+      setAnimationKey(prev => prev + 1);
+    }
+  }, [isFocused]);
 
   // Find next badge to unlock
   const nextBadge = useMemo(() => {
@@ -444,14 +450,8 @@ function InsightsContent({
     }, 100);
   };
 
-  const isFocused = useIsFocused();
-  const focusKey = useMemo(
-    () => (isFocused ? "focused" : "blurred"),
-    [isFocused],
-  );
-
   return (
-    <ScreenWrapper style={{ backgroundColor: Colors.background }}>
+    <View className="flex-1" style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -459,7 +459,6 @@ function InsightsContent({
         end={{ x: 0, y: 1 }}
       />
       <ScrollView
-        key={focusKey}
         className="flex-1"
         contentContainerStyle={{
           paddingTop: insets.top + 16,
@@ -467,10 +466,11 @@ function InsightsContent({
           paddingHorizontal: 20,
         }}
         showsVerticalScrollIndicator={false}
+        key={`insights-${animationKey}`}
       >
         {/* Demo Data Button - Remove in production */}
         {entries.length === 0 && (
-          <Animated.View entering={getStaggeredFadeIn(7)} className="mb-4">
+          <Animated.View className="mb-4">
             <Pressable
               onPress={handlePopulateDummyData}
               style={{
@@ -511,16 +511,14 @@ function InsightsContent({
           </Animated.View>
         )}
 
-        {/* Welcome Section - Elements staggered internally */}
-        <WelcomeSection
-          user={user}
-          totalEntries={stats.totalEntries}
-          isFocused={isFocused}
-        />
+        {/* Welcome Section */}
+        <Animated.View entering={FadeInUp.delay(0).duration(800)}>
+          <WelcomeSection user={user} totalEntries={stats.totalEntries} />
+        </Animated.View>
 
         {/* Weekly Reflection Summary */}
         {entries.length >= 1 && (
-          <Animated.View entering={getStaggeredFadeIn(3)}>
+          <Animated.View entering={FadeInUp.delay(200).duration(800)}>
             <WeeklyReflectionCard
               primaryColor={Colors.primary}
               isDarkMode={isDarkMode}
@@ -529,7 +527,7 @@ function InsightsContent({
         )}
 
         {/* Journal Streak Calendar */}
-        <Animated.View entering={getStaggeredFadeIn(4)}>
+        <Animated.View entering={FadeInUp.delay(400).duration(800)}>
           <View className="mb-6">
             <StreakCalendar
               entries={entries}
@@ -540,13 +538,13 @@ function InsightsContent({
         </Animated.View>
 
         {/* Mood Story Timeline */}
-        <Animated.View entering={getStaggeredFadeIn(5)}>
+        <Animated.View entering={FadeInUp.delay(600).duration(800)}>
           <MoodStoryTimeline entries={entries} primaryColor={Colors.primary} />
         </Animated.View>
 
         {/* Valence-Arousal Emotional Landscape */}
         <Animated.View
-          entering={getStaggeredFadeIn(6)}
+          entering={FadeInUp.delay(800).duration(800)}
           style={{ marginBottom: 24 }}
         >
           <ValenceArousalChart
@@ -584,23 +582,22 @@ function InsightsContent({
             if (sorted.length === 0) return null;
             return (
               <Animated.View
-                entering={getStaggeredFadeIn(7)}
+                entering={FadeInUp.delay(1000).duration(800)}
                 style={{ marginBottom: 24 }}
               >
                 <View
                   style={{
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
+                    borderWidth: 1,
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                     borderRadius: BorderRadius.xxlarge,
                     padding: 20,
                     overflow: "hidden",
-                    shadowColor: tintColor,
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowRadius: 16,
-                    elevation: 4,
+                    ...Shadows.medium,
                   }}
                 >
                   <GlassLayers
                     primaryColor={Colors.primary}
-                    tintColor={tintColor}
                     borderRadius={BorderRadius.xxlarge}
                   />
                   <View
@@ -680,27 +677,26 @@ function InsightsContent({
         {entries.length >= 5 &&
           priorityInsights &&
           priorityInsights.length > 0 && (
-            <Animated.View entering={getStaggeredFadeIn(8)}>
+            <Animated.View entering={FadeInUp.delay(1200).duration(800)}>
               <DeepInsightsSection insights={priorityInsights} />
             </Animated.View>
           )}
 
         {/* Trigger Detection Section */}
-        <Animated.View entering={getStaggeredFadeIn(9)}>
+        <Animated.View entering={FadeInUp.delay(1400).duration(800)}>
           <View
             className="mb-6"
             style={{
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
+              borderWidth: 1,
+              borderColor: hexToRgba(Colors.primary, 0.15),
               borderRadius: BorderRadius.xxlarge,
               overflow: "hidden",
-              shadowColor: tintColor,
-              shadowOffset: { width: 0, height: 8 },
-              shadowRadius: 16,
-              elevation: 4,
+              ...Shadows.medium,
             }}
           >
             <GlassLayers
               primaryColor={Colors.primary}
-              tintColor={tintColor}
               borderRadius={BorderRadius.xxlarge}
             />
             <View className="p-5">
@@ -716,7 +712,6 @@ function InsightsContent({
                       key={trigger.id}
                       trigger={trigger}
                       index={index}
-                      primaryColor={Colors.primary}
                     />
                   ))}
                 </View>
@@ -732,17 +727,17 @@ function InsightsContent({
 
         {/* Emotional Themes */}
         {topThemes.length > 0 && (
-          <Animated.View entering={getStaggeredFadeIn(10)}>
+          <Animated.View entering={FadeInUp.delay(1600).duration(800)}>
             <EmotionalThemes themes={topThemes} />
           </Animated.View>
         )}
 
         {/* Time of Day Patterns */}
-        <Animated.View entering={getStaggeredFadeIn(11)}>
+        <Animated.View entering={FadeInUp.delay(1800).duration(800)}>
           <TimeOfDayPatterns patterns={timeOfDayPatterns} />
         </Animated.View>
       </ScrollView>
-    </ScreenWrapper>
+    </View>
   );
 }
 
@@ -758,41 +753,64 @@ interface WelcomeSectionProps {
     remainingMinutes: number;
   };
   totalEntries: number;
-  isFocused?: boolean;
 }
 
-function WelcomeSection({
-  user,
-  totalEntries,
-  isFocused,
-}: WelcomeSectionProps) {
+function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   const { Colors, Gradients, Shadows } = useTheme();
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
-
   const progressWidth = useSharedValue(0);
-// ...
-      {/* Streak & Badge Card */}
+  const usageWidth = useSharedValue(0);
+
+  const usagePct = Math.min(1, user.usageMinutes / USAGE_LIMIT_MINUTES);
+  const isNearLimit = usagePct >= 0.8 && usagePct < 1;
+  const isAtLimit = usagePct >= 1;
+
+  React.useEffect(() => {
+    progressWidth.value = withSpring(user.nextBadge.progress * 100, {
+      damping: 15,
+      stiffness: 100,
+    });
+  }, [user.nextBadge.progress, progressWidth]);
+
+  React.useEffect(() => {
+    usageWidth.value = withDelay(
+      200,
+      withSpring(usagePct * 100, {
+        damping: 15,
+        stiffness: 80,
+      }),
+    );
+  }, [usagePct, usageWidth]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
+
+  const usageBarStyle = useAnimatedStyle(() => ({
+    width: `${usageWidth.value}%`,
+  }));
+
+  const usageBarColor = isAtLimit
+    ? "#FF5050"
+    : isNearLimit
+      ? "#FFB830"
+      : Colors.primary;
+
+  return (
+    <View className="mb-6">
+      {/* Emotional Companion */}
       <Animated.View
-        entering={getStaggeredFadeIn(2)}
-        style={{
-          borderRadius: BorderRadius.xxlarge,
-          overflow: "hidden",
-          shadowColor: tintColor,
-          shadowOffset: { width: 0, height: 8 },
-          shadowRadius: 16,
-          elevation: 4,
-        }}
+        entering={FadeInUp.delay(100).duration(800)}
+        className="items-center mb-4"
       >
-        <GlassLayers
-          primaryColor={Colors.primary}
-          tintColor={tintColor}
-          borderRadius={BorderRadius.xxlarge}
+        <EmotionalCompanion
+          state="idle"
+          size={120}
+          themeColor={Colors.primary}
         />
       </Animated.View>
 
       {/* Greeting */}
-      <Animated.View entering={getStaggeredFadeIn(0)}>
+      <Animated.View entering={FadeInUp.delay(200).duration(800)}>
         <Text
           style={{
             fontFamily: "Fraunces_700Bold",
@@ -804,8 +822,7 @@ function WelcomeSection({
           Hello, {user.name}
         </Text>
       </Animated.View>
-
-      <Animated.View entering={getStaggeredFadeIn(1)}>
+      <Animated.View entering={FadeInUp.delay(300).duration(800)}>
         <Text
           style={{
             fontFamily: "Inter_400Regular",
@@ -819,7 +836,7 @@ function WelcomeSection({
 
       {/* Streak & Badge Card */}
       <Animated.View
-        entering={getStaggeredFadeIn(2)}
+        entering={FadeInUp.delay(400).duration(800)}
         style={{
           backgroundColor: hexToRgba(Colors.primary, 0.1),
           borderWidth: 1,
@@ -1031,7 +1048,7 @@ function WelcomeSection({
             </View>
           </View>
         </View>
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -1151,26 +1168,25 @@ function SentimentTimeline({
   onEmotionSelect,
 }: SentimentTimelineProps) {
   const { Colors, Gradients, Shadows } = useTheme();
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
-
   const entries = useJournalStore((s) => s.entries);
-// ...
+  const selectedEmotionData = selectedEmotion
+    ? CORE_EMOTIONS.find((e) => e.id === selectedEmotion)
+    : null;
+
   return (
     <View
       className="mb-6"
       style={{
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
+        borderWidth: 1,
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
         overflow: "hidden",
-        shadowColor: tintColor,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 16,
-        elevation: 4,
+        ...Shadows.medium,
       }}
     >
       <GlassLayers
         primaryColor={Colors.primary}
-        tintColor={tintColor}
         borderRadius={BorderRadius.xxlarge}
       />
       <View className="p-5">
@@ -1343,27 +1359,82 @@ function SentimentTimeline({
 // Overall Mood Display - Shows dominant emotion for each timeframe
 function OverallMoodDisplay() {
   const { Colors } = useTheme();
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
-
   const entries = useJournalStore((s) => s.entries);
-// ...
+
+  // Calculate dominant emotion for a given timeframe
+  const getDominantEmotion = (days: number) => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const recentEntries = entries.filter(
+      (e) => new Date(e.createdAt) >= cutoffDate,
+    );
+
+    if (recentEntries.length === 0) return null;
+
+    // Count emotion occurrences
+    const emotionCounts: Record<string, number> = {};
+    recentEntries.forEach((entry) => {
+      entry.emotions.forEach((emotion) => {
+        emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
+      });
+    });
+
+    // Find dominant emotion
+    let maxCount = 0;
+    let dominantEmotion: EmotionType | null = null;
+    Object.entries(emotionCounts).forEach(([emotion, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        dominantEmotion = emotion as EmotionType;
+      }
+    });
+
+    if (!dominantEmotion) return null;
+
+    // Calculate intensity (percentage of entries with this emotion)
+    const intensity = Math.round((maxCount / recentEntries.length) * 100);
+
+    return {
+      emotion: dominantEmotion,
+      intensity,
+      count: maxCount,
+      totalEntries: recentEntries.length,
+    };
+  };
+
+  const sevenDayData = getDominantEmotion(7);
+  const fourteenDayData = getDominantEmotion(14);
+  const thirtyDayData = getDominantEmotion(30);
+
+  const timeframes = [
+    { label: "7 Days", data: sevenDayData },
+    { label: "14 Days", data: fourteenDayData },
+    { label: "30 Days", data: thirtyDayData },
+  ];
+
+  return (
+    <View style={{ paddingVertical: 16 }}>
+      {timeframes.map((timeframe, index) => {
+        const emotionData = timeframe.data
+          ? CORE_EMOTIONS.find((e) => e.id === timeframe.data!.emotion)
+          : null;
+
+        return (
           <Animated.View
             key={timeframe.label}
             style={{
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
+              borderWidth: 1,
+              borderColor: hexToRgba(Colors.primary, 0.15),
               borderRadius: BorderRadius.large,
               padding: 16,
               overflow: "hidden",
               marginBottom: index < 2 ? 12 : 0,
-              shadowColor: tintColor,
-              shadowOffset: { width: 0, height: 4 },
-              shadowRadius: 10,
-              elevation: 3,
             }}
           >
             <GlassLayers
               primaryColor={Colors.primary}
-              tintColor={tintColor}
               borderRadius={BorderRadius.large}
             />
             <View className="flex-row items-center justify-between">
@@ -1463,28 +1534,85 @@ function OverallMoodDisplay() {
 // falls back to counting emotion occurrences.
 function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
   const { Colors } = useTheme();
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
-
   const entries = useJournalStore((s) => s.entries);
-// ...
+
+  // Calculate emotion intensity for a given timeframe
+  const getEmotionIntensity = (days: number) => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const recentEntries = entries.filter(
+      (e) => new Date(e.createdAt) >= cutoffDate,
+    );
+
+    if (recentEntries.length === 0) return null;
+
+    // Prefer emotionScores (precise 0-100 scores from OpenRouter) when available
+    const scoredEntries = recentEntries.filter((e) => e.emotionScores);
+    if (scoredEntries.length > 0) {
+      const avgScore = Math.round(
+        scoredEntries.reduce(
+          (sum, e) => sum + (e.emotionScores![emotion] ?? 0),
+          0,
+        ) / scoredEntries.length,
+      );
+      return {
+        intensity: avgScore,
+        count: scoredEntries.filter(
+          (e) => (e.emotionScores![emotion] ?? 0) >= 30,
+        ).length,
+        totalEntries: recentEntries.length,
+        usedScores: true,
+      };
+    }
+
+    // Fallback: count how many entries contain this emotion
+    const entriesWithEmotion = recentEntries.filter((entry) =>
+      entry.emotions.includes(emotion),
+    ).length;
+
+    const intensity = Math.round(
+      (entriesWithEmotion / recentEntries.length) * 100,
+    );
+
+    return {
+      intensity,
+      count: entriesWithEmotion,
+      totalEntries: recentEntries.length,
+      usedScores: false,
+    };
+  };
+
+  const sevenDayData = getEmotionIntensity(7);
+  const fourteenDayData = getEmotionIntensity(14);
+  const thirtyDayData = getEmotionIntensity(30);
+
+  const emotionData = CORE_EMOTIONS.find((e) => e.id === emotion);
+  if (!emotionData) return null;
+
+  const timeframes = [
+    { label: "7 Days", data: sevenDayData },
+    { label: "14 Days", data: fourteenDayData },
+    { label: "30 Days", data: thirtyDayData },
+  ];
+
+  return (
+    <View style={{ paddingVertical: 16 }}>
       {timeframes.map((timeframe, index) => (
         <Animated.View
           key={timeframe.label}
           style={{
+            backgroundColor: hexToRgba(Colors.primary, 0.1),
+            borderWidth: 1,
+            borderColor: hexToRgba(Colors.primary, 0.15),
             borderRadius: BorderRadius.large,
             padding: 16,
             overflow: "hidden",
             marginBottom: index < 2 ? 12 : 0,
-            shadowColor: tintColor,
-            shadowOffset: { width: 0, height: 4 },
-            shadowRadius: 10,
-            elevation: 3,
           }}
         >
           <GlassLayers
             primaryColor={Colors.primary}
-            tintColor={tintColor}
             borderRadius={BorderRadius.large}
           />
           <View className="flex-row items-center justify-between">
@@ -1574,24 +1702,20 @@ interface EmotionalThemesProps {
 
 function EmotionalThemes({ themes }: EmotionalThemesProps) {
   const { Colors, Shadows } = useTheme();
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
-
   return (
     <View
       className="mb-6"
       style={{
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
+        borderWidth: 1,
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
         overflow: "hidden",
-        shadowColor: tintColor,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 16,
-        elevation: 4,
+        ...Shadows.medium,
       }}
     >
       <GlassLayers
         primaryColor={Colors.primary}
-        tintColor={tintColor}
         borderRadius={BorderRadius.xxlarge}
       />
       <View className="p-5">
@@ -1710,24 +1834,20 @@ interface TimeOfDayPatternsProps {
 
 function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
   const { Colors, Shadows } = useTheme();
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
-
   return (
     <View
       className="mb-6"
       style={{
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
+        borderWidth: 1,
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
         overflow: "hidden",
-        shadowColor: tintColor,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 16,
-        elevation: 4,
+        ...Shadows.medium,
       }}
     >
       <GlassLayers
         primaryColor={Colors.primary}
-        tintColor={tintColor}
         borderRadius={BorderRadius.xxlarge}
       />
       <View className="p-5">
@@ -1858,24 +1978,71 @@ interface DeepInsightsSectionProps {
 
 function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
   const { Colors, Shadows } = useTheme();
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
-// ...
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "self_awareness":
+        return Eye;
+      case "growth":
+        return TrendingUp;
+      case "warning":
+        return AlertTriangle;
+      case "strength":
+        return Shield;
+      case "recommendation":
+        return Lightbulb;
+      default:
+        return Sparkles;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "self_awareness":
+        return "#A88AFF";
+      case "growth":
+        return "#7BD97B";
+      case "warning":
+        return "#FFB347";
+      case "strength":
+        return "#8E6BFF";
+      case "recommendation":
+        return "#FFA8D5";
+      default:
+        return Colors.primary;
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "Key Insight";
+      case "medium":
+        return "Notable";
+      case "low":
+        return "Observation";
+      default:
+        return "";
+    }
+  };
+
+  // Show top 3 insights
+  const topInsights = insights.slice(0, 3);
+
   return (
     <View
       className="mb-6"
       style={{
+        backgroundColor: hexToRgba(Colors.primary, 0.1),
+        borderWidth: 1,
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
         overflow: "hidden",
-        shadowColor: tintColor,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 16,
-        elevation: 4,
+        ...Shadows.medium,
       }}
     >
       <GlassLayers
         primaryColor={Colors.primary}
-        tintColor={tintColor}
         borderRadius={BorderRadius.xxlarge}
       />
       <View className="p-5">

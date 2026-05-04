@@ -3,7 +3,7 @@
  * Customizable settings menu for theme, notifications, dark mode, PIN, time, and sign out
  */
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useIsFocused } from "@react-navigation/native";
 import {
   useFonts,
   Inter_400Regular,
@@ -80,8 +79,6 @@ import { removePin } from "@/lib/auth-service";
 import { exportAllDataAsCsv } from "@/lib/export-data";
 import { getLanguageByCode } from "@/lib/languages";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import { getStaggeredFadeIn } from "@/lib/animations";
 
 export default function SettingsScreen() {
   const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
@@ -138,7 +135,6 @@ export default function SettingsScreen() {
   const Colors = getThemeColors(selectedTheme, isDarkMode);
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -338,9 +334,6 @@ export default function SettingsScreen() {
     setResetStep(1);
   };
 
-  const isFocused = useIsFocused();
-  const focusKey = useMemo(() => isFocused ? 'focused' : 'blurred', [isFocused]);
-
   if (!fontsLoaded) {
     return (
       <View className="flex-1">
@@ -355,7 +348,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScreenWrapper style={{ backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[0] }}>
+    <View className="flex-1">
       <LinearGradient
         colors={THEME_COLORS[selectedTheme].backgroundGradient}
         start={{ x: 0, y: 0 }}
@@ -364,8 +357,8 @@ export default function SettingsScreen() {
       >
         <SafeAreaView className="flex-1">
           {/* Header */}
-          <View key={focusKey} className="px-6 pt-4 pb-6">
-            <Animated.View entering={getStaggeredFadeIn(0)}>
+          <View className="px-6 pt-4 pb-6">
+            <Animated.View>
               <Text
                 className="text-white font-bold mb-2 text-center"
                 style={{ fontFamily: "Fraunces_700Bold", fontSize: 22 }}
@@ -388,21 +381,24 @@ export default function SettingsScreen() {
             contentContainerStyle={{ paddingBottom: 40 }}
           >
             {/* Usage Limit Card */}
-            <Animated.View entering={getStaggeredFadeIn(1)} className="mb-6">
+            <Animated.View className="mb-6">
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  shadowColor: isAtLimit ? "#FF5050" : tintColor,
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowRadius: 20,
-                  elevation: 4,
+                  backgroundColor: isAtLimit
+                    ? "rgba(255, 80, 80, 0.18)"
+                    : isNearLimit
+                      ? "rgba(255, 180, 50, 0.15)"
+                      : hexToRgba(Colors.primary, 0.1),
+                  borderWidth: 1,
+                  borderColor: isAtLimit
+                    ? "rgba(255, 100, 100, 0.5)"
+                    : isNearLimit
+                      ? "rgba(255, 200, 80, 0.4)"
+                      : hexToRgba(Colors.primary, 0.15),
                 }}
               >
-                <GlassLayers 
-                  primaryColor={Colors.primary} 
-                  tintColor={tintColor}
-                  borderRadius={24} 
-                />
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View className="p-5">
                   {/* Header row */}
                   <View className="flex-row items-center justify-between mb-4">
@@ -500,7 +496,7 @@ export default function SettingsScreen() {
             </Animated.View>
 
             {/* Theme Customization */}
-            <Animated.View entering={getStaggeredFadeIn(2)} className="mb-6">
+            <Animated.View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -522,18 +518,12 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  overflow: "hidden",
-                  shadowColor: tintColor,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowRadius: 12,
-                  elevation: 3,
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
-                <GlassLayers 
-                  primaryColor={Colors.primary} 
-                  tintColor={tintColor}
-                  borderRadius={24} 
-                />
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View
                   style={{
                     flexDirection: "row",
@@ -661,20 +651,66 @@ export default function SettingsScreen() {
             </Animated.View>
 
             {/* Notifications */}
-            <Animated.View entering={getStaggeredFadeIn(3)} className="mb-6">
-// ...
-            {/* Time Format */}
-            <Animated.View entering={getStaggeredFadeIn(4)} className="mb-6">
-// ...
-            {/* Emotion Reflection */}
-            <Animated.View entering={getStaggeredFadeIn(5)} className="mb-6">
-// ...
-            {/* Transcription Language */}
-            <Animated.View entering={getStaggeredFadeIn(6)} className="mb-6">
-// ...
-            {/* Privacy & Security */}
-            <Animated.View entering={getStaggeredFadeIn(7)} className="mb-6">
+            <Animated.View className="mb-6">
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
+                >
+                  <Bell size={20} color="#FFFFFF" />
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  Notifications
+                </Text>
+              </View>
 
+              <View
+                className="rounded-3xl p-5"
+                style={{
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
+                }}
+              >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1 mr-4">
+                    <Text
+                      className="text-base font-semibold mb-1"
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                      }}
+                    >
+                      Daily Reminders
+                    </Text>
+                    <Text
+                      style={{
+                        color: "rgba(255, 255, 255, 0.8)",
+                        fontSize: 15,
+                      }}
+                    >
+                      Get reminded to journal every day
+                    </Text>
+                  </View>
+                  <ThemedSwitch
+                    value={notificationsEnabled}
+                    onValueChange={handleNotificationToggle}
+                    trackColor={Colors.primary}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Time Format */}
+            <Animated.View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -696,18 +732,12 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  overflow: "hidden",
-                  shadowColor: tintColor,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowRadius: 12,
-                  elevation: 3,
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
-                <GlassLayers 
-                  primaryColor={Colors.primary} 
-                  tintColor={tintColor}
-                  borderRadius={24} 
-                />
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1 mr-4">
                     <Text
@@ -760,17 +790,12 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  shadowColor: tintColor,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowRadius: 12,
-                  elevation: 3,
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
-                <GlassLayers 
-                  primaryColor={Colors.primary} 
-                  tintColor={tintColor}
-                  borderRadius={24} 
-                />
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View
                   className="p-5"
                   style={{
@@ -924,86 +949,12 @@ export default function SettingsScreen() {
                 }}
                 className="rounded-3xl overflow-hidden active:opacity-70"
                 style={{
-                  shadowColor: tintColor,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowRadius: 12,
-                  elevation: 3,
-                }}
-              >
-                <GlassLayers 
-                  primaryColor={Colors.primary} 
-                  tintColor={tintColor}
-                  borderRadius={24} 
-                />
-                <View
-                  className="p-5"
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <View className="flex-1">
-                    <Text
-                      style={{
-                        fontFamily: "Inter_600SemiBold",
-                        color: "#FFFFFF",
-                        fontSize: 15,
-                        marginBottom: 2,
-                      }}
-                    >
-                      {currentLang.flag} {currentLang.name}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "rgba(255, 255, 255, 0.7)",
-                        fontSize: 13,
-                      }}
-                    >
-                      Used for all voice transcriptions
-                    </Text>
-                  </View>
-                  <ChevronRight
-                    size={20}
-                    color="rgba(255, 255, 255, 0.6)"
-                    strokeWidth={2}
-                  />
-                </View>
-              </Pressable>
-            </Animated.View>
-
-            {/* Privacy & Security */}
-            <Animated.View className="mb-6">
-              <View className="flex-row items-center mb-3">
-                <View
-                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
-                >
-                  <Shield size={20} color="#FFFFFF" />
-                </View>
-                <Text
-                  className="text-xl font-bold"
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Privacy & Security
-                </Text>
-              </View>
-
-              <Pressable
-                onPress={() => {
-                  tapHaptic();
-                  router.push("/language-picker");
-                }}
-                className="rounded-3xl overflow-hidden active:opacity-70"
-                style={{
                   backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
                   borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <View
                   className="p-5"
                   style={{
@@ -1064,17 +1015,12 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  shadowColor: tintColor,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowRadius: 12,
-                  elevation: 3,
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
-                <GlassLayers 
-                  primaryColor={Colors.primary} 
-                  tintColor={tintColor}
-                  borderRadius={24} 
-                />
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Pressable
                   onPress={handleOpenPinChange}
                   className="p-5 active:opacity-70"
@@ -1297,18 +1243,11 @@ export default function SettingsScreen() {
           <View
             className="rounded-3xl p-6 w-full max-w-md"
             style={{
-              overflow: "hidden",
-              shadowColor: tintColor,
-              shadowOffset: { width: 0, height: 12 },
-              shadowRadius: 24,
-              elevation: 8,
+              backgroundColor: Colors.surfaceHighlight,
+              ...Shadows.large,
             }}
           >
-            <GlassLayers 
-              primaryColor={Colors.primary} 
-              tintColor={tintColor}
-              borderRadius={24} 
-            />
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             {/* Header with centered title */}
             <View
               style={{

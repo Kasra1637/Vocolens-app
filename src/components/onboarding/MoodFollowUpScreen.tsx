@@ -9,7 +9,7 @@ import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated from "react-native-reanimated";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
 import useOnboardingStore, {
   THEME_COLORS,
@@ -21,8 +21,6 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import { getStaggeredFadeIn } from "@/lib/animations";
 
 interface FollowUpOption {
   id: MoodFollowUpType;
@@ -112,7 +110,7 @@ export function MoodFollowUpScreen() {
   };
 
   return (
-    <ScreenWrapper>
+    <View className="flex-1">
       <LinearGradient
         colors={themeColors.backgroundGradient}
         style={{ flex: 1 }}
@@ -126,8 +124,7 @@ export function MoodFollowUpScreen() {
 
           <View className="flex-1 px-6 py-3">
             {/* Character at Top */}
-            <Animated.View
-              entering={getStaggeredFadeIn(0)}
+            <View
               className="items-center justify-center"
               style={{ height: 120 }}
             >
@@ -136,11 +133,11 @@ export function MoodFollowUpScreen() {
                 size={120}
                 themeColor={themeColors.primary}
               />
-            </Animated.View>
+            </View>
 
             {/* Dynamic Title */}
             <Animated.View
-              entering={getStaggeredFadeIn(1)}
+              entering={FadeInUp.delay(400).duration(600)}
               className="items-center mb-4"
             >
               <Text
@@ -158,14 +155,19 @@ export function MoodFollowUpScreen() {
             </Animated.View>
 
             {/* Options */}
-            <View style={{ marginTop: 4, marginBottom: 12 }}>
+            <Animated.View
+              entering={FadeInDown.delay(600).duration(600)}
+              style={{ marginTop: 4, marginBottom: 12 }}
+            >
               <View className="gap-2">
                 {config.options.map((option, index) => {
                   const isSelected = selectedOption === option.id;
                   return (
                     <Animated.View
                       key={option.id}
-                      entering={getStaggeredFadeIn(2 + index)}
+                      entering={FadeInDown.delay(700 + index * 80).duration(
+                        400,
+                      )}
                     >
                       <Pressable
                         onPress={() => handleOptionSelect(option.id)}
@@ -202,25 +204,23 @@ export function MoodFollowUpScreen() {
                   );
                 })}
               </View>
-            </View>
+            </Animated.View>
 
             {/* Continue */}
             <Animated.View
-              entering={getStaggeredFadeIn(2 + config.options.length)}
+              entering={FadeInUp.delay(400).duration(500)}
               className="pb-6"
             >
               <OnboardingCTAButton
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedOption}
-                pulse
-                primaryColor={themeColors.primary}
               />
             </Animated.View>
             <View style={{ flex: 1 }} />
           </View>
         </SafeAreaView>
       </LinearGradient>
-    </ScreenWrapper>
+    </View>
   );
 }

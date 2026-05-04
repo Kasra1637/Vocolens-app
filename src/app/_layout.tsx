@@ -44,27 +44,8 @@ function RootLayoutNav({
 }: {
   colorScheme: "light" | "dark" | null | undefined;
 }) {
-  // Force a dark background for both themes to prevent white blinks during transitions
-  const customDarkTheme = {
-    ...DarkTheme,
-    colors: {
-      ...DarkTheme.colors,
-      background: "#0F0E1A", // Match the deep base of Midnight Glow
-    },
-  };
-
-  const customDefaultTheme = {
-    ...DefaultTheme,
-    colors: {
-      ...DefaultTheme.colors,
-      background: "#0F0E1A",
-    },
-  };
-
   return (
-    <ThemeProvider
-      value={colorScheme === "dark" ? customDarkTheme : customDefaultTheme}
-    >
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />

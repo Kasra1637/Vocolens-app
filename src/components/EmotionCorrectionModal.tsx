@@ -42,7 +42,7 @@ import { getEmotionDefinition } from "@/lib/emotion-definitions";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import { transcribeAudioFile } from "@/lib/deepgram-transcription-service";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeColors } from "@/lib/theme";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
@@ -113,7 +113,6 @@ export default function EmotionCorrectionModal({
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   const Colors = getThemeColors(selectedTheme, isDarkMode);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   const handleConfirm = useCallback(() => {
     successHaptic();
@@ -316,15 +315,17 @@ export default function EmotionCorrectionModal({
                 </Text>
                 <View
                   style={{
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
                     borderRadius: 16,
                     padding: 20,
+                    borderWidth: 1,
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                     marginBottom: 24,
                     overflow: "hidden",
                   }}
                 >
                   <GlassLayers
                     primaryColor={Colors.primary}
-                    tintColor={tintColor}
                     borderRadius={16}
                   />
                   <View
@@ -523,15 +524,17 @@ export default function EmotionCorrectionModal({
 
                 <View
                   style={{
+                    backgroundColor: hexToRgba(Colors.primary, 0.08),
                     borderRadius: 16,
                     padding: 20,
+                    borderWidth: 1,
+                    borderColor: hexToRgba(Colors.primary, 0.15),
                     marginBottom: 24,
                     overflow: "hidden",
                   }}
                 >
                   <GlassLayers
                     primaryColor={Colors.primary}
-                    tintColor={tintColor}
                     borderRadius={16}
                   />
                   <View style={{ marginBottom: 20 }}>
@@ -628,8 +631,11 @@ export default function EmotionCorrectionModal({
                     </Text>
                     <View
                       style={{
+                        backgroundColor: hexToRgba(Colors.primary, 0.08),
                         borderRadius: 16,
                         padding: 16,
+                        borderWidth: 1,
+                        borderColor: hexToRgba(Colors.primary, 0.15),
                         flexDirection: "row",
                         alignItems: "center",
                         overflow: "hidden",
@@ -637,7 +643,6 @@ export default function EmotionCorrectionModal({
                     >
                       <GlassLayers
                         primaryColor={Colors.primary}
-                        tintColor={tintColor}
                         borderRadius={16}
                       />
                       <Text style={{ fontSize: 28, marginRight: 12 }}>
@@ -726,6 +731,7 @@ export default function EmotionCorrectionModal({
                   <Animated.View
                     entering={FadeIn.delay(100)}
                     style={{
+                      backgroundColor: hexToRgba(Colors.primary, 0.08),
                       borderRadius: 12,
                       padding: 16,
                       alignItems: "center",
@@ -735,7 +741,6 @@ export default function EmotionCorrectionModal({
                   >
                     <GlassLayers
                       primaryColor={Colors.primary}
-                      tintColor={tintColor}
                       borderRadius={12}
                     />
                     {isRecordingVoice ? (
@@ -806,6 +811,9 @@ export default function EmotionCorrectionModal({
               bottom: 0,
               left: 0,
               right: 0,
+              backgroundColor: hexToRgba(Colors.primary, 0.12),
+              borderTopWidth: 1,
+              borderTopColor: hexToRgba(Colors.primary, 0.15),
               paddingHorizontal: 20,
               paddingVertical: 16,
               paddingBottom: 32,
@@ -814,7 +822,6 @@ export default function EmotionCorrectionModal({
           >
             <GlassLayers
               primaryColor={Colors.primary}
-              tintColor={tintColor}
               borderRadius={0}
               blur={true}
               blurIntensity={80}

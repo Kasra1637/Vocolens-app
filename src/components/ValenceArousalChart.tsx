@@ -14,7 +14,7 @@
  *  • Quadrant distribution bar + dominant state summary
  */
 
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -40,22 +40,15 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
-  withDelay,
-  Easing,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { useIsFocused } from "@react-navigation/native";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import {
   JournalEntry,
   EMOTION_COLORS,
   EMOTION_EMOJIS,
   EmotionType,
 } from "@/lib/types";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
-import { BorderRadius } from "@/lib/theme";
-import { PROGRESS_ANIM_CONFIG } from "@/lib/animations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -140,12 +133,7 @@ export default function ValenceArousalChart({
   entries,
   primaryColor = "#8B5CF6",
 }: ValenceArousalChartProps) {
-  const isFocused = useIsFocused();
   const [range, setRange] = useState<TimeRange>("30D");
-
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
-
   const [selectedPoint, setSelectedPoint] = useState<ChartPoint | null>(null);
   const [chartWidth, setChartWidth] = useState(280);
 
@@ -241,19 +229,13 @@ export default function ValenceArousalChart({
   return (
     <View
       style={{
+        backgroundColor: "rgba(255,255,255,0.08)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.18)",
         borderRadius: 24,
         overflow: "hidden",
-        shadowColor: tintColor,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 16,
-        elevation: 4,
       }}
     >
-      <GlassLayers
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        borderRadius={24}
-      />
       {/* Header */}
       <View style={{ padding: 20, paddingBottom: 0 }}>
         <View
@@ -281,7 +263,7 @@ export default function ValenceArousalChart({
           <View
             style={{
               flexDirection: "row",
-              backgroundColor: hexToRgba(primaryColor, 0.1),
+              backgroundColor: "rgba(255,255,255,0.07)",
               borderRadius: 10,
               padding: 3,
             }}
@@ -373,119 +355,107 @@ export default function ValenceArousalChart({
                 marginHorizontal: 20,
                 marginTop: 4,
                 marginBottom: 12,
+                padding: 14,
                 borderRadius: 16,
-                overflow: "hidden",
-                shadowColor: tintColor,
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 8,
-                elevation: 3,
+                backgroundColor: "rgba(255,255,255,0.1)",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.2)",
               }}
             >
-              <GlassLayers
-                primaryColor={primaryColor}
-                tintColor={tintColor}
-                borderRadius={16}
-              />
-              <View style={{ padding: 14 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 6,
+                }}
+              >
                 <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 6,
+                    gap: 8,
+                    flex: 1,
                   }}
                 >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                      flex: 1,
-                    }}
-                  >
-                    <Text style={{ fontSize: 20 }}>{selectedPoint.emoji}</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          fontSize: 13,
-                          color: "#FFFFFF",
-                        }}
-                        numberOfLines={1}
-                      >
-                        {selectedPoint.title}
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_400Regular",
-                          fontSize: 11,
-                          color: "rgba(255,255,255,0.5)",
-                          marginTop: 1,
-                        }}
-                      >
-                        {selectedPoint.date}
-                      </Text>
-                    </View>
-                  </View>
-                  {selectedPoint.isUserCorrected && (
-                    <View
+                  <Text style={{ fontSize: 20 }}>{selectedPoint.emoji}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text
                       style={{
-                        paddingHorizontal: 7,
-                        paddingVertical: 3,
-                        borderRadius: 8,
-                        backgroundColor: hexToRgba(primaryColor, 0.18),
-                        borderWidth: 1,
-                        borderColor: hexToRgba(primaryColor, 0.35),
+                        fontFamily: "Inter_600SemiBold",
+                        fontSize: 13,
+                        color: "#FFFFFF",
+                      }}
+                      numberOfLines={1}
+                    >
+                      {selectedPoint.title}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "Inter_400Regular",
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.5)",
+                        marginTop: 1,
                       }}
                     >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          fontSize: 9,
-                          color: primaryColor,
-                          textTransform: "uppercase",
-                          letterSpacing: 0.5,
-                        }}
-                      >
-                        You edited
-                      </Text>
-                    </View>
-                  )}
+                      {selectedPoint.date}
+                    </Text>
+                  </View>
                 </View>
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  <VABadge
-                    label="Valence"
-                    value={selectedPoint.valence}
-                    unit=""
-                    signed
-                  />
-                  <VABadge
-                    label="Arousal"
-                    value={selectedPoint.arousal}
-                    unit=""
-                    signed={false}
-                  />
-                  <VABadge
-                    label="Emotion"
-                    value={
-                      selectedPoint.emotion.charAt(0).toUpperCase() +
-                      selectedPoint.emotion.slice(1)
-                    }
-                    unit=""
-                    isText
-                    color={selectedPoint.color}
-                  />
-                </View>
+                {selectedPoint.isUserCorrected && (
+                  <View
+                    style={{
+                      paddingHorizontal: 7,
+                      paddingVertical: 3,
+                      borderRadius: 8,
+                      backgroundColor: `${primaryColor}30`,
+                      borderWidth: 1,
+                      borderColor: `${primaryColor}60`,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        fontSize: 9,
+                        color: primaryColor,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      You edited
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <VABadge
+                  label="Valence"
+                  value={selectedPoint.valence}
+                  unit=""
+                  signed
+                />
+                <VABadge
+                  label="Arousal"
+                  value={selectedPoint.arousal}
+                  unit=""
+                  signed={false}
+                />
+                <VABadge
+                  label="Emotion"
+                  value={
+                    selectedPoint.emotion.charAt(0).toUpperCase() +
+                    selectedPoint.emotion.slice(1)
+                  }
+                  unit=""
+                  isText
+                  color={selectedPoint.color}
+                />
               </View>
             </Animated.View>
           )}
 
           {/* Quadrant Distribution */}
-          <QuadrantDistribution
-            counts={quadrantCounts}
-            total={totalPoints}
-            primaryColor={primaryColor}
-          />
+          <QuadrantDistribution counts={quadrantCounts} total={totalPoints} />
 
           {/* Dominant quadrant summary */}
           {dominantQuadrant && (
@@ -807,22 +777,10 @@ function AxisLabels() {
 function QuadrantDistribution({
   counts,
   total,
-  primaryColor,
 }: {
   counts: QuadrantCounts;
   total: number;
-  primaryColor: string;
 }) {
-  const isFocused = useIsFocused();
-  const animValue = useSharedValue(0);
-
-  useEffect(() => {
-    if (isFocused) {
-      animValue.value = 0;
-      animValue.value = withTiming(1, PROGRESS_ANIM_CONFIG);
-    }
-  }, [isFocused]);
-
   if (total === 0) return null;
 
   const sections = QUADRANT_CONFIG.map((q) => ({
@@ -840,27 +798,20 @@ function QuadrantDistribution({
           borderRadius: 3,
           flexDirection: "row",
           overflow: "hidden",
-          backgroundColor: hexToRgba(primaryColor, 0.07),
+          backgroundColor: "rgba(255,255,255,0.07)",
           marginBottom: 10,
         }}
       >
-        {sections.map((s) => {
-          const animatedStyle = useAnimatedStyle(() => ({
-            flex: s.pct * animValue.value,
-          }));
-          return (
-            <Animated.View
-              key={s.key}
-              style={[
-                {
-                  backgroundColor: s.color,
-                  opacity: 0.75,
-                },
-                animatedStyle,
-              ]}
-            />
-          );
-        })}
+        {sections.map((s) => (
+          <View
+            key={s.key}
+            style={{
+              flex: s.pct,
+              backgroundColor: s.color,
+              opacity: 0.75,
+            }}
+          />
+        ))}
       </View>
 
       {/* Legend */}

@@ -21,9 +21,7 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { ArrowLeft, FileText, Shield } from "lucide-react-native";
-import Animated from "react-native-reanimated";
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import { getStaggeredFadeIn } from "@/lib/animations";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
 import {
@@ -32,7 +30,7 @@ import {
   getThemeShadows,
   BorderRadius,
 } from "@/lib/theme";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 
 type TabType = "privacy" | "terms";
@@ -51,7 +49,6 @@ export default function LegalScreen() {
   const Colors = getThemeColors(selectedTheme, isDarkMode);
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -63,118 +60,106 @@ export default function LegalScreen() {
   if (!fontsLoaded) return null;
 
   return (
-    <ScreenWrapper>
-      <View className="flex-1" style={{ backgroundColor: Colors.background }}>
-        <LinearGradient
-          colors={Gradients.background}
-          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        />
+    <View className="flex-1" style={{ backgroundColor: Colors.background }}>
+      <LinearGradient
+        colors={Gradients.background}
+        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
 
-        {/* Header */}
-        <Animated.View
-          entering={getStaggeredFadeIn(0)}
-          className="flex-row items-center px-5"
-          style={{ paddingTop: insets.top + 12, paddingBottom: 16 }}
-        >
-          <Pressable
-            onPress={() => {
-              tapHaptic();
-              router.back();
-            }}
-            style={({ pressed }) => ({
-              backgroundColor: hexToRgba(Colors.primary, 0.15),
-              opacity: pressed ? 0.7 : 1,
-              transform: [{ scale: pressed ? 0.97 : 1 }],
-            })}
-            className="w-10 h-10 rounded-full items-center justify-center mr-4"
-          >
-            <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
-          </Pressable>
-          <Text
-            style={{
-              fontFamily: "Fraunces_700Bold",
-              color: "#FFFFFF",
-              fontSize: 20,
-            }}
-          >
-            Legal
-          </Text>
-        </Animated.View>
-
-        {/* Tab Switcher */}
-        <Animated.View entering={getStaggeredFadeIn(1)} className="px-5 mb-4">
-          <View
-            className="flex-row p-1 rounded-2xl"
-            style={{ backgroundColor: hexToRgba(Colors.primary, 0.12) }}
-          >
-            {(
-              [
-                { key: "privacy", label: "Privacy Policy", icon: Shield },
-                { key: "terms", label: "Terms of Service", icon: FileText },
-              ] as { key: TabType; label: string; icon: typeof Shield }[]
-            ).map(({ key, label, icon: Icon }) => (
-              <Pressable
-                key={key}
-                onPress={() => {
-                  selectionHaptic();
-                  setActiveTab(key);
-                }}
-                className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
-                style={({ pressed }) => ({
-                  backgroundColor:
-                    activeTab === key
-                      ? hexToRgba(Colors.primary, 0.2)
-                      : "transparent",
-                  opacity: pressed ? 0.8 : 1,
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
-                })}
-              >
-                <Icon size={14} color="#FFFFFF" strokeWidth={2} />
-                <Text
-                  style={{
-                    fontFamily:
-                      activeTab === key
-                        ? "Inter_600SemiBold"
-                        : "Inter_400Regular",
-                    color: "#FFFFFF",
-                    fontSize: 13,
-                    marginLeft: 6,
-                  }}
-                >
-                  {label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </Animated.View>
-
-        <Animated.ScrollView
-          entering={getStaggeredFadeIn(2)}
-          className="flex-1"
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingBottom: insets.bottom + 40,
+      {/* Header */}
+      <View
+        className="flex-row items-center px-5"
+        style={{ paddingTop: insets.top + 12, paddingBottom: 16 }}
+      >
+        <Pressable
+          onPress={() => {
+            tapHaptic();
+            router.back();
           }}
-          showsVerticalScrollIndicator={false}
+          className="w-10 h-10 rounded-full items-center justify-center mr-4"
+          style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
         >
-          {activeTab === "privacy" ? (
-            <PrivacyPolicy
-              isDarkMode={isDarkMode}
-              primaryColor={Colors.primary}
-              tintColor={tintColor}
-            />
-          ) : (
-            <TermsOfService
-              isDarkMode={isDarkMode}
-              primaryColor={Colors.primary}
-              tintColor={tintColor}
-            />
-          )}
-        </Animated.ScrollView>
+          <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+        </Pressable>
+        <Text
+          style={{
+            fontFamily: "Fraunces_700Bold",
+            color: "#FFFFFF",
+            fontSize: 20,
+          }}
+        >
+          Legal
+        </Text>
       </View>
-    </ScreenWrapper>
+
+      {/* Tab Switcher */}
+      <View className="px-5 mb-4">
+        <View
+          className="flex-row p-1 rounded-2xl"
+          style={{ backgroundColor: hexToRgba(Colors.primary, 0.12) }}
+        >
+          {(
+            [
+              { key: "privacy", label: "Privacy Policy", icon: Shield },
+              { key: "terms", label: "Terms of Service", icon: FileText },
+            ] as { key: TabType; label: string; icon: typeof Shield }[]
+          ).map(({ key, label, icon: Icon }) => (
+            <Pressable
+              key={key}
+              onPress={() => {
+                selectionHaptic();
+                setActiveTab(key);
+              }}
+              className="flex-1 flex-row items-center justify-center py-3 rounded-xl"
+              style={{
+                backgroundColor:
+                  activeTab === key
+                    ? hexToRgba(Colors.primary, 0.2)
+                    : "transparent",
+              }}
+            >
+              <Icon size={14} color="#FFFFFF" strokeWidth={2} />
+              <Text
+                style={{
+                  fontFamily:
+                    activeTab === key
+                      ? "Inter_600SemiBold"
+                      : "Inter_400Regular",
+                  color: "#FFFFFF",
+                  fontSize: 13,
+                  marginLeft: 6,
+                }}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 40,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {activeTab === "privacy" ? (
+          <PrivacyPolicy
+            isDarkMode={isDarkMode}
+            primaryColor={Colors.primary}
+          />
+        ) : (
+          <TermsOfService
+            isDarkMode={isDarkMode}
+            primaryColor={Colors.primary}
+          />
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -186,26 +171,23 @@ function Section({
   title,
   children,
   primaryColor,
-  tintColor,
 }: {
   title: string;
   children: React.ReactNode;
   primaryColor: string;
-  tintColor: string;
 }) {
   return (
-    <Animated.View entering={getStaggeredFadeIn(0)} className="mb-6">
+    <Animated.View entering={FadeInDown.duration(400)} className="mb-6">
       <View
         className="rounded-3xl p-5"
         style={{
+          backgroundColor: hexToRgba(primaryColor, 0.1),
+          borderWidth: 1,
+          borderColor: hexToRgba(primaryColor, 0.18),
           overflow: "hidden",
         }}
       >
-        <GlassLayers
-          primaryColor={primaryColor}
-          tintColor={tintColor}
-          borderRadius={24}
-        />
+        <GlassLayers primaryColor={primaryColor} borderRadius={24} />
         <Text
           style={{
             fontFamily: "Inter_700Bold",
@@ -326,11 +308,9 @@ function MetaLine({ label, value }: { label: string; value: string }) {
 function PrivacyPolicy({
   isDarkMode,
   primaryColor,
-  tintColor,
 }: {
   isDarkMode: boolean;
   primaryColor: string;
-  tintColor: string;
 }) {
   return (
     <View>
@@ -342,25 +322,20 @@ function PrivacyPolicy({
         <View
           className="rounded-3xl p-5"
           style={{
+            backgroundColor: hexToRgba(primaryColor, 0.07),
+            borderWidth: 1,
+            borderColor: hexToRgba(primaryColor, 0.12),
             overflow: "hidden",
           }}
         >
-          <GlassLayers
-            primaryColor={primaryColor}
-            tintColor={tintColor}
-            borderRadius={24}
-          />
+          <GlassLayers primaryColor={primaryColor} borderRadius={24} />
           <MetaLine label="App" value={APP_NAME} />
           <MetaLine label="Effective Date" value={EFFECTIVE_DATE} />
           <MetaLine label="Contact" value={CONTACT_EMAIL} />
         </View>
       </Animated.View>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Our Core Commitment"
-      >
+      <Section primaryColor={primaryColor} title="Our Core Commitment">
         <Body>
           {`${APP_NAME} is built on a simple principle: your personal reflections belong to you. We designed the app so your journal entries are stored only on your device. We do not operate user accounts, we do not store your data on our servers, and we do not sell or share your information with advertisers.\n\nThis policy explains exactly what data leaves your device, why, and what happens to it.`}
         </Body>
@@ -478,11 +453,7 @@ function PrivacyPolicy({
         </Bullet>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Audio Data"
-      >
+      <Section primaryColor={primaryColor} title="Audio Data">
         <Body>
           {`Audio recordings are saved as .wav files in your device's local app storage directory.\n\nWhen you record a journal entry:\n`}
         </Body>
@@ -517,11 +488,7 @@ function PrivacyPolicy({
         </Bullet>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Local Notifications"
-      >
+      <Section primaryColor={primaryColor} title="Local Notifications">
         <Body>
           {`${APP_NAME} can send daily reminder notifications to encourage journaling. These notifications:\n`}
         </Body>
@@ -540,21 +507,13 @@ function PrivacyPolicy({
         </Bullet>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="In-App Purchases"
-      >
+      <Section primaryColor={primaryColor} title="In-App Purchases">
         <Body>
           {`${APP_NAME} offers a premium subscription. Subscription purchases are handled by Apple App Store or Google Play.\n\nWe use RevenueCat to manage subscription status. RevenueCat may receive your device's anonymous app store identifier to verify purchase status. No personal information beyond purchase status is shared. See revenuecat.com/privacy.`}
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="No Analytics or Tracking"
-      >
+      <Section primaryColor={primaryColor} title="No Analytics or Tracking">
         <Body>
           {`${APP_NAME} does not include any third-party analytics, advertising, or crash-reporting SDKs. We do not track:\n`}
         </Body>
@@ -570,11 +529,7 @@ function PrivacyPolicy({
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Security"
-      >
+      <Section primaryColor={primaryColor} title="Security">
         <Body>{"We take reasonable measures to protect your data:\n"}</Body>
         <Bullet>
           Your PIN is stored in your device's secure hardware keystore (iOS
@@ -591,11 +546,7 @@ function PrivacyPolicy({
         </Bullet>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Your Rights & Controls"
-      >
+      <Section primaryColor={primaryColor} title="Your Rights & Controls">
         <Body>{"You have full control over your data at all times:\n"}</Body>
         <Bullet>
           Export — Download all your journal entries, statistics, and
@@ -616,31 +567,19 @@ function PrivacyPolicy({
         </Bullet>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Children's Privacy"
-      >
+      <Section primaryColor={primaryColor} title="Children's Privacy">
         <Body>
           {`${APP_NAME} is not directed to children under the age of 13. We do not knowingly collect personal information from children. If you believe a child under 13 has used the app and their data has been transmitted to a third-party service, please contact us at ${CONTACT_EMAIL}.`}
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Changes to This Policy"
-      >
+      <Section primaryColor={primaryColor} title="Changes to This Policy">
         <Body>
           {`We may update this Privacy Policy from time to time. When we do, we will update the effective date at the top of this document. Continued use of the app after changes constitutes acceptance of the revised policy.\n\nFor significant changes that affect how your data is handled, we will notify you through an in-app prompt.`}
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Contact Us"
-      >
+      <Section primaryColor={primaryColor} title="Contact Us">
         <Body>
           {`If you have questions about this Privacy Policy or how your data is handled, please contact us at:\n\n${CONTACT_EMAIL}`}
         </Body>
@@ -656,11 +595,9 @@ function PrivacyPolicy({
 function TermsOfService({
   isDarkMode,
   primaryColor,
-  tintColor,
 }: {
   isDarkMode: boolean;
   primaryColor: string;
-  tintColor: string;
 }) {
   return (
     <View>
@@ -672,35 +609,26 @@ function TermsOfService({
         <View
           className="rounded-3xl p-5"
           style={{
+            backgroundColor: hexToRgba(primaryColor, 0.07),
+            borderWidth: 1,
+            borderColor: hexToRgba(primaryColor, 0.12),
             overflow: "hidden",
           }}
         >
-          <GlassLayers
-            primaryColor={primaryColor}
-            tintColor={tintColor}
-            borderRadius={24}
-          />
+          <GlassLayers primaryColor={primaryColor} borderRadius={24} />
           <MetaLine label="App" value={APP_NAME} />
           <MetaLine label="Effective Date" value={EFFECTIVE_DATE} />
           <MetaLine label="Contact" value={CONTACT_EMAIL} />
         </View>
       </Animated.View>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Acceptance of Terms"
-      >
+      <Section primaryColor={primaryColor} title="Acceptance of Terms">
         <Body>
           {`By downloading or using ${APP_NAME}, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the app.\n\nThese terms apply to all users of the app, including the free trial and paid subscription tiers.`}
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Description of Service"
-      >
+      <Section primaryColor={primaryColor} title="Description of Service">
         <Body>
           {`${APP_NAME} is a voice-based journaling application that allows you to record audio entries, have them transcribed to text, and receive AI-powered emotional analysis. The app provides:\n`}
         </Body>
@@ -719,11 +647,7 @@ function TermsOfService({
         <Bullet>Local data export and full account deletion</Bullet>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Subscriptions & Free Trial"
-      >
+      <Section primaryColor={primaryColor} title="Subscriptions & Free Trial">
         <Body>
           {`${APP_NAME} offers a 3-day free trial followed by a paid subscription.\n`}
         </Body>
@@ -749,11 +673,7 @@ function TermsOfService({
         </Bullet>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Permitted Use"
-      >
+      <Section primaryColor={primaryColor} title="Permitted Use">
         <Body>
           {`You may use ${APP_NAME} for lawful personal journaling purposes only. You agree not to:\n`}
         </Body>
@@ -778,11 +698,7 @@ function TermsOfService({
         </Bullet>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Not a Medical Service"
-      >
+      <Section primaryColor={primaryColor} title="Not a Medical Service">
         <Body>
           {`${APP_NAME} is a personal journaling tool and is not a medical device, mental health service, or therapy application.\n\nThe emotional analysis, scores, and reflections generated by the app are produced by an AI language model and are for informational and self-reflection purposes only. They do not constitute:\n`}
         </Body>
@@ -796,21 +712,13 @@ function TermsOfService({
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Your Content"
-      >
+      <Section primaryColor={primaryColor} title="Your Content">
         <Body>
           {`You own all content you create in ${APP_NAME}, including your voice recordings and written transcripts.\n\nBy using the app, you grant us a limited, temporary licence to transmit your audio recording and transcript text to our analysis backend and to Deepgram and OpenAI solely for the purpose of providing the transcription and emotional analysis services described in this agreement. This licence does not give us the right to use your content for any other purpose.\n\nAs described in the Privacy Policy, your journal data is stored locally on your device and is not backed up to our servers.`}
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Third-Party Services"
-      >
+      <Section primaryColor={primaryColor} title="Third-Party Services">
         <Body>
           {`${APP_NAME} integrates with the following third-party services:\n`}
         </Body>
@@ -830,11 +738,7 @@ function TermsOfService({
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Data Loss Disclaimer"
-      >
+      <Section primaryColor={primaryColor} title="Data Loss Disclaimer">
         <Body>
           {`Because your journal data is stored only on your device:\n`}
         </Body>
@@ -865,21 +769,13 @@ function TermsOfService({
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Governing Law"
-      >
+      <Section primaryColor={primaryColor} title="Governing Law">
         <Body>
           {`These Terms shall be governed by and construed in accordance with applicable laws. Disputes will be resolved through good-faith negotiation first; if unresolved, through binding arbitration or a court of competent jurisdiction.`}
         </Body>
       </Section>
 
-      <Section
-        primaryColor={primaryColor}
-        tintColor={tintColor}
-        title="Changes to These Terms"
-      >
+      <Section primaryColor={primaryColor} title="Changes to These Terms">
         <Body>
           {`We may update these Terms of Service. Continued use of the app after changes constitutes your acceptance of the revised terms. We will notify you of material changes through an in-app prompt.\n\nFor questions, contact us at ${CONTACT_EMAIL}.`}
         </Body>

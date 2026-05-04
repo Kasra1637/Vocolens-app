@@ -20,9 +20,6 @@ import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
-import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import { getStaggeredFadeIn } from "@/lib/animations";
 
 interface GainOption {
   id: JournalingGainType;
@@ -93,7 +90,7 @@ export function JournalingGoalsScreen() {
   };
 
   return (
-    <ScreenWrapper>
+    <View className="flex-1">
       <LinearGradient
         colors={themeColors.backgroundGradient}
         style={{ flex: 1 }}
@@ -107,8 +104,7 @@ export function JournalingGoalsScreen() {
 
           <View className="flex-1 px-6 py-3">
             {/* Character at Top */}
-            <Animated.View
-              entering={getStaggeredFadeIn(0)}
+            <View
               className="items-center justify-center"
               style={{ height: 120 }}
             >
@@ -117,11 +113,11 @@ export function JournalingGoalsScreen() {
                 size={120}
                 themeColor={themeColors.primary}
               />
-            </Animated.View>
+            </View>
 
             {/* Title Section */}
             <Animated.View
-              entering={getStaggeredFadeIn(1)}
+              entering={FadeInUp.delay(400).duration(600)}
               className="items-center mb-4"
             >
               <Text
@@ -139,7 +135,10 @@ export function JournalingGoalsScreen() {
             </Animated.View>
 
             {/* Options */}
-            <View style={{ marginTop: 4, marginBottom: 12 }}>
+            <Animated.View
+              entering={FadeInDown.delay(600).duration(600)}
+              style={{ marginTop: 4, marginBottom: 12 }}
+            >
               <View className="gap-2">
                 {GAIN_OPTIONS.map((option, index) => {
                   const Icon = option.icon;
@@ -148,7 +147,9 @@ export function JournalingGoalsScreen() {
                   return (
                     <Animated.View
                       key={option.id}
-                      entering={getStaggeredFadeIn(2 + index)}
+                      entering={FadeInDown.delay(700 + index * 80).duration(
+                        400,
+                      )}
                     >
                       <Pressable
                         onPress={() => handleGainSelect(option.id)}
@@ -161,9 +162,9 @@ export function JournalingGoalsScreen() {
                           borderColor: isSelected
                             ? "rgba(255, 255, 255, 0.6)"
                             : "rgba(255, 255, 255, 0.2)",
-                          shadowColor: themeColors.primary,
+                          shadowColor: "#000",
                           shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: isSelected ? 0.2 : 0.08,
+                          shadowOpacity: isSelected ? 0.15 : 0.08,
                           shadowRadius: 8,
                         }}
                       >
@@ -198,26 +199,50 @@ export function JournalingGoalsScreen() {
                   );
                 })}
               </View>
-            </View>
+            </Animated.View>
 
             {/* Bottom Buttons */}
             <Animated.View
-              entering={getStaggeredFadeIn(2 + GAIN_OPTIONS.length)}
+              entering={FadeInUp.delay(400).duration(500)}
               className="pb-6"
             >
-              <OnboardingCTAButton
-                label="Continue"
+              <Pressable
                 onPress={handleContinue}
                 disabled={!selectedGain}
-                pulse
-                primaryColor={themeColors.primary}
-              />
+                className="w-full rounded-2xl active:opacity-70"
+                style={{
+                  borderWidth: 2,
+                  borderColor: selectedGain
+                    ? "#FFFFFF"
+                    : "rgba(255, 255, 255, 0.3)",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 16,
+                  elevation: Platform.OS === "android" ? 0 : 8,
+                  opacity: selectedGain ? 1 : 0.5,
+                }}
+              >
+                <View className="flex-row items-center justify-center py-4">
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      marginRight: 6,
+                      fontFamily: "Inter_700Bold",
+                    }}
+                  >
+                    Continue
+                  </Text>
+                  <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} />
+                </View>
+              </Pressable>
             </Animated.View>
             <View style={{ flex: 1 }} />
           </View>
         </SafeAreaView>
       </LinearGradient>
-    </ScreenWrapper>
-  );
+    </View>
   );
 }

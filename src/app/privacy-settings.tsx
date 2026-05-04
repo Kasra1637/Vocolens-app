@@ -13,9 +13,7 @@ import { View, Text, ScrollView, Pressable, Alert, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated from "react-native-reanimated";
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import { getStaggeredFadeIn } from "@/lib/animations";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import {
   tapHaptic,
   successHaptic,
@@ -36,7 +34,7 @@ import useBadgesStore from "@/lib/state/badges-store";
 import { useAuthStore } from "@/lib/state/auth-store";
 import { removePin } from "@/lib/auth-service";
 import { PinEntryModal } from "@/components/PinEntryModal";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeColors, getThemeGradients, BorderRadius } from "@/lib/theme";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
@@ -54,7 +52,6 @@ export default function PrivacySettingsScreen() {
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   const themeColors = getThemeColors(selectedTheme, isDarkMode);
   const themeGradients = getThemeGradients(selectedTheme, isDarkMode);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   const clearAllEntries = useJournalStore((s) => s.clearAllEntries);
   const entries = useJournalStore((s) => s.entries);
@@ -160,82 +157,80 @@ export default function PrivacySettingsScreen() {
   };
 
   return (
-    <ScreenWrapper>
-      <View
-        className="flex-1"
-        style={{ backgroundColor: themeColors.background }}
-      >
-        {/* Full-screen gradient background */}
-        <LinearGradient
-          colors={themeGradients.background}
-          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        />
+    <View
+      className="flex-1"
+      style={{ backgroundColor: themeColors.background }}
+    >
+      {/* Full-screen gradient background */}
+      <LinearGradient
+        colors={themeGradients.background}
+        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
 
-        <SafeAreaView edges={["top"]} className="flex-1">
-          {/* Header */}
-          <Animated.View
-            entering={getStaggeredFadeIn(0)}
-            className="px-6 pt-2 pb-4"
+      <SafeAreaView edges={["top"]} className="flex-1">
+        {/* Header */}
+        <View className="px-6 pt-2 pb-4">
+          <View
+            className="flex-row items-center justify-center"
+            style={{ minHeight: 44 }}
           >
-            <View
-              className="flex-row items-center justify-center"
-              style={{ minHeight: 44 }}
+            <Pressable
+              onPress={() => {
+                tapHaptic();
+                router.back();
+              }}
+              className="absolute left-0 active:opacity-60"
+              style={{ padding: 4 }}
             >
-              <Pressable
-                onPress={() => {
-                  tapHaptic();
-                  router.back();
+              <ChevronLeft size={28} color="#FFFFFF" />
+            </Pressable>
+            <View className="items-center">
+              <Text
+                style={{
+                  fontFamily: "Fraunces_700Bold",
+                  fontSize: 22,
+                  color: "#FFFFFF",
                 }}
-                className="absolute left-0 active:opacity-60"
-                style={{ padding: 4 }}
               >
-                <ChevronLeft size={28} color="#FFFFFF" />
-              </Pressable>
-              <View className="items-center">
-                <Text
-                  style={{
-                    fontFamily: "Fraunces_700Bold",
-                    fontSize: 22,
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Privacy & Security
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.7)",
-                    marginTop: 2,
-                  }}
-                >
-                  Manage your data
-                </Text>
-              </View>
+                Privacy & Security
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.7)",
+                  marginTop: 2,
+                }}
+              >
+                Manage your data
+              </Text>
             </View>
-          </Animated.View>
+          </View>
+        </View>
 
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
-            showsVerticalScrollIndicator={false}
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Export Data */}
+          <Animated.View
+            entering={FadeInDown.delay(60).duration(500)}
+            className="mb-4"
           >
-            {/* Export Data */}
-            <Animated.View
-              entering={getStaggeredFadeIn(1)}
-              className="mb-4"
-            >
             <View
               style={{
+                backgroundColor: hexToRgba(themeColors.primary, 0.1),
+                borderWidth: 1,
+                borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
                 overflow: "hidden",
               }}
             >
               <GlassLayers
                 primaryColor={themeColors.primary}
-                tintColor={tintColor}
                 borderRadius={BorderRadius.xlarge}
               />
               <View className="p-5">
@@ -278,16 +273,15 @@ export default function PrivacySettingsScreen() {
                 </Text>
                 <Pressable
                   onPress={handleExportData}
-                  style={({ pressed }) => ({
+                  className="active:opacity-70"
+                  style={{
                     backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
                     borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
-                    opacity: pressed ? 0.7 : 1,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  })}
+                  }}
                 >
                   <Text
                     style={{
@@ -305,18 +299,20 @@ export default function PrivacySettingsScreen() {
 
           {/* Delete All Entries */}
           <Animated.View
-            entering={getStaggeredFadeIn(2)}
+            entering={FadeInDown.delay(120).duration(500)}
             className="mb-4"
           >
             <View
               style={{
+                backgroundColor: hexToRgba(themeColors.primary, 0.1),
+                borderWidth: 1,
+                borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
                 overflow: "hidden",
               }}
             >
               <GlassLayers
                 primaryColor={themeColors.primary}
-                tintColor={tintColor}
                 borderRadius={BorderRadius.xlarge}
               />
               <View className="p-5">
@@ -359,16 +355,15 @@ export default function PrivacySettingsScreen() {
                 </Text>
                 <Pressable
                   onPress={handleDeleteEntries}
-                  style={({ pressed }) => ({
+                  className="active:opacity-70"
+                  style={{
                     backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
                     borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
-                    opacity: pressed ? 0.7 : 1,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  })}
+                  }}
                 >
                   <Text
                     style={{
@@ -385,16 +380,18 @@ export default function PrivacySettingsScreen() {
           </Animated.View>
 
           {/* Delete Account */}
-          <Animated.View entering={getStaggeredFadeIn(3)}>
+          <Animated.View entering={FadeInDown.delay(180).duration(500)}>
             <View
               style={{
+                backgroundColor: hexToRgba(themeColors.primary, 0.1),
+                borderWidth: 1,
+                borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
                 overflow: "hidden",
               }}
             >
               <GlassLayers
                 primaryColor={themeColors.primary}
-                tintColor={tintColor}
                 borderRadius={BorderRadius.xlarge}
               />
               <View className="p-5">
@@ -438,16 +435,15 @@ export default function PrivacySettingsScreen() {
                 </Text>
                 <Pressable
                   onPress={handleDeleteAccount}
-                  style={({ pressed }) => ({
+                  className="active:opacity-70"
+                  style={{
                     backgroundColor: hexToRgba(themeColors.primary, 0.2),
                     borderWidth: 1,
                     borderColor: hexToRgba(themeColors.primary, 0.25),
                     borderRadius: BorderRadius.medium,
                     paddingVertical: 12,
                     alignItems: "center",
-                    opacity: pressed ? 0.7 : 1,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  })}
+                  }}
                 >
                   <Text
                     style={{
@@ -662,6 +658,6 @@ export default function PrivacySettingsScreen() {
         onSuccess={handlePinVerified}
         onDismiss={() => setShowPinVerify(false)}
       />
-    </ScreenWrapper>
+    </View>
   );
 }

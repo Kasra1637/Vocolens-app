@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import {
   useFonts,
@@ -38,7 +37,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from "react-native-reanimated";
 import {
   tapHaptic,
@@ -64,12 +62,6 @@ import {
 } from "@/lib/types";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
-import { ScreenWrapper } from "@/components/ScreenWrapper";
-import {
-  getStaggeredFadeIn,
-  BUTTON_PRESS_SCALE,
-  BUTTON_RELEASE_DURATION,
-} from "@/lib/animations";
 
 // Display types for UI (capitalized versions)
 type DisplayEmotion = "Happiness" | "Sadness" | "Anger" | "Disgust";
@@ -115,7 +107,6 @@ export default function EntriesScreen() {
   const Colors = getThemeColors(selectedTheme, isDarkMode);
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   // Get entries from store
   const entries = useJournalStore((s) => s.entries);
@@ -206,9 +197,6 @@ export default function EntriesScreen() {
     setEntryToDelete(null);
   }, []);
 
-  const isFocused = useIsFocused();
-  const focusKey = useMemo(() => isFocused ? 'focused' : 'blurred', [isFocused]);
-
   if (!fontsLoaded) {
     return (
       <View className="flex-1" style={{ backgroundColor: Colors.background }}>
@@ -223,7 +211,7 @@ export default function EntriesScreen() {
   }
 
   return (
-    <ScreenWrapper style={{ backgroundColor: Colors.background }}>
+    <View className="flex-1" style={{ backgroundColor: Colors.background }}>
       <LinearGradient
         colors={Gradients.background}
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -231,7 +219,6 @@ export default function EntriesScreen() {
         end={{ x: 0, y: 1 }}
       />
       <ScrollView
-        key={focusKey}
         className="flex-1"
         contentContainerStyle={{
           paddingTop: insets.top + 16,
@@ -241,7 +228,7 @@ export default function EntriesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Animated.View entering={getStaggeredFadeIn(0)}>
+        <Animated.View>
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
@@ -284,18 +271,16 @@ export default function EntriesScreen() {
         </Animated.View>
 
         {/* Filter & Search Section */}
-        <Animated.View entering={getStaggeredFadeIn(1)}>
+        <Animated.View>
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              overflow: "hidden",
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
+              borderWidth: 1,
+              borderColor: hexToRgba(Colors.primary, 0.15),
             }}
           >
-            <GlassLayers 
-              primaryColor={Colors.primary} 
-              tintColor={tintColor}
-              borderRadius={24} 
-            />
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <View className="p-4">
               {/* Section Header */}
               <View className="flex-row items-center mb-3">
@@ -381,10 +366,14 @@ export default function EntriesScreen() {
                 <Animated.View
                   exiting={FadeOut.duration(200)}
                   className="mt-2 rounded-2xl overflow-hidden"
+                  style={{
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
+                    borderWidth: 1,
+                    borderColor: hexToRgba(Colors.primary, 0.15),
+                  }}
                 >
                   <GlassLayers
                     primaryColor={Colors.primary}
-                    tintColor={tintColor}
                     borderRadius={16}
                   />
                   {SORT_OPTIONS.map((sort) => (
@@ -424,10 +413,14 @@ export default function EntriesScreen() {
                 <Animated.View
                   exiting={FadeOut.duration(200)}
                   className="mt-2 rounded-2xl overflow-hidden"
+                  style={{
+                    backgroundColor: hexToRgba(Colors.primary, 0.1),
+                    borderWidth: 1,
+                    borderColor: hexToRgba(Colors.primary, 0.15),
+                  }}
                 >
                   <GlassLayers
                     primaryColor={Colors.primary}
-                    tintColor={tintColor}
                     borderRadius={16}
                   />
                   <View
@@ -471,14 +464,13 @@ export default function EntriesScreen() {
 
         {/* Entry Cards */}
         {filteredEntries.map((entry, index) => (
-          <Animated.View key={entry.id} entering={getStaggeredFadeIn(2 + index)}>
+          <Animated.View key={entry.id}>
             <EntryCard
               entry={entry}
               onPress={() => handleEntryPress(entry)}
               onDelete={() => handleDeleteRequest(entry.id)}
               surfaceElevatedColor={Colors.surfaceElevated}
               primaryColor={Colors.primary}
-              tintColor={tintColor}
               isDarkMode={isDarkMode}
             />
           </Animated.View>
@@ -520,11 +512,7 @@ export default function EntriesScreen() {
             entering={FadeIn.duration(200)}
             className="rounded-3xl overflow-hidden w-full max-w-sm"
           >
-            <GlassLayers 
-              primaryColor={Colors.primary} 
-              tintColor={tintColor}
-              borderRadius={24} 
-            />
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <LinearGradient
               colors={Gradients.background}
               start={{ x: 0, y: 0 }}
@@ -618,7 +606,6 @@ interface EntryCardProps {
   onDelete: () => void;
   surfaceElevatedColor: string;
   primaryColor: string;
-  tintColor: string;
   isDarkMode?: boolean;
 }
 
@@ -628,49 +615,83 @@ function EntryCard({
   onDelete,
   surfaceElevatedColor,
   primaryColor,
-  tintColor,
   isDarkMode = false,
 }: EntryCardProps) {
   const scale = useSharedValue(1);
-  const glow = useSharedValue(0);
   const [transcriptExpanded, setTranscriptExpanded] = useState(false);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    shadowOpacity: withTiming(0.1 + glow.value * 0.3),
-    shadowRadius: withTiming(20 + glow.value * 8),
   }));
 
   const handlePressIn = () => {
-    scale.value = withTiming(BUTTON_PRESS_SCALE, { duration: 0 });
-    glow.value = withTiming(1, { duration: 50 });
+    scale.value = withSpring(0.98);
   };
 
   const handlePressOut = () => {
-    scale.value = withTiming(1, { duration: BUTTON_RELEASE_DURATION });
-    glow.value = withTiming(0, { duration: BUTTON_RELEASE_DURATION });
+    scale.value = withSpring(1);
   };
-// ...
+
+  // Dynamic title: use entry.title if meaningful, else generate from transcript
+  const displayTitle = useMemo(() => {
+    const title = entry.title;
+    // If title looks auto-generated/generic (e.g., "Journal Entry", "Untitled", empty, or just a date)
+    if (
+      !title ||
+      title.trim().length === 0 ||
+      /^(journal entry|untitled|entry|new entry)/i.test(title.trim())
+    ) {
+      // Generate from first meaningful sentence of transcript
+      const transcript = entry.transcript || "";
+      const firstSentence = transcript.split(/[.!?\n]/)[0]?.trim() || "";
+      if (firstSentence.length > 0) {
+        return firstSentence.length > 50
+          ? firstSentence.slice(0, 50).trim() + "..."
+          : firstSentence;
+      }
+      return "Journal Entry";
+    }
+    return title;
+  }, [entry.title, entry.transcript]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  return (
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
       <Animated.View
         style={[
           {
+            backgroundColor: hexToRgba(primaryColor, 0.1),
+            borderWidth: 1,
+            borderColor: hexToRgba(primaryColor, 0.15),
             borderRadius: 24,
             marginBottom: 16,
-            shadowColor: tintColor,
+            shadowColor: "#000",
             shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.1,
             shadowRadius: 20,
             elevation: Platform.OS === "android" ? 0 : 6,
-            overflow: "hidden",
           },
           animatedStyle,
         ]}
       >
-
-        <GlassLayers 
-          primaryColor={primaryColor} 
-          tintColor={tintColor}
-          borderRadius={24} 
-        />
+        <GlassLayers primaryColor={primaryColor} borderRadius={24} />
         <View className="p-5">
           {/* Header */}
           <View className="flex-row items-start justify-between mb-2">

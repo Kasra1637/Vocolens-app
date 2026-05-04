@@ -1,16 +1,16 @@
 // Trigger Insight Card Component
 // Displays emotional triggers with calm, supportive styling
 
-import React from "react";
-import { View, Text, Pressable } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import React from 'react';
+import { View, Text, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   FadeInDown,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-} from "react-native-reanimated";
-import { tapHaptic } from "@/lib/haptics";
+} from 'react-native-reanimated';
+import { tapHaptic } from '@/lib/haptics';
 import {
   Briefcase,
   Heart,
@@ -31,72 +31,74 @@ import {
   Link,
   TrendingUp,
   TrendingDown,
-} from "lucide-react-native";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
-import { DetectedTrigger } from "@/lib/trigger-detection";
-import { EMOTION_COLORS, EmotionType } from "@/lib/types";
-import { BorderRadius } from "@/lib/theme";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
+} from 'lucide-react-native';
+import {
+  DetectedTrigger,
+} from '@/lib/trigger-detection';
+import { EMOTION_COLORS, EmotionType } from '@/lib/types';
+import { BorderRadius } from '@/lib/theme';
 
 // Map each trigger category to a relevant icon
-const TRIGGER_ICONS: Record<
-  string,
-  React.ComponentType<{ size: number; color: string; strokeWidth: number }>
-> = {
-  work: Briefcase,
-  family: Heart,
-  social: Users,
-  health: Activity,
-  finance: DollarSign,
-  selfCare: Flower2,
-  gratitude: Sparkles,
-  stress: Zap,
-  achievement: Trophy,
-  change: RefreshCw,
-  reflection: BookOpen,
+const TRIGGER_ICONS: Record<string, React.ComponentType<{ size: number; color: string; strokeWidth: number }>> = {
+  work:          Briefcase,
+  family:        Heart,
+  social:        Users,
+  health:        Activity,
+  finance:       DollarSign,
+  selfCare:      Flower2,
+  gratitude:     Sparkles,
+  stress:        Zap,
+  achievement:   Trophy,
+  change:        RefreshCw,
+  reflection:    BookOpen,
   relationships: HandHeart,
-  exercise: Dumbbell,
-  relaxation: Coffee,
-  creativity: Palette,
-  planning: Calendar,
-  connection: Link,
+  exercise:      Dumbbell,
+  relaxation:    Coffee,
+  creativity:    Palette,
+  planning:      Calendar,
+  connection:    Link,
 };
 
 interface TriggerInsightCardProps {
   trigger: DetectedTrigger;
   index?: number;
   onPress?: () => void;
-  primaryColor?: string;
 }
 
-// ...
+// Trigger category labels for display
+const TRIGGER_LABELS: Record<string, string> = {
+  work: 'Work',
+  family: 'Family',
+  social: 'Social',
+  health: 'Health & Wellness',
+  finance: 'Finances',
+  selfCare: 'Self-Care',
+  gratitude: 'Gratitude',
+  stress: 'Stress',
+  achievement: 'Achievements',
+  change: 'Life Changes',
+  reflection: 'Reflection',
+  relationships: 'Relationships',
+  exercise: 'Exercise',
+  relaxation: 'Relaxation',
+  creativity: 'Creativity',
+  planning: 'Planning',
+  connection: 'Connection',
+};
 
-export function TriggerInsightCard({
-  trigger,
-  index = 0,
-  onPress,
-  primaryColor = "#8B5CF6",
-}: TriggerInsightCardProps) {
+export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsightCardProps) {
   const scale = useSharedValue(1);
-  const glow = useSharedValue(0);
-
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const tintColor = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    shadowOpacity: withSpring(0.1 + glow.value * 0.3),
-    shadowRadius: withSpring(16 + glow.value * 8),
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.97);
-    glow.value = withSpring(1);
+    scale.value = withSpring(0.97, { damping: 15 });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1);
-    glow.value = withSpring(0);
+    scale.value = withSpring(1, { damping: 15 });
   };
 
   const handlePress = () => {
@@ -104,20 +106,27 @@ export function TriggerInsightCard({
     onPress?.();
   };
 
-  const isPositive = trigger.type === "positive";
-  const triggerLabel =
-    TRIGGER_LABELS[trigger.trigger] ||
+  const isPositive = trigger.type === 'positive';
+  const triggerLabel = TRIGGER_LABELS[trigger.trigger] ||
     trigger.trigger.charAt(0).toUpperCase() + trigger.trigger.slice(1);
 
   // Category-specific icon; fall back to trending up/down
-  const CategoryIcon =
-    TRIGGER_ICONS[trigger.trigger] ?? (isPositive ? TrendingUp : TrendingDown);
+  const CategoryIcon = TRIGGER_ICONS[trigger.trigger] ?? (isPositive ? TrendingUp : TrendingDown);
+
+  // Get primary emotion color
+  const primaryEmotion = trigger.associatedEmotions[0] as EmotionType;
+  const emotionColor = EMOTION_COLORS[primaryEmotion] || '#8BA888';
+
+  // Calculate confidence level text
+  const getConfidenceLevel = (confidence: number): string => {
+    if (confidence >= 70) return 'Strong pattern';
+    if (confidence >= 50) return 'Moderate pattern';
+    return 'Emerging pattern';
+  };
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(index * 100)
-        .duration(500)
-        .springify()}
+      entering={FadeInDown.delay(index * 100).duration(500).springify()}
       style={animatedStyle}
     >
       <Pressable
@@ -127,37 +136,42 @@ export function TriggerInsightCard({
       >
         <View
           style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
             borderRadius: BorderRadius.xxlarge,
-            overflow: "hidden",
-            shadowColor: tintColor,
-            shadowOffset: { width: 0, height: 8 },
-            shadowRadius: 16,
-            elevation: Platform.OS === "android" ? 0 : 6,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            overflow: 'hidden',
           }}
         >
-          <GlassLayers
-            primaryColor={primaryColor}
-            tintColor={tintColor}
-            borderRadius={BorderRadius.xxlarge}
+          {/* Subtle gradient accent */}
+          <LinearGradient
+            colors={
+              isPositive
+                ? ['rgba(255, 255, 255, 0.07)', 'rgba(255, 255, 255, 0.02)']
+                : ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.01)']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+            }}
           />
 
           <View style={{ padding: 18 }}>
             {/* Header with trigger type indicator */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "flex-start",
-                marginBottom: 14,
-              }}
-            >
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 14 }}>
               <View
                 style={{
                   width: 40,
                   height: 40,
                   borderRadius: 12,
-                  backgroundColor: "rgba(255, 255, 255, 0.15)",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   marginRight: 12,
                 }}
               >
@@ -167,9 +181,9 @@ export function TriggerInsightCard({
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontFamily: "Inter_600SemiBold",
+                    fontFamily: 'Inter_600SemiBold',
                     fontSize: 16,
-                    color: "#FFFFFF",
+                    color: '#FFFFFF',
                     marginBottom: 4,
                   }}
                 >
@@ -177,12 +191,12 @@ export function TriggerInsightCard({
                 </Text>
                 <Text
                   style={{
-                    fontFamily: "Inter_500Medium",
+                    fontFamily: 'Inter_500Medium',
                     fontSize: 11,
-                    color: "rgba(255, 255, 255, 0.75)",
+                    color: 'rgba(255, 255, 255, 0.75)',
                   }}
                 >
-                  {isPositive ? "Positive trigger" : "Challenging trigger"}
+                  {isPositive ? 'Positive trigger' : 'Challenging trigger'}
                 </Text>
               </View>
             </View>
@@ -193,17 +207,17 @@ export function TriggerInsightCard({
                 paddingHorizontal: 8,
                 paddingVertical: 3,
                 borderRadius: 6,
-                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                alignSelf: "flex-start",
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                alignSelf: 'flex-start',
                 marginBottom: 12,
               }}
             >
               <Text
                 style={{
-                  fontFamily: "Inter_600SemiBold",
+                  fontFamily: 'Inter_600SemiBold',
                   fontSize: 9,
-                  color: "#FFFFFF",
-                  textTransform: "uppercase",
+                  color: '#FFFFFF',
+                  textTransform: 'uppercase',
                   letterSpacing: 0.5,
                 }}
               >
@@ -214,9 +228,9 @@ export function TriggerInsightCard({
             {/* Insight message */}
             <Text
               style={{
-                fontFamily: "Inter_400Regular",
+                fontFamily: 'Inter_400Regular',
                 fontSize: 13,
-                color: "rgba(255, 255, 255, 0.95)",
+                color: 'rgba(255, 255, 255, 0.95)',
                 lineHeight: 22,
                 marginBottom: 16,
               }}
@@ -229,19 +243,18 @@ export function TriggerInsightCard({
               style={{
                 paddingTop: 14,
                 borderTopWidth: 1,
-                borderTopColor: "rgba(255, 255, 255, 0.1)",
+                borderTopColor: 'rgba(255, 255, 255, 0.1)',
               }}
             >
               {/* Frequency stats */}
               <Text
                 style={{
-                  fontFamily: "Inter_500Medium",
+                  fontFamily: 'Inter_500Medium',
                   fontSize: 11,
-                  color: "rgba(255, 255, 255, 0.7)",
+                  color: 'rgba(255, 255, 255, 0.7)',
                 }}
               >
-                Detected in {trigger.frequency} of {trigger.totalEntries}{" "}
-                entries
+                Detected in {trigger.frequency} of {trigger.totalEntries} entries
               </Text>
             </View>
           </View>
@@ -257,38 +270,27 @@ interface TriggerEmptyStateProps {
   minRequired: number;
 }
 
-export function TriggerEmptyState({
-  currentEntries,
-  minRequired,
-}: TriggerEmptyStateProps) {
-  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const theme = THEME_COLORS[selectedTheme];
-  const primaryColor = theme.primary;
-  const tintColor = theme.backgroundGradient[2];
-
+export function TriggerEmptyState({ currentEntries, minRequired }: TriggerEmptyStateProps) {
   return (
     <Animated.View entering={FadeInDown.duration(500)}>
       <View
         style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
           borderRadius: BorderRadius.xxlarge,
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
           padding: 24,
-          alignItems: "center",
-          overflow: "hidden",
+          alignItems: 'center',
         }}
       >
-        <GlassLayers
-          primaryColor={primaryColor}
-          tintColor={tintColor}
-          borderRadius={BorderRadius.xxlarge}
-        />
         <View
           style={{
             width: 40,
             height: 40,
             borderRadius: 12,
-            backgroundColor: "rgba(255, 255, 255, 0.15)",
-            alignItems: "center",
-            justifyContent: "center",
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            alignItems: 'center',
+            justifyContent: 'center',
             marginBottom: 16,
           }}
         >
@@ -297,10 +299,10 @@ export function TriggerEmptyState({
 
         <Text
           style={{
-            fontFamily: "Inter_600SemiBold",
+            fontFamily: 'Inter_600SemiBold',
             fontSize: 15,
-            color: "#FFFFFF",
-            textAlign: "center",
+            color: '#FFFFFF',
+            textAlign: 'center',
             marginBottom: 8,
           }}
         >
@@ -309,10 +311,10 @@ export function TriggerEmptyState({
 
         <Text
           style={{
-            fontFamily: "Inter_400Regular",
+            fontFamily: 'Inter_400Regular',
             fontSize: 12,
-            color: "rgba(255, 255, 255, 0.6)",
-            textAlign: "center",
+            color: 'rgba(255, 255, 255, 0.6)',
+            textAlign: 'center',
             lineHeight: 22,
           }}
         >
@@ -327,39 +329,30 @@ export function TriggerEmptyState({
 
 // Section header component
 interface TriggerSectionHeaderProps {
-  timeWindow: "7D" | "14D" | "30D";
-  onTimeWindowChange?: (window: "7D" | "14D" | "30D") => void;
+  timeWindow: '7D' | '14D' | '30D';
+  onTimeWindowChange?: (window: '7D' | '14D' | '30D') => void;
 }
 
-export function TriggerSectionHeader({
-  timeWindow,
-  onTimeWindowChange,
-}: TriggerSectionHeaderProps) {
-  const timeWindows: Array<"7D" | "14D" | "30D"> = ["7D", "14D", "30D"];
+export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: TriggerSectionHeaderProps) {
+  const timeWindows: Array<'7D' | '14D' | '30D'> = ['7D', '14D', '30D'];
 
   const getLabel = (tw: string) => {
     switch (tw) {
-      case "7D":
-        return "7 Days";
-      case "14D":
-        return "14 Days";
-      case "30D":
-        return "30 Days";
-      default:
-        return tw;
+      case '7D': return '7 Days';
+      case '14D': return '14 Days';
+      case '30D': return '30 Days';
+      default: return tw;
     }
   };
 
   return (
     <View style={{ marginBottom: 16 }}>
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-      >
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
         <Text
           style={{
-            fontFamily: "Inter_600SemiBold",
+            fontFamily: 'Inter_600SemiBold',
             fontSize: 16,
-            color: "#FFFFFF",
+            color: '#FFFFFF',
           }}
         >
           Emotional Triggers
@@ -368,19 +361,18 @@ export function TriggerSectionHeader({
 
       <Text
         style={{
-          fontFamily: "Inter_400Regular",
+          fontFamily: 'Inter_400Regular',
           fontSize: 12,
-          color: "rgba(255, 255, 255, 0.7)",
+          color: 'rgba(255, 255, 255, 0.7)',
           marginBottom: 14,
           lineHeight: 22,
         }}
       >
-        Recurring topics and situations that correlate with your emotional
-        states.
+        Recurring topics and situations that correlate with your emotional states.
       </Text>
 
       {/* Time window selector */}
-      <View style={{ flexDirection: "row", gap: 8 }}>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
         {timeWindows.map((tw) => (
           <Pressable
             key={tw}
@@ -392,25 +384,17 @@ export function TriggerSectionHeader({
               flex: 1,
               paddingVertical: 8,
               borderRadius: 12,
-              backgroundColor:
-                timeWindow === tw
-                  ? "rgba(255, 255, 255, 0.15)"
-                  : "rgba(255, 255, 255, 0.05)",
+              backgroundColor: timeWindow === tw ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
               borderWidth: 1,
-              borderColor:
-                timeWindow === tw
-                  ? "rgba(255, 255, 255, 0.25)"
-                  : "rgba(255, 255, 255, 0.1)",
-              alignItems: "center",
+              borderColor: timeWindow === tw ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+              alignItems: 'center',
             }}
           >
             <Text
               style={{
-                fontFamily:
-                  timeWindow === tw ? "Inter_600SemiBold" : "Inter_500Medium",
+                fontFamily: timeWindow === tw ? 'Inter_600SemiBold' : 'Inter_500Medium',
                 fontSize: 12,
-                color:
-                  timeWindow === tw ? "#FFFFFF" : "rgba(255, 255, 255, 0.6)",
+                color: timeWindow === tw ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
               }}
             >
               {getLabel(tw)}
