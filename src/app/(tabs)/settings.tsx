@@ -136,6 +136,14 @@ export default function SettingsScreen() {
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
 
+  // Glassmorphic inactive style matching LanguageSelectionScreen
+  const surfaceBg = isDarkMode
+    ? "rgba(255,255,255,0.07)"
+    : "rgba(255,255,255,0.18)";
+  const borderColor = isDarkMode
+    ? "rgba(255,255,255,0.15)"
+    : "rgba(255,255,255,0.15)";
+
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_600SemiBold,
@@ -518,9 +526,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: surfaceBg,
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: borderColor,
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -673,9 +681,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: surfaceBg,
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: borderColor,
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -732,9 +740,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: surfaceBg,
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: borderColor,
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -790,9 +798,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: surfaceBg,
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: borderColor,
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -949,9 +957,9 @@ export default function SettingsScreen() {
                 }}
                 className="rounded-3xl overflow-hidden active:opacity-70"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: surfaceBg,
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: borderColor,
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -1015,9 +1023,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: surfaceBg,
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: borderColor,
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
