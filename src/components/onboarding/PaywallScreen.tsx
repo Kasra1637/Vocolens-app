@@ -829,7 +829,7 @@ export function PaywallScreen() {
                       <Text
                         style={{
                           color: "#FFFFFF",
-                          fontFamily: "Inter_700Bold",
+                          fontFamily: "Fraunces_700Bold",
                           fontSize: 20,
                         }}
                       >
