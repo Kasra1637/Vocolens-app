@@ -519,10 +519,7 @@ function InsightsContent({
         {/* Weekly Reflection Summary */}
         {entries.length >= 1 && (
           <View>
-            <WeeklyReflectionCard
-              primaryColor={Colors.primary}
-              isDarkMode={isDarkMode}
-            />
+            <WeeklyReflectionCard primaryColor={Colors.primary} />
           </View>
         )}
 
@@ -816,10 +813,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
 
       {/* Greeting */}
       <View>
-        <WeeklyReflectionCard
-          primaryColor={Colors.primary}
-          isDarkMode={isDarkMode}
-        />
+        <WeeklyReflectionCard primaryColor={Colors.primary} />
       </View>
       <View>
         <Text
