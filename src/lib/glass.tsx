@@ -9,10 +9,16 @@
  *   import { hexToRgba, glassCard, glassSpecular, glassBorders, GlassLayers } from '@/lib/glass';
  */
 
-import React from 'react';
-import { View, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
+import React from "react";
+import {
+  View,
+  StyleSheet,
+  ViewStyle,
+  DimensionValue,
+  Platform,
+} from "react-native";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 
 // ─── Color Utility ────────────────────────────────────────────────────────────
 
@@ -31,10 +37,13 @@ export interface GlassCardOptions {
 }
 
 /** Returns the outer container style for a glass card (no blur) */
-export function glassCard({ borderRadius = 20, primaryColor = '#8B5CF6' }: GlassCardOptions = {}): ViewStyle {
+export function glassCard({
+  borderRadius = 20,
+  primaryColor = "#8B5CF6",
+}: GlassCardOptions = {}): ViewStyle {
   return {
     borderRadius,
-    overflow: 'hidden',
+    overflow: "hidden",
   };
 }
 
@@ -47,9 +56,12 @@ export function glassWash(primaryColor: string): ViewStyle {
 }
 
 /** Returns the specular highlight line style (top edge) */
-export function glassSpecular(primaryColor: string, borderRadius = 20): ViewStyle {
+export function glassSpecular(
+  primaryColor: string,
+  borderRadius = 20,
+): ViewStyle {
   return {
-    position: 'absolute',
+    position: "absolute",
     top: 0.5,
     left: Math.min(borderRadius * 0.5, 12),
     right: Math.min(borderRadius * 0.5, 12),
@@ -60,9 +72,12 @@ export function glassSpecular(primaryColor: string, borderRadius = 20): ViewStyl
 }
 
 /** Returns the bottom shadow line style */
-export function glassBottomShadow(primaryColor: string, borderRadius = 20): ViewStyle {
+export function glassBottomShadow(
+  primaryColor: string,
+  borderRadius = 20,
+): ViewStyle {
   return {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0.5,
     left: Math.min(borderRadius * 0.5, 12),
     right: Math.min(borderRadius * 0.5, 12),
@@ -73,9 +88,12 @@ export function glassBottomShadow(primaryColor: string, borderRadius = 20): View
 }
 
 /** Returns the outer border style */
-export function glassOuterBorder(primaryColor: string, borderRadius = 20): ViewStyle {
+export function glassOuterBorder(
+  primaryColor: string,
+  borderRadius = 20,
+): ViewStyle {
   return {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -87,9 +105,12 @@ export function glassOuterBorder(primaryColor: string, borderRadius = 20): ViewS
 }
 
 /** Returns the inner glow border style */
-export function glassInnerBorder(primaryColor: string, borderRadius = 20): ViewStyle {
+export function glassInnerBorder(
+  primaryColor: string,
+  borderRadius = 20,
+): ViewStyle {
   return {
-    position: 'absolute',
+    position: "absolute",
     top: 1,
     left: 1,
     right: 1,
@@ -101,19 +122,21 @@ export function glassInnerBorder(primaryColor: string, borderRadius = 20): ViewS
 }
 
 /** Top light gradient config */
-export function glassTopGradientColors(primaryColor: string): readonly [string, string] {
-  return [hexToRgba(primaryColor, 0.08), 'transparent'] as const;
+export function glassTopGradientColors(
+  primaryColor: string,
+): readonly [string, string] {
+  return [hexToRgba(primaryColor, 0.08), "transparent"] as const;
 }
 
 // ─── Component: GlassLayers ───────────────────────────────────────────────────
 
 interface GlassLayersProps {
   primaryColor: string;
+  tintColor?: string;
   borderRadius?: number;
   /** Add a BlurView base layer. Use for panels/modals/headers — NOT for inline cards. */
   blur?: boolean;
   blurIntensity?: number;
-  isDarkMode?: boolean;
 }
 
 /**
@@ -123,40 +146,101 @@ interface GlassLayersProps {
  */
 export function GlassLayers({
   primaryColor,
-  borderRadius = 20,
-  blur = false,
-  blurIntensity = 90,
-  isDarkMode = true,
+  tintColor,
+  borderRadius = 24,
+  blur = true,
+  blurIntensity = 80,
 }: GlassLayersProps) {
-  const inset = StyleSheet.absoluteFill;
+  const finalTint = tintColor || primaryColor;
+
   return (
     <>
+      {/* 1. Backdrop Blur - enables background to show through */}
       {blur && (
         <BlurView
           intensity={blurIntensity}
-          tint={isDarkMode ? 'dark' : 'dark'}
-          style={inset}
+          tint="light"
+          style={StyleSheet.absoluteFill}
         />
       )}
-      <View style={[inset, glassWash(primaryColor)]} />
+
+      {/* 2. Background Tint Wash - reduced opacity to match Weekly Reflection (0.1) */}
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: hexToRgba(finalTint, 0.05) },
+        ]}
+      />
+
+      {/* 3. Gradient Border - TL white to BR transparent */}
+      {/* Simulation: absolute gradient with 1px inset body */}
       <LinearGradient
-        colors={glassTopGradientColors(primaryColor)}
+        colors={[
+          "rgba(255,255,255,0.25)",
+          "rgba(255,255,255,0.03)",
+          "transparent",
+        ]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* 4. Main Glass Inner Body */}
+      <View
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           left: 0,
           right: 0,
-          height: 30,
-          borderTopLeftRadius: borderRadius,
-          borderTopRightRadius: borderRadius,
+          bottom: 0,
+          borderRadius,
+          backgroundColor: hexToRgba(finalTint, 0.05), // extra subtle depth
+          overflow: "hidden",
+          borderTopWidth: 1,
+          borderTopColor: "rgba(255, 255, 255, 0.2)",
+          borderLeftWidth: 1,
+          borderLeftColor: "rgba(255, 255, 255, 0.2)",
+          borderBottomWidth: 1,
+          borderBottomColor: "rgba(255, 255, 255, 0.04)",
+          borderRightWidth: 1,
+          borderRightColor: "rgba(255, 255, 255, 0.04)",
         }}
-      />
-      <View style={glassSpecular(primaryColor, borderRadius)} />
-      <View style={glassBottomShadow(primaryColor, borderRadius)} />
-      <View style={glassOuterBorder(primaryColor, borderRadius)} />
-      <View style={glassInnerBorder(primaryColor, borderRadius)} />
+      >
+        {/* Inner highlight gradient */}
+        <LinearGradient
+          colors={["rgba(255, 255, 255, 0.15)", "transparent"]}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 20,
+          }}
+        />
+        {/* 5. Inner Depth - Top Inset Highlight */}
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 10,
+            right: 10,
+            height: 1,
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+          }}
+        />
+
+        {/* 6. Inner Depth - Bottom Inset Glow (darker side softened) */}
+        <LinearGradient
+          colors={["transparent", hexToRgba(finalTint, 0.12)]}
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 20,
+          }}
+        />
+      </View>
     </>
   );
 }
@@ -165,24 +249,45 @@ export function GlassLayers({
 
 interface GlassCardProps {
   primaryColor: string;
+  tintColor?: string;
   borderRadius?: number;
   children: React.ReactNode;
   style?: ViewStyle;
 }
 
 /**
- * Drop-in replacement for card surfaces. Renders the full glass treatment
- * (tint wash, top gradient, specular, bottom shadow, borders) with content.
+ * Enhanced GlassCard with gradient borders and depth.
  */
 export function GlassCard({
   primaryColor,
-  borderRadius = 20,
+  tintColor,
+  borderRadius = 24,
   children,
   style,
 }: GlassCardProps) {
   return (
-    <View style={[glassCard({ borderRadius, primaryColor }), style]}>
-      <GlassLayers primaryColor={primaryColor} borderRadius={borderRadius} />
+    <View
+      style={[
+        {
+          borderRadius,
+          overflow: "hidden",
+          filter: `drop-shadow(0px 8px 16px ${hexToRgba(primaryColor, 0.15)})`,
+          ...(Platform.OS !== "web" && {
+            shadowColor: primaryColor,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.15,
+            shadowRadius: 16,
+            elevation: 8,
+          }),
+        },
+        style,
+      ]}
+    >
+      <GlassLayers
+        primaryColor={primaryColor}
+        tintColor={tintColor}
+        borderRadius={borderRadius}
+      />
       {children}
     </View>
   );

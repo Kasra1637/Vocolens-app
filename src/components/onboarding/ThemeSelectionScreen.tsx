@@ -34,12 +34,12 @@ import { useClickSound } from "@/lib/hooks/useClickSound";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const THEMES = Object.keys(THEME_COLORS) as ThemeColorType[];
 
-// Card layout — centered card fully visible with peek of adjacent cards
+// Card layout — one card fully visible with a peek of the next
 const H_PAD = 24;
-const CARD_GAP = 16; // Reduced gap for better peeking
-const PEEK = 30; // Amount of adjacent cards to peek
-const CARD_WIDTH = SCREEN_WIDTH - H_PAD * 2 - PEEK * 2; // Account for peek on both sides
-const PAGE_WIDTH = CARD_WIDTH + CARD_GAP; // Width of each page (card + gap)
+const CARD_GAP = 14;
+const PEEK = 48;
+const CARD_WIDTH = SCREEN_WIDTH - H_PAD * 2 - PEEK;
+const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 
 // Orb dimensions
 const ORB = 100;
@@ -56,49 +56,27 @@ export function ThemeSelectionScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const initialIndex = Math.max(0, THEMES.indexOf(selectedTheme));
   const [activeIndex, setActiveIndex] = useState(initialIndex);
-  const [isScrolling, setIsScrolling] = useState(false);
 
   // Jump to the persisted theme on mount
   React.useEffect(() => {
     if (initialIndex > 0) {
       setTimeout(() => {
         scrollRef.current?.scrollTo({
-          x: H_PAD + initialIndex * PAGE_WIDTH,
+          x: initialIndex * SNAP_INTERVAL,
           animated: false,
         });
       }, 50);
     }
   }, []);
 
-  const handleScrollBeginDrag = () => {
-    setIsScrolling(true);
-  };
-
-  const handleScrollEndDrag = () => {
-    setIsScrolling(false);
-  };
-
   const handleMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const scrollX = e.nativeEvent.contentOffset.x;
-      const pageWidth = PAGE_WIDTH;
-      // Calculate which page is closest to center, accounting for padding
-      const rawPage = (scrollX - H_PAD) / pageWidth;
-
-      // Calculate which page is closest to center
-      const centerPage = Math.round(rawPage);
-      const clampedPage = Math.max(0, Math.min(centerPage, THEMES.length - 1));
-
-      if (clampedPage !== activeIndex) {
-        setActiveIndex(clampedPage);
-        setSelectedTheme(THEMES[clampedPage]);
+      const raw = e.nativeEvent.contentOffset.x / SNAP_INTERVAL;
+      const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
+      if (clamped !== activeIndex) {
+        setActiveIndex(clamped);
+        setSelectedTheme(THEMES[clamped]);
         selectHaptic();
-
-        // Smoothly snap to the centered position
-        scrollRef.current?.scrollTo({
-          x: H_PAD + clampedPage * pageWidth,
-          animated: true,
-        });
       }
     },
     [activeIndex],
@@ -181,11 +159,9 @@ export function ThemeSelectionScreen() {
               ref={scrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
-              pagingEnabled={true}
+              snapToInterval={SNAP_INTERVAL}
               decelerationRate="fast"
               onMomentumScrollEnd={handleMomentumScrollEnd}
-              onScrollBeginDrag={handleScrollBeginDrag}
-              onScrollEndDrag={handleScrollEndDrag}
               scrollEventThrottle={16}
               contentContainerStyle={{
                 paddingLeft: H_PAD,
@@ -204,7 +180,7 @@ export function ThemeSelectionScreen() {
                     onPress={() => {
                       if (!isActive) {
                         scrollRef.current?.scrollTo({
-                          x: H_PAD + i * PAGE_WIDTH,
+                          x: i * SNAP_INTERVAL,
                           animated: true,
                         });
                         setActiveIndex(i);

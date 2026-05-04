@@ -517,7 +517,7 @@ export function PaywallScreen() {
             >
               <Text
                 style={{
-                  fontFamily: "Fraunces_700Bold",
+                  fontFamily: "Inter_700Bold",
                   color: "#FFFFFF",
                   fontSize: 22,
                   textAlign: "center",
@@ -525,8 +525,8 @@ export function PaywallScreen() {
                 }}
               >
                 {selectedPlan === "yearly"
-                  ? "Start your 3-day free trial to continue."
-                  : "Upgrade to premium and unlock everything."}
+                  ? "Start your 3-day FREE trial\nto continue."
+                  : "Upgrade to Premium\n& unlock everything."}
               </Text>
             </Animated.View>
 
@@ -829,7 +829,7 @@ export function PaywallScreen() {
                       <Text
                         style={{
                           color: "#FFFFFF",
-                          fontFamily: "Fraunces_700Bold",
+                          fontFamily: "Inter_700Bold",
                           fontSize: 20,
                         }}
                       >

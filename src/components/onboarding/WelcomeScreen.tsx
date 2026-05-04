@@ -1,32 +1,39 @@
 /**
  * Onboarding Screen 0: Welcome Screen
  *
- * Layout:
- *  1. First headline "Welcome to Vocolens"
- *  2. Second headline "Turn your thoughts into clear insights" directly below
- *  3. CTA button "Start Journaling Free" below the second headline
+ * Two-phase animated headline:
+ *  Phase 1: "Welcome to Vocolens" fades + slides up (~700ms)
+ *  Phase 2: After ~1.2s delay, first headline fades out and
+ *           "Turn your thoughts into clear insights" fades in (~700ms)
+ *  Phase 3: CTA button fades in only after second headline is fully visible
  *
  * Uses same background gradient, CTA button, and design patterns
  * as all other onboarding screens.
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInUp, Easing } from "react-native-reanimated";
+import Animated, {
+  FadeInUp,
+  FadeOutUp,
+  FadeIn,
+  Easing,
+} from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
-import { GlassCard } from "@/lib/glass";
 
 const EASE_IN_OUT = Easing.inOut(Easing.quad);
+
 const HEADLINE_ENTER = FadeInUp.duration(700).easing(EASE_IN_OUT);
-const HEADLINE2_ENTER = FadeInUp.duration(700).delay(200).easing(EASE_IN_OUT);
-const CTA_ENTER = FadeInUp.duration(500).delay(400).easing(EASE_IN_OUT);
+const HEADLINE_EXIT = FadeOutUp.duration(500).easing(EASE_IN_OUT);
+const HEADLINE2_ENTER = FadeInUp.duration(700).easing(EASE_IN_OUT);
+const CTA_ENTER = FadeIn.duration(500).easing(EASE_IN_OUT);
 
 export function WelcomeScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -35,6 +42,17 @@ export function WelcomeScreen() {
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const themeColors = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
+
+  const [phase, setPhase] = useState<1 | 2 | 3>(1);
+
+  // Glassmorphic inactive state colors matching LanguageSelectionScreen
+  const isDark = selectedTheme === "darkMode";
+  const surfaceBg = isDark
+    ? "rgba(255,255,255,0.07)"
+    : "rgba(255,255,255,0.18)";
+  const borderColor = isDark
+    ? "rgba(255,255,255,0.15)"
+    : "rgba(255,255,255,0.15)";
 
   const handleBack = () => {
     playClickSound();
@@ -48,14 +66,16 @@ export function WelcomeScreen() {
     nextStep();
   };
 
-  // Glassmorphic inactive state colors matching LanguageSelectionScreen
-  const isDark = selectedTheme === "darkMode";
-  const surfaceBg = isDark
-    ? "rgba(255,255,255,0.07)"
-    : "rgba(255,255,255,0.18)";
-  const borderColor = isDark
-    ? "rgba(255,255,255,0.15)"
-    : "rgba(255,255,255,0.15)";
+  useEffect(() => {
+    if (phase === 1) {
+      const t = setTimeout(() => setPhase(2), 1200);
+      return () => clearTimeout(t);
+    }
+    if (phase === 2) {
+      const t = setTimeout(() => setPhase(3), 700);
+      return () => clearTimeout(t);
+    }
+  }, [phase]);
 
   return (
     <View className="flex-1">
@@ -70,34 +90,28 @@ export function WelcomeScreen() {
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={false} />
 
-          {/* Glassmorphic card container matching LanguageSelectionScreen inactive state */}
           <View
             style={{
               flex: 1,
+              paddingHorizontal: 24,
+              paddingTop: 8,
+              paddingBottom: 8,
+              justifyContent: "center",
             }}
           >
-            <GlassCard
-              primaryColor={themeColors.primary}
-              borderRadius={20}
+            {/* Headline area — swap between phase 1 and 2 */}
+            <View
               style={{
-                backgroundColor: surfaceBg,
-                borderWidth: 1,
-                borderColor: borderColor,
-                padding: 24,
-                flex: 1,
+                alignItems: "center",
+                minHeight: 120,
+                justifyContent: "center",
+                marginBottom: 40,
               }}
             >
-              {/* All content centered vertically - headlines and button together */}
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {/* First headline */}
+              {phase === 1 && (
                 <Animated.View
                   entering={HEADLINE_ENTER}
+                  exiting={HEADLINE_EXIT}
                   style={{ alignItems: "center" }}
                 >
                   <Text
@@ -114,37 +128,41 @@ export function WelcomeScreen() {
                     Welcome to Vocolens
                   </Text>
                 </Animated.View>
+              )}
 
-                {/* Subheadline - directly below */}
+              {phase === 2 && (
                 <Animated.View
                   entering={HEADLINE2_ENTER}
-                  style={{ alignItems: "center", marginTop: 8 }}
+                  style={{ alignItems: "center" }}
                 >
                   <Text
                     style={{
-                      fontFamily: "Inter_700Bold",
-                      color: "rgba(255,255,255,0.75)",
-                      fontSize: 16,
+                      fontFamily: "Fraunces_700Bold",
+                      color: "#FFFFFF",
+                      fontSize: 28,
                       textAlign: "center",
-                      letterSpacing: 0.3,
-                      lineHeight: 22,
+                      opacity: 0.97,
+                      letterSpacing: 0.2,
+                      lineHeight: 36,
                     }}
                   >
-                    Turn your thoughts into clear insights
+                    Turn your thoughts into{"\n"}clear insights
                   </Text>
                 </Animated.View>
+              )}
+            </View>
 
-                {/* CTA button - immediately below subheadline */}
-                <Animated.View entering={CTA_ENTER} style={{ marginTop: 24 }}>
-                  <OnboardingCTAButton
-                    label="Start Journaling Free"
-                    onPress={handleGetStarted}
-                    paddingVertical={18}
-                    fontSize={18}
-                  />
-                </Animated.View>
-              </View>
-            </GlassCard>
+            {/* CTA — only appears after second headline is fully visible */}
+            {phase === 3 && (
+              <Animated.View entering={CTA_ENTER}>
+                <OnboardingCTAButton
+                  label="Start Journaling Free"
+                  onPress={handleGetStarted}
+                  paddingVertical={18}
+                  fontSize={18}
+                />
+              </Animated.View>
+            )}
           </View>
         </SafeAreaView>
       </LinearGradient>
