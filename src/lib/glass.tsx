@@ -10,7 +10,13 @@
  */
 
 import React from "react";
-import { View, StyleSheet, ViewStyle, DimensionValue } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ViewStyle,
+  DimensionValue,
+  Platform,
+} from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -179,19 +185,38 @@ export function GlassLayers({
         style={StyleSheet.absoluteFill}
       />
 
-      {/* 4. Main Glass Inner Body (Inset by 1px for the border) */}
+      {/* 4. Main Glass Inner Body */}
       <View
         style={{
           position: "absolute",
-          top: 1,
-          left: 1,
-          right: 1,
-          bottom: 1,
-          borderRadius: borderRadius - 1,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius,
           backgroundColor: hexToRgba(finalTint, 0.05), // extra subtle depth
           overflow: "hidden",
+          borderTopWidth: 1,
+          borderTopColor: "rgba(255, 255, 255, 0.35)",
+          borderLeftWidth: 1,
+          borderLeftColor: "rgba(255, 255, 255, 0.35)",
+          borderBottomWidth: 1,
+          borderBottomColor: "rgba(255, 255, 255, 0.08)",
+          borderRightWidth: 1,
+          borderRightColor: "rgba(255, 255, 255, 0.08)",
         }}
       >
+        {/* Inner highlight gradient */}
+        <LinearGradient
+          colors={["rgba(255, 255, 255, 0.25)", "transparent"]}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 20,
+          }}
+        />
         {/* 5. Inner Depth - Top Inset Highlight */}
         <View
           style={{
@@ -247,6 +272,13 @@ export function GlassCard({
           borderRadius,
           overflow: "hidden",
           filter: `drop-shadow(0px 8px 16px ${hexToRgba(primaryColor, 0.15)})`,
+          ...(Platform.OS !== "web" && {
+            shadowColor: primaryColor,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.15,
+            shadowRadius: 16,
+            elevation: 8,
+          }),
         },
         style,
       ]}
