@@ -358,7 +358,7 @@ export default function SettingsScreen() {
         <SafeAreaView className="flex-1">
           {/* Header */}
           <View className="px-6 pt-4 pb-6">
-            <Animated.View>
+            <View>
               <Text
                 className="text-white font-bold mb-2 text-center"
                 style={{ fontFamily: "Fraunces_700Bold", fontSize: 22 }}
@@ -371,7 +371,7 @@ export default function SettingsScreen() {
               >
                 Customize your experience
               </Text>
-            </Animated.View>
+            </View>
           </View>
 
           {/* Settings Content */}
@@ -381,7 +381,7 @@ export default function SettingsScreen() {
             contentContainerStyle={{ paddingBottom: 40 }}
           >
             {/* Usage Limit Card */}
-            <Animated.View className="mb-6">
+            <View className="mb-6">
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
@@ -493,10 +493,10 @@ export default function SettingsScreen() {
                   </Text>
                 </View>
               </View>
-            </Animated.View>
+            </View>
 
             {/* Theme Customization */}
-            <Animated.View className="mb-6">
+            <View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -648,10 +648,10 @@ export default function SettingsScreen() {
                   })}
                 </View>
               </View>
-            </Animated.View>
+            </View>
 
             {/* Notifications */}
-            <Animated.View className="mb-6">
+            <View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -707,10 +707,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </View>
-            </Animated.View>
+            </View>
 
             {/* Time Format */}
-            <Animated.View className="mb-6">
+            <View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -768,10 +768,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </View>
-            </Animated.View>
+            </View>
 
             {/* Emotion Reflection */}
-            <Animated.View className="mb-6">
+            <View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -920,10 +920,10 @@ export default function SettingsScreen() {
                   </View>
                 </Pressable>
               </View>
-            </Animated.View>
+            </View>
 
             {/* Transcription Language */}
-            <Animated.View className="mb-6">
+            <View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -990,10 +990,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </Pressable>
-            </Animated.View>
+            </View>
 
             {/* Privacy & Security */}
-            <Animated.View className="mb-6">
+            <View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -1227,7 +1227,7 @@ export default function SettingsScreen() {
                   </Pressable>
                 </View>
               </View>
-            </Animated.View>
+            </View>
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>

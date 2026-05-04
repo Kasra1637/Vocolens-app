@@ -250,7 +250,7 @@ export default function MilestonesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Animated.View className="mb-6">
+        <View className="mb-6">
           <View className="flex-row items-center justify-center mb-6">
             <View className="items-center">
               <Text
@@ -274,15 +274,15 @@ export default function MilestonesScreen() {
               </Text>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Stats Overview */}
-        <Animated.View>
+        <View>
           <StatsOverview stats={userStats} isDarkMode={isDarkMode} />
-        </Animated.View>
+        </View>
 
         {/* Category Dropdown */}
-        <Animated.View className="mb-4">
+        <View className="mb-4">
           <CategoryDropdown
             selectedOption={selectedCategoryOption!}
             isOpen={dropdownOpen}
@@ -294,10 +294,10 @@ export default function MilestonesScreen() {
             options={CATEGORY_OPTIONS}
             isDarkMode={isDarkMode}
           />
-        </Animated.View>
+        </View>
 
         {/* Badge Grid */}
-        <Animated.View>
+        <View>
           <View className="flex-row flex-wrap" style={{ gap: 16 }}>
             {filteredBadges.map((badge, index) => (
               <BadgeCard
@@ -308,11 +308,11 @@ export default function MilestonesScreen() {
               />
             ))}
           </View>
-        </Animated.View>
+        </View>
 
         {/* Empty State */}
         {filteredBadges.length === 0 && (
-          <Animated.View
+          <View
             className="items-center justify-center"
             style={{ paddingVertical: 60 }}
           >
@@ -325,7 +325,7 @@ export default function MilestonesScreen() {
             >
               No badges in this category yet
             </Text>
-          </Animated.View>
+          </View>
         )}
       </ScrollView>
 
@@ -511,14 +511,12 @@ function CategoryDropdown({
       </Pressable>
 
       {isOpen && (
-        <Animated.View
-          exiting={FadeOut.duration(200)}
+        <View
           className="mt-2 rounded-2xl overflow-hidden"
           style={{
             backgroundColor: hexToRgba(Colors.primary, 0.1),
             borderWidth: 1,
             borderColor: hexToRgba(Colors.primary, 0.15),
-            ...StaticShadows.small,
           }}
         >
           <GlassLayers primaryColor={Colors.primary} borderRadius={16} />
@@ -554,7 +552,7 @@ function CategoryDropdown({
               </Pressable>
             );
           })}
-        </Animated.View>
+        </View>
       )}
     </View>
   );
@@ -568,7 +566,6 @@ interface BadgeCardProps {
 }
 
 function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
-  const scale = useSharedValue(1);
   const Icon = BADGE_ICONS[badge.icon] || Award;
   const rarityConfig = RARITY_CONFIG[badge.rarity];
 
@@ -576,18 +573,6 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   const Colors = getThemeColors(selectedTheme, isDarkMode);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.95);
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1);
-  };
 
   const formatUnlockDate = (dateString?: string) => {
     if (!dateString) return "";
@@ -600,12 +585,8 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
   };
 
   return (
-    <Animated.View style={[{ width: CARD_WIDTH }, animatedStyle]}>
-      <Pressable
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-      >
+    <View style={[{ width: CARD_WIDTH }]}>
+      <Pressable onPress={onPress}>
         <View
           style={{
             backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -763,7 +744,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
           )}
         </View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -816,7 +797,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           padding: 20,
         }}
       >
-        <Animated.View
+        <View
           style={{
             backgroundColor: hexToRgba(Colors.primary, 0.1),
             borderRadius: BorderRadius.xxlarge,
@@ -1042,7 +1023,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
               </LinearGradient>
             </Pressable>
           )}
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );

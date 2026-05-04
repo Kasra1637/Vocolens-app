@@ -587,7 +587,7 @@ export default function SpeakScreen() {
         }}
       >
         {/* Header */}
-        <Animated.View className="items-center">
+        <View className="items-center">
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
@@ -617,11 +617,11 @@ export default function SpeakScreen() {
               </Text>
             </Pressable>
           ) : null}
-        </Animated.View>
+        </View>
 
         {/* Permission Denied Warning */}
         {permissionMessage && permissionMessage.trim().length > 0 ? (
-          <Animated.View exiting={FadeOut.duration(300)} className="w-full">
+          <View className="w-full">
             <View
               className="rounded-3xl overflow-hidden"
               style={{
@@ -677,12 +677,12 @@ export default function SpeakScreen() {
                 </View>
               </View>
             </View>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Usage limit / near-limit banner */}
         {(isAtLimit || isNearLimit) && !isRecording && !isProcessing ? (
-          <Animated.View exiting={FadeOut.duration(300)} className="w-full">
+          <View className="w-full">
             <View
               className="rounded-3xl p-4"
               style={{
@@ -743,7 +743,7 @@ export default function SpeakScreen() {
                 />
               </View>
             </View>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Error Message */}
@@ -751,7 +751,7 @@ export default function SpeakScreen() {
         typeof errorMessage === "string" &&
         errorMessage.trim().length > 0 &&
         !permissionMessage ? (
-          <Animated.View exiting={FadeOut.duration(300)} className="w-full">
+          <View className="w-full">
             <View
               className="rounded-3xl overflow-hidden"
               style={{
@@ -792,7 +792,7 @@ export default function SpeakScreen() {
                 </View>
               </View>
             </View>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Conversation Starter */}
@@ -801,11 +801,7 @@ export default function SpeakScreen() {
         !hasTranscript &&
         !permissionMessage &&
         !errorMessage ? (
-          <Animated.View
-            exiting={FadeOut.duration(300)}
-            className="w-full"
-            style={{ marginTop: 4 }}
-          >
+          <View className="w-full" style={{ marginTop: 4 }}>
             <View
               className="rounded-3xl overflow-hidden"
               style={{
@@ -858,8 +854,7 @@ export default function SpeakScreen() {
 
                 {/* Dropdown */}
                 {showTopicDropdown ? (
-                  <Animated.View
-                    exiting={FadeOut.duration(200)}
+                  <View
                     className="mb-3 rounded-2xl overflow-hidden"
                     style={{
                       backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -898,7 +893,7 @@ export default function SpeakScreen() {
                         </Pressable>
                       ),
                     )}
-                  </Animated.View>
+                  </View>
                 ) : null}
 
                 {/* Question Display - Only show after topic selection */}
@@ -931,13 +926,12 @@ export default function SpeakScreen() {
                 ) : null}
               </View>
             </View>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Recording Status Display with Live Transcription */}
         {isActiveSession ? (
-          <Animated.View
-            exiting={FadeOut.duration(300)}
+          <View
             className="w-full rounded-3xl overflow-hidden"
             style={{
               backgroundColor: "transparent",
@@ -1026,13 +1020,12 @@ export default function SpeakScreen() {
                 </Text>
               )}
             </ScrollView>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Transcription Result Display */}
         {hasTranscript && !isRecording && !isProcessing ? (
-          <Animated.View
-            exiting={FadeOut.duration(300)}
+          <View
             className="w-full rounded-3xl overflow-hidden"
             style={{
               backgroundColor: Colors.surface,
@@ -1071,12 +1064,12 @@ export default function SpeakScreen() {
                 ) : null}
               </View>
             </ScrollView>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Duration Display — shown while recording or paused */}
         {isActiveSession ? (
-          <Animated.View style={{ marginTop: 16 }} className="items-center">
+          <View style={{ marginTop: 16 }} className="items-center">
             <Text
               style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
               className="text-3xl"
@@ -1095,12 +1088,12 @@ export default function SpeakScreen() {
                 </Text>
               ) : null}
             </Text>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Processing Indicator */}
         {isProcessing ? (
-          <Animated.View className="items-center">
+          <View className="items-center">
             <View className="flex-row items-center justify-center">
               {[0, 1, 2].map((i) => (
                 <View key={i} style={{ marginHorizontal: 4 }}>
@@ -1111,7 +1104,7 @@ export default function SpeakScreen() {
                 </View>
               ))}
             </View>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Spacer pushes mic button to bottom */}
@@ -1122,7 +1115,7 @@ export default function SpeakScreen() {
         <View className="items-center" style={{ marginBottom: 48 }}>
           {isActiveSession ? (
             /* Recording or Paused — two-button layout */
-            <Animated.View className="items-center">
+            <View className="items-center">
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 32 }}
               >
@@ -1137,7 +1130,7 @@ export default function SpeakScreen() {
                     }}
                     onPress={isPaused ? handleResume : handlePause}
                   >
-                    <Animated.View style={buttonAnimatedStyle}>
+                    <View>
                       {isPaused ? (
                         <LinearGradient
                           colors={[Colors.gradientEnd, Colors.gradientStart]}
@@ -1176,7 +1169,7 @@ export default function SpeakScreen() {
                           />
                         </View>
                       )}
-                    </Animated.View>
+                    </View>
                   </Pressable>
                   <Text
                     style={{
@@ -1219,7 +1212,7 @@ export default function SpeakScreen() {
                   </Text>
                 </View>
               </View>
-            </Animated.View>
+            </View>
           ) : (
             /* Idle — enhanced mic button with sonar ripples, halo glow, and 3-stop gradient */
             <>
@@ -1289,35 +1282,8 @@ interface ProcessingDotProps {
 }
 
 function ProcessingDot({ delay, primaryColor }: ProcessingDotProps) {
-  const scale = useSharedValue(0.8);
-  const opacity = useSharedValue(0.4);
-
-  useEffect(() => {
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.2, { duration: 400 }),
-        withTiming(0.8, { duration: 400 }),
-      ),
-      -1,
-      false,
-    );
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 400 }),
-        withTiming(0.4, { duration: 400 }),
-      ),
-      -1,
-      false,
-    );
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
   return (
-    <Animated.View
+    <View
       style={[
         {
           width: 12,
@@ -1325,7 +1291,6 @@ function ProcessingDot({ delay, primaryColor }: ProcessingDotProps) {
           borderRadius: 6,
           backgroundColor: primaryColor,
         },
-        animatedStyle,
       ]}
     />
   );
@@ -1337,25 +1302,8 @@ interface LiveIndicatorProps {
 }
 
 function LiveIndicator({ primaryColor }: LiveIndicatorProps) {
-  const opacity = useSharedValue(1);
-
-  useEffect(() => {
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.3, { duration: 800 }),
-        withTiming(1, { duration: 800 }),
-      ),
-      -1,
-      false,
-    );
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
   return (
-    <Animated.View
+    <View
       style={[
         {
           width: 6,
@@ -1364,7 +1312,6 @@ function LiveIndicator({ primaryColor }: LiveIndicatorProps) {
           backgroundColor: "#EF4444",
           marginLeft: 6,
         },
-        animatedStyle,
       ]}
     />
   );

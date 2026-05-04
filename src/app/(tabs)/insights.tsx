@@ -213,7 +213,7 @@ function InsightsContent({
 
   useEffect(() => {
     if (isFocused) {
-      setAnimationKey(prev => prev + 1);
+      setAnimationKey((prev) => prev + 1);
     }
   }, [isFocused]);
 
@@ -470,7 +470,7 @@ function InsightsContent({
       >
         {/* Demo Data Button - Remove in production */}
         {entries.length === 0 && (
-          <Animated.View className="mb-4">
+          <View className="mb-4">
             <Pressable
               onPress={handlePopulateDummyData}
               style={{
@@ -508,26 +508,26 @@ function InsightsContent({
                 Populate with sample journal entries to preview features
               </Text>
             </Pressable>
-          </Animated.View>
+          </View>
         )}
 
         {/* Welcome Section */}
-        <Animated.View entering={FadeInUp.delay(0).duration(800)}>
+        <View>
           <WelcomeSection user={user} totalEntries={stats.totalEntries} />
-        </Animated.View>
+        </View>
 
         {/* Weekly Reflection Summary */}
         {entries.length >= 1 && (
-          <Animated.View entering={FadeInUp.delay(200).duration(800)}>
+          <View>
             <WeeklyReflectionCard
               primaryColor={Colors.primary}
               isDarkMode={isDarkMode}
             />
-          </Animated.View>
+          </View>
         )}
 
         {/* Journal Streak Calendar */}
-        <Animated.View entering={FadeInUp.delay(400).duration(800)}>
+        <View>
           <View className="mb-6">
             <StreakCalendar
               entries={entries}
@@ -535,23 +535,27 @@ function InsightsContent({
               currentStreak={stats.currentStreak}
             />
           </View>
-        </Animated.View>
+        </View>
 
         {/* Mood Story Timeline */}
-        <Animated.View entering={FadeInUp.delay(600).duration(800)}>
+        <View>
           <MoodStoryTimeline entries={entries} primaryColor={Colors.primary} />
-        </Animated.View>
+        </View>
 
         {/* Valence-Arousal Emotional Landscape */}
-        <Animated.View
-          entering={FadeInUp.delay(800).duration(800)}
-          style={{ marginBottom: 24 }}
+        <View
+          className="rounded-2xl overflow-hidden mb-6"
+          style={{
+            backgroundColor: hexToRgba(Colors.primary, 0.1),
+            borderWidth: 1,
+            borderColor: hexToRgba(Colors.primary, 0.15),
+          }}
         >
           <ValenceArousalChart
             entries={entries}
             primaryColor={Colors.primary}
           />
-        </Animated.View>
+        </View>
 
         {/* Where You Feel Things — Body Frequency Card */}
         {entries.length >= 3 &&
@@ -581,9 +585,13 @@ function InsightsContent({
               .slice(0, 6);
             if (sorted.length === 0) return null;
             return (
-              <Animated.View
-                entering={FadeInUp.delay(1000).duration(800)}
-                style={{ marginBottom: 24 }}
+              <View
+                className="rounded-2xl overflow-hidden mb-6"
+                style={{
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
+                }}
               >
                 <View
                   style={{
@@ -669,7 +677,7 @@ function InsightsContent({
                     );
                   })}
                 </View>
-              </Animated.View>
+              </View>
             );
           })()}
 
@@ -677,13 +685,13 @@ function InsightsContent({
         {entries.length >= 5 &&
           priorityInsights &&
           priorityInsights.length > 0 && (
-            <Animated.View entering={FadeInUp.delay(1200).duration(800)}>
+            <View>
               <DeepInsightsSection insights={priorityInsights} />
-            </Animated.View>
+            </View>
           )}
 
         {/* Trigger Detection Section */}
-        <Animated.View entering={FadeInUp.delay(1400).duration(800)}>
+        <View>
           <View
             className="mb-6"
             style={{
@@ -723,19 +731,19 @@ function InsightsContent({
               )}
             </View>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Emotional Themes */}
         {topThemes.length > 0 && (
-          <Animated.View entering={FadeInUp.delay(1600).duration(800)}>
+          <View>
             <EmotionalThemes themes={topThemes} />
-          </Animated.View>
+          </View>
         )}
 
         {/* Time of Day Patterns */}
-        <Animated.View entering={FadeInUp.delay(1800).duration(800)}>
+        <View>
           <TimeOfDayPatterns patterns={timeOfDayPatterns} />
-        </Animated.View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -798,31 +806,22 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   return (
     <View className="mb-6">
       {/* Emotional Companion */}
-      <Animated.View
-        entering={FadeInUp.delay(100).duration(800)}
-        className="items-center mb-4"
-      >
+      <View className="flex-row items-center mb-6">
         <EmotionalCompanion
           state="idle"
           size={120}
           themeColor={Colors.primary}
         />
-      </Animated.View>
+      </View>
 
       {/* Greeting */}
-      <Animated.View entering={FadeInUp.delay(200).duration(800)}>
-        <Text
-          style={{
-            fontFamily: "Fraunces_700Bold",
-            color: "#FFFFFF",
-            fontSize: 22,
-          }}
-          className="mb-1 text-center"
-        >
-          Hello, {user.name}
-        </Text>
-      </Animated.View>
-      <Animated.View entering={FadeInUp.delay(300).duration(800)}>
+      <View>
+        <WeeklyReflectionCard
+          primaryColor={Colors.primary}
+          isDarkMode={isDarkMode}
+        />
+      </View>
+      <View>
         <Text
           style={{
             fontFamily: "Inter_400Regular",
@@ -832,11 +831,10 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
         >
           Here are your journaling insights
         </Text>
-      </Animated.View>
+      </View>
 
       {/* Streak & Badge Card */}
-      <Animated.View
-        entering={FadeInUp.delay(400).duration(800)}
+      <View
         style={{
           backgroundColor: hexToRgba(Colors.primary, 0.1),
           borderWidth: 1,
@@ -937,14 +935,14 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                   overflow: "hidden",
                 }}
               >
-                <Animated.View style={[progressStyle]}>
+                <View style={[progressStyle]}>
                   <LinearGradient
                     colors={Gradients.primary}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{ height: "100%", borderRadius: BorderRadius.round }}
                   />
-                </Animated.View>
+                </View>
               </View>
             </View>
           </View>
@@ -1020,7 +1018,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                   overflow: "hidden",
                 }}
               >
-                <Animated.View
+                <View
                   style={[
                     usageBarStyle,
                     {
@@ -1110,7 +1108,7 @@ function EmotionSelector({
                   backgroundColor: "transparent",
                 }}
               >
-                <Animated.View
+                <View
                   style={{
                     backgroundColor: "transparent",
                     borderRadius: BorderRadius.medium,
@@ -1144,7 +1142,7 @@ function EmotionSelector({
                       {emotion.label}
                     </Text>
                   </View>
-                </Animated.View>
+                </View>
               </Pressable>
             );
           })}
@@ -1282,26 +1280,26 @@ function SentimentTimeline({
 
         {/* Emotion Selector - only show when in emotion mode */}
         {viewMode === "emotion" && (
-          <Animated.View exiting={FadeOut.duration(200)}>
+          <View>
             <EmotionSelector
               selectedEmotion={selectedEmotion}
               onEmotionSelect={onEmotionSelect}
             />
-          </Animated.View>
+          </View>
         )}
 
         {/* Overall Mood Mode - Show dominant emotion for each timeframe */}
         {viewMode === "overall" && (
-          <Animated.View>
+          <View>
             <OverallMoodDisplay />
-          </Animated.View>
+          </View>
         )}
 
         {/* Emotion Focus Mode - Show selected emotion intensity across timeframes */}
         {viewMode === "emotion" && selectedEmotion && (
-          <Animated.View>
+          <View>
             <EmotionIntensityDisplay emotion={selectedEmotion} />
-          </Animated.View>
+          </View>
         )}
 
         {/* Emotion Focus Empty State */}
@@ -1421,7 +1419,7 @@ function OverallMoodDisplay() {
           : null;
 
         return (
-          <Animated.View
+          <View
             key={timeframe.label}
             style={{
               backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -1522,7 +1520,7 @@ function OverallMoodDisplay() {
                 </View>
               )}
             </View>
-          </Animated.View>
+          </View>
         );
       })}
     </View>
@@ -1599,7 +1597,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
   return (
     <View style={{ paddingVertical: 16 }}>
       {timeframes.map((timeframe, index) => (
-        <Animated.View
+        <View
           key={timeframe.label}
           style={{
             backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -1690,7 +1688,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
               </View>
             )}
           </View>
-        </Animated.View>
+        </View>
       ))}
     </View>
   );
@@ -1728,13 +1726,13 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
 
         <View className="flex-row flex-wrap" style={{ gap: 10 }}>
           {themes.map((theme, index) => (
-            <Animated.View key={theme.label}>
+            <View key={theme.label}>
               <ThemeChip
                 label={theme.label}
                 count={theme.count}
                 index={index}
               />
-            </Animated.View>
+            </View>
           ))}
         </View>
       </View>
@@ -1775,7 +1773,7 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
 
   return (
     <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
-      <Animated.View
+      <View
         style={[
           {
             backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -1818,7 +1816,7 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
             {count}
           </Text>
         </View>
-      </Animated.View>
+      </View>
     </Pressable>
   );
 }
@@ -1860,9 +1858,9 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
 
         <View className="flex-row flex-wrap" style={{ gap: 12 }}>
           {patterns.map((pattern, index) => (
-            <Animated.View key={pattern.period} style={{ width: "47%" }}>
+            <View key={pattern.period} style={{ width: "47%" }}>
               <TimeOfDayCard pattern={pattern} />
-            </Animated.View>
+            </View>
           ))}
         </View>
       </View>
@@ -1901,7 +1899,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
 
   return (
     <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
-      <Animated.View
+      <View
         style={[
           {
             backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -1955,7 +1953,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
         >
           {pattern.entries} {pattern.entries === 1 ? "entry" : "entries"}
         </Text>
-      </Animated.View>
+      </View>
     </Pressable>
   );
 }
@@ -2071,10 +2069,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
         {/* Insight Cards */}
         {topInsights.map((insight, index) => {
           return (
-            <Animated.View
-              key={`${insight.category}-${index}`}
-              className="mb-4"
-            >
+            <View key={`${insight.category}-${index}`} className="mb-4">
               <Pressable onPress={() => tapHaptic()}>
                 <View
                   style={{
@@ -2209,7 +2204,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                   </View>
                 </View>
               </Pressable>
-            </Animated.View>
+            </View>
           );
         })}
 
