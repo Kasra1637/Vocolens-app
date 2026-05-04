@@ -74,8 +74,6 @@ export function WelcomeScreen() {
           <View
             style={{
               flex: 1,
-              marginHorizontal: 24,
-              marginVertical: 24,
             }}
           >
             <GlassCard
@@ -88,11 +86,12 @@ export function WelcomeScreen() {
                 padding: 24,
               }}
             >
-              {/* Headlines stacked vertically */}
+              {/* Headlines stacked vertically - centered */}
               <View
                 style={{
                   alignItems: "center",
-                  marginBottom: 40,
+                  justifyContent: "center",
+                  flex: 1,
                 }}
               >
                 {/* First headline */}
@@ -122,7 +121,7 @@ export function WelcomeScreen() {
                 >
                   <Text
                     style={{
-                      fontFamily: "Fraunces_700Bold",
+                      fontFamily: "Inter_700Bold",
                       color: "rgba(255,255,255,0.75)",
                       fontSize: 16,
                       textAlign: "center",
