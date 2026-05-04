@@ -1,24 +1,21 @@
 /**
  * Onboarding Screen 0: Welcome Screen
  *
- * Two-phase animated headline:
- *  Phase 1: "Welcome to Vocolens" fades + slides up (~700ms)
- *  Phase 2: After ~1.2s delay, first headline fades out and
- *           "Turn your thoughts into clear insights" fades in (~700ms)
- *  Phase 3: CTA button fades in only after second headline is fully visible
+ * Layout:
+ *  1. First headline "Welcome to Vocolens"
+ *  2. Second headline "Turn your thoughts into clear insights" directly below
+ *  3. CTA button "Start Journaling Free" below the second headline
  *
  * Uses same background gradient, CTA button, and design patterns
  * as all other onboarding screens.
  */
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
   FadeInUp,
-  FadeOutUp,
-  FadeIn,
   Easing,
 } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
@@ -29,11 +26,9 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 
 const EASE_IN_OUT = Easing.inOut(Easing.quad);
-
 const HEADLINE_ENTER = FadeInUp.duration(700).easing(EASE_IN_OUT);
-const HEADLINE_EXIT = FadeOutUp.duration(500).easing(EASE_IN_OUT);
-const HEADLINE2_ENTER = FadeInUp.duration(700).easing(EASE_IN_OUT);
-const CTA_ENTER = FadeIn.duration(500).easing(EASE_IN_OUT);
+const HEADLINE2_ENTER = FadeInUp.duration(700).delay(200).easing(EASE_IN_OUT);
+const CTA_ENTER = FadeInUp.duration(500).delay(400).easing(EASE_IN_OUT);
 
 export function WelcomeScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -42,8 +37,6 @@ export function WelcomeScreen() {
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const themeColors = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
-
-  const [phase, setPhase] = useState<1 | 2 | 3>(1);
 
   const handleBack = () => {
     playClickSound();
@@ -56,17 +49,6 @@ export function WelcomeScreen() {
     tapHaptic();
     nextStep();
   };
-
-  useEffect(() => {
-    if (phase === 1) {
-      const t = setTimeout(() => setPhase(2), 1200);
-      return () => clearTimeout(t);
-    }
-    if (phase === 2) {
-      const t = setTimeout(() => setPhase(3), 700);
-      return () => clearTimeout(t);
-    }
-  }, [phase]);
 
   return (
     <View className="flex-1">
@@ -90,70 +72,62 @@ export function WelcomeScreen() {
               justifyContent: "center",
             }}
           >
-            {/* Headline area — swap between phase 1 and 2 */}
+            {/* Headlines stacked vertically */}
             <View
               style={{
                 alignItems: "center",
-                minHeight: 120,
-                justifyContent: "center",
                 marginBottom: 40,
               }}
             >
-              {phase === 1 && (
-                <Animated.View
-                  entering={HEADLINE_ENTER}
-                  exiting={HEADLINE_EXIT}
-                  style={{ alignItems: "center" }}
+              {/* First headline */}
+              <Animated.View
+                entering={HEADLINE_ENTER}
+                style={{ alignItems: "center" }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Fraunces_700Bold",
+                    color: "#FFFFFF",
+                    fontSize: 30,
+                    textAlign: "center",
+                    opacity: 0.97,
+                    letterSpacing: 0.2,
+                    lineHeight: 38,
+                  }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: "Fraunces_700Bold",
-                      color: "#FFFFFF",
-                      fontSize: 30,
-                      textAlign: "center",
-                      opacity: 0.97,
-                      letterSpacing: 0.2,
-                      lineHeight: 38,
-                    }}
-                  >
-                    Welcome to Vocolens
-                  </Text>
-                </Animated.View>
-              )}
+                  Welcome to Vocolens
+                </Text>
+              </Animated.View>
 
-              {phase === 2 && (
-                <Animated.View
-                  entering={HEADLINE2_ENTER}
-                  style={{ alignItems: "center" }}
+              {/* Subheadline - directly below */}
+              <Animated.View
+                entering={HEADLINE2_ENTER}
+                style={{ alignItems: "center", marginTop: 8 }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Fraunces_700Bold",
+                    color: "rgba(255,255,255,0.75)",
+                    fontSize: 16,
+                    textAlign: "center",
+                    letterSpacing: 0.3,
+                    lineHeight: 22,
+                  }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: "Fraunces_700Bold",
-                      color: "#FFFFFF",
-                      fontSize: 28,
-                      textAlign: "center",
-                      opacity: 0.97,
-                      letterSpacing: 0.2,
-                      lineHeight: 36,
-                    }}
-                  >
-                    Turn your thoughts into{"\n"}clear insights
-                  </Text>
-                </Animated.View>
-              )}
+                  Turn your thoughts into clear insights
+                </Text>
+              </Animated.View>
             </View>
 
-            {/* CTA — only appears after second headline is fully visible */}
-            {phase === 3 && (
-              <Animated.View entering={CTA_ENTER}>
-                <OnboardingCTAButton
-                  label="Start Journaling Free"
-                  onPress={handleGetStarted}
-                  paddingVertical={18}
-                  fontSize={18}
-                />
-              </Animated.View>
-            )}
+            {/* CTA button - below both headlines */}
+            <Animated.View entering={CTA_ENTER}>
+              <OnboardingCTAButton
+                label="Start Journaling Free"
+                onPress={handleGetStarted}
+                paddingVertical={18}
+                fontSize={18}
+              />
+            </Animated.View>
           </View>
         </SafeAreaView>
       </LinearGradient>

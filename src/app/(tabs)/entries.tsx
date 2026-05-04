@@ -228,7 +228,7 @@ export default function EntriesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View className="mb-6">
+        <Animated.View>
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
@@ -268,10 +268,10 @@ export default function EntriesScreen() {
               Total Entries
             </Text>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Filter & Search Section */}
-        <View>
+        <Animated.View>
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
@@ -363,7 +363,8 @@ export default function EntriesScreen() {
 
               {/* Sort Dropdown */}
               {showSortDropdown && (
-                <View
+                <Animated.View
+                  exiting={FadeOut.duration(200)}
                   className="mt-2 rounded-2xl overflow-hidden"
                   style={{
                     backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -404,12 +405,13 @@ export default function EntriesScreen() {
                       </Text>
                     </Pressable>
                   ))}
-                </View>
+                </Animated.View>
               )}
 
               {/* Emotion Dropdown */}
               {showEmotionDropdown && (
-                <View
+                <Animated.View
+                  exiting={FadeOut.duration(200)}
                   className="mt-2 rounded-2xl overflow-hidden"
                   style={{
                     backgroundColor: hexToRgba(Colors.primary, 0.1),
@@ -454,15 +456,15 @@ export default function EntriesScreen() {
                       </Pressable>
                     ))}
                   </View>
-                </View>
+                </Animated.View>
               )}
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Entry Cards */}
         {filteredEntries.map((entry, index) => (
-          <View key={entry.id}>
+          <Animated.View key={entry.id}>
             <EntryCard
               entry={entry}
               onPress={() => handleEntryPress(entry)}
@@ -471,12 +473,12 @@ export default function EntriesScreen() {
               primaryColor={Colors.primary}
               isDarkMode={isDarkMode}
             />
-          </View>
+          </Animated.View>
         ))}
 
         {/* Empty State */}
         {filteredEntries.length === 0 && (
-          <View className="items-center py-8">
+          <Animated.View className="items-center py-8">
             <Text
               style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
               className="text-center text-lg mb-2"
@@ -494,7 +496,7 @@ export default function EntriesScreen() {
                 ? "Start recording your thoughts\nto see them here."
                 : "Try adjusting your filters\nto find what you're looking for."}
             </Text>
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
 
@@ -506,7 +508,10 @@ export default function EntriesScreen() {
         onRequestClose={handleDeleteCancel}
       >
         <View className="flex-1 bg-black/60 items-center justify-center px-6">
-          <View className="rounded-3xl overflow-hidden w-full max-w-sm">
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            className="rounded-3xl overflow-hidden w-full max-w-sm"
+          >
             <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <LinearGradient
               colors={Gradients.background}
@@ -588,7 +593,7 @@ export default function EntriesScreen() {
                 </Pressable>
               </View>
             </LinearGradient>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </View>
@@ -612,7 +617,20 @@ function EntryCard({
   primaryColor,
   isDarkMode = false,
 }: EntryCardProps) {
+  const scale = useSharedValue(1);
   const [transcriptExpanded, setTranscriptExpanded] = useState(false);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.98);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1);
+  };
 
   // Dynamic title: use entry.title if meaningful, else generate from transcript
   const displayTitle = useMemo(() => {
@@ -655,13 +673,13 @@ function EntryCard({
   };
 
   return (
-    <Pressable>
-      <View
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
+      <Animated.View
         style={[
           {
-            backgroundColor: hexToRgba(primaryColor, 0.05),
+            backgroundColor: hexToRgba(primaryColor, 0.1),
             borderWidth: 1,
-            borderColor: hexToRgba(primaryColor, 0.08),
+            borderColor: hexToRgba(primaryColor, 0.15),
             borderRadius: 24,
             marginBottom: 16,
             shadowColor: "#000",
@@ -670,6 +688,7 @@ function EntryCard({
             shadowRadius: 20,
             elevation: Platform.OS === "android" ? 0 : 6,
           },
+          animatedStyle,
         ]}
       >
         <GlassLayers primaryColor={primaryColor} borderRadius={24} />
@@ -855,7 +874,7 @@ function EntryCard({
                         key={index}
                         className="px-2 py-1 rounded-full"
                         style={{
-                          backgroundColor: hexToRgba(primaryColor, 0.05),
+                          backgroundColor: hexToRgba(primaryColor, 0.1),
                         }}
                       >
                         <Text
@@ -873,7 +892,7 @@ function EntryCard({
                     3 && (
                     <View
                       className="px-2 py-1 rounded-full"
-                      style={{ backgroundColor: hexToRgba(primaryColor, 0.05) }}
+                      style={{ backgroundColor: hexToRgba(primaryColor, 0.1) }}
                     >
                       <Text
                         style={{
@@ -948,7 +967,7 @@ function EntryCard({
             </Pressable>
           </View>
         </View>
-      </View>
+      </Animated.View>
     </Pressable>
   );
 }

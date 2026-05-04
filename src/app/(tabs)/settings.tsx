@@ -358,7 +358,7 @@ export default function SettingsScreen() {
         <SafeAreaView className="flex-1">
           {/* Header */}
           <View className="px-6 pt-4 pb-6">
-            <View>
+            <Animated.View>
               <Text
                 className="text-white font-bold mb-2 text-center"
                 style={{ fontFamily: "Fraunces_700Bold", fontSize: 22 }}
@@ -371,7 +371,7 @@ export default function SettingsScreen() {
               >
                 Customize your experience
               </Text>
-            </View>
+            </Animated.View>
           </View>
 
           {/* Settings Content */}
@@ -381,7 +381,7 @@ export default function SettingsScreen() {
             contentContainerStyle={{ paddingBottom: 40 }}
           >
             {/* Usage Limit Card */}
-            <View className="mb-6">
+            <Animated.View className="mb-6">
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
@@ -493,10 +493,10 @@ export default function SettingsScreen() {
                   </Text>
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Theme Customization */}
-            <View className="mb-6">
+            <Animated.View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -518,9 +518,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -648,10 +648,10 @@ export default function SettingsScreen() {
                   })}
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Notifications */}
-            <View className="mb-6">
+            <Animated.View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -673,9 +673,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -707,10 +707,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Time Format */}
-            <View className="mb-6">
+            <Animated.View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -732,9 +732,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl p-5"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -768,10 +768,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Emotion Reflection */}
-            <View className="mb-6">
+            <Animated.View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -790,9 +790,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -840,14 +840,14 @@ export default function SettingsScreen() {
                             borderWidth: 2,
                             borderColor:
                               emotionReflectionMode === mode
-                                ? Colors.primary
+                                ? "#FFFFFF"
                                 : "rgba(255,255,255,0.4)",
                           }}
                         >
                           {emotionReflectionMode === mode && (
                             <View
                               className="w-2.5 h-2.5 rounded-full"
-                              style={{ backgroundColor: Colors.primary }}
+                              style={{ backgroundColor: "#FFFFFF" }}
                             />
                           )}
                         </View>
@@ -920,10 +920,10 @@ export default function SettingsScreen() {
                   </View>
                 </Pressable>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Transcription Language */}
-            <View className="mb-6">
+            <Animated.View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -949,9 +949,9 @@ export default function SettingsScreen() {
                 }}
                 className="rounded-3xl overflow-hidden active:opacity-70"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -990,10 +990,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </Pressable>
-            </View>
+            </Animated.View>
 
             {/* Privacy & Security */}
-            <View className="mb-6">
+            <Animated.View className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -1015,9 +1015,9 @@ export default function SettingsScreen() {
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.05),
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
                   borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.08),
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
@@ -1127,7 +1127,7 @@ export default function SettingsScreen() {
                     data-testid="export-data-button"
                     onPress={handleExportData}
                     disabled={isExporting}
-                    className="rounded-3xl overflow-hidden active:opacity-80 mb-5"
+                    className="rounded-2xl overflow-hidden active:opacity-80 mb-5"
                     style={{ opacity: isExporting ? 0.6 : 1 }}
                   >
                     <View
@@ -1164,7 +1164,7 @@ export default function SettingsScreen() {
                   <View
                     style={{
                       height: 1,
-                      backgroundColor: "rgba(239, 68, 68, 0.2)",
+                      backgroundColor: "rgba(255, 255, 255, 0.15)",
                       marginBottom: 16,
                     }}
                   />
@@ -1173,7 +1173,7 @@ export default function SettingsScreen() {
                   <Text
                     style={{
                       fontFamily: "Inter_600SemiBold",
-                      color: "#EF4444",
+                      color: "#FFFFFF",
                       fontSize: 15,
                       marginBottom: 4,
                     }}
@@ -1195,7 +1195,7 @@ export default function SettingsScreen() {
                   <Pressable
                     data-testid="reset-all-data-button"
                     onPress={handleResetAllData}
-                    className="rounded-3xl overflow-hidden active:opacity-80"
+                    className="rounded-2xl overflow-hidden active:opacity-80"
                   >
                     <LinearGradient
                       colors={["#EF4444", "#DC2626"]}
@@ -1227,7 +1227,7 @@ export default function SettingsScreen() {
                   </Pressable>
                 </View>
               </View>
-            </View>
+            </Animated.View>
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>
@@ -1318,7 +1318,7 @@ export default function SettingsScreen() {
                 return (
                   <View
                     key={index}
-                    className="w-14 h-14 rounded-3xl items-center justify-center"
+                    className="w-14 h-14 rounded-2xl items-center justify-center"
                     style={{
                       backgroundColor: isFilled
                         ? Colors.primary
@@ -1354,7 +1354,7 @@ export default function SettingsScreen() {
                         handlePinInput(currentValue + num.toString());
                       }
                     }}
-                    className="w-16 h-16 rounded-3xl items-center justify-center"
+                    className="w-16 h-16 rounded-2xl items-center justify-center"
                     style={{
                       backgroundColor: isDarkMode
                         ? "rgba(139, 92, 246, 0.15)"
@@ -1385,7 +1385,7 @@ export default function SettingsScreen() {
                         handlePinInput(currentValue + num.toString());
                       }
                     }}
-                    className="w-16 h-16 rounded-3xl items-center justify-center"
+                    className="w-16 h-16 rounded-2xl items-center justify-center"
                     style={{
                       backgroundColor: isDarkMode
                         ? "rgba(139, 92, 246, 0.15)"
@@ -1416,7 +1416,7 @@ export default function SettingsScreen() {
                         handlePinInput(currentValue + num.toString());
                       }
                     }}
-                    className="w-16 h-16 rounded-3xl items-center justify-center"
+                    className="w-16 h-16 rounded-2xl items-center justify-center"
                     style={{
                       backgroundColor: isDarkMode
                         ? "rgba(139, 92, 246, 0.15)"
@@ -1446,7 +1446,7 @@ export default function SettingsScreen() {
                       handlePinInput(currentValue + "0");
                     }
                   }}
-                  className="w-16 h-16 rounded-3xl items-center justify-center"
+                  className="w-16 h-16 rounded-2xl items-center justify-center"
                   style={{
                     backgroundColor: isDarkMode
                       ? "rgba(139, 92, 246, 0.15)"
@@ -1470,7 +1470,7 @@ export default function SettingsScreen() {
                       pinStep === "current" ? currentPin : newPin;
                     handlePinInput(currentValue.slice(0, -1));
                   }}
-                  className="w-16 h-16 rounded-3xl items-center justify-center"
+                  className="w-16 h-16 rounded-2xl items-center justify-center"
                   style={{
                     backgroundColor: isDarkMode
                       ? "rgba(139, 92, 246, 0.15)"
@@ -1488,7 +1488,7 @@ export default function SettingsScreen() {
                 (pinStep === "current" && currentPin.length !== 4) ||
                 (pinStep === "new" && newPin.length !== 4)
               }
-              className="rounded-3xl overflow-hidden"
+              className="rounded-2xl overflow-hidden"
               style={{
                 opacity:
                   (pinStep === "current" && currentPin.length !== 4) ||
@@ -1563,7 +1563,7 @@ export default function SettingsScreen() {
             <View className="space-y-3">
               <Pressable
                 onPress={confirmSignOut}
-                className="rounded-3xl overflow-hidden mb-3"
+                className="rounded-2xl overflow-hidden mb-3"
               >
                 <LinearGradient
                   colors={["#EF4444", "#DC2626"]}
@@ -1582,7 +1582,7 @@ export default function SettingsScreen() {
 
               <Pressable
                 onPress={cancelSignOut}
-                className="rounded-3xl py-4 items-center border-2"
+                className="rounded-2xl py-4 items-center border-2"
                 style={{ borderColor: Colors.primary }}
               >
                 <Text
@@ -1670,7 +1670,7 @@ export default function SettingsScreen() {
                     ? handleResetStep1Confirm
                     : confirmResetAllData
                 }
-                className="rounded-3xl overflow-hidden mb-3"
+                className="rounded-2xl overflow-hidden mb-3"
               >
                 <LinearGradient
                   colors={["#EF4444", "#DC2626"]}
@@ -1692,7 +1692,7 @@ export default function SettingsScreen() {
               <Pressable
                 data-testid="cancel-reset-button"
                 onPress={cancelReset}
-                className="rounded-3xl py-4 items-center border-2"
+                className="rounded-2xl py-4 items-center border-2"
                 style={{ borderColor: Colors.primary }}
               >
                 <Text
