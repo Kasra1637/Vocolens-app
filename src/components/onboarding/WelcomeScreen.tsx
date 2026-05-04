@@ -84,14 +84,15 @@ export function WelcomeScreen() {
                 borderWidth: 1,
                 borderColor: borderColor,
                 padding: 24,
+                flex: 1,
               }}
             >
-              {/* Headlines stacked vertically - centered */}
+              {/* All content centered vertically - headlines and button together */}
               <View
                 style={{
-                  alignItems: "center",
-                  justifyContent: "center",
                   flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
                 {/* First headline */}
@@ -132,17 +133,17 @@ export function WelcomeScreen() {
                     Turn your thoughts into clear insights
                   </Text>
                 </Animated.View>
-              </View>
 
-              {/* CTA button - below both headlines */}
-              <Animated.View entering={CTA_ENTER}>
-                <OnboardingCTAButton
-                  label="Start Journaling Free"
-                  onPress={handleGetStarted}
-                  paddingVertical={18}
-                  fontSize={18}
-                />
-              </Animated.View>
+                {/* CTA button - immediately below subheadline */}
+                <Animated.View entering={CTA_ENTER} style={{ marginTop: 24 }}>
+                  <OnboardingCTAButton
+                    label="Start Journaling Free"
+                    onPress={handleGetStarted}
+                    paddingVertical={18}
+                    fontSize={18}
+                  />
+                </Animated.View>
+              </View>
             </GlassCard>
           </View>
         </SafeAreaView>
