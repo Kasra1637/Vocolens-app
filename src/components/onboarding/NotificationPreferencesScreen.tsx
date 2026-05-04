@@ -439,7 +439,7 @@ export function NotificationPreferencesScreen() {
                 {/* ---- Time picker button ---- */}
                 <Animated.View
                   entering={FadeInDown.delay(500).duration(500)}
-                  className="mb-4"
+                  className="mb-2"
                 >
                   <Text
                     style={{
@@ -575,7 +575,7 @@ export function NotificationPreferencesScreen() {
           {/* Continue button */}
           <Animated.View
             entering={FadeInUp.delay(400).duration(500)}
-            className="px-6 pb-6"
+            className="px-6 pb-3"
           >
             <OnboardingCTAButton label="Continue" onPress={handleContinue} />
           </Animated.View>
