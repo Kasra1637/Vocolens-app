@@ -360,9 +360,9 @@ function StatsOverview({ stats, isDarkMode = false }: StatsOverviewProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.05),
+        backgroundColor: hexToRgba(Colors.primary, 0.18),
         borderWidth: 1,
-        borderColor: hexToRgba(Colors.primary, 0.08),
+        borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
         overflow: "hidden",
         ...StaticShadows.medium,
@@ -480,9 +480,9 @@ function CategoryDropdown({
       <Pressable
         onPress={onToggle}
         style={{
-          backgroundColor: hexToRgba(Colors.primary, 0.05),
+          backgroundColor: hexToRgba(Colors.primary, 0.18),
           borderWidth: 1,
-          borderColor: hexToRgba(Colors.primary, 0.08),
+          borderColor: hexToRgba(Colors.primary, 0.15),
           borderRadius: BorderRadius.large,
           padding: 14,
           flexDirection: "row",
@@ -589,7 +589,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
       <Pressable onPress={onPress}>
         <View
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.1),
+            backgroundColor: hexToRgba(Colors.primary, 0.18),
             borderWidth: 1,
             borderColor: hexToRgba(Colors.primary, 0.15),
             borderRadius: BorderRadius.xlarge,
@@ -799,13 +799,13 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
       >
         <View
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.05),
+            backgroundColor: hexToRgba(Colors.primary, 0.18),
             borderRadius: BorderRadius.xxlarge,
             padding: 28,
             width: "100%",
             maxWidth: 400,
             borderWidth: 1,
-            borderColor: hexToRgba(Colors.primary, 0.08),
+            borderColor: hexToRgba(Colors.primary, 0.15),
             overflow: "hidden",
             ...StaticShadows.large,
           }}

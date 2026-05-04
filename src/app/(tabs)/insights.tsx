@@ -543,7 +543,7 @@ function InsightsContent({
         <View
           className="rounded-2xl overflow-hidden mb-6"
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.1),
+            backgroundColor: hexToRgba(Colors.primary, 0.18),
             borderWidth: 1,
             borderColor: hexToRgba(Colors.primary, 0.15),
           }}
@@ -585,14 +585,14 @@ function InsightsContent({
               <View
                 className="rounded-2xl overflow-hidden mb-6"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  backgroundColor: hexToRgba(Colors.primary, 0.18),
                   borderWidth: 1,
                   borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <View
                   style={{
-                    backgroundColor: hexToRgba(Colors.primary, 0.1),
+                    backgroundColor: hexToRgba(Colors.primary, 0.18),
                     borderWidth: 1,
                     borderColor: hexToRgba(Colors.primary, 0.15),
                     borderRadius: BorderRadius.xxlarge,
@@ -692,7 +692,7 @@ function InsightsContent({
           <View
             className="mb-6"
             style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.1),
+              backgroundColor: hexToRgba(Colors.primary, 0.18),
               borderWidth: 1,
               borderColor: hexToRgba(Colors.primary, 0.15),
               borderRadius: BorderRadius.xxlarge,
@@ -830,7 +830,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
       {/* Streak & Badge Card */}
       <View
         style={{
-          backgroundColor: hexToRgba(Colors.primary, 0.1),
+          backgroundColor: hexToRgba(Colors.primary, 0.18),
           borderWidth: 1,
           borderColor: hexToRgba(Colors.primary, 0.15),
           borderRadius: BorderRadius.xxlarge,
@@ -1169,7 +1169,7 @@ function SentimentTimeline({
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.1),
+        backgroundColor: hexToRgba(Colors.primary, 0.18),
         borderWidth: 1,
         borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
@@ -1416,7 +1416,7 @@ function OverallMoodDisplay() {
           <View
             key={timeframe.label}
             style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.1),
+              backgroundColor: hexToRgba(Colors.primary, 0.18),
               borderWidth: 1,
               borderColor: hexToRgba(Colors.primary, 0.15),
               borderRadius: BorderRadius.large,
@@ -1594,7 +1594,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
         <View
           key={timeframe.label}
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.1),
+            backgroundColor: hexToRgba(Colors.primary, 0.18),
             borderWidth: 1,
             borderColor: hexToRgba(Colors.primary, 0.15),
             borderRadius: BorderRadius.large,
@@ -1698,7 +1698,7 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.1),
+        backgroundColor: hexToRgba(Colors.primary, 0.18),
         borderWidth: 1,
         borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
@@ -1770,7 +1770,7 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
       <View
         style={[
           {
-            backgroundColor: hexToRgba(Colors.primary, 0.1),
+            backgroundColor: hexToRgba(Colors.primary, 0.18),
             borderWidth: 1,
             borderColor: hexToRgba(Colors.primary, 0.15),
             paddingHorizontal: 16,
@@ -1830,7 +1830,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.1),
+        backgroundColor: hexToRgba(Colors.primary, 0.18),
         borderWidth: 1,
         borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
@@ -1896,7 +1896,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
       <View
         style={[
           {
-            backgroundColor: hexToRgba(Colors.primary, 0.1),
+            backgroundColor: hexToRgba(Colors.primary, 0.18),
             borderWidth: 1,
             borderColor: hexToRgba(Colors.primary, 0.15),
             borderRadius: BorderRadius.large,
@@ -2025,7 +2025,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.1),
+        backgroundColor: hexToRgba(Colors.primary, 0.18),
         borderWidth: 1,
         borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
@@ -2067,7 +2067,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
               <Pressable onPress={() => tapHaptic()}>
                 <View
                   style={{
-                    backgroundColor: hexToRgba(Colors.primary, 0.1),
+                    backgroundColor: hexToRgba(Colors.primary, 0.18),
                     borderRadius: BorderRadius.xxlarge,
                     borderWidth: 1,
                     borderColor: hexToRgba(Colors.primary, 0.15),
@@ -2147,7 +2147,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                         style={{
                           paddingTop: 14,
                           borderTopWidth: 1,
-                          borderTopColor: hexToRgba(Colors.primary, 0.1),
+                          borderTopColor: hexToRgba(Colors.primary, 0.18),
                         }}
                       >
                         <Text

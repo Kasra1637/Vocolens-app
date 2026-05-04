@@ -659,9 +659,9 @@ function EntryCard({
       <View
         style={[
           {
-            backgroundColor: hexToRgba(primaryColor, 0.05),
+            backgroundColor: hexToRgba(primaryColor, 0.18),
             borderWidth: 1,
-            borderColor: hexToRgba(primaryColor, 0.08),
+            borderColor: hexToRgba(primaryColor, 0.15),
             borderRadius: 24,
             marginBottom: 16,
             shadowColor: "#000",

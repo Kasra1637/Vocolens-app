@@ -136,13 +136,9 @@ export default function SettingsScreen() {
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
 
-  // Glassmorphic inactive style matching LanguageSelectionScreen
-  const surfaceBg = isDarkMode
-    ? "rgba(255,255,255,0.07)"
-    : "rgba(255,255,255,0.18)";
-  const borderColor = isDarkMode
-    ? "rgba(255,255,255,0.15)"
-    : "rgba(255,255,255,0.15)";
+  // Glassmorphic style matching LanguageSelectionScreen — dynamic to active theme
+  const surfaceBg = hexToRgba(Colors.primary, 0.18);
+  const borderColor = hexToRgba(Colors.primary, 0.15);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
