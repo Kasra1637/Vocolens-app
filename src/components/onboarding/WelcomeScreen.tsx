@@ -86,8 +86,14 @@ export function WelcomeScreen() {
         <SafeAreaView style={{ flex: 1 }}>
           <BackButton onPress={handleBack} show={false} />
 
-          {/* Glassmorphic card - centered container */}
-          <View style={{ flex: 1, marginHorizontal: 24, marginVertical: 24 }}>
+          {/* Glassmorphic card container matching LanguageSelectionScreen inactive state */}
+          <View
+            style={{
+              flex: 1,
+              marginHorizontal: 24,
+              marginVertical: 24,
+            }}
+          >
             <GlassCard
               primaryColor={themeColors.primary}
               borderRadius={20}
@@ -96,15 +102,13 @@ export function WelcomeScreen() {
                 borderWidth: 1,
                 borderColor: borderColor,
                 padding: 24,
-                flex: 1,
               }}
             >
-              {/* Centered content stack - all elements persist after appearing */}
+              {/* Headlines stacked vertically */}
               <View
                 style={{
-                  flex: 1,
-                  justifyContent: "center",
                   alignItems: "center",
+                  marginBottom: 40,
                 }}
               >
                 {/* Phase 1: Welcome headline */}
@@ -147,26 +151,19 @@ export function WelcomeScreen() {
                     Turn your thoughts into clear insights
                   </Text>
                 </Animated.View>
-
-                {/* Phase 3: CTA button - appears below both text elements */}
-                {currentPhase === "ready" && (
-                  <Animated.View
-                    entering={BUTTON_ANIM}
-                    style={{
-                      marginTop: 32,
-                      width: "100%",
-                      alignItems: "center",
-                    }}
-                  >
-                    <OnboardingCTAButton
-                      label="Start Journaling Free"
-                      onPress={handleGetStarted}
-                      paddingVertical={18}
-                      fontSize={18}
-                    />
-                  </Animated.View>
-                )}
               </View>
+
+              {/* Phase 3: CTA button - appears below both text elements */}
+              {currentPhase === "ready" && (
+                <Animated.View entering={BUTTON_ANIM}>
+                  <OnboardingCTAButton
+                    label="Start Journaling Free"
+                    onPress={handleGetStarted}
+                    paddingVertical={18}
+                    fontSize={18}
+                  />
+                </Animated.View>
+              )}
             </GlassCard>
           </View>
         </SafeAreaView>
