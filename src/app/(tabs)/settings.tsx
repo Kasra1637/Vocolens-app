@@ -1743,8 +1743,3 @@ export default function SettingsScreen() {
     </View>
   );
 }
-       onClose={() => setAlertVisible(false)}
-      />
-    </View>
-  );
-}
