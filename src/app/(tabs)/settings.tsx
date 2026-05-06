@@ -473,11 +473,7 @@ export default function SettingsScreen() {
                       className="h-full rounded-full"
                       style={{
                         width: `${Math.min(100, usagePct * 100)}%`,
-                        backgroundColor: isAtLimit
-                          ? "#FF5050"
-                          : isNearLimit
-                            ? "#FFB830"
-                            : Colors.primary,
+                        backgroundColor: "#FFFFFF",
                       }}
                     />
                   </View>
