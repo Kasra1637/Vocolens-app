@@ -63,6 +63,7 @@ import {
   BorderRadius,
   getThemeColors,
   getThemeGradients,
+  getThemeShadows,
 } from "@/lib/theme";
 import useBadgesStore from "@/lib/state/badges-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
