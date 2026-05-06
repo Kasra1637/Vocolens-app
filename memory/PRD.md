@@ -68,6 +68,10 @@ Add an option to reset all app data and start from scratch. Adds a "Danger Zone"
   - Step indicator dots show progress; Cancel resets to step 1
   - No PIN input required — just double confirmation then immediate data wipe
 
+- **Feb 2026**: Glassmorphic style unified across Settings & Milestones screens
+  - Settings screen: all 7 section cards (Usage, Theme, Notifications, Time Format, Emotion Reflection, Language, Privacy) updated to onboarding white-opacity glass style: `rgba(255,255,255,0.12)` bg, `borderWidth: 2`, `rgba(255,255,255,0.20)` border, `shadow(0,4,8,0.08)`. All `GlassLayers` removed from cards (kept in modals).
+  - Milestones screen: StatsOverview, CategoryDropdown trigger+list+items, every BadgeCard, and BadgeModal popup all updated to same style. Removed `GlassLayers` import and all `StaticShadows` usages. Requirement and Tip boxes inside modal also updated to white-opacity glass.
+
 ## Prioritized Backlog
 - P0: None
 - P1: None

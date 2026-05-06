@@ -60,18 +60,16 @@ import { router } from "expo-router";
 import {
   Colors as StaticColors,
   Gradients as StaticGradients,
-  Shadows as StaticShadows,
   BorderRadius,
   getThemeColors,
   getThemeGradients,
-  getThemeShadows,
 } from "@/lib/theme";
 import useBadgesStore from "@/lib/state/badges-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { Badge, BadgeCategory, BadgeRarity } from "@/lib/types";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { hexToRgba } from "@/lib/glass";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - 60) / 2;
@@ -360,15 +358,17 @@ function StatsOverview({ stats, isDarkMode = false }: StatsOverviewProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.18),
-        borderWidth: 1,
-        borderColor: hexToRgba(Colors.primary, 0.15),
+        backgroundColor: "rgba(255, 255, 255, 0.12)",
+        borderWidth: 2,
+        borderColor: "rgba(255, 255, 255, 0.20)",
         borderRadius: BorderRadius.xxlarge,
         overflow: "hidden",
-        ...StaticShadows.medium,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
       }}
     >
-      <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
       <View className="p-5">
         <View className="flex-row justify-between">
           <StatItem
@@ -480,19 +480,21 @@ function CategoryDropdown({
       <Pressable
         onPress={onToggle}
         style={{
-          backgroundColor: hexToRgba(Colors.primary, 0.18),
-          borderWidth: 1,
-          borderColor: hexToRgba(Colors.primary, 0.15),
+          backgroundColor: "rgba(255, 255, 255, 0.12)",
+          borderWidth: 2,
+          borderColor: "rgba(255, 255, 255, 0.20)",
           borderRadius: BorderRadius.large,
           padding: 14,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
           overflow: "hidden",
-          ...StaticShadows.small,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
         }}
       >
-        <GlassLayers primaryColor={Colors.primary} borderRadius={16} />
         <View className="flex-row items-center">
           <Icon size={20} color="#FFFFFF" strokeWidth={2} />
           <Text
@@ -514,12 +516,11 @@ function CategoryDropdown({
         <View
           className="mt-2 rounded-2xl overflow-hidden"
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.1),
-            borderWidth: 1,
-            borderColor: hexToRgba(Colors.primary, 0.15),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
           }}
         >
-          <GlassLayers primaryColor={Colors.primary} borderRadius={16} />
           {options.map((option) => {
             const OptionIcon = option.icon;
             const isSelected = option.value === selectedOption.value;
@@ -530,10 +531,10 @@ function CategoryDropdown({
                 className="px-3 py-3"
                 style={{
                   backgroundColor: isSelected
-                    ? hexToRgba(Colors.primary, 0.15)
+                    ? "rgba(255, 255, 255, 0.15)"
                     : "transparent",
                   borderBottomWidth: 1,
-                  borderBottomColor: hexToRgba(Colors.primary, 0.1),
+                  borderBottomColor: "rgba(255, 255, 255, 0.10)",
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -589,17 +590,19 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
       <Pressable onPress={onPress}>
         <View
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.18),
-            borderWidth: 1,
-            borderColor: hexToRgba(Colors.primary, 0.15),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
             borderRadius: BorderRadius.xlarge,
             padding: 16,
             opacity: 1,
             overflow: "hidden",
-            ...StaticShadows.medium,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
           }}
         >
-          <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
           {/* Badge Icon */}
           <View className="items-center mb-3">
             <View
@@ -799,18 +802,20 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
       >
         <View
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.18),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderRadius: BorderRadius.xxlarge,
             padding: 28,
             width: "100%",
             maxWidth: 400,
-            borderWidth: 1,
-            borderColor: hexToRgba(Colors.primary, 0.15),
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
             overflow: "hidden",
-            ...StaticShadows.large,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
           }}
         >
-          <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
           {/* Close Button */}
           <Pressable
             onPress={onClose}
@@ -908,11 +913,12 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           {/* Requirement */}
           <View
             style={{
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
               borderRadius: BorderRadius.large,
               padding: 14,
               marginBottom: 16,
               borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.08),
+              borderColor: "rgba(255, 255, 255, 0.15)",
             }}
           >
             <Text
@@ -941,14 +947,14 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
           {/* Tip */}
           <View
             style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.08),
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
               borderRadius: BorderRadius.large,
               padding: 14,
               marginBottom: 20,
               borderLeftWidth: 4,
-              borderLeftColor: Colors.primary,
+              borderLeftColor: "rgba(255, 255, 255, 0.60)",
               borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.1),
+              borderColor: "rgba(255, 255, 255, 0.15)",
             }}
           >
             <Text
