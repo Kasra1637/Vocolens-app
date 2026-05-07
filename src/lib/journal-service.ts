@@ -685,7 +685,7 @@ export async function createJournalEntry(
     }
   }
 
-  // Create the entry
+  // Create the entry with AI baseline fields preserved separately
   const entry = journalStore.addEntry({
     title: "Journal Entry",
     transcript,
@@ -708,6 +708,10 @@ export async function createJournalEntry(
     aiReflection: analysis.reflection,
     conversationTopic,
     conversationPrompt,
+    // AI baseline fields (never overwritten by user* overrides)
+    aiTopThreeEmotions: analysis.topThreeEmotions ?? [],
+    aiBlendedEmotions: analysis.blendedEmotions ?? {},
+    aiAmbivalenceFlags: analysis.ambivalenceFlags ?? [],
   });
 
   // Update user stats - IMPORTANT: incrementEntries MUST be called first
