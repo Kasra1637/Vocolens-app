@@ -25,14 +25,14 @@ export type EmotionType =
 
 /** Blended emotions formed by adjacent primary pairs on Plutchik's wheel */
 export type BlendedEmotionType =
-  | "love"           // Joy + Trust
-  | "submission"     // Trust + Fear
-  | "awe"            // Fear + Surprise
-  | "disapproval"    // Surprise + Sadness
-  | "remorse"        // Sadness + Disgust
-  | "contempt"       // Disgust + Anger
-  | "aggressiveness" // Anger + Anticipation
-  | "optimism";      // Anticipation + Joy
+  | "love"
+  | "submission"
+  | "awe"
+  | "disapproval"
+  | "remorse"
+  | "contempt"
+  | "aggressiveness"
+  | "optimism";
 
 /** Opposite emotion pairs — when both appear, flag ambivalence and reduce intensity */
 export const OPPOSITE_PAIRS: [EmotionType, EmotionType][] = [
@@ -68,8 +68,8 @@ export interface EmotionIntensityLabels {
 export interface RankedEmotion {
   rank: 1 | 2 | 3;
   emotion: EmotionType;
-  score: number;           // 0-100
-  intensityLabel: string;  // Plutchik tier label (e.g. "Ecstasy", "Rage")
+  score: number;
+  intensityLabel: string;
   blendedEmotion?: BlendedEmotionType;
 }
 
@@ -84,7 +84,7 @@ const PLUTCHIK_LABELS: Record<EmotionType, { low: string; mid: string; high: str
   anticipation: { low: "Interest",     mid: "Anticipation", high: "Vigilance"  },
 };
 
-/** Adjacent pairs on Plutchik's wheel (clockwise) → blended emotion */
+/** Adjacent pairs on Plutchik's wheel clockwise → blended emotion */
 export const BLENDED_PAIRS: [EmotionType, EmotionType, BlendedEmotionType][] = [
   ["happiness", "trust", "love"],
   ["trust", "fear", "submission"],
@@ -96,10 +96,7 @@ export const BLENDED_PAIRS: [EmotionType, EmotionType, BlendedEmotionType][] = [
   ["anticipation", "happiness", "optimism"],
 ];
 
-/** Compute blended emotions from emotion scores */
-export function computeBlendedEmotions(
-  scores: EmotionScores,
-): Partial<Record<BlendedEmotionType, number>> {
+export function computeBlendedEmotions(scores: EmotionScores): Partial<Record<BlendedEmotionType, number>> {
   const result: Partial<Record<BlendedEmotionType, number>> = {};
   for (const [a, b, blended] of BLENDED_PAIRS) {
     const minScore = Math.min(scores[a], scores[b]);
@@ -110,11 +107,7 @@ export function computeBlendedEmotions(
   return result;
 }
 
-/** Detect if both sides of an opposite pair are above threshold */
-export function detectAmbivalence(
-  scores: EmotionScores,
-  threshold = 25,
-): [EmotionType, EmotionType][] {
+export function detectAmbivalence(scores: EmotionScores, threshold = 25): [EmotionType, EmotionType][] {
   const ambivalent: [EmotionType, EmotionType][] = [];
   for (const [a, b] of OPPOSITE_PAIRS) {
     if (scores[a] >= threshold && scores[b] >= threshold) {
