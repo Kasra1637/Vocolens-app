@@ -18,7 +18,6 @@ export type TopicCategory =
   | "decision"
   | "manifestation";
 
-
 /** Blended emotions formed by adjacent primary pairs on Plutchik's wheel */
 export type BlendedEmotionType =
   | "love"
@@ -204,53 +203,23 @@ export type BodyRegion =
   | "Jaw/Neck";
 
 export const ALL_BODY_REGIONS: BodyRegion[] = [
-  "Head",
-  "Throat",
-  "Jaw/Neck",
-  "Chest",
-  "Stomach",
-  "Arms",
-  "Hands",
-  "Legs",
-  "Feet",
+  "Head", "Throat", "Jaw/Neck", "Chest", "Stomach", "Arms", "Hands", "Legs", "Feet",
 ];
 
 export const BODY_REGION_LABELS: Record<BodyRegion, string> = {
-  Head: "Head",
-  Chest: "Chest",
-  Stomach: "Stomach",
-  Arms: "Arms",
-  Hands: "Hands",
-  Legs: "Legs",
-  Feet: "Feet",
-  Throat: "Throat",
-  "Jaw/Neck": "Jaw & Neck",
+  Head: "Head", Chest: "Chest", Stomach: "Stomach", Arms: "Arms",
+  Hands: "Hands", Legs: "Legs", Feet: "Feet", Throat: "Throat", "Jaw/Neck": "Jaw & Neck",
 };
 
 export const BODY_REGION_EMOJIS: Record<BodyRegion, string> = {
-  Head: "\uD83E\uDDE0",
-  Chest: "\u2764\uFE0F",
-  Stomach: "\uD83C\uDF31",
-  Arms: "\uD83D\uDCAA",
-  Hands: "\u270B",
-  Legs: "\uD83E\uDDB5",
-  Feet: "\uD83E\uDDB6",
-  Throat: "\uD83C\uDFA4",
-  "Jaw/Neck": "\uD83D\uDE0C",
+  Head: "\uD83E\uDDE0", Chest: "\u2764\uFE0F", Stomach: "\uD83C\uDF31",
+  Arms: "\uD83D\uDCAA", Hands: "\u270B", Legs: "\uD83E\uDDB5", Feet: "\uD83E\uDDB6",
+  Throat: "\uD83C\uDFA4", "Jaw/Neck": "\uD83D\uDE0C",
 };
 
 export type BodySensation =
-  | "tightness"
-  | "heaviness"
-  | "emptiness"
-  | "warmth"
-  | "numbness"
-  | "restlessness"
-  | "energy"
-  | "trembling"
-  | "hollow feeling"
-  | "openness"
-  | "unknown";
+  | "tightness" | "heaviness" | "emptiness" | "warmth" | "numbness"
+  | "restlessness" | "energy" | "trembling" | "hollow feeling" | "openness" | "unknown";
 
 export interface BodyRegionSensation {
   region: BodyRegion;
@@ -264,16 +233,16 @@ export interface JournalEntry {
   title: string;
   transcript: string;
   audioUri?: string;
-  duration: number; // in seconds
-  createdAt: string; // ISO date string
+  duration: number;
+  createdAt: string;
   updatedAt: string;
   emotions: EmotionType[];
   primaryEmotion: EmotionType;
-  emotionIntensity: number; // 0-100
+  emotionIntensity: number;
   emotionScores?: EmotionScores;
   emotionIntensityLabels?: EmotionIntensityLabels;
-  valence: number; // -100 (unpleasant) to +100 (pleasant)
-  arousal: number; // 0 (calm) to 100 (activated)
+  valence: number;
+  arousal: number;
   bodySensation?: BodySensation;
   bodyRegions?: BodyRegionSensation[];
   alexithymiaFlag?: boolean;
@@ -306,12 +275,6 @@ export function formatShortDuration(seconds: number): string {
 }
 
 export const ALL_EMOTIONS: EmotionType[] = [
-  "happiness",
-  "trust",
-  "anticipation",
-  "surprise",
-  "fear",
-  "sadness",
-  "disgust",
-  "anger",
+  "happiness", "trust", "anticipation", "surprise",
+  "fear", "sadness", "disgust", "anger",
 ];
