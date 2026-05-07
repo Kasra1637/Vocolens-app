@@ -18,6 +18,46 @@ export type TopicCategory =
   | "decision"
   | "manifestation";
 
+/** Blended emotions formed by adjacent primary pairs on Plutchik's wheel */
+export type BlendedEmotionType =
+  | "love"           // Joy + Trust
+  | "submission"     // Trust + Fear
+  | "awe"            // Fear + Surprise
+  | "disapproval"    // Surprise + Sadness
+  | "remorse"        // Sadness + Disgust
+  | "contempt"       // Disgust + Anger
+  | "aggressiveness" // Anger + Anticipation
+  | "optimism";      // Anticipation + Joy
+
+/** A single ranked emotion in the top-3 AI detection */
+export interface RankedEmotion {
+  rank: 1 | 2 | 3;
+  emotion: EmotionType;
+  score: number;
+  intensityLabel: string; // Plutchik tier label (e.g. "Ecstasy", "Rage")
+  blendedEmotion?: BlendedEmotionType;
+}
+
+/** Blended emotion labels for display */
+export const BLENDED_EMOTION_LABELS: Record<BlendedEmotionType, string> = {
+  love: "Love",
+  submission: "Submission",
+  awe: "Awe",
+  disapproval: "Disapproval",
+  remorse: "Remorse",
+  contempt: "Contempt",
+  aggressiveness: "Aggressiveness",
+  optimism: "Optimism",
+};
+
+/** Opposite emotion pairs on Plutchik's wheel */
+export const OPPOSITE_EMOTION_PAIRS: [EmotionType, EmotionType][] = [
+  ["happiness", "sadness"],
+  ["trust", "disgust"],
+  ["fear", "anger"],
+  ["surprise", "anticipation"],
+];
+
 // Emotion scores - individual 0-100 scores for all 8 core emotions
 export interface EmotionScores {
   happiness: number;
@@ -156,6 +196,10 @@ export interface JournalEntry {
   userOverrideLabels?: Partial<Record<EmotionType, string>>; // user-edited intensity labels
   userValidated?: boolean; // user confirmed the analysis is correct
   aiCorrected?: boolean; // user corrected the AI's analysis
+  // AI-detected top 3 emotions (baseline AI output, never overwritten by user*)
+  aiTopThreeEmotions?: RankedEmotion[];
+  aiBlendedEmotions?: Partial<Record<BlendedEmotionType, number>>;
+  aiAmbivalenceFlags?: [EmotionType, EmotionType][];
 }
 
 // Daily Mood Summary
