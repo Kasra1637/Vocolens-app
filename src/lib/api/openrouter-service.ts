@@ -125,14 +125,14 @@ Analyse the journal transcript for emotional content.${personalization}
 
 PLUTCHIK'S FULL SPECTRUM (use exact labels):
 Primary emotions with 3-tier intensity labels (score drives tier):
-- Joy: Serenity (0-35) \u2192 Joy (36-69) \u2192 Ecstasy (70-100)
-- Trust: Acceptance (0-35) \u2192 Trust (36-69) \u2192 Admiration (70-100)
-- Fear: Apprehension (0-35) \u2192 Fear (36-69) \u2192 Terror (70-100)
-- Surprise: Distraction (0-35) \u2192 Surprise (36-69) \u2192 Amazement (70-100)
-- Sadness: Pensiveness (0-35) \u2192 Sadness (36-69) \u2192 Grief (70-100)
-- Disgust: Boredom (0-35) \u2192 Disgust (36-69) \u2192 Loathing (70-100)
-- Anger: Annoyance (0-35) \u2192 Anger (36-69) \u2192 Rage (70-100)
-- Anticipation: Interest (0-35) \u2192 Anticipation (36-69) \u2192 Vigilance (70-100)
+- Joy: Serenity (0-35) → Joy (36-69) → Ecstasy (70-100)
+- Trust: Acceptance (0-35) → Trust (36-69) → Admiration (70-100)
+- Fear: Apprehension (0-35) → Fear (36-69) → Terror (70-100)
+- Surprise: Distraction (0-35) → Surprise (36-69) → Amazement (70-100)
+- Sadness: Pensiveness (0-35) → Sadness (36-69) → Grief (70-100)
+- Disgust: Boredom (0-35) → Disgust (36-69) → Loathing (70-100)
+- Anger: Annoyance (0-35) → Anger (36-69) → Rage (70-100)
+- Anticipation: Interest (0-35) → Anticipation (36-69) → Vigilance (70-100)
 
 Secondary blended emotions (adjacent pairs on the wheel):
 - Love = Joy + Trust
@@ -145,12 +145,12 @@ Secondary blended emotions (adjacent pairs on the wheel):
 - Optimism = Anticipation + Joy
 
 OPPOSITE EMOTIONS: If BOTH appear above threshold, flag as ambivalent:
-- Joy \u21cc Sadness
-- Trust \u21cc Disgust
-- Fear \u21cc Anger
-- Surprise \u21cc Anticipation
+- Joy ↔ Sadness
+- Trust ↔ Disgust
+- Fear ↔ Anger
+- Surprise ↔ Anticipation
 
-Return ONLY a valid JSON object \u2014 no markdown, no explanation:
+Return ONLY a valid JSON object — no markdown, no explanation:
 {
   "emotions": ["happiness", "trust"],
   "primaryEmotion": "happiness",
@@ -182,7 +182,7 @@ Rules:
 - emotions array: only emotions with score >= 30, max 4
 - primaryEmotion: highest scoring emotion from: happiness, sadness, anger, disgust, fear, surprise, trust, anticipation
 - topThreeEmotions: the top-3 ranked emotions, each with rank (1/2/3), emotion name, score (0-100), and intensityLabel (exact Plutchik tier label)
-- blendedEmotions: compute from adjacent pairs where both score >= 20 \u2014 use minimum of the two scores. Valid keys: love, submission, awe, disapproval, remorse, contempt, aggressiveness, optimism
+- blendedEmotions: compute from adjacent pairs where both score >= 20 — use minimum of the two scores. Valid keys: love, submission, awe, disapproval, remorse, contempt, aggressiveness, optimism
 - ambivalenceFlags: array of string arrays ["emotionA", "emotionB"] where both opposite emotions score >= 25
 - emotionIntensity: 0-100 overall intensity
 - valence: -100 (very unpleasant) to +100 (very pleasant)
@@ -202,10 +202,12 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
     .trim();
 
   const result = JSON.parse(jsonStr);
+
   const emotionScores: EmotionScores = {
     happiness: 0, sadness: 0, anger: 0, disgust: 0,
     fear: 0, surprise: 0, trust: 0, anticipation: 0,
   };
+
   if (result.emotionScores && typeof result.emotionScores === 'object') {
     for (const emotion of validEmotions) {
       const score = Number(result.emotionScores[emotion]);
@@ -222,7 +224,7 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
     ? (result.primaryEmotion as EmotionType)
     : (emotions[0] ?? 'happiness');
 
-
+  // Prefer AI-provided top-3, fall back to client compute
   let topThreeEmotions: RankedEmotion[];
   if (Array.isArray(result.topThreeEmotions) && result.topThreeEmotions.length > 0) {
     topThreeEmotions = result.topThreeEmotions
@@ -248,8 +250,13 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
     topThreeEmotions = computeTopThree(emotionScores);
   }
 
+  // Prefer AI-provided blended, fall back to client compute
   let blendedEmotions: Partial<Record<BlendedEmotionType, number>>;
-  if (result.blendedEmotions && typeof result.blendedEmotions === 'object' && Object.keys(result.blendedEmotions).length > 0) {
+  if (
+    result.blendedEmotions &&
+    typeof result.blendedEmotions === 'object' &&
+    Object.keys(result.blendedEmotions).length > 0
+  ) {
     blendedEmotions = {};
     for (const key of validBlended) {
       const v = Number((result.blendedEmotions as Record<string, unknown>)[key]);
@@ -259,6 +266,7 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
     blendedEmotions = computeBlendedEmotions(emotionScores);
   }
 
+  // Prefer AI-provided ambivalence, fall back to client compute
   let ambivalenceFlags: [EmotionType, EmotionType][];
   if (Array.isArray(result.ambivalenceFlags) && result.ambivalenceFlags.length > 0) {
     ambivalenceFlags = result.ambivalenceFlags
@@ -274,7 +282,7 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
   }
 
   console.log(
-    `[OpenRouter] Claude parsed | primary=${primaryEmotion} | top3=${topThreeEmotions.map((e) => `${e.emotion}(${e.intensityLabel})`).join(',')} | blended=${Object.keys(blendedEmotions).join(',')} | ambivalent=${ambivalenceFlags.map((p) => `${p[0]}\u21cc${p[1]}`).join(',')}`
+    `[OpenRouter] Claude parsed | primary=${primaryEmotion} | top3=${topThreeEmotions.map((e) => `${e.emotion}(${e.intensityLabel})`).join(',')} | blended=${Object.keys(blendedEmotions).join(',')} | ambivalent=${ambivalenceFlags.map((p) => `${p[0]}↔${p[1]}`).join(',')}`
   );
 
   return {
@@ -311,6 +319,7 @@ async function callOpenRouterDirectly(
   if (!apiKey || !apiKey.startsWith('sk-or-')) {
     throw new Error('OpenRouter API key not configured client-side');
   }
+
   const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -329,16 +338,20 @@ async function callOpenRouterDirectly(
       max_tokens: 2000,
     }),
   });
+
   if (!response.ok) {
     const errText = await response.text();
     throw new Error(`OpenRouter direct error (${response.status}): ${errText}`);
   }
+
   const data = await response.json() as {
     choices?: Array<{ message?: { content?: string } }>;
     model?: string;
   };
+
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error('OpenRouter returned empty content');
+
   const resolvedModel = data.model ?? modelId;
   console.log(`[OpenRouter] Claude 3.5 direct call succeeded | model=${resolvedModel}`);
   return parseDirectResponse(content);
@@ -374,18 +387,22 @@ export async function analyzeWithOpenRouter(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+
   if (!response.ok) {
     const errText = await response.text();
     throw new Error(`Backend analysis error (${response.status}): ${errText}`);
   }
+
   const json = await response.json() as {
     success: boolean;
     data: OpenRouterAnalysisResult;
     error?: string;
   };
+
   if (!json.success || !json.data) {
     throw new Error(json.error || 'Invalid response from analysis backend');
   }
+
   return json.data;
 }
 
