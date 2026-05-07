@@ -2,10 +2,20 @@
  * OpenRouter Mobile Service
  * Calls OpenRouter API directly from the client (primary) or via backend (fallback)
  * for deep emotional analysis using GPT-4o models.
+ * 
+ * Plutchik's Wheel of Emotions — all 3 tiers, blended emotions, opposite ambivalence, top-3 ranking.
  */
 
 import Constants from 'expo-constants';
-import { EmotionType, EmotionScores, EmotionIntensityLabels, buildIntensityLabels } from '../types';
+import {
+  EmotionType,
+  EmotionScores,
+  EmotionIntensityLabels,
+  BlendedEmotionType,
+  RankedEmotion,
+  buildIntensityLabels,
+  getEmotionSubLabel,
+} from '../types';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const BACKEND_URL =
@@ -26,6 +36,9 @@ export interface OpenRouterAnalysisResult {
   emotionIntensity: number;
   emotionScores: EmotionScores;
   emotionIntensityLabels: EmotionIntensityLabels;
+  topThreeEmotions: RankedEmotion[];
+  blendedEmotions: Partial<Record<BlendedEmotionType, number>>;
+  ambivalenceFlags: [EmotionType, EmotionType][];
   topics: string[];
   analysis: string;
   reflection: string;
@@ -38,22 +51,120 @@ export interface OpenRouterAnalysisResult {
   distressLevel: 'low' | 'moderate' | 'high';
 }
 
+const validEmotions: EmotionType[] = [
+  'happiness', 'sadness', 'anger', 'disgust',
+  'fear', 'surprise', 'trust', 'anticipation',
+];
+
+const validBlended: BlendedEmotionType[] = [
+  'love', 'submission', 'awe', 'disapproval',
+  'remorse', 'contempt', 'aggressiveness', 'optimism',
+];
+
+// Blended Emotion Pairing Map - adjacent emotions on Plutchik's wheel (clockwise)
+const BLENDED_PAIRS: [EmotionType, EmotionType, BlendedEmotionType][] = [
+  ['happiness', 'trust', 'love'],
+  ['trust', 'fear', 'submission'],
+  ['fear', 'surprise', 'awe'],
+  ['surprise', 'sadness', 'disapproval'],
+  ['sadness', 'disgust', 'remorse'],
+  ['disgust', 'anger', 'contempt'],
+  ['anger', 'anticipation', 'aggressiveness'],
+  ['anticipation', 'happiness', 'optimism'],
+];
+
+// Opposite Emotion Pairs
+const OPPOSITE_PAIRS: [EmotionType, EmotionType][] = [
+  ['happiness', 'sadness'],
+  ['trust', 'disgust'],
+  ['fear', 'anger'],
+  ['surprise', 'anticipation'],
+];
+
+function computeBlendedEmotions(
+  scores: EmotionScores,
+): Partial<Record<BlendedEmotionType, number>> {
+  const result: Partial<Record<BlendedEmotionType, number>> = {};
+  for (const [a, b, key] of BLENDED_PAIRS) {
+    if (scores[a] >= 20 && scores[b] >= 20) {
+      result[key] = Math.min(scores[a], scores[b]);
+    }
+  }
+  return result;
+}
+
+function detectAmbivalence(
+  scores: EmotionScores,
+): [EmotionType, EmotionType][] {
+  const flags: [EmotionType, EmotionType][] = [];
+  for (const [a, b] of OPPOSITE_PAIRS) {
+    if (scores[a] >= 25 && scores[b] >= 25) {
+      flags.push([a, b]);
+    }
+  }
+  return flags;
+}
+
+function computeTopThree(scores: EmotionScores): RankedEmotion[] {
+  return (Object.keys(scores) as EmotionType[])
+    .map((emotion) => ({
+      emotion,
+      score: scores[emotion],
+      intensityLabel: getEmotionSubLabel(emotion, scores[emotion]),
+    }))
+    .filter((e) => e.score >= 10)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((e, i) => ({
+      rank: (i + 1) as 1 | 2 | 3,
+      emotion: e.emotion,
+      score: e.score,
+      intensityLabel: e.intensityLabel,
+    }));
+}
+
 function buildSystemPrompt(personalizationContext?: string): string {
   const personalization = personalizationContext
     ? `\n\n${personalizationContext}`
     : '';
   return `You are an expert emotional intelligence analyst specializing in Plutchik's wheel of emotions.
-Analyse the journal transcript text for emotional content.${personalization}
+Analyse the journal transcript for emotional content.${personalization}
 
-Return ONLY a valid JSON object — no markdown, no explanation:
+PLUTCHIK'S FULL SPECTRUM (use exact labels):
+Primary emotions with 3-tier intensity labels (score drives tier):
+- Joy: Serenity (0-35) \u2192 Joy (36-69) \u2192 Ecstasy (70-100)
+- Trust: Acceptance (0-35) \u2192 Trust (36-69) \u2192 Admiration (70-100)
+- Fear: Apprehension (0-35) \u2192 Fear (36-69) \u2192 Terror (70-100)
+- Surprise: Distraction (0-35) \u2192 Surprise (36-69) \u2192 Amazement (70-100)
+- Sadness: Pensiveness (0-35) \u2192 Sadness (36-69) \u2192 Grief (70-100)
+- Disgust: Boredom (0-35) \u2192 Disgust (36-69) \u2192 Loathing (70-100)
+- Anger: Annoyance (0-35) \u2192 Anger (36-69) \u2192 Rage (70-100)
+- Anticipation: Interest (0-35) \u2192 Anticipation (36-69) \u2192 Vigilance (70-100)
+
+Secondary blended emotions (adjacent pairs):
+Love = Joy + Trust | Submission = Trust + Fear | Awe = Fear + Surprise
+Disapproval = Surprise + Sadness | Remorse = Sadness + Disgust | Contempt = Disgust + Anger
+Aggressiveness = Anger + Anticipation | Optimism = Anticipation + Joy
+
+OPPOSITE PAIRS: Joy\u2194Sadness, Trust\u2194Disgust, Fear\u2194Anger, Surprise\u2194Anticipation
+If both appear, flag as ambivalent and reduce each intensity.
+
+Return ONLY a valid JSON object \u2014 no markdown, no explanation:
 {
-  "emotions": ["emotion1", "emotion2"],
-  "primaryEmotion": "emotion",
+  "emotions": ["happiness", "trust"],
+  "primaryEmotion": "happiness",
   "emotionIntensity": 75,
   "emotionScores": {
     "happiness": 80, "sadness": 10, "anger": 5, "disgust": 2,
     "fear": 15, "surprise": 20, "trust": 60, "anticipation": 45
   },
+  "topThreeEmotions": [
+    {"rank": 1, "emotion": "happiness", "score": 80, "intensityLabel": "Ecstasy"},
+    {"rank": 2, "emotion": "trust", "score": 60, "intensityLabel": "Trust"},
+    {"rank": 3, "emotion": "anticipation", "score": 45, "intensityLabel": "Anticipation"}
+  ],
+  "blendedEmotions": {"love": 60, "optimism": 45},
+  "ambivalenceFlags": [],
   "topics": ["topic1", "topic2"],
   "analysis": "compassionate analysis paragraph (1-2 sentences)",
   "reflection": "warm empathetic second-person reflection (2-3 sentences) for TTS playback",
@@ -69,13 +180,18 @@ Rules:
 - emotionScores: all 8 emotions scored 0-100
 - emotions array: only emotions with score >= 30, max 4
 - primaryEmotion: highest scoring emotion
+- topThreeEmotions: the top-3 ranked emotions \u2014 each with rank (1/2/3), emotion name, score, and intensityLabel (exact Plutchik tier label matching spectrum above)
+- blendedEmotions: compute from adjacent pairs where both score >= 20 \u2014 use minimum of the two scores
+- ambivalenceFlags: array of string arrays ["emotionA", "emotionB"] where both opposite emotions score >= 25
 - emotionIntensity: 0-100 overall intensity
-- valence: -100 (unpleasant) to +100 (pleasant)
-- arousal: 0 (calm) to 100 (activated)
+- valence: -100 (very unpleasant) to +100 (very pleasant)
+- arousal: 0 (very calm) to 100 (very activated)
 - distressLevel: "low", "moderate", or "high"
 - reflection: warm, second-person ("you"), suitable for TTS
 - suggestedBodySensations: 0-3 body sensation strings
-- Only valid emotions: happiness, sadness, anger, disgust, fear, surprise, trust, anticipation`;
+- Only valid emotions: happiness, sadness, anger, disgust, fear, surprise, trust, anticipation
+- Only valid blendedEmotion keys: love, submission, awe, disapproval, remorse, contempt, aggressiveness, optimism
+- ALWAYS include topThreeEmotions, blendedEmotions, and ambivalenceFlags fields`;
 }
 
 function parseDirectResponse(content: string): OpenRouterAnalysisResult {
@@ -86,11 +202,6 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
     .trim();
 
   const result = JSON.parse(jsonStr);
-
-  const validEmotions: EmotionType[] = [
-    'happiness', 'sadness', 'anger', 'disgust',
-    'fear', 'surprise', 'trust', 'anticipation',
-  ];
 
   const emotionScores: EmotionScores = {
     happiness: 0, sadness: 0, anger: 0, disgust: 0,
@@ -113,12 +224,90 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
     ? (result.primaryEmotion as EmotionType)
     : (emotions[0] ?? 'happiness');
 
+  // Top-3: prefer AI-provided, fall back to client compute
+  let topThreeEmotions: RankedEmotion[];
+  if (
+    Array.isArray(result.topThreeEmotions) &&
+    result.topThreeEmotions.length > 0
+  ) {
+    topThreeEmotions = result.topThreeEmotions
+      .filter(
+        (e: unknown) =>
+          typeof e === 'object' &&
+          e !== null &&
+          typeof (e as Record<string, unknown>).emotion === 'string' &&
+          validEmotions.includes((e as Record<string, unknown>).emotion as EmotionType)
+      )
+      .slice(0, 3)
+      .map((e: Record<string, unknown>, i: number) => ({
+        rank: (i + 1) as 1 | 2 | 3,
+        emotion: e.emotion as EmotionType,
+        score:
+          typeof e.score === 'number'
+            ? Math.max(0, Math.min(100, e.score))
+            : emotionScores[e.emotion as EmotionType],
+        intensityLabel:
+          typeof e.intensityLabel === 'string' && e.intensityLabel.trim().length > 0
+            ? (e.intensityLabel as string)
+            : getEmotionSubLabel(
+                e.emotion as EmotionType,
+                emotionScores[e.emotion as EmotionType]
+              ),
+      }));
+  } else {
+    topThreeEmotions = computeTopThree(emotionScores);
+  }
+
+  // Blended: prefer AI-provided, fall back to client compute
+  let blendedEmotions: Partial<Record<BlendedEmotionType, number>>;
+  if (
+    result.blendedEmotions &&
+    typeof result.blendedEmotions === 'object' &&
+    Object.keys(result.blendedEmotions).length > 0
+  ) {
+    blendedEmotions = {};
+    for (const key of validBlended) {
+      const v = Number((result.blendedEmotions as Record<string, unknown>)[key]);
+      if (!isNaN(v) && v >= 20) {
+        blendedEmotions[key] = Math.max(0, Math.min(100, v));
+      }
+    }
+  } else {
+    blendedEmotions = computeBlendedEmotions(emotionScores);
+  }
+
+  // Ambivalence: prefer AI-provided, fall back to client compute
+  let ambivalenceFlags: [EmotionType, EmotionType][];
+  if (
+    Array.isArray(result.ambivalenceFlags) &&
+    result.ambivalenceFlags.length > 0
+  ) {
+    ambivalenceFlags = result.ambivalenceFlags
+      .filter(
+        (pair: unknown) =>
+          Array.isArray(pair) &&
+          pair.length === 2 &&
+          validEmotions.includes(pair[0] as EmotionType) &&
+          validEmotions.includes(pair[1] as EmotionType)
+      )
+      .slice(0, 4) as [EmotionType, EmotionType][];
+  } else {
+    ambivalenceFlags = detectAmbivalence(emotionScores);
+  }
+
+  console.log(
+    `[OpenRouter] Direct parsed | primary=${primaryEmotion} | top3=${topThreeEmotions.map((e) => `${e.emotion}(${e.intensityLabel})`).join(',')} | blended=${Object.keys(blendedEmotions).join(',')} | ambivalent=${ambivalenceFlags.map((p) => `${p[0]}\u2194${p[1]}`).join(',')}`
+  );
+
   return {
     emotions,
     primaryEmotion,
     emotionIntensity: Math.max(0, Math.min(100, Number(result.emotionIntensity) || 50)),
     emotionScores,
     emotionIntensityLabels: buildIntensityLabels(emotionScores),
+    topThreeEmotions,
+    blendedEmotions,
+    ambivalenceFlags,
     topics: ((result.topics ?? ['reflection']) as string[]).slice(0, 5),
     analysis: result.analysis || 'Your journal entry has been recorded.',
     reflection: result.reflection || 'Thank you for sharing. Your feelings are valid.',
@@ -134,10 +323,6 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
   };
 }
 
-/**
- * Call OpenRouter API directly from the client.
- * Uses EXPO_PUBLIC_OPENROUTER_API_KEY env var.
- */
 async function callOpenRouterDirectly(
   transcript: string,
   personalizationContext?: string,
@@ -163,7 +348,7 @@ async function callOpenRouterDirectly(
         { role: 'user', content: `Analyse this journal entry:\n\n"${transcript}"` },
       ],
       temperature: 0.7,
-      max_tokens: 1200,
+      max_tokens: 2000,
     }),
   });
 
@@ -187,10 +372,6 @@ async function callOpenRouterDirectly(
   return parseDirectResponse(content);
 }
 
-/**
- * Analyze a journal entry.
- * Priority: 1) Direct OpenRouter API call (client-side), 2) Backend endpoint (fallback)
- */
 export async function analyzeWithOpenRouter(
   transcript: string,
   audioBase64?: string,
@@ -237,16 +418,11 @@ export async function analyzeWithOpenRouter(
   return json.data;
 }
 
-/**
- * Check if OpenRouter analysis is available
- */
 export async function checkOpenRouterStatus(): Promise<boolean> {
-  // Quick check: do we have a client-side key?
   if (OPENROUTER_API_KEY && OPENROUTER_API_KEY.startsWith('sk-or-')) {
     return true;
   }
 
-  // Fallback: check backend
   try {
     const response = await fetch(`${BACKEND_URL}/api/journal/status`, {
       method: 'GET',
