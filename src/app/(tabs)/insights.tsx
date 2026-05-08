@@ -1,1 +1,1 @@
-PLACEHOLDER_INSIGHTS
+PLACEHOLDER_src_app_(tabs)_insights.tsx

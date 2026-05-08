@@ -1,1 +1,1 @@
-PLACEHOLDER_ED
+PLACEHOLDER_src_app_entry-detail.tsx

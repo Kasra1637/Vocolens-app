@@ -1,1 +1,1 @@
-PLACEHOLDER_JOURNAL
+PLACEHOLDER_src_lib_journal-service.ts
