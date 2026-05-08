@@ -40,8 +40,9 @@ export async function analyzeTranscript(
     );
   }
 
-  // Claude 3.5 Sonnet via OpenRouter - text only
-  console.log(`[OpenRouter] Sending request → model=${TEXT_FALLBACK_MODEL} (text-only, Claude 3.5 Sonnet)`);
+
+  // Claude 3.5 Sonnet via OpenRouter — text only
+  console.log(`[OpenRouter] Sending request \u2192 model=${TEXT_FALLBACK_MODEL} (text-only, Claude 3.5 Sonnet)`);
 
   const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
     method: "POST",
@@ -66,14 +67,12 @@ export async function analyzeTranscript(
     choices?: Array<{ message?: { content?: string } }>;
     model?: string;
   };
-
   const content = data.choices?.[0]?.message?.content;
   if (!content) {
     throw new Error("[OpenRouter] API returned empty content");
   }
-
   const resolvedModel = data.model ?? TEXT_FALLBACK_MODEL;
-  console.log(`[OpenRouter] ✓ Claude 3.5 Sonnet response received | resolved_model=${resolvedModel}`);
+  console.log(`[OpenRouter] \u2713 Claude 3.5 Sonnet response received | resolved_model=${resolvedModel}`);
   return parseAnalysisJson(content, false, resolvedModel);
 }
 
@@ -83,6 +82,7 @@ export async function analyzeTranscriptWithRetry(
   audioBase64?: string
 ): Promise<AnalysisResult> {
   let lastError: Error | null = null;
+
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -97,7 +97,6 @@ export async function analyzeTranscriptWithRetry(
       }
     }
   }
-
   throw lastError ?? new Error("[OpenRouter] All retry attempts exhausted");
 }
 
@@ -106,11 +105,9 @@ export async function generateWeeklyReflection(
   weekLabel: string
 ): Promise<WeeklyReflectionResult> {
   const apiKey = getApiKey();
-
   if (!apiKey || !apiKey.startsWith("sk-or-")) {
     throw new Error("[OpenRouter] OPENROUTER_API_KEY is missing or invalid.");
   }
-
   if (entries.length === 0) {
     throw new Error("No entries to reflect on");
   }
@@ -122,12 +119,12 @@ export async function generateWeeklyReflection(
         month: "short",
         day: "numeric",
       });
-      return `Entry ${i + 1} (${date}) — Emotion: ${e.primaryEmotion} (${e.emotionIntensity}% intensity)\nTopics: ${e.topics.join(", ")}\nExcerpt: "${e.transcript.slice(0, 300)}${e.transcript.length > 300 ? "..." : ""}"`;
+      return `Entry ${i + 1} (${date}) \u2014 Emotion: ${e.primaryEmotion} (${e.emotionIntensity}% intensity)\nTopics: ${e.topics.join(", ")}\nExcerpt: "${e.transcript.slice(0, 300)}${e.transcript.length > 300 ? "..." : ""}"`;
     })
     .join("\n\n---\n\n");
 
   const systemPrompt = `You are a warm, insightful journaling companion creating a weekly reflection digest.
-Your tone is compassionate, personal, and encouraging — like a wise friend who truly listened.
+Your tone is compassionate, personal, and encouraging \u2014 like a wise friend who truly listened.
 Write as if speaking directly to the person. Keep narratives warm and intimate, not clinical.
 
 Respond with valid JSON only (no markdown, no code fences):
@@ -179,12 +176,12 @@ Respond with valid JSON only (no markdown, no code fences):
     .trim();
 
   const result = JSON.parse(jsonStr);
-
   const validEmotions: EmotionType[] = [
     "happiness", "sadness", "anger", "disgust", "fear", "surprise", "trust", "anticipation",
   ];
 
   console.log(`[OpenRouter] Weekly reflection generated | entries=${entries.length} | dominant=${result.dominantEmotion}`);
+
 
   return {
     narrativeSummary: result.narrativeSummary || "A week of meaningful reflection.",
