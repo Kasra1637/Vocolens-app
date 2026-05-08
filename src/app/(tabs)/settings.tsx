@@ -51,7 +51,7 @@ import useOnboardingStore, {
   ThemeColorType,
   THEME_COLORS,
 } from "@/lib/state/onboarding-store";
-import { TimeFormat, EmotionReflectionMode } from "@/lib/state/settings-store";
+import useSettingsStore, { EmotionReflectionMode } from "@/lib/state/settings-store";
 import {
   getThemeColors,
   getThemeGradients,
