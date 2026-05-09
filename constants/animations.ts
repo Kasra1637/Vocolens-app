@@ -10,7 +10,7 @@
  * withTiming(value, { duration: animationDurations.normal, easing: animationEasing.easeInOut })
  */
 
-import Animated, { FadeIn, Easing } from 'react-native-reanimated';
+import { Easing } from 'react-native-reanimated';
 
 // ============================================================================
 // DURATIONS (in milliseconds)
@@ -293,18 +293,3 @@ export const defaultAnimation = {
  * Use for most spring-based animations
  */
 export const defaultSpring = animationTimings.spring;
-
-// ============================================================================
-// HELPER FUNCTIONS FOR ENTRIES SCREEN
-// ============================================================================
-
-/**
- * Get staggered fade-in animation with delay
- */
-export function getStaggeredFadeIn(index: number) {
-  return FadeIn.delay(index * staggerDelays.normal).duration(animationDurations.normal);
-}
-
-// Button press scale
-export const BUTTON_PRESS_SCALE = 0.95;
-export const BUTTON_RELEASE_DURATION = animationDurations.fast;
