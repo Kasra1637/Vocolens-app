@@ -1,16 +1,11 @@
 /**
  * OpenRouter Types & Constants
- * 
- * Claude 3.5 Sonnet via OpenRouter — full Plutchik 3-tier spectrum, blended emotions, opposite ambivalence.
  */
 
 export const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
-
-// Claude 3.5 Sonnet — text-only via OpenRouter
-// Deepgram handles transcription locally; Claude analyses text ONLY.
-export const AUDIO_MODEL = "anthropic/claude-3.5-sonnet-20241022";
-export const TEXT_FALLBACK_MODEL = "anthropic/claude-3.5-sonnet-20241022";
+export const AUDIO_MODEL = "openai/gpt-4o-audio-preview";
+export const TEXT_FALLBACK_MODEL = "openai/gpt-4o";
 
 export function getApiKey(): string | undefined {
   return process.env.OPENROUTER_API_KEY;
@@ -25,26 +20,6 @@ export type EmotionType =
   | "surprise"
   | "trust"
   | "anticipation";
-
-
-/** Blended emotions formed by adjacent primary pairs on Plutchik's wheel */
-export type BlendedEmotionType =
-  | "love"
-  | "submission"
-  | "awe"
-  | "disapproval"
-  | "remorse"
-  | "contempt"
-  | "aggressiveness"
-  | "optimism";
-
-/** Opposite emotion pairs — when both appear, flag ambivalence and reduce intensity */
-export const OPPOSITE_PAIRS: [EmotionType, EmotionType][] = [
-  ["happiness", "sadness"],
-  ["trust", "disgust"],
-  ["fear", "anger"],
-  ["surprise", "anticipation"],
-];
 
 export interface EmotionScores {
   happiness: number;
@@ -68,15 +43,6 @@ export interface EmotionIntensityLabels {
   anticipation: string;
 }
 
-/** A single ranked emotion in the top-3 list */
-export interface RankedEmotion {
-  rank: 1 | 2 | 3;
-  emotion: EmotionType;
-  score: number;
-  intensityLabel: string;
-  blendedEmotion?: BlendedEmotionType;
-}
-
 const PLUTCHIK_LABELS: Record<EmotionType, { low: string; mid: string; high: string }> = {
   happiness:    { low: "Serenity",     mid: "Joy",          high: "Ecstasy"    },
   trust:        { low: "Acceptance",   mid: "Trust",        high: "Admiration" },
@@ -87,44 +53,6 @@ const PLUTCHIK_LABELS: Record<EmotionType, { low: string; mid: string; high: str
   anger:        { low: "Annoyance",    mid: "Anger",        high: "Rage"       },
   anticipation: { low: "Interest",     mid: "Anticipation", high: "Vigilance"  },
 };
-
-/** Adjacent pairs on Plutchik's wheel clockwise → blended emotion */
-export const BLENDED_PAIRS: [EmotionType, EmotionType, BlendedEmotionType][] = [
-  ["happiness", "trust", "love"],
-  ["trust", "fear", "submission"],
-  ["fear", "surprise", "awe"],
-  ["surprise", "sadness", "disapproval"],
-  ["sadness", "disgust", "remorse"],
-  ["disgust", "anger", "contempt"],
-  ["anger", "anticipation", "aggressiveness"],
-  ["anticipation", "happiness", "optimism"],
-];
-
-export function computeBlendedEmotions(
-  scores: EmotionScores,
-): Partial<Record<BlendedEmotionType, number>> {
-  const result: Partial<Record<BlendedEmotionType, number>> = {};
-  for (const [a, b, blended] of BLENDED_PAIRS) {
-    const minScore = Math.min(scores[a], scores[b]);
-    if (minScore >= 20) {
-      result[blended] = minScore;
-    }
-  }
-  return result;
-}
-
-export function detectAmbivalence(
-  scores: EmotionScores,
-  threshold = 25,
-): [EmotionType, EmotionType][] {
-  const ambivalent: [EmotionType, EmotionType][] = [];
-  for (const [a, b] of OPPOSITE_PAIRS) {
-    if (scores[a] >= threshold && scores[b] >= threshold) {
-      ambivalent.push([a, b]);
-    }
-  }
-  return ambivalent;
-}
 
 export function getIntensityLabel(emotion: EmotionType, score: number): string {
   const labels = PLUTCHIK_LABELS[emotion];
@@ -151,9 +79,6 @@ export interface AnalysisResult {
   emotionIntensity: number;
   emotionScores: EmotionScores;
   emotionIntensityLabels: EmotionIntensityLabels;
-  topThreeEmotions: RankedEmotion[];
-  blendedEmotions: Partial<Record<BlendedEmotionType, number>>;
-  ambivalenceFlags: [EmotionType, EmotionType][];
   topics: string[];
   analysis: string;
   reflection: string;
@@ -161,6 +86,7 @@ export interface AnalysisResult {
   confidence: number;
   audioAnalyzed: boolean;
   modelUsed: string;
+  // Valence-Arousal (Circumplex Model)
   valence: number;
   arousal: number;
   suggestedBodySensations: string[];
@@ -199,7 +125,7 @@ export function isOpenRouterConfigured(): boolean {
   const key = getApiKey();
   const configured = Boolean(key && key.startsWith("sk-or-"));
   if (configured) {
-    console.log(`[OpenRouter] Claude 3.5 Sonnet configured | model: ${AUDIO_MODEL}`);
+    console.log(`[OpenRouter] Configured ✓ | Audio model: ${AUDIO_MODEL} | Text fallback: ${TEXT_FALLBACK_MODEL}`);
   } else {
     console.error("[OpenRouter] ERROR: OPENROUTER_API_KEY missing or invalid (must start with sk-or-)");
   }

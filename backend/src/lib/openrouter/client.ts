@@ -1,10 +1,10 @@
 /**
- * OpenRouter API Client - Claude 3.5 Sonnet (text-only)
- * Deepgram handles transcription locally; Claude analyses the text.
+ * OpenRouter API Client
  */
 
 import {
   OPENROUTER_BASE_URL,
+  AUDIO_MODEL,
   TEXT_FALLBACK_MODEL,
   getApiKey,
 } from "./types.ts";
@@ -29,20 +29,76 @@ function buildHeaders(apiKey: string): Record<string, string> {
 
 export async function analyzeTranscript(
   transcript: string,
-  _audioBase64?: string
+  audioBase64?: string
 ): Promise<AnalysisResult> {
   const apiKey = getApiKey();
 
   if (!apiKey || !apiKey.startsWith("sk-or-")) {
     throw new Error(
       "[OpenRouter] OPENROUTER_API_KEY is missing or invalid. " +
-      "Ensure it is set and starts with sk-or-"
+      "Ensure it is set in /home/user/workspace/backend/.env and starts with sk-or-"
     );
   }
 
+  // PATH 1: Audio provided → openai/gpt-4o-audio-preview
+  if (audioBase64 && audioBase64.length > 100) {
+    console.log(`[OpenRouter] Sending request → model=${AUDIO_MODEL} (audio+text multimodal)`);
 
-  // Claude 3.5 Sonnet via OpenRouter — text only
-  console.log(`[OpenRouter] Sending request \u2192 model=${TEXT_FALLBACK_MODEL} (text-only, Claude 3.5 Sonnet)`);
+    try {
+      const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+        method: "POST",
+        headers: buildHeaders(apiKey),
+        body: JSON.stringify({
+          model: AUDIO_MODEL,
+          messages: [
+            { role: "system", content: AUDIO_SYSTEM_PROMPT },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "input_audio",
+                  input_audio: { data: audioBase64, format: "wav" },
+                },
+                {
+                  type: "text",
+                  text: `Transcript of the audio above:\n\n"${transcript}"\n\nAnalyse both the vocal characteristics (prosody, tone, pitch, pace, energy) AND the text. Return JSON only.`,
+                },
+              ],
+            },
+          ],
+          temperature: 0.6,
+          max_tokens: 1400,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json() as {
+          choices?: Array<{ message?: { content?: string } }>;
+          model?: string;
+          error?: { message: string };
+        };
+
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          const resolvedModel = data.model ?? AUDIO_MODEL;
+          console.log(`[OpenRouter] ✓ GPT-4o Audio Preview response received | resolved_model=${resolvedModel}`);
+          return parseAnalysisJson(content, true, resolvedModel);
+        }
+
+        console.warn(`[OpenRouter] Audio model returned empty content — falling back to text model`);
+      } else {
+        const errBody = await response.json().catch(() => ({ error: { message: response.statusText } })) as { error?: { message: string } };
+        console.warn(`[OpenRouter] Audio model error ${response.status}: ${errBody?.error?.message} — falling back to text model`);
+      }
+    } catch (err) {
+      console.warn(`[OpenRouter] Audio model request threw: ${err} — falling back to text model`);
+    }
+  } else {
+    console.log(`[OpenRouter] No audio provided — using text-only path`);
+  }
+
+  // PATH 2: Text only → openai/gpt-4o
+  console.log(`[OpenRouter] Sending request → model=${TEXT_FALLBACK_MODEL} (text-only)`);
 
   const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
     method: "POST",
@@ -54,25 +110,27 @@ export async function analyzeTranscript(
         { role: "user", content: `Analyse this journal entry:\n\n"${transcript}"` },
       ],
       temperature: 0.7,
-      max_tokens: 2000,
+      max_tokens: 1200,
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`[OpenRouter] API error (${response.status}): ${errText}`);
+    throw new Error(`[OpenRouter] Text model error (${response.status}): ${errText}`);
   }
 
   const data = await response.json() as {
     choices?: Array<{ message?: { content?: string } }>;
     model?: string;
   };
+
   const content = data.choices?.[0]?.message?.content;
   if (!content) {
-    throw new Error("[OpenRouter] API returned empty content");
+    throw new Error("[OpenRouter] Text model returned empty content");
   }
+
   const resolvedModel = data.model ?? TEXT_FALLBACK_MODEL;
-  console.log(`[OpenRouter] \u2713 Claude 3.5 Sonnet response received | resolved_model=${resolvedModel}`);
+  console.log(`[OpenRouter] ✓ GPT-4o text response received | resolved_model=${resolvedModel}`);
   return parseAnalysisJson(content, false, resolvedModel);
 }
 
@@ -82,7 +140,6 @@ export async function analyzeTranscriptWithRetry(
   audioBase64?: string
 ): Promise<AnalysisResult> {
   let lastError: Error | null = null;
-
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -97,6 +154,7 @@ export async function analyzeTranscriptWithRetry(
       }
     }
   }
+
   throw lastError ?? new Error("[OpenRouter] All retry attempts exhausted");
 }
 
@@ -105,9 +163,11 @@ export async function generateWeeklyReflection(
   weekLabel: string
 ): Promise<WeeklyReflectionResult> {
   const apiKey = getApiKey();
+
   if (!apiKey || !apiKey.startsWith("sk-or-")) {
     throw new Error("[OpenRouter] OPENROUTER_API_KEY is missing or invalid.");
   }
+
   if (entries.length === 0) {
     throw new Error("No entries to reflect on");
   }
@@ -119,12 +179,12 @@ export async function generateWeeklyReflection(
         month: "short",
         day: "numeric",
       });
-      return `Entry ${i + 1} (${date}) \u2014 Emotion: ${e.primaryEmotion} (${e.emotionIntensity}% intensity)\nTopics: ${e.topics.join(", ")}\nExcerpt: "${e.transcript.slice(0, 300)}${e.transcript.length > 300 ? "..." : ""}"`;
+      return `Entry ${i + 1} (${date}) — Emotion: ${e.primaryEmotion} (${e.emotionIntensity}% intensity)\nTopics: ${e.topics.join(", ")}\nExcerpt: "${e.transcript.slice(0, 300)}${e.transcript.length > 300 ? "..." : ""}"`;
     })
     .join("\n\n---\n\n");
 
   const systemPrompt = `You are a warm, insightful journaling companion creating a weekly reflection digest.
-Your tone is compassionate, personal, and encouraging \u2014 like a wise friend who truly listened.
+Your tone is compassionate, personal, and encouraging — like a wise friend who truly listened.
 Write as if speaking directly to the person. Keep narratives warm and intimate, not clinical.
 
 Respond with valid JSON only (no markdown, no code fences):
@@ -176,12 +236,12 @@ Respond with valid JSON only (no markdown, no code fences):
     .trim();
 
   const result = JSON.parse(jsonStr);
+
   const validEmotions: EmotionType[] = [
     "happiness", "sadness", "anger", "disgust", "fear", "surprise", "trust", "anticipation",
   ];
 
   console.log(`[OpenRouter] Weekly reflection generated | entries=${entries.length} | dominant=${result.dominantEmotion}`);
-
 
   return {
     narrativeSummary: result.narrativeSummary || "A week of meaningful reflection.",
@@ -214,6 +274,7 @@ export async function generateAIEmotionalAnalysis(request: AICompletionRequest):
       ],
       temperature: request.temperature ?? 0.7,
       max_tokens: request.maxTokens ?? 2000,
+      response_format: { type: "json_object" },
     }),
   });
 

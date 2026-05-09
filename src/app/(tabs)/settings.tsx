@@ -38,6 +38,7 @@ import {
   Trash2,
   Download,
   Globe,
+  FileText,
 } from "lucide-react-native";
 import Animated from "react-native-reanimated";
 import {
@@ -51,7 +52,10 @@ import useOnboardingStore, {
   ThemeColorType,
   THEME_COLORS,
 } from "@/lib/state/onboarding-store";
-import useSettingsStore, { EmotionReflectionMode } from "@/lib/state/settings-store";
+import useSettingsStore, {
+  TimeFormat,
+  EmotionReflectionMode,
+} from "@/lib/state/settings-store";
 import {
   getThemeColors,
   getThemeGradients,
@@ -79,7 +83,11 @@ import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 export default function SettingsScreen() {
   const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
+  const [pinModalVisible, setPinModalVisible] = useState(false);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
+  const [currentPin, setCurrentPin] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [pinStep, setPinStep] = useState<"current" | "new">("current");
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
@@ -187,6 +195,66 @@ export default function SettingsScreen() {
       // User wants to disable notifications
       await NotificationService.cancelAllNotifications();
       setNotificationsEnabled(false);
+    }
+  };
+
+  const handleTimeFormatToggle = (value: boolean) => {
+    selectHaptic();
+    setTimeFormat(value ? "24h" : "12h");
+  };
+
+  const handleOpenPinChange = () => {
+    tapHaptic();
+    setPinModalVisible(true);
+    setPinStep("current");
+    setCurrentPin("");
+    setNewPin("");
+  };
+
+  const handlePinChange = async () => {
+    confirmHaptic();
+
+    if (pinStep === "current") {
+      // Verify current PIN
+      const isValid = await verifyPin(currentPin);
+      if (!isValid) {
+        showAlert(
+          "error",
+          "Incorrect PIN",
+          "Current PIN is incorrect. Please try again.",
+        );
+        setCurrentPin("");
+        return;
+      }
+      setPinStep("new");
+    } else if (pinStep === "new") {
+      // Change PIN directly
+      const success = await changePin(currentPin, newPin);
+      if (success) {
+        showAlert(
+          "success",
+          "PIN Changed",
+          "Your PIN has been changed successfully.",
+        );
+        setPinModalVisible(false);
+        setCurrentPin("");
+        setNewPin("");
+        setPinStep("current");
+      } else {
+        showAlert(
+          "error",
+          "Change Failed",
+          "Failed to change PIN. Please try again.",
+        );
+      }
+    }
+  };
+
+  const handlePinInput = (value: string) => {
+    if (pinStep === "current") {
+      setCurrentPin(value);
+    } else {
+      setNewPin(value);
     }
   };
 
@@ -651,6 +719,70 @@ export default function SettingsScreen() {
               </View>
             </View>
 
+            {/* Time Format */}
+            <View className="mb-6">
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
+                >
+                  <Clock size={20} color="#FFFFFF" />
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  Time Format
+                </Text>
+              </View>
+
+              <View
+                className="rounded-3xl p-5"
+                style={{
+                  backgroundColor: surfaceBg,
+                  borderWidth: 2,
+                  borderColor: borderColor,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 8,
+                }}
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1 mr-4">
+                    <Text
+                      className="text-base font-semibold mb-1"
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                      }}
+                    >
+                      24-Hour Format
+                    </Text>
+                    <Text
+                      style={{
+                        color: "rgba(255, 255, 255, 0.8)",
+                        fontSize: 15,
+                      }}
+                    >
+                      {timeFormat === "24h"
+                        ? "Using 24-hour format (14:00)"
+                        : "Using 12-hour format (2:00 PM)"}
+                    </Text>
+                  </View>
+                  <ThemedSwitch
+                    value={timeFormat === "24h"}
+                    onValueChange={handleTimeFormatToggle}
+                    trackColor={Colors.primary}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+              </View>
+            </View>
+
             {/* Emotion Reflection */}
             <View className="mb-6">
               <View className="flex-row items-center mb-3">
@@ -912,6 +1044,45 @@ export default function SettingsScreen() {
                 }}
               >
                 <Pressable
+                  onPress={handleOpenPinChange}
+                  className="p-5 active:opacity-70"
+                  style={{
+                    borderBottomWidth: 1,
+                    borderBottomColor: hexToRgba(Colors.primary, 0.1),
+                  }}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text
+                        className="text-base font-semibold mb-1"
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        Change PIN
+                      </Text>
+                      <Text
+                        style={{
+                          color: "rgba(255, 255, 255, 0.8)",
+                          fontSize: 15,
+                        }}
+                      >
+                        Update your security PIN
+                      </Text>
+                    </View>
+                    <View
+                      className="w-8 h-8 rounded-full items-center justify-center"
+                      style={{
+                        backgroundColor: hexToRgba(Colors.primary, 0.2),
+                      }}
+                    >
+                      <Lock size={16} color="#FFFFFF" />
+                    </View>
+                  </View>
+                </Pressable>
+
+                <Pressable
                   onPress={() => {
                     tapHaptic();
                     router.push("/legal");
@@ -1082,6 +1253,289 @@ export default function SettingsScreen() {
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>
+
+      {/* PIN Change Modal */}
+      <Modal
+        visible={pinModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPinModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View
+            className="rounded-3xl p-6 w-full max-w-md"
+            style={{
+              backgroundColor: Colors.surfaceHighlight,
+              ...Shadows.large,
+            }}
+          >
+            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
+            {/* Header with centered title */}
+            <View
+              style={{
+                position: "relative",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <Text
+                className="text-2xl font-bold text-center"
+                style={{
+                  fontFamily: "Inter_700Bold",
+                  color: Colors.textPrimary,
+                }}
+              >
+                Change PIN
+              </Text>
+              <Pressable
+                onPress={() => setPinModalVisible(false)}
+                className="w-8 h-8 rounded-full items-center justify-center"
+                style={{
+                  backgroundColor: isDarkMode
+                    ? "rgba(139, 92, 246, 0.15)"
+                    : "#F3F4F6",
+                  position: "absolute",
+                  right: 0,
+                  top: 0,
+                }}
+              >
+                <X size={18} color={Colors.textPrimary} />
+              </Pressable>
+            </View>
+
+            {/* Step indicator */}
+            <View className="flex-row justify-center items-center gap-2 mb-4">
+              <View
+                className="w-8 h-2 rounded-full"
+                style={{ backgroundColor: Colors.primary }}
+              />
+              <View
+                className="w-8 h-2 rounded-full"
+                style={{
+                  backgroundColor:
+                    pinStep === "new"
+                      ? Colors.primary
+                      : isDarkMode
+                        ? "rgba(255,255,255,0.2)"
+                        : "rgba(0,0,0,0.15)",
+                }}
+              />
+            </View>
+
+            <Text
+              className="text-center text-base mb-6"
+              style={{ color: Colors.textSecondary }}
+            >
+              {pinStep === "current"
+                ? "Confirm your old PIN"
+                : "Enter your new PIN"}
+            </Text>
+
+            {/* PIN Input Display */}
+            <View className="flex-row justify-center mb-6 gap-3">
+              {[0, 1, 2, 3].map((index) => {
+                const currentValue =
+                  pinStep === "current" ? currentPin : newPin;
+                const isFilled = index < currentValue.length;
+                return (
+                  <View
+                    key={index}
+                    className="w-14 h-14 rounded-3xl items-center justify-center"
+                    style={{
+                      backgroundColor: isFilled
+                        ? Colors.primary
+                        : isDarkMode
+                          ? "rgba(139, 92, 246, 0.15)"
+                          : "#F3F4F6",
+                      borderWidth: 2,
+                      borderColor: isFilled ? Colors.primary : "transparent",
+                    }}
+                  >
+                    {isFilled && (
+                      <View
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: "#FFFFFF" }}
+                      />
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Number Pad */}
+            <View className="mb-4">
+              <View className="flex-row justify-center gap-3 mb-3">
+                {[1, 2, 3].map((num) => (
+                  <Pressable
+                    key={num}
+                    onPress={() => {
+                      const currentValue =
+                        pinStep === "current" ? currentPin : newPin;
+                      if (currentValue.length < 4) {
+                        tapHaptic();
+                        handlePinInput(currentValue + num.toString());
+                      }
+                    }}
+                    className="w-16 h-16 rounded-3xl items-center justify-center"
+                    style={{
+                      backgroundColor: isDarkMode
+                        ? "rgba(139, 92, 246, 0.15)"
+                        : "#F3F4F6",
+                    }}
+                  >
+                    <Text
+                      className="text-2xl font-bold"
+                      style={{
+                        color: Colors.textPrimary,
+                        fontFamily: "Inter_700Bold",
+                      }}
+                    >
+                      {num}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View className="flex-row justify-center gap-3 mb-3">
+                {[4, 5, 6].map((num) => (
+                  <Pressable
+                    key={num}
+                    onPress={() => {
+                      const currentValue =
+                        pinStep === "current" ? currentPin : newPin;
+                      if (currentValue.length < 4) {
+                        tapHaptic();
+                        handlePinInput(currentValue + num.toString());
+                      }
+                    }}
+                    className="w-16 h-16 rounded-3xl items-center justify-center"
+                    style={{
+                      backgroundColor: isDarkMode
+                        ? "rgba(139, 92, 246, 0.15)"
+                        : "#F3F4F6",
+                    }}
+                  >
+                    <Text
+                      className="text-2xl font-bold"
+                      style={{
+                        color: Colors.textPrimary,
+                        fontFamily: "Inter_700Bold",
+                      }}
+                    >
+                      {num}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View className="flex-row justify-center gap-3 mb-3">
+                {[7, 8, 9].map((num) => (
+                  <Pressable
+                    key={num}
+                    onPress={() => {
+                      const currentValue =
+                        pinStep === "current" ? currentPin : newPin;
+                      if (currentValue.length < 4) {
+                        tapHaptic();
+                        handlePinInput(currentValue + num.toString());
+                      }
+                    }}
+                    className="w-16 h-16 rounded-3xl items-center justify-center"
+                    style={{
+                      backgroundColor: isDarkMode
+                        ? "rgba(139, 92, 246, 0.15)"
+                        : "#F3F4F6",
+                    }}
+                  >
+                    <Text
+                      className="text-2xl font-bold"
+                      style={{
+                        color: Colors.textPrimary,
+                        fontFamily: "Inter_700Bold",
+                      }}
+                    >
+                      {num}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View className="flex-row justify-center gap-3">
+                <View className="w-16 h-16" />
+                <Pressable
+                  onPress={() => {
+                    const currentValue =
+                      pinStep === "current" ? currentPin : newPin;
+                    if (currentValue.length < 4) {
+                      tapHaptic();
+                      handlePinInput(currentValue + "0");
+                    }
+                  }}
+                  className="w-16 h-16 rounded-3xl items-center justify-center"
+                  style={{
+                    backgroundColor: isDarkMode
+                      ? "rgba(139, 92, 246, 0.15)"
+                      : "#F3F4F6",
+                  }}
+                >
+                  <Text
+                    className="text-2xl font-bold"
+                    style={{
+                      color: Colors.textPrimary,
+                      fontFamily: "Inter_700Bold",
+                    }}
+                  >
+                    0
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    const currentValue =
+                      pinStep === "current" ? currentPin : newPin;
+                    handlePinInput(currentValue.slice(0, -1));
+                  }}
+                  className="w-16 h-16 rounded-3xl items-center justify-center"
+                  style={{
+                    backgroundColor: isDarkMode
+                      ? "rgba(139, 92, 246, 0.15)"
+                      : "#F3F4F6",
+                  }}
+                >
+                  <X size={24} color={Colors.textPrimary} />
+                </Pressable>
+              </View>
+            </View>
+
+            <Pressable
+              onPress={handlePinChange}
+              disabled={
+                (pinStep === "current" && currentPin.length !== 4) ||
+                (pinStep === "new" && newPin.length !== 4)
+              }
+              className="rounded-3xl overflow-hidden"
+              style={{
+                opacity:
+                  (pinStep === "current" && currentPin.length !== 4) ||
+                  (pinStep === "new" && newPin.length !== 4)
+                    ? 0.5
+                    : 1,
+              }}
+            >
+              <LinearGradient
+                colors={Gradients.primary}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ padding: 16, alignItems: "center" }}
+              >
+                <Text
+                  className="text-white text-lg font-bold"
+                  style={{ fontFamily: "Inter_700Bold" }}
+                >
+                  {pinStep === "new" ? "Change PIN" : "Continue"}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       {/* Sign Out Confirmation Modal */}
       <Modal
