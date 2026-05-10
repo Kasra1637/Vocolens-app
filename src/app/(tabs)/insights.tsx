@@ -474,39 +474,39 @@ function InsightsContent({
             <Pressable
               onPress={handlePopulateDummyData}
               style={{
-                backgroundColor: Colors.surface,
-                borderRadius: BorderRadius.large,
-                padding: 16,
-                ...Shadows.medium,
-                borderWidth: 2,
-                borderColor: Colors.primary,
-                borderStyle: "dashed",
+                borderRadius: 24,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: hexToRgba(Colors.primary, 0.15),
               }}
             >
-              <View className="flex-row items-center justify-center">
-                <Sparkles size={20} color="#FFFFFF" strokeWidth={2} />
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
+              <View style={{ padding: 16 }}>
+                <View className="flex-row items-center justify-center">
+                  <Sparkles size={20} color="#FFFFFF" strokeWidth={2} />
+                  <Text
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#FFFFFF",
+                      fontSize: 15,
+                      marginLeft: 8,
+                    }}
+                  >
+                    Load Demo Data
+                  </Text>
+                </View>
                 <Text
                   style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "#FFFFFF",
-                    fontSize: 15,
-                    marginLeft: 8,
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255, 255, 255, 0.8)",
+                    fontSize: 12,
+                    textAlign: "center",
+                    marginTop: 6,
                   }}
                 >
-                  Load Demo Data
+                  Populate with sample journal entries to preview features
                 </Text>
               </View>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255, 255, 255, 0.8)",
-                  fontSize: 12,
-                  textAlign: "center",
-                  marginTop: 6,
-                }}
-              >
-                Populate with sample journal entries to preview features
-              </Text>
             </Pressable>
           </View>
         )}
@@ -541,13 +541,14 @@ function InsightsContent({
 
         {/* Valence-Arousal Emotional Landscape */}
         <View
-          className="rounded-2xl overflow-hidden mb-6"
+          className="rounded-3xl overflow-hidden mb-6"
           style={{
             backgroundColor: hexToRgba(Colors.primary, 0.18),
             borderWidth: 1,
             borderColor: hexToRgba(Colors.primary, 0.15),
           }}
         >
+          <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
           <ValenceArousalChart
             entries={entries}
             primaryColor={Colors.primary}
@@ -583,28 +584,19 @@ function InsightsContent({
             if (sorted.length === 0) return null;
             return (
               <View
-                className="rounded-2xl overflow-hidden mb-6"
+                className="rounded-3xl overflow-hidden mb-6"
                 style={{
                   backgroundColor: hexToRgba(Colors.primary, 0.18),
                   borderWidth: 1,
                   borderColor: hexToRgba(Colors.primary, 0.15),
+                  ...Shadows.medium,
                 }}
               >
-                <View
-                  style={{
-                    backgroundColor: hexToRgba(Colors.primary, 0.18),
-                    borderWidth: 1,
-                    borderColor: hexToRgba(Colors.primary, 0.15),
-                    borderRadius: BorderRadius.xxlarge,
-                    padding: 20,
-                    overflow: "hidden",
-                    ...Shadows.medium,
-                  }}
-                >
-                  <GlassLayers
-                    primaryColor={Colors.primary}
-                    borderRadius={BorderRadius.xxlarge}
-                  />
+                <GlassLayers
+                  primaryColor={Colors.primary}
+                  borderRadius={24}
+                />
+                <View style={{ padding: 20 }}>
                   <View
                     style={{
                       flexDirection: "row",

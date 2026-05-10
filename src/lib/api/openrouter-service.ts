@@ -16,9 +16,10 @@ import {
   buildIntensityLabels,
   getIntensityLabel,
 } from '../types';
+import { getOpenRouterKey } from '../api-key-storage';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-const MODEL = 'anthropic/claude-3.5-sonnet-20241022';
+const MODEL = 'anthropic/claude-3.7-sonnet';
 
 const BACKEND_URL =
   Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL ||
@@ -225,11 +226,18 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
 
 // ── API call ──────────────────────────────────────────────────────────────────
 
+/** Resolves the best available API key: stored key > env var */
+async function resolveApiKey(): Promise<string> {
+  const stored = await getOpenRouterKey();
+  if (stored && stored.startsWith('sk-or-')) return stored;
+  return OPENROUTER_API_KEY;
+}
+
 async function callClaudeDirect(
   transcript: string,
   personalizationContext?: string,
 ): Promise<OpenRouterAnalysisResult> {
-  const apiKey = OPENROUTER_API_KEY;
+  const apiKey = await resolveApiKey();
   if (!apiKey || !apiKey.startsWith('sk-or-')) {
     throw new Error('OpenRouter API key not configured client-side');
   }
@@ -249,7 +257,7 @@ async function callClaudeDirect(
         { role: 'user', content: `Analyse this journal entry:\n\n"${transcript}"` },
       ],
       temperature: 0.7,
-      max_tokens: 1400,
+      max_tokens: 1200,
     }),
   });
 
@@ -318,7 +326,8 @@ export async function analyzeWithOpenRouter(
 }
 
 export async function checkOpenRouterStatus(): Promise<boolean> {
-  if (OPENROUTER_API_KEY && OPENROUTER_API_KEY.startsWith('sk-or-')) return true;
+  const key = await resolveApiKey();
+  if (key && key.startsWith('sk-or-')) return true;
   try {
     const response = await fetch(`${BACKEND_URL}/api/journal/status`);
     if (!response.ok) return false;

@@ -3,7 +3,7 @@
  * Customizable settings menu for theme, notifications, dark mode, PIN, time, and sign out
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Modal,
   Alert,
   Platform,
+  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -79,6 +80,13 @@ import { removePin } from "@/lib/auth-service";
 import { exportAllDataAsCsv } from "@/lib/export-data";
 import { getLanguageByCode } from "@/lib/languages";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
+import {
+  saveOpenRouterKey,
+  getOpenRouterKey,
+  clearOpenRouterKey,
+  hasOpenRouterKey,
+} from "@/lib/api-key-storage";
+import { Eye, EyeOff } from "lucide-react-native";
 
 export default function SettingsScreen() {
   const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
@@ -94,6 +102,12 @@ export default function SettingsScreen() {
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [isExporting, setIsExporting] = useState(false);
+  // API Key state
+  const [apiKeyModalVisible, setApiKeyModalVisible] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [apiKeyVisible, setApiKeyVisible] = useState(false);
+  const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
+  const [apiKeySaving, setApiKeySaving] = useState(false);
   // Onboarding Store (for theme and notification time)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const setSelectedTheme = useOnboardingStore((s) => s.setSelectedTheme);
@@ -155,6 +169,54 @@ export default function SettingsScreen() {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertVisible(true);
+  };
+
+  // Check API key status on mount
+  useEffect(() => {
+    hasOpenRouterKey().then(setApiKeyConfigured);
+  }, []);
+
+  const handleOpenApiKeyModal = async () => {
+    tapHaptic();
+    // Pre-fill with masked placeholder if key exists
+    const stored = await getOpenRouterKey();
+    setApiKeyInput(stored && stored.startsWith("sk-or-") ? stored : "");
+    setApiKeyVisible(false);
+    setApiKeyModalVisible(true);
+  };
+
+  const handleSaveApiKey = async () => {
+    const trimmed = apiKeyInput.trim();
+    if (!trimmed) {
+      showAlert("error", "Empty Key", "Please paste your OpenRouter API key.");
+      return;
+    }
+    if (!trimmed.startsWith("sk-or-")) {
+      showAlert("error", "Invalid Key", "OpenRouter keys must start with sk-or-");
+      return;
+    }
+    setApiKeySaving(true);
+    try {
+      await saveOpenRouterKey(trimmed);
+      setApiKeyConfigured(true);
+      setApiKeyModalVisible(false);
+      setApiKeyInput("");
+      confirmHaptic();
+      showAlert("success", "API Key Saved", "Claude 3.5 Sonnet is now active for emotion analysis.");
+    } catch {
+      showAlert("error", "Save Failed", "Could not save the key securely. Please try again.");
+    } finally {
+      setApiKeySaving(false);
+    }
+  };
+
+  const handleClearApiKey = async () => {
+    tapHaptic();
+    await clearOpenRouterKey();
+    setApiKeyConfigured(false);
+    setApiKeyInput("");
+    setApiKeyModalVisible(false);
+    showAlert("success", "Key Removed", "Reverted to the built-in API key.");
   };
 
   const handleThemeSelect = (theme: ThemeColorType) => {
@@ -1010,6 +1072,72 @@ export default function SettingsScreen() {
               </Pressable>
             </View>
 
+            {/* AI Engine */}
+            <View className="mb-6">
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
+                >
+                  <Brain size={20} color="#FFFFFF" />
+                </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+                >
+                  AI Engine
+                </Text>
+              </View>
+
+              <View
+                className="rounded-3xl overflow-hidden"
+                style={{
+                  backgroundColor: surfaceBg,
+                  borderWidth: 2,
+                  borderColor: borderColor,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 8,
+                }}
+              >
+                <Pressable
+                  onPress={handleOpenApiKeyModal}
+                  className="p-5 active:opacity-70"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text
+                        className="text-base font-semibold mb-1"
+                        style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+                      >
+                        OpenRouter API Key
+                      </Text>
+                      <View className="flex-row items-center" style={{ gap: 6 }}>
+                        <View
+                          style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: 4,
+                            backgroundColor: apiKeyConfigured ? "#4ade80" : "rgba(255,255,255,0.3)",
+                          }}
+                        />
+                        <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 14 }}>
+                          {apiKeyConfigured ? "Claude 3.5 Sonnet — active" : "Using built-in key"}
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      className="w-8 h-8 rounded-full items-center justify-center"
+                      style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
+                    >
+                      <ChevronRight size={16} color="#FFFFFF" />
+                    </View>
+                  </View>
+                </Pressable>
+              </View>
+            </View>
+
             {/* Privacy & Security */}
             <View className="mb-6">
               <View className="flex-row items-center mb-3">
@@ -1252,6 +1380,159 @@ export default function SettingsScreen() {
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>
+
+      {/* API Key Modal */}
+      <Modal
+        visible={apiKeyModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setApiKeyModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/60 items-center justify-center px-6">
+          <View
+            className="rounded-3xl overflow-hidden w-full"
+            style={{ maxWidth: 400 }}
+          >
+            <LinearGradient
+              colors={Gradients.background}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={{
+                padding: 24,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: hexToRgba(Colors.primary, 0.25),
+              }}
+            >
+              {/* Header */}
+              <View className="flex-row items-center justify-between mb-5">
+                <View className="flex-row items-center" style={{ gap: 10 }}>
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: hexToRgba(Colors.primary, 0.2),
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Brain size={18} color="#FFFFFF" />
+                  </View>
+                  <Text
+                    style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 17 }}
+                  >
+                    OpenRouter API Key
+                  </Text>
+                </View>
+                <Pressable onPress={() => setApiKeyModalVisible(false)}>
+                  <X size={22} color="rgba(255,255,255,0.6)" strokeWidth={2} />
+                </Pressable>
+              </View>
+
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.75)",
+                  fontSize: 13,
+                  lineHeight: 20,
+                  marginBottom: 16,
+                }}
+              >
+                Your key is stored securely on this device (iOS Keychain / Android Keystore). It is never sent to any server other than OpenRouter.
+              </Text>
+
+              {/* Key input */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                  borderRadius: 14,
+                  borderWidth: 1.5,
+                  borderColor: hexToRgba(Colors.primary, 0.3),
+                  paddingHorizontal: 14,
+                  marginBottom: 20,
+                  minHeight: 52,
+                }}
+              >
+                <TextInput
+                  value={apiKeyInput}
+                  onChangeText={setApiKeyInput}
+                  placeholder="sk-or-v1-…"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  secureTextEntry={!apiKeyVisible}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="off"
+                  style={{
+                    flex: 1,
+                    fontFamily: "Inter_400Regular",
+                    color: "#FFFFFF",
+                    fontSize: 14,
+                    paddingVertical: 14,
+                    letterSpacing: apiKeyVisible ? 0 : 2,
+                  }}
+                />
+                <Pressable
+                  onPress={() => setApiKeyVisible((v) => !v)}
+                  style={{ paddingLeft: 10 }}
+                >
+                  {apiKeyVisible
+                    ? <EyeOff size={18} color="rgba(255,255,255,0.5)" strokeWidth={2} />
+                    : <Eye size={18} color="rgba(255,255,255,0.5)" strokeWidth={2} />
+                  }
+                </Pressable>
+              </View>
+
+              {/* Buttons */}
+              <View style={{ gap: 10 }}>
+                <Pressable
+                  onPress={handleSaveApiKey}
+                  disabled={apiKeySaving}
+                  style={{
+                    backgroundColor: Colors.primary,
+                    borderRadius: 14,
+                    paddingVertical: 15,
+                    alignItems: "center",
+                    opacity: apiKeySaving ? 0.6 : 1,
+                  }}
+                >
+                  <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 15 }}>
+                    {apiKeySaving ? "Saving…" : "Save Key"}
+                  </Text>
+                </Pressable>
+
+                {apiKeyConfigured && (
+                  <Pressable
+                    onPress={handleClearApiKey}
+                    style={{
+                      borderRadius: 14,
+                      paddingVertical: 14,
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "rgba(255,80,80,0.4)",
+                    }}
+                  >
+                    <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FF8080", fontSize: 14 }}>
+                      Remove Saved Key
+                    </Text>
+                  </Pressable>
+                )}
+
+                <Pressable
+                  onPress={() => setApiKeyModalVisible(false)}
+                  style={{ paddingVertical: 12, alignItems: "center" }}
+                >
+                  <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
+                    Cancel
+                  </Text>
+                </Pressable>
+              </View>
+            </LinearGradient>
+          </View>
+        </View>
+      </Modal>
 
       {/* PIN Change Modal */}
       <Modal
