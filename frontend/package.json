@@ -1,0 +1,8 @@
+{
+  "name": "vocolens-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "cd /app && ([ -d dist ] || (EXPO_TUNNEL=none EXPO_OFFLINE=true EXPO_NO_DEV_CLIENT=true npx expo export --platform web --output-dir dist 2>&1)) && serve dist --listen ${PORT:-3000} --single --no-clipboard"
+  }
+}
