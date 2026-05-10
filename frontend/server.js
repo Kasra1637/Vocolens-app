@@ -160,7 +160,7 @@ function getHTML(tunnelUrl, expoUrl) {
     }
 
     function checkTunnel() {
-      fetch('/api/tunnel-url')
+      fetch('/tunnel-url')
         .then(function(r) { return r.json(); })
         .then(function(d) {
           if (d.expoUrl && d.expoUrl !== EXPO_URL) {
@@ -214,7 +214,7 @@ function getTunnelInfo(cb) {
 
 // HTTP server
 const server = http.createServer((req, res) => {
-  if (req.url === '/api/tunnel-url') {
+  if (req.url === '/tunnel-url') {
     getTunnelInfo((err, info) => {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
