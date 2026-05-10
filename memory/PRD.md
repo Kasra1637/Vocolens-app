@@ -1,12 +1,35 @@
-# PRD - Voice Journal App
+# PRD - VocoLens Voice Journal App
 
 ## Original Problem Statement
-Add an option to reset all app data and start from scratch. Adds a "Danger Zone" section in settings with a "Reset All Data" button that clears all user entries, stats, badges, PIN, and settings, returning the app to its initial state. The `resetBadges` function is updated to fully re-initialize badge states and clear pending celebrations.
+Use the source code from the connected GitHub repository for a native mobile app. Do not remove, simplify, or alter any existing logic, features, UI screens, navigation, backend integrations, or data structures. Make this mobile app run seamlessly in the app.emergent.sh ecosystem.
+
+## App Overview
+VocoLens is a React Native / Expo Voice Journal App that uses Plutchik's wheel of emotions for deep emotional analysis of voice journal entries. It uses OpenRouter API (GPT-4o audio-preview + GPT-4o text fallback) for AI-powered emotional analysis.
 
 ## Architecture
-- **Platform**: React Native / Expo
+- **Platform**: React Native / Expo (Expo Router for navigation)
+- **Frontend**: Expo web, pre-built static bundle served by `serve` on port 3000
+- **Backend**: Python FastAPI on port 8001 (replaces original Hono/TypeScript backend)
 - **State Management**: Zustand with AsyncStorage persistence
 - **Styling**: NativeWind (Tailwind CSS for RN) + expo-linear-gradient
+- **AI**: OpenRouter API (openai/gpt-4o-audio-preview + openai/gpt-4o fallback)
+
+## Project Structure
+```
+/app/
+├── src/                        # React Native Expo source code
+│   ├── app/(tabs)/             # Tab screens: home, entries, insights, milestones, settings
+│   ├── app/                    # Other screens: entry-detail, reflection, etc.
+│   └── components/, lib/       # Reusable components and utilities
+├── assets/                     # Images, sound effects
+├── backend/
+│   └── server.py               # Python FastAPI backend (created for Emergent ecosystem)
+├── frontend/
+│   └── package.json            # Frontend wrapper (created for Emergent ecosystem)
+├── dist/                       # Pre-built Expo web bundle (output of `npx expo export --platform web`)
+├── metro.config.js             # Metro bundler config (updated: 0.0.0.0 bind, PORT env var)
+└── .env.local                  # Environment variables incl. EXPO_PUBLIC_BACKEND_URL
+```
 
 ## Core Stores
 - `onboarding-store` - Theme, onboarding state, user preferences
@@ -19,63 +42,55 @@ Add an option to reset all app data and start from scratch. Adds a "Danger Zone"
 - `subscription-store` - Subscription status
 - `auth-store` - Auth state (ephemeral)
 
+## Backend API Endpoints
+- `GET /health` - Health check
+- `GET /api/sample/` - Sample greeting
+- `GET /api/journal/status` - OpenRouter connection status
+- `POST /api/journal/analyze` - Analyze journal transcript (audio+text or text-only)
+- `POST /api/journal/weekly-reflection` - Generate weekly digest
+- `POST /api/journal/ai-completion` - Generic AI completion
+- `GET /api/usage/status` - Get monthly usage
+- `POST /api/usage/record` - Record session usage
+
+## Environment Variables
+- `OPENROUTER_API_KEY` - OpenRouter API key (in .env.local)
+- `EXPO_PUBLIC_BACKEND_URL` - Backend URL for the Expo app (in .env.local, set to APP_URL)
+- `EXPO_PUBLIC_DEEPGRAM_API_KEY` - Deepgram API key for transcription
+- `EXPO_PUBLIC_OPENROUTER_API_KEY` - OpenRouter key for client-side calls
+- `APP_URL` - Set by Emergent supervisor: https://486cce79-9f32-4661-b20c-0a03390aa836.preview.emergentagent.com
+
 ## What's Been Implemented
-- **Jan 2026**: "Reset All Data" feature
-  - Added "Danger Zone" section at bottom of Settings screen
-  - Red-themed warning UI with AlertTriangle icon and Trash2 icon on button
-  - Simple confirmation modal with "Yes, Reset Everything" / "Cancel" buttons
-  - Resets ALL 8 stores: journal, badges, stats, settings, pin, emotion corrections, subscription, onboarding
-  - Clears PIN from secure storage via `removePin()`
-  - Updated `resetBadges()` to fully re-initialize badge states from BADGE_DEFINITIONS and clear pendingCelebrations
-  - Redirects to onboarding screen after reset
-  - All data-testid attributes added for testing
 
-- **Jan 2026**: "Export All Data" feature
-  - CSV export of all app data (journal entries, stats, badges, settings, emotion corrections)
-  - Uses expo-file-system + expo-sharing for native file write and share sheet
-  - "Export as CSV" button in Danger Zone section, above Reset button with divider separator
-  - Loading state with "Exporting..." feedback
-  - New utility: `/app/src/lib/export-data.ts`
+### Original App Features (from GitHub, preserved intact)
+- Multi-step onboarding flow with theme selection (6 color themes)
+- Voice journal recording with Deepgram transcription
+- AI emotional analysis using Plutchik's wheel (8 emotions)
+- Entries list with collapsible transcripts
+- Insights screen with weekly reflections
+- Milestones/badges screen
+- Settings with PIN protection, export, reset
 
-- **Jan 2026**: Font migration & readability improvements
-  - Replaced Comfortaa with Inter font family across all 41 files
-  - Installed `@expo-google-fonts/inter` (v0.4.2)
-  - Standardized typography: headings 22px Bold, body 15px Regular, labels 12px Medium
-  - Improved line heights (body text now 22px+, labels 18-20px)
-  - Increased touch targets on dropdowns, filters, radio buttons (py-3 minimum)
-  - Font colors kept unchanged as requested
+### Emergent Platform Integration (May 2026)
+- **Python FastAPI backend** (`/app/backend/server.py`): Replicates all Hono/TypeScript backend routes in Python, loads env from `/app/.env.local`, implements journal analysis, usage tracking, sample routes
+- **Frontend wrapper** (`/app/frontend/package.json`): Wrapper that runs pre-built Expo web bundle via `serve` on port 3000 (avoids inotify watcher limit in Kubernetes)
+- **Static web build** (`/app/dist/`): Pre-built Expo web app via `npx expo export --platform web`
+- **Metro config update**: Updated to bind on `0.0.0.0` and use `PORT` env var
+- **EXPO_PUBLIC_BACKEND_URL**: Set in `.env.local` to Emergent APP_URL for correct API routing
 
-- **Jan 2026**: Settings restructure
-  - Removed standalone "Danger Zone" section
-  - Removed "Privacy Settings" link (Export data, manage entries & account)
-  - Moved Export All Data + Reset All Data into the Privacy & Security card
-  - Privacy & Security now contains: Change PIN, Privacy Policy & Terms, Export All Data, Reset All Data
+## Known Limitations
+- **No hot reload**: Frontend uses pre-built static bundle, not the dev server. Requires manual rebuild after code changes: `cd /app && npx expo export --platform web --output-dir dist`
+- **Usage store is in-memory**: Same as original Hono backend - resets on server restart (by design)
+- **In-memory usage**: No MongoDB persistence for usage data
 
-- **Jan 2026**: Tab bar blend
-  - Removed border radius and shadow from bottom tab bar
-  - Background uses `backgroundGradient[2]` (darkest gradient stop) for seamless blend with screen gradient
-
-- **Jan 2026**: Journal entries UX improvements
-  - Dynamic title generation from transcript when title is generic
-  - Collapsible transcript (2 lines + "Read more") on both entries list and entry detail
-  - Themed delete confirmation modal with gradient background (replaces white modal)
-  - Cancel button: transparent bg + theme color border; delete button: red gradient
-  - Edit mode: header icons (X, Save) stay white; title editable via TextInput
-  - Split delete handler into request + confirm pattern with haptic feedback
-
-- **Jan 2026**: Two-step reset confirmation (no PIN)
-  - Replaced single confirmation with two-step flow: Step 1 "Reset All Data?" → Step 2 "Are you sure?"
-  - Step indicator dots show progress; Cancel resets to step 1
-  - No PIN input required — just double confirmation then immediate data wipe
-
-- **Feb 2026**: Glassmorphic style unified across Settings & Milestones screens
-  - Settings screen: all 7 section cards (Usage, Theme, Notifications, Time Format, Emotion Reflection, Language, Privacy) updated to onboarding white-opacity glass style: `rgba(255,255,255,0.12)` bg, `borderWidth: 2`, `rgba(255,255,255,0.20)` border, `shadow(0,4,8,0.08)`. All `GlassLayers` removed from cards (kept in modals).
-  - Milestones screen: StatsOverview, CategoryDropdown trigger+list+items, every BadgeCard, and BadgeModal popup all updated to same style. Removed `GlassLayers` import and all `StaticShadows` usages. Requirement and Tip boxes inside modal also updated to white-opacity glass.
+## Rebuild After Code Changes
+When frontend code changes, rebuild with:
+```bash
+cd /app && rm -rf dist && npx expo export --platform web --output-dir dist
+sudo supervisorctl restart frontend
+```
 
 ## Prioritized Backlog
 - P0: None
-- P1: None
+- P1: Auto-rebuild on code changes (webpack watch mode)
 - P2: CSV re-import functionality
-
-## Next Tasks
-- None pending
+- P2: MongoDB persistence for usage data
