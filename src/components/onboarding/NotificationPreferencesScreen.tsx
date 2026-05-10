@@ -21,7 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
-import { Clock, Bell, BellOff, Globe } from "lucide-react-native";
+import { Clock, Bell, BellOff } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import useOnboardingStore, {
   THEME_COLORS,
@@ -496,42 +496,7 @@ export function NotificationPreferencesScreen() {
                   </Pressable>
                 </Animated.View>
 
-                {/* ---- Timezone info ---- */}
-                <Animated.View entering={FadeInUp.delay(560).duration(400)}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      backgroundColor: "rgba(255,255,255,0.12)",
-                      borderRadius: 14,
-                      padding: 12,
-                      borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.2)",
-                    }}
-                  >
-                    <Globe
-                      size={16}
-                      color="rgba(255,255,255,0.75)"
-                      strokeWidth={2}
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text
-                      style={{
-                        flex: 1,
-                        color: "rgba(255,255,255,0.85)",
-                        fontFamily: "Inter_400Regular",
-                        fontSize: 12,
-                        lineHeight: 22,
-                      }}
-                    >
-                      Notifications will arrive at{" "}
-                      <Text style={{ fontFamily: "Inter_700Bold" }}>
-                        {formatTime(selectedTime)}
-                      </Text>{" "}
-                      in your local timezone ({timezone}).
-                    </Text>
-                  </View>
-                </Animated.View>
+                {/* Timezone info removed per design update */}
               </>
             )}
 
@@ -570,15 +535,16 @@ export function NotificationPreferencesScreen() {
                 </Text>
               </Animated.View>
             )}
+
+            {/* Continue button — directly below content, close to reminder time */}
+            <Animated.View
+              entering={FadeInUp.delay(580).duration(500)}
+              style={{ marginTop: 20, marginBottom: 8 }}
+            >
+              <OnboardingCTAButton label="Continue" onPress={handleContinue} />
+            </Animated.View>
           </ScrollView>
 
-          {/* Continue button */}
-          <Animated.View
-            entering={FadeInUp.delay(400).duration(500)}
-            className="px-6 pb-3"
-          >
-            <OnboardingCTAButton label="Continue" onPress={handleContinue} />
-          </Animated.View>
         </SafeAreaView>
       </LinearGradient>
 
