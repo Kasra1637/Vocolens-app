@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "cd /app && EXPO_TUNNEL=none EXPO_OFFLINE=true EXPO_NO_DEV_CLIENT=true METRO_PORT=3001 npx expo start --web --port 3001 --offline & node /app/frontend/proxy-server.js"
+    "start": "cd /app && EXPO_TUNNEL=true EXPO_NO_DEV_CLIENT=true METRO_PORT=3001 npx expo start --tunnel --port 3001 & node /app/frontend/proxy-server.js"
   }
 }
