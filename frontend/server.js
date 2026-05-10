@@ -1,0 +1,240 @@
+/**
+ * VocoLens - Expo Native Dev Server Landing Page
+ * Runs on port 3000. Metro bundler runs on 8081 via ngrok tunnel.
+ * Shows QR code for Expo Go once the tunnel is ready.
+ */
+const http = require('http');
+const { execFile } = require('child_process');
+const path = require('path');
+
+const PORT = parseInt(process.env.PORT) || 3000;
+
+// HTML page that polls for tunnel URL and renders QR code in browser
+function getHTML(tunnelUrl, expoUrl) {
+  const isReady = !!tunnelUrl;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VocoLens – Open in Expo Go</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #6B3FA0 0%, #4A2880 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .card {
+      background: rgba(255,255,255,0.12);
+      border: 2px solid rgba(255,255,255,0.20);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      backdrop-filter: blur(12px);
+    }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+    .subtitle { opacity: 0.75; font-size: 15px; margin-bottom: 28px; }
+    #qr-wrap {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+    #qr-wrap canvas, #qr-wrap img { display: block; }
+    .status {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .status.ready { background: rgba(74,222,128,0.2); color: #86efac; }
+    .status.loading { color: rgba(255,255,255,0.7); }
+    .steps { text-align: left; margin-top: 16px; }
+    .step {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+    .step-num {
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .step-text { font-size: 14px; line-height: 1.4; opacity: 0.9; }
+    .step-text a { color: #c4b5fd; }
+    .url-box {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+      margin-top: 8px;
+      opacity: 0.85;
+    }
+    .spinner {
+      display: inline-block;
+      width: 200px;
+      height: 200px;
+      border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>VocoLens</h1>
+    <p class="subtitle">Voice Journal with AI Emotion Analysis</p>
+
+    <div id="qr-wrap">
+      ${isReady
+        ? '<div id="qr-code"></div>'
+        : '<div class="spinner"></div>'
+      }
+    </div>
+
+    <div class="status ${isReady ? 'ready' : 'loading'}" id="status">
+      ${isReady
+        ? '✓ Dev server ready — scan QR code with Expo Go'
+        : '⏳ Starting Metro dev server... (may take 30–60s)'
+      }
+    </div>
+
+    ${isReady && expoUrl ? `<div class="url-box">${expoUrl}</div>` : ''}
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          Install <strong>Expo Go</strong> on your iPhone or Android:<br/>
+          <a href="https://apps.apple.com/app/expo-go/id982107779" target="_blank">App Store</a> &nbsp;·&nbsp;
+          <a href="https://play.google.com/store/apps/details?id=host.exp.exponent" target="_blank">Google Play</a>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Open Expo Go → tap <strong>Scan QR Code</strong> and point at the code above.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">VocoLens loads natively on your device. Microphone &amp; all features work.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var EXPO_URL = ${JSON.stringify(expoUrl || null)};
+
+    function renderQR(url) {
+      var wrap = document.getElementById('qr-wrap');
+      wrap.innerHTML = '<div id="qr-code"></div>';
+      new QRCode(document.getElementById('qr-code'), {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    function checkTunnel() {
+      fetch('/api/tunnel-url')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.expoUrl && d.expoUrl !== EXPO_URL) {
+            EXPO_URL = d.expoUrl;
+            renderQR(d.expoUrl);
+            document.getElementById('status').className = 'status ready';
+            document.getElementById('status').textContent = '✓ Dev server ready — scan QR code with Expo Go';
+          }
+        })
+        .catch(function() {});
+    }
+
+    if (EXPO_URL) {
+      renderQR(EXPO_URL);
+    } else {
+      setInterval(checkTunnel, 3000);
+      checkTunnel();
+    }
+  </script>
+</body>
+</html>`;
+}
+
+// Fetch current tunnel URL from ngrok API
+function getTunnelInfo(cb) {
+  const opts = { hostname: '127.0.0.1', port: 4040, path: '/api/tunnels', timeout: 2000 };
+  const req = http.get(opts, (res) => {
+    let data = '';
+    res.on('data', (c) => data += c);
+    res.on('end', () => {
+      try {
+        const json = JSON.parse(data);
+        const tunnels = json.tunnels || [];
+        const https = tunnels.find((t) => t.public_url && t.public_url.startsWith('https://'));
+        const http_ = tunnels.find((t) => t.public_url && t.public_url.startsWith('http://'));
+        const tunnel = https || http_;
+        if (tunnel) {
+          const host = tunnel.public_url.replace(/^https?:\/\//, '');
+          cb(null, { tunnelUrl: tunnel.public_url, expoUrl: 'exp://' + host });
+        } else {
+          cb(new Error('no tunnels'));
+        }
+      } catch (e) {
+        cb(e);
+      }
+    });
+  });
+  req.on('error', cb);
+  req.on('timeout', () => { req.destroy(); cb(new Error('timeout')); });
+}
+
+// HTTP server
+const server = http.createServer((req, res) => {
+  if (req.url === '/api/tunnel-url') {
+    getTunnelInfo((err, info) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      if (err || !info) {
+        res.writeHead(200);
+        res.end(JSON.stringify({ ready: false }));
+      } else {
+        res.writeHead(200);
+        res.end(JSON.stringify({ ready: true, ...info }));
+      }
+    });
+  } else {
+    getTunnelInfo((err, info) => {
+      res.setHeader('Content-Type', 'text/html');
+      res.writeHead(200);
+      res.end(getHTML(info ? info.tunnelUrl : null, info ? info.expoUrl : null));
+    });
+  }
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('[VocoLens] Landing page running on port', PORT);
+});

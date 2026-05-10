@@ -1,0 +1,49 @@
+{
+  "summary": "Tested VocoLens landing page and backend APIs. Landing page renders correctly with QR code, status, steps, and store links. Backend APIs for journal/status and usage/status work correctly. One issue: /api/tunnel-url returns 404 externally because /api/* routes are proxied to FastAPI backend which doesn't have that endpoint.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/tunnel-url",
+        "issue": "Returns 404 - Kubernetes ingress routes /api/* to FastAPI backend (port 8001), but this endpoint only exists in the Node.js landing page server (port 3000). Browser-side polling for dynamic QR updates will fail.",
+        "priority": "MEDIUM"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Dynamic QR code update via polling",
+        "issue": "Client-side fetch('/api/tunnel-url') will always get 404 from FastAPI backend. Initial page load embeds tunnel URL server-side so QR works, but dynamic updates (if tunnel restarts) won't work.",
+        "affected_selectors": ["#qr-wrap", "#status"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Add /tunnel-url endpoint to FastAPI backend (server.py) OR rename the landing page endpoint from /api/tunnel-url to /tunnel-url (non-api prefix) so it's not intercepted by backend routing. Recommended: rename to /tunnel-url in server.js and update the client-side fetch call to match."
+  ],
+  "critical_code_review_comments": [
+    "/api/tunnel-url route collision: The Node.js server.js handles /api/tunnel-url on port 3000, but the ingress sends all /api/* to port 8001 (FastAPI). The client-side JavaScript polls /api/tunnel-url which gets 404. Fix: either add the endpoint to FastAPI backend, or change the route to /tunnel-url (without /api prefix) and update the fetch() call in server.js."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "67% (2/3 endpoints pass - journal/status ✅, usage/status ✅, tunnel-url ❌)",
+    "frontend": "90% (landing page renders correctly with QR code; dynamic polling broken)"
+  },
+  "feature_checklist": {
+    "landing_page_loads_with_qr": "PASS - QR code visible showing exp://y-fws0e-anonymous-8081.exp.direct",
+    "qr_contains_exp_url": "PASS - exp://y-fws0e-anonymous-8081.exp.direct shown",
+    "status_shows_ready": "PASS - '✓ Dev server ready — scan QR code with Expo Go'",
+    "app_store_links": "PASS - Both App Store and Google Play links present",
+    "3_step_instructions": "PASS - All 3 steps visible",
+    "journal_status_openrouter_connected": "PASS - {openrouter: connected}",
+    "usage_status_returns_data": "PASS - monthly/total minutes, limit data returned",
+    "tunnel_url_endpoint": "FAIL - 404 due to /api/* routing to FastAPI"
+  },
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Landing page works (server-side renders QR code). The only issue is /api/tunnel-url 404 due to ingress routing all /api/* to FastAPI. Fix the route name in server.js or add endpoint to FastAPI. After fix, test that the client-side polling updates QR dynamically."
+}

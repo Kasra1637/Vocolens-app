@@ -12,8 +12,7 @@ config.resolver.useWatchman = false;
 // Completely disable tunneling at Metro level
 config.server = {
   ...config.server,
-  port: parseInt(process.env.PORT) || parseInt(process.env.METRO_PORT) || 3000,
-  host: process.env.HOST || "0.0.0.0",
+  port: parseInt(process.env.PORT) || parseInt(process.env.METRO_PORT) || 8081,
   runInspectorProxy: false,
   enhanceMiddleware: (middleware) => {
     return (req, res, next) => {
