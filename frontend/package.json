@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "cd /app && npx expo start --tunnel > /tmp/expo-metro.log 2>&1 & node /app/frontend/server.js"
+    "start": "cd /app && EXPO_TUNNEL=none EXPO_OFFLINE=true EXPO_NO_DEV_CLIENT=true npx expo start --web --port ${PORT:-3000} --offline"
   }
 }
