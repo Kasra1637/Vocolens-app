@@ -25,7 +25,7 @@ load_dotenv('/app/.env.local')
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-MODEL = "anthropic/claude-3.5-sonnet-20241022"
+MODEL = "anthropic/claude-3.7-sonnet"
 # kept for compatibility
 AUDIO_MODEL = MODEL
 TEXT_FALLBACK_MODEL = MODEL
@@ -323,7 +323,7 @@ async def analyze_transcript(transcript: str, audio_base64: Optional[str] = None
             {"role": "user", "content": f'Analyse this journal entry:\n\n"{transcript}"'},
         ],
         "temperature": 0.7,
-        "max_tokens": 1400,
+        "max_tokens": 1200,
     }
 
     async with httpx.AsyncClient(timeout=60.0) as client:

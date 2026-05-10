@@ -19,7 +19,7 @@ import {
 import { getOpenRouterKey } from '../api-key-storage';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-const MODEL = 'anthropic/claude-3.5-sonnet-20241022';
+const MODEL = 'anthropic/claude-3.7-sonnet';
 
 const BACKEND_URL =
   Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL ||
@@ -257,7 +257,7 @@ async function callClaudeDirect(
         { role: 'user', content: `Analyse this journal entry:\n\n"${transcript}"` },
       ],
       temperature: 0.7,
-      max_tokens: 1400,
+      max_tokens: 1200,
     }),
   });
 
