@@ -4,22 +4,13 @@
  * Shows QR code for Expo Go once the tunnel is ready.
  */
 const http = require('http');
-const { execFile } = require('child_process');
-const path = require('path');
 
 const PORT = parseInt(process.env.PORT) || 3000;
 
-// HTML page that polls for tunnel URL and renders QR code in browser
-function getHTML(tunnelUrl, expoUrl) {
-  const isReady = !!tunnelUrl;
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>VocoLens – Open in Expo Go</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <style>
+// ── HTML component builders ───────────────────────────────────────────────────
+
+function buildStyles() {
+  return `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -60,23 +51,13 @@ function getHTML(tunnelUrl, expoUrl) {
     .status.ready { background: rgba(74,222,128,0.2); color: #86efac; }
     .status.loading { color: rgba(255,255,255,0.7); }
     .steps { text-align: left; margin-top: 16px; }
-    .step {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
-      align-items: flex-start;
-    }
+    .step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
     .step-num {
       background: rgba(255,255,255,0.2);
       border-radius: 50%;
-      width: 26px;
-      height: 26px;
-      min-width: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
+      width: 26px; height: 26px; min-width: 26px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600;
     }
     .step-text { font-size: 14px; line-height: 1.4; opacity: 0.9; }
     .step-text a { color: #c4b5fd; }
@@ -92,64 +73,67 @@ function getHTML(tunnelUrl, expoUrl) {
     }
     .spinner {
       display: inline-block;
-      width: 200px;
-      height: 200px;
+      width: 200px; height: 200px;
       border: 3px solid rgba(255,255,255,0.2);
       border-top-color: white;
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>VocoLens</h1>
-    <p class="subtitle">Voice Journal with AI Emotion Analysis</p>
+    @keyframes spin { to { transform: rotate(360deg); } }`;
+}
 
+function buildQRSection(isReady) {
+  return `
     <div id="qr-wrap">
-      ${isReady
-        ? '<div id="qr-code"></div>'
-        : '<div class="spinner"></div>'
-      }
+      ${isReady ? '<div id="qr-code"></div>' : '<div class="spinner"></div>'}
     </div>
-
     <div class="status ${isReady ? 'ready' : 'loading'}" id="status">
-      ${isReady
-        ? '✓ Dev server ready — scan QR code with Expo Go'
-        : '⏳ Starting Metro dev server... (may take 30–60s)'
-      }
-    </div>
+      ${isReady ? '&#10003; Dev server ready &mdash; scan QR code with Expo Go' : '&#8987; Starting Metro dev server&hellip; (may take 30&ndash;60s)'}
+    </div>`;
+}
 
-    ${isReady && expoUrl ? `<div class="url-box">${expoUrl}</div>` : ''}
+function buildUrlBox(isReady, expoUrl) {
+  if (!isReady || !expoUrl) return '';
+  const safe = expoUrl.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<div class="url-box">${safe}</div>`;
+}
 
+function buildSteps() {
+  return `
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-text">
           Install <strong>Expo Go</strong> on your iPhone or Android:<br/>
-          <a href="https://apps.apple.com/app/expo-go/id982107779" target="_blank">App Store</a> &nbsp;·&nbsp;
-          <a href="https://play.google.com/store/apps/details?id=host.exp.exponent" target="_blank">Google Play</a>
+          <a href="https://apps.apple.com/app/expo-go/id982107779" target="_blank" rel="noopener">App Store</a>
+          &nbsp;&middot;&nbsp;
+          <a href="https://play.google.com/store/apps/details?id=host.exp.exponent" target="_blank" rel="noopener">Google Play</a>
         </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-text">Open Expo Go → tap <strong>Scan QR Code</strong> and point at the code above.</div>
+        <div class="step-text">Open Expo Go &rarr; tap <strong>Scan QR Code</strong> and point at the code above.</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-text">VocoLens loads natively on your device. Microphone &amp; all features work.</div>
       </div>
-    </div>
-  </div>
+    </div>`;
+}
 
+function buildClientScript(expoUrl) {
+  return `
   <script>
     var EXPO_URL = ${JSON.stringify(expoUrl || null)};
 
     function renderQR(url) {
       var wrap = document.getElementById('qr-wrap');
-      wrap.innerHTML = '<div id="qr-code"></div>';
-      new QRCode(document.getElementById('qr-code'), {
+      // Safe DOM clearing — no innerHTML
+      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+      var qrDiv = document.createElement('div');
+      qrDiv.id = 'qr-code';
+      wrap.appendChild(qrDiv);
+      new QRCode(qrDiv, {
         text: url,
         width: 200,
         height: 200,
@@ -159,6 +143,22 @@ function getHTML(tunnelUrl, expoUrl) {
       });
     }
 
+    function updateStatus(text, cssClass) {
+      var el = document.getElementById('status');
+      el.textContent = text;
+      el.className = 'status ' + cssClass;
+    }
+
+    function updateUrlBox(url) {
+      var existing = document.querySelector('.url-box');
+      if (!existing) {
+        existing = document.createElement('div');
+        existing.className = 'url-box';
+        document.querySelector('.card').insertBefore(existing, document.querySelector('.steps'));
+      }
+      existing.textContent = url;
+    }
+
     function checkTunnel() {
       fetch('/tunnel-url')
         .then(function(r) { return r.json(); })
@@ -166,8 +166,8 @@ function getHTML(tunnelUrl, expoUrl) {
           if (d.expoUrl && d.expoUrl !== EXPO_URL) {
             EXPO_URL = d.expoUrl;
             renderQR(d.expoUrl);
-            document.getElementById('status').className = 'status ready';
-            document.getElementById('status').textContent = '✓ Dev server ready — scan QR code with Expo Go';
+            updateStatus('\\u2713 Dev server ready \u2014 scan QR code with Expo Go', 'ready');
+            updateUrlBox(d.expoUrl);
           }
         })
         .catch(function() {});
@@ -179,24 +179,49 @@ function getHTML(tunnelUrl, expoUrl) {
       setInterval(checkTunnel, 3000);
       checkTunnel();
     }
-  </script>
+  </script>`;
+}
+
+// ── Main page assembler ───────────────────────────────────────────────────────
+
+function getHTML(tunnelUrl, expoUrl) {
+  const isReady = !!tunnelUrl;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VocoLens &ndash; Open in Expo Go</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>${buildStyles()}</style>
+</head>
+<body>
+  <div class="card">
+    <h1>VocoLens</h1>
+    <p class="subtitle">Voice Journal with AI Emotion Analysis</p>
+    ${buildQRSection(isReady)}
+    ${buildUrlBox(isReady, expoUrl)}
+    ${buildSteps()}
+  </div>
+  ${buildClientScript(expoUrl)}
 </body>
 </html>`;
 }
 
-// Fetch current tunnel URL from ngrok API
+// ── Tunnel info fetcher ───────────────────────────────────────────────────────
+
 function getTunnelInfo(cb) {
   const opts = { hostname: '127.0.0.1', port: 4040, path: '/api/tunnels', timeout: 2000 };
   const req = http.get(opts, (res) => {
     let data = '';
-    res.on('data', (c) => data += c);
+    res.on('data', (c) => { data += c; });
     res.on('end', () => {
       try {
         const json = JSON.parse(data);
         const tunnels = json.tunnels || [];
-        const https = tunnels.find((t) => t.public_url && t.public_url.startsWith('https://'));
-        const http_ = tunnels.find((t) => t.public_url && t.public_url.startsWith('http://'));
-        const tunnel = https || http_;
+        const tunnel =
+          tunnels.find((t) => t.public_url && t.public_url.startsWith('https://')) ||
+          tunnels.find((t) => t.public_url);
         if (tunnel) {
           const host = tunnel.public_url.replace(/^https?:\/\//, '');
           cb(null, { tunnelUrl: tunnel.public_url, expoUrl: 'exp://' + host });
@@ -212,19 +237,15 @@ function getTunnelInfo(cb) {
   req.on('timeout', () => { req.destroy(); cb(new Error('timeout')); });
 }
 
-// HTTP server
+// ── HTTP server ───────────────────────────────────────────────────────────────
+
 const server = http.createServer((req, res) => {
   if (req.url === '/tunnel-url') {
     getTunnelInfo((err, info) => {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
-      if (err || !info) {
-        res.writeHead(200);
-        res.end(JSON.stringify({ ready: false }));
-      } else {
-        res.writeHead(200);
-        res.end(JSON.stringify({ ready: true, ...info }));
-      }
+      res.writeHead(200);
+      res.end(JSON.stringify(info ? { ready: true, ...info } : { ready: false }));
     });
   } else {
     getTunnelInfo((err, info) => {

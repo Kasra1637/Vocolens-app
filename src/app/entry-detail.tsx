@@ -431,13 +431,12 @@ export default function EntryDetailScreen() {
               onPress={() => toggleSection("reflection")}
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.12),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
                 overflow: "hidden",
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               <View className="p-5">
                 <View className="flex-row items-center justify-between mb-3">
                   <View className="flex-row items-center">
@@ -538,13 +537,13 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-2xl p-4"
               style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.08),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
                 overflow: "hidden",
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={16} />
+              
               <View className="flex-row items-center mb-2">
                 <MessageSquare
                   size={16}
@@ -580,13 +579,12 @@ export default function EntryDetailScreen() {
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.1),
-              borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.15),
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
               overflow: "hidden",
             }}
           >
-            <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
             <View className="p-5">
               <Text
                 style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -673,13 +671,12 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.1),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
                 overflow: "hidden",
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               <View className="p-5">
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -716,13 +713,12 @@ export default function EntryDetailScreen() {
             onPress={() => toggleSection("emotions")}
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.1),
-              borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.15),
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
               overflow: "hidden",
             }}
           >
-            <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
             <View className="p-5">
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center">
@@ -1017,13 +1013,12 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-3xl overflow-hidden mb-6"
               style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.1),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
                 overflow: "hidden",
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               <View className="p-5">
                 <View className="flex-row items-center justify-between mb-4">
                   <View className="flex-row items-center">
@@ -1417,13 +1412,12 @@ export default function EntryDetailScreen() {
               onPress={() => toggleSection("analysis")}
               className="rounded-3xl overflow-hidden mb-6"
               style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.1),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
                 overflow: "hidden",
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               <View className="p-5">
                 <View className="flex-row items-center justify-between mb-3">
                   <View className="flex-row items-center">
@@ -1491,13 +1485,12 @@ export default function EntryDetailScreen() {
               <View
                 className="rounded-3xl overflow-hidden mb-6"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.1),
-                  borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.15),
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
+                  borderWidth: 2,
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                   overflow: "hidden",
                 }}
               >
-                <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                 <View className="p-5">
                   <View className="flex-row items-center mb-3">
                     <Target size={18} color="#FFFFFF" strokeWidth={2} />

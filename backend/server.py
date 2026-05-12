@@ -214,38 +214,48 @@ def strip_json_fences(content: str) -> str:
     return re.sub(r'^```json\s*|^```\s*|```\s*$', '', content, flags=re.MULTILINE).strip()
 
 
-def parse_analysis_json(content: str, audio_analyzed: bool, model_used: str) -> dict:
-    json_str = strip_json_fences(content)
-    result = json.loads(json_str)
-
-    emotion_scores = {e: 0 for e in VALID_EMOTIONS}
-    if isinstance(result.get("emotionScores"), dict):
+def _parse_emotion_scores(result: dict) -> dict:
+    """Parse and clamp all 8 emotion scores from the AI response."""
+    scores = {e: 0 for e in VALID_EMOTIONS}
+    raw = result.get("emotionScores")
+    if isinstance(raw, dict):
         for e in VALID_EMOTIONS:
-            score = result["emotionScores"].get(e, 0)
             try:
-                emotion_scores[e] = max(0, min(100, float(score)))
+                scores[e] = max(0, min(100, float(raw.get(e, 0))))
             except (ValueError, TypeError):
-                emotion_scores[e] = 0
+                scores[e] = 0
+    return scores
 
+
+def _parse_emotions_and_primary(result: dict, emotion_scores: dict) -> tuple:
+    """Return (emotions_list, primary_emotion) validated against VALID_EMOTIONS."""
     emotions = [e for e in (result.get("emotions") or []) if e in VALID_EMOTIONS][:4]
     if not emotions:
         emotions = ["happiness"]
+    primary = result.get("primaryEmotion")
+    if primary not in VALID_EMOTIONS:
+        primary = emotions[0]
+    return emotions, primary
 
-    primary_emotion = result.get("primaryEmotion") if result.get("primaryEmotion") in VALID_EMOTIONS else emotions[0]
 
+def _parse_valence_arousal_distress(result: dict, emotion_scores: dict) -> tuple:
+    """Return (valence, arousal, distress_level) with computed fallbacks."""
     valence_raw = result.get("valence")
     arousal_raw = result.get("arousal")
     valence = float(valence_raw) if isinstance(valence_raw, (int, float)) else compute_valence(emotion_scores)
     arousal = float(arousal_raw) if isinstance(arousal_raw, (int, float)) else compute_arousal(emotion_scores)
-
     distress_raw = result.get("distressLevel")
     distress = distress_raw if distress_raw in ("low", "moderate", "high") else compute_distress_level(valence, arousal)
+    return valence, arousal, distress
 
-    # top-3: prefer AI, fall back to server-side compute
+
+def _parse_plutchik_breakdown(result: dict, emotion_scores: dict) -> tuple:
+    """Return (top_three, blended, ambivalence) — AI response preferred, computed as fallback."""
     valid_blends = list(BLENDED_EMOTION_RULES.keys())
+
     raw_top3 = result.get("topThreeEmotions")
     if isinstance(raw_top3, list) and raw_top3:
-        ai_top_three = [
+        top_three = [
             {
                 "emotion": r["emotion"],
                 "score": max(0, min(100, float(r.get("score", 0)))),
@@ -256,24 +266,40 @@ def parse_analysis_json(content: str, audio_analyzed: bool, model_used: str) -> 
             if r.get("emotion") in VALID_EMOTIONS
         ]
     else:
-        ai_top_three = compute_top_three_emotions(emotion_scores)
+        top_three = compute_top_three_emotions(emotion_scores)
 
     raw_blended = result.get("blendedEmotions")
-    ai_blended = (
+    blended = (
         [b for b in raw_blended if b in valid_blends]
         if isinstance(raw_blended, list) and raw_blended
         else compute_blended_emotions(emotion_scores)
     )
 
     raw_ambivalence = result.get("ambivalenceFlags")
-    ai_ambivalence = (
+    ambivalence = (
         list(raw_ambivalence)
         if isinstance(raw_ambivalence, list) and raw_ambivalence
         else detect_ambivalence(emotion_scores)
     )
 
-    print(f"[OpenRouter] Analysis complete | model={model_used} | primary={primary_emotion} | blended={','.join(ai_blended) or 'none'} | ambivalence={','.join(ai_ambivalence) or 'none'}")
+    return top_three, blended, ambivalence
 
+
+def _build_analysis_response(
+    result: dict,
+    emotion_scores: dict,
+    emotions: list,
+    primary_emotion: str,
+    valence: float,
+    arousal: float,
+    distress: str,
+    top_three: list,
+    blended: list,
+    ambivalence: list,
+    audio_analyzed: bool,
+    model_used: str,
+) -> dict:
+    """Assemble the final analysis response dict."""
     return {
         "emotions": emotions,
         "primaryEmotion": primary_emotion,
@@ -291,10 +317,32 @@ def parse_analysis_json(content: str, audio_analyzed: bool, model_used: str) -> 
         "arousal": arousal,
         "suggestedBodySensations": list(result.get("suggestedBodySensations") or [])[:3],
         "distressLevel": distress,
-        "aiTopThreeEmotions": ai_top_three,
-        "aiBlendedEmotions": ai_blended,
-        "aiAmbivalenceFlags": ai_ambivalence,
+        "aiTopThreeEmotions": top_three,
+        "aiBlendedEmotions": blended,
+        "aiAmbivalenceFlags": ambivalence,
     }
+
+
+def parse_analysis_json(content: str, audio_analyzed: bool, model_used: str) -> dict:
+    """Parse and validate a Claude/GPT analysis JSON response into a structured dict."""
+    json_str = strip_json_fences(content)
+    result = json.loads(json_str)
+
+    emotion_scores = _parse_emotion_scores(result)
+    emotions, primary_emotion = _parse_emotions_and_primary(result, emotion_scores)
+    valence, arousal, distress = _parse_valence_arousal_distress(result, emotion_scores)
+    top_three, blended, ambivalence = _parse_plutchik_breakdown(result, emotion_scores)
+
+    print(
+        f"[OpenRouter] Analysis complete | model={model_used} | primary={primary_emotion} "
+        f"| blended={','.join(blended) or 'none'} | ambivalence={','.join(ambivalence) or 'none'}"
+    )
+
+    return _build_analysis_response(
+        result, emotion_scores, emotions, primary_emotion,
+        valence, arousal, distress, top_three, blended, ambivalence,
+        audio_analyzed, model_used,
+    )
 
 
 def build_openrouter_headers(api_key: str) -> dict:
@@ -455,23 +503,7 @@ async def journal_analyze(body: AnalyzeRequest):
         raise HTTPException(status_code=500, detail=message)
 
 
-@app.post("/api/journal/weekly-reflection")
-async def weekly_reflection(body: WeeklyReflectionRequest):
-    if not body.entries:
-        raise HTTPException(status_code=400, detail="At least one entry required")
-
-    if not is_openrouter_configured():
-        raise HTTPException(status_code=503, detail="OpenRouter API key not configured on server")
-
-    api_key = get_api_key()
-    headers = build_openrouter_headers(api_key)
-
-    entry_digest = "\n\n---\n\n".join(
-        f"Entry {i+1} ({datetime.fromisoformat(e.createdAt.replace('Z','+00:00')).strftime('%A, %b %-d') if e.createdAt else 'Unknown'}) — Emotion: {e.primaryEmotion} ({e.emotionIntensity}% intensity)\nTopics: {', '.join(e.topics)}\nExcerpt: \"{e.transcript[:300]}{'...' if len(e.transcript) > 300 else ''}\""
-        for i, e in enumerate(body.entries)
-    )
-
-    system_prompt = """You are a warm, insightful journaling companion creating a weekly reflection digest.
+WEEKLY_REFLECTION_SYSTEM_PROMPT = """You are a warm, insightful journaling companion creating a weekly reflection digest.
 Your tone is compassionate, personal, and encouraging — like a wise friend who truly listened.
 Write as if speaking directly to the person. Keep narratives warm and intimate, not clinical.
 
@@ -486,47 +518,87 @@ Respond with valid JSON only (no markdown, no code fences):
   "emotionalRange": "brief phrase describing their emotional range e.g. 'Mostly grounded with moments of joy'"
 }"""
 
-    payload = {
+
+@app.post("/api/journal/weekly-reflection")
+
+
+def _format_entry_digest(entries: list) -> str:
+    """Format journal entries into a readable text digest for the AI prompt."""
+    parts = []
+    for i, e in enumerate(entries):
+        try:
+            date_str = datetime.fromisoformat(e.createdAt.replace('Z', '+00:00')).strftime('%A, %b %-d')
+        except Exception:
+            date_str = 'Unknown'
+        excerpt = e.transcript[:300] + ('...' if len(e.transcript) > 300 else '')
+        parts.append(
+            f"Entry {i+1} ({date_str}) — Emotion: {e.primaryEmotion} ({e.emotionIntensity}% intensity)\n"
+            f"Topics: {', '.join(e.topics)}\n"
+            f'Excerpt: "{excerpt}"'
+        )
+    return "\n\n---\n\n".join(parts)
+
+
+def _build_weekly_payload(entry_digest: str, week_label: str) -> dict:
+    """Build the OpenRouter API payload for weekly reflection."""
+    return {
         "model": TEXT_FALLBACK_MODEL,
         "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Here are my journal entries from {body.weekLabel}:\n\n{entry_digest}\n\nPlease create my weekly reflection digest."},
+            {"role": "system", "content": WEEKLY_REFLECTION_SYSTEM_PROMPT},
+            {"role": "user", "content": f"Here are my journal entries from {week_label}:\n\n{entry_digest}\n\nPlease create my weekly reflection digest."},
         ],
         "temperature": 0.8,
         "max_tokens": 800,
     }
 
+
+async def _call_weekly_reflection_api(payload: dict, headers: dict) -> dict:
+    """Call the OpenRouter API and return the parsed JSON result dict."""
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(f"{OPENROUTER_BASE_URL}/chat/completions", headers=headers, json=payload)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"OpenRouter error ({resp.status_code}): {resp.text}")
+        data = resp.json()
+        content = data.get("choices", [{}])[0].get("message", {}).get("content")
+        if not content:
+            raise HTTPException(status_code=502, detail="Weekly reflection returned empty content")
+        return json.loads(strip_json_fences(content))
+
+
+def _build_reflection_response(result: dict, entry_count: int, week_label: str) -> dict:
+    """Validate and normalise a weekly reflection result dict."""
+    dominant = result.get("dominantEmotion") if result.get("dominantEmotion") in VALID_EMOTIONS else "trust"
+    print(f"[OpenRouter] Weekly reflection generated | entries={entry_count} | dominant={dominant}")
+    return {
+        "success": True,
+        "data": {
+            "narrativeSummary": result.get("narrativeSummary") or "A week of meaningful reflection.",
+            "emotionalJourney": result.get("emotionalJourney") or "Your emotions told a story this week.",
+            "keyThemes": list(result.get("keyThemes") or [])[:4],
+            "growthMoment": result.get("growthMoment") or "You showed up for yourself this week.",
+            "weekAhead": result.get("weekAhead") or "Carry this week's wisdom forward.",
+            "dominantEmotion": dominant,
+            "emotionalRange": result.get("emotionalRange") or "A balanced week",
+            "entryCount": entry_count,
+            "weekLabel": week_label,
+        },
+    }
+
+
+async def weekly_reflection(body: WeeklyReflectionRequest):
+    if not body.entries:
+        raise HTTPException(status_code=400, detail="At least one entry required")
+    if not is_openrouter_configured():
+        raise HTTPException(status_code=503, detail="OpenRouter API key not configured on server")
+
+    api_key = get_api_key()
+    headers = build_openrouter_headers(api_key)
+    entry_digest = _format_entry_digest(body.entries)
+    payload = _build_weekly_payload(entry_digest, body.weekLabel)
+
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"{OPENROUTER_BASE_URL}/chat/completions", headers=headers, json=payload)
-            if resp.status_code != 200:
-                raise HTTPException(status_code=502, detail=f"OpenRouter error ({resp.status_code}): {resp.text}")
-
-            data = resp.json()
-            content = data.get("choices", [{}])[0].get("message", {}).get("content")
-            if not content:
-                raise HTTPException(status_code=502, detail="Weekly reflection returned empty content")
-
-            json_str = strip_json_fences(content)
-            result = json.loads(json_str)
-
-            dominant = result.get("dominantEmotion") if result.get("dominantEmotion") in VALID_EMOTIONS else "trust"
-            print(f"[OpenRouter] Weekly reflection generated | entries={len(body.entries)} | dominant={dominant}")
-
-            return {
-                "success": True,
-                "data": {
-                    "narrativeSummary": result.get("narrativeSummary") or "A week of meaningful reflection.",
-                    "emotionalJourney": result.get("emotionalJourney") or "Your emotions told a story this week.",
-                    "keyThemes": list(result.get("keyThemes") or [])[:4],
-                    "growthMoment": result.get("growthMoment") or "You showed up for yourself this week.",
-                    "weekAhead": result.get("weekAhead") or "Carry this week's wisdom forward.",
-                    "dominantEmotion": dominant,
-                    "emotionalRange": result.get("emotionalRange") or "A balanced week",
-                    "entryCount": len(body.entries),
-                    "weekLabel": body.weekLabel,
-                }
-            }
+        result = await _call_weekly_reflection_api(payload, headers)
+        return _build_reflection_response(result, len(body.entries), body.weekLabel)
     except HTTPException:
         raise
     except Exception as e:
