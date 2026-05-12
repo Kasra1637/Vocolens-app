@@ -543,9 +543,9 @@ function InsightsContent({
         <View
           className="rounded-2xl overflow-hidden mb-6"
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.18),
-            borderWidth: 1,
-            borderColor: hexToRgba(Colors.primary, 0.15),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
           }}
         >
           <ValenceArousalChart
@@ -585,26 +585,22 @@ function InsightsContent({
               <View
                 className="rounded-2xl overflow-hidden mb-6"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.18),
-                  borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.15),
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
+                  borderWidth: 2,
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 }}
               >
                 <View
                   style={{
-                    backgroundColor: hexToRgba(Colors.primary, 0.18),
-                    borderWidth: 1,
-                    borderColor: hexToRgba(Colors.primary, 0.15),
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderWidth: 2,
+                    borderColor: "rgba(255, 255, 255, 0.20)",
                     borderRadius: BorderRadius.xxlarge,
                     padding: 20,
                     overflow: "hidden",
                     ...Shadows.medium,
                   }}
                 >
-                  <GlassLayers
-                    primaryColor={Colors.primary}
-                    borderRadius={BorderRadius.xxlarge}
-                  />
                   <View
                     style={{
                       flexDirection: "row",
@@ -692,18 +688,14 @@ function InsightsContent({
           <View
             className="mb-6"
             style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.18),
-              borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.15),
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
               borderRadius: BorderRadius.xxlarge,
               overflow: "hidden",
               ...Shadows.medium,
             }}
           >
-            <GlassLayers
-              primaryColor={Colors.primary}
-              borderRadius={BorderRadius.xxlarge}
-            />
             <View className="p-5">
               <TriggerSectionHeader
                 timeWindow={triggerTimeWindow}
@@ -830,7 +822,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
       {/* Streak & Badge Card */}
       <View
         style={{
-          backgroundColor: hexToRgba(Colors.primary, 0.18),
+          backgroundColor: "rgba(255, 255, 255, 0.12)",
           borderWidth: 1,
           borderColor: hexToRgba(Colors.primary, 0.15),
           borderRadius: BorderRadius.xxlarge,
@@ -838,10 +830,6 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
           ...Shadows.medium,
         }}
       >
-        <GlassLayers
-          primaryColor={Colors.primary}
-          borderRadius={BorderRadius.xxlarge}
-        />
         <View className="p-5">
           {/* Streak */}
           <View className="flex-row items-center mb-4">
@@ -1169,7 +1157,7 @@ function SentimentTimeline({
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.18),
+        backgroundColor: "rgba(255, 255, 255, 0.12)",
         borderWidth: 1,
         borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
@@ -1177,10 +1165,6 @@ function SentimentTimeline({
         ...Shadows.medium,
       }}
     >
-      <GlassLayers
-        primaryColor={Colors.primary}
-        borderRadius={BorderRadius.xxlarge}
-      />
       <View className="p-5">
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
@@ -1202,7 +1186,7 @@ function SentimentTimeline({
           className="flex-row mb-4 p-1"
           style={{
             borderRadius: BorderRadius.large,
-            backgroundColor: hexToRgba(Colors.primary, 0.15),
+            backgroundColor: "rgba(255, 255, 255, 0.08)",
           }}
         >
           <Pressable
@@ -1416,19 +1400,15 @@ function OverallMoodDisplay() {
           <View
             key={timeframe.label}
             style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.18),
-              borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.15),
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
               borderRadius: BorderRadius.large,
               padding: 16,
               overflow: "hidden",
               marginBottom: index < 2 ? 12 : 0,
             }}
           >
-            <GlassLayers
-              primaryColor={Colors.primary}
-              borderRadius={BorderRadius.large}
-            />
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <Text
@@ -1594,19 +1574,15 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
         <View
           key={timeframe.label}
           style={{
-            backgroundColor: hexToRgba(Colors.primary, 0.18),
-            borderWidth: 1,
-            borderColor: hexToRgba(Colors.primary, 0.15),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
             borderRadius: BorderRadius.large,
             padding: 16,
             overflow: "hidden",
             marginBottom: index < 2 ? 12 : 0,
           }}
         >
-          <GlassLayers
-            primaryColor={Colors.primary}
-            borderRadius={BorderRadius.large}
-          />
           <View className="flex-row items-center justify-between">
             <View className="flex-1">
               <Text
@@ -1698,7 +1674,7 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.18),
+        backgroundColor: "rgba(255, 255, 255, 0.12)",
         borderWidth: 1,
         borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
@@ -1706,10 +1682,6 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
         ...Shadows.medium,
       }}
     >
-      <GlassLayers
-        primaryColor={Colors.primary}
-        borderRadius={BorderRadius.xxlarge}
-      />
       <View className="p-5">
         <Text
           style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -1770,9 +1742,9 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
       <View
         style={[
           {
-            backgroundColor: hexToRgba(Colors.primary, 0.18),
-            borderWidth: 1,
-            borderColor: hexToRgba(Colors.primary, 0.15),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderRadius: BorderRadius.large,
@@ -1830,7 +1802,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.18),
+        backgroundColor: "rgba(255, 255, 255, 0.12)",
         borderWidth: 1,
         borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
@@ -1838,10 +1810,6 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
         ...Shadows.medium,
       }}
     >
-      <GlassLayers
-        primaryColor={Colors.primary}
-        borderRadius={BorderRadius.xxlarge}
-      />
       <View className="p-5">
         <Text
           style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -1896,9 +1864,9 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
       <View
         style={[
           {
-            backgroundColor: hexToRgba(Colors.primary, 0.18),
-            borderWidth: 1,
-            borderColor: hexToRgba(Colors.primary, 0.15),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
             borderRadius: BorderRadius.large,
             padding: 16,
           },
@@ -2025,7 +1993,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: hexToRgba(Colors.primary, 0.18),
+        backgroundColor: "rgba(255, 255, 255, 0.12)",
         borderWidth: 1,
         borderColor: hexToRgba(Colors.primary, 0.15),
         borderRadius: BorderRadius.xxlarge,
@@ -2033,10 +2001,6 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
         ...Shadows.medium,
       }}
     >
-      <GlassLayers
-        primaryColor={Colors.primary}
-        borderRadius={BorderRadius.xxlarge}
-      />
       <View className="p-5">
         {/* Header */}
         <View style={{ marginBottom: 16 }}>
@@ -2067,10 +2031,10 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
               <Pressable onPress={() => tapHaptic()}>
                 <View
                   style={{
-                    backgroundColor: hexToRgba(Colors.primary, 0.18),
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
                     borderRadius: BorderRadius.xxlarge,
-                    borderWidth: 1,
-                    borderColor: hexToRgba(Colors.primary, 0.15),
+                    borderWidth: 2,
+                    borderColor: "rgba(255, 255, 255, 0.20)",
                     overflow: "hidden",
                   }}
                 >
@@ -2208,8 +2172,8 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
             onPress={() => tapHaptic()}
             style={{
               backgroundColor: hexToRgba(Colors.primary, 0.15),
-              borderWidth: 1,
-              borderColor: hexToRgba(Colors.primary, 0.15),
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
               borderRadius: BorderRadius.large,
               padding: 12,
               alignItems: "center",

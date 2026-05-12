@@ -267,7 +267,6 @@ export default function ReflectionScreen() {
           <Animated.View entering={FadeIn}>
             <Text style={s.sectionLabel}>AI detected these emotions</Text>
             <View style={[s.emotionGrid, { overflow: "hidden" }]}>
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
               {ALL_EMOTIONS.map((emotion) => {
                 const def = getEmotionDefinition(emotion);
                 const sel = emotions.includes(emotion);
@@ -285,8 +284,8 @@ export default function ReflectionScreen() {
                     style={[
                       s.emotionChip,
                       {
-                        backgroundColor: hexToRgba(Colors.primary, 0.08),
-                        borderColor: hexToRgba(Colors.primary, 0.15),
+                        backgroundColor: "rgba(255, 255, 255, 0.12)",
+                        borderColor: "rgba(255, 255, 255, 0.20)",
                       },
                       sel && {
                         borderColor: accentColor,
@@ -317,12 +316,11 @@ export default function ReflectionScreen() {
                   s.defCard,
                   {
                     overflow: "hidden",
-                    backgroundColor: hexToRgba(Colors.primary, 0.08),
-                    borderColor: hexToRgba(Colors.primary, 0.15),
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderColor: "rgba(255, 255, 255, 0.20)",
                   },
                 ]}
               >
-                <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                 <Text style={s.defEmoji}>
                   {getEmotionDefinition(selectedEmotionDef).emoji}
                 </Text>
@@ -349,8 +347,8 @@ export default function ReflectionScreen() {
               style={[
                 s.nextBtn,
                 {
-                  backgroundColor: hexToRgba(Colors.primary, 0.12),
-                  borderColor: hexToRgba(Colors.primary, 0.2),
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
@@ -373,12 +371,11 @@ export default function ReflectionScreen() {
                 s.sliderCard,
                 {
                   overflow: "hidden",
-                  backgroundColor: hexToRgba(Colors.primary, 0.08),
-                  borderColor: hexToRgba(Colors.primary, 0.12),
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View style={s.sliderHeader}>
                 <Text style={s.sliderTitle}>Pleasant ↔ Unpleasant</Text>
                 <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
@@ -405,12 +402,11 @@ export default function ReflectionScreen() {
                 {
                   marginTop: 16,
                   overflow: "hidden",
-                  backgroundColor: hexToRgba(Colors.primary, 0.08),
-                  borderColor: hexToRgba(Colors.primary, 0.12),
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View style={s.sliderHeader}>
                 <Text style={s.sliderTitle}>Calm ↔ Activated</Text>
                 <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
@@ -437,12 +433,11 @@ export default function ReflectionScreen() {
                   s.distressBanner,
                   {
                     overflow: "hidden",
-                    backgroundColor: hexToRgba(Colors.primary, 0.1),
-                    borderColor: hexToRgba(Colors.primary, 0.2),
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderColor: "rgba(255, 255, 255, 0.20)",
                   },
                 ]}
               >
-                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.distressText}>
                   {distress === "high"
                     ? "⚠️  High distress detected — grounding may help"
@@ -456,8 +451,8 @@ export default function ReflectionScreen() {
               style={[
                 s.nextBtn,
                 {
-                  backgroundColor: hexToRgba(Colors.primary, 0.12),
-                  borderColor: hexToRgba(Colors.primary, 0.2),
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
@@ -486,8 +481,8 @@ export default function ReflectionScreen() {
                 s.nextBtn,
                 {
                   marginTop: 28,
-                  backgroundColor: hexToRgba(Colors.primary, 0.12),
-                  borderColor: hexToRgba(Colors.primary, 0.2),
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
@@ -518,12 +513,11 @@ export default function ReflectionScreen() {
                   s.groundingBtn,
                   {
                     overflow: "hidden",
-                    backgroundColor: hexToRgba(Colors.primary, 0.08),
-                    borderColor: hexToRgba(Colors.primary, 0.15),
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderColor: "rgba(255, 255, 255, 0.20)",
                   },
                 ]}
               >
-                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.groundingEmoji}>🫁</Text>
                 <Text style={s.groundingTitle}>4-7-8 Breathing</Text>
                 <Text style={s.groundingDesc}>Calm your nervous system</Text>
@@ -537,12 +531,11 @@ export default function ReflectionScreen() {
                   s.groundingBtn,
                   {
                     overflow: "hidden",
-                    backgroundColor: hexToRgba(Colors.primary, 0.08),
-                    borderColor: hexToRgba(Colors.primary, 0.15),
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderColor: "rgba(255, 255, 255, 0.20)",
                   },
                 ]}
               >
-                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.groundingEmoji}>🌿</Text>
                 <Text style={s.groundingTitle}>5-4-3-2-1 Senses</Text>
                 <Text style={s.groundingDesc}>Return to the present</Text>
@@ -652,11 +645,11 @@ const s = StyleSheet.create({
   },
   defCard: {
     flexDirection: "row",
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderRadius: 20,
     padding: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.20)",
     marginTop: 12,
   },
   defEmoji: { fontSize: 32, marginRight: 12 },
@@ -711,11 +704,11 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.45)",
   },
   sliderCard: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderRadius: 24,
     padding: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.20)",
   },
   sliderHeader: {
     flexDirection: "row",
