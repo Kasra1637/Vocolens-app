@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BodySensation } from '@/lib/types';
 import { tapHaptic } from '@/lib/haptics';
+import { getThemeColors } from '@/lib/theme';
+import { hexToRgba } from '@/lib/glass';
 
 const OPTIONS: { value: BodySensation; label: string; emoji: string }[] = [
   { value: 'chest tightness', label: 'Chest tightness', emoji: '💓' },
@@ -31,9 +33,11 @@ export default function BodySensationPicker({
   onChange: (value: BodySensation | undefined) => void;
   suggestedSensations: string[];
 }) {
+  const themeColors = getThemeColors();
+
   return (
     <View>
-      <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 10 }}>
+      <Text style={s.title}>
         Where do you feel this in your body?
       </Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -44,19 +48,16 @@ export default function BodySensationPicker({
               tapHaptic();
               onChange(selected === option.value ? undefined : option.value);
             }}
-            style={{
-              backgroundColor: selected === option.value ? '#EDE9FE' : '#FFFFFF',
-              borderWidth: 1,
-              borderColor: selected === option.value ? '#7C3AED' : '#E5E7EB',
-              borderRadius: 24,
-              paddingHorizontal: 14,
-              paddingVertical: 10,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}
+            style={[
+              s.chip,
+              {
+                backgroundColor: selected === option.value ? hexToRgba(themeColors.primary, 0.2) : hexToRgba(themeColors.primary, 0.1),
+                borderColor: selected === option.value ? hexToRgba(themeColors.primary, 0.4) : hexToRgba(themeColors.primary, 0.15),
+              },
+            ]}
           >
             <Text style={{ fontSize: 16, marginRight: 6 }}>{option.emoji}</Text>
-            <Text style={{ fontSize: 13, fontWeight: '500', color: selected === option.value ? '#7C3AED' : '#374151' }}>
+            <Text style={[s.chipText, { color: selected === option.value ? '#FFFFFF' : 'rgba(255,255,255,0.7)' }]}>
               {option.label}
             </Text>
           </Pressable>
@@ -65,11 +66,11 @@ export default function BodySensationPicker({
 
       {suggestedSensations.length > 0 && (
         <View style={{ marginTop: 16 }}>
-          <Text style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 8 }}>Suggested based on your entry</Text>
+          <Text style={s.suggestedLabel}>Suggested based on your entry</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {suggestedSensations.map((sensation, i) => (
-              <View key={i} style={{ backgroundColor: '#F3F4F6', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 }}>
-                <Text style={{ fontSize: 12, color: '#6B7280' }}>{sensation}</Text>
+              <View key={i} style={[s.suggestedPill, { backgroundColor: hexToRgba(themeColors.primary, 0.15) }]}>
+                <Text style={s.suggestedText}>{sensation}</Text>
               </View>
             ))}
           </View>
@@ -78,3 +79,38 @@ export default function BodySensationPicker({
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  title: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 10,
+  },
+  chip: {
+    borderWidth: 1,
+    borderRadius: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  suggestedLabel: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 8,
+  },
+  suggestedPill: {
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  suggestedText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+  },
+});
