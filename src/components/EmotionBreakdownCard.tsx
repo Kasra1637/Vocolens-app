@@ -12,6 +12,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { RankedEmotion, BlendedEmotionType, EmotionType } from "@/lib/types";
+import { GlassLayers, hexToRgba } from "@/lib/glass";
 
 // ── Emotion palette ───────────────────────────────────────────────────────────
 
@@ -106,7 +107,8 @@ export default function EmotionBreakdownCard({
   if (!hasTop3 && !hasBlended && !hasAmbivalence) return null;
 
   return (
-    <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.card}>
+    <Animated.View entering={FadeInUp.delay(200).duration(600)} style={[styles.card, { overflow: 'hidden' }]}>
+      <GlassLayers primaryColor={themeColor} borderRadius={20} />
       {/* Header */}
       <View style={styles.header}>
         <View style={[styles.headerDot, { backgroundColor: themeColor }]} />
@@ -165,10 +167,7 @@ export default function EmotionBreakdownCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "rgba(255,255,255,0.09)",
     borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.16)",
     padding: 18,
     marginBottom: 16,
   },

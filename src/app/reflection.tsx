@@ -284,15 +284,22 @@ export default function ReflectionScreen() {
                     style={[
                       s.emotionChip,
                       {
-                        backgroundColor: "rgba(255, 255, 255, 0.12)",
-                        borderColor: "rgba(255, 255, 255, 0.20)",
+                        overflow: "hidden",
                       },
                       sel && {
                         borderColor: accentColor,
                         backgroundColor: `${accentColor}22`,
                       },
                     ]}
+                    onPress={() => toggleEmotion(emotion)}
+                    onLongPress={() => {
+                      tapHaptic();
+                      setSelectedEmotionDef(
+                        selectedEmotionDef === emotion ? null : emotion,
+                      );
+                    }}
                   >
+                    <GlassLayers primaryColor={accentColor} borderRadius={24} blur={false} />
                     <Text style={s.emotionEmoji}>{def.emoji}</Text>
                     <Text style={[s.emotionLabel, sel && { color: "#FFFFFF" }]}>
                       {emotion}
@@ -316,11 +323,10 @@ export default function ReflectionScreen() {
                   s.defCard,
                   {
                     overflow: "hidden",
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderColor: "rgba(255, 255, 255, 0.20)",
                   },
                 ]}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                 <Text style={s.defEmoji}>
                   {getEmotionDefinition(selectedEmotionDef).emoji}
                 </Text>
@@ -347,11 +353,11 @@ export default function ReflectionScreen() {
               style={[
                 s.nextBtn,
                 {
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderColor: "rgba(255, 255, 255, 0.20)",
+                  overflow: "hidden",
                 },
               ]}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <Text style={s.nextBtnText}>Next</Text>
               <ChevronRight size={18} color="#FFFFFF" />
             </Pressable>
@@ -371,11 +377,10 @@ export default function ReflectionScreen() {
                 s.sliderCard,
                 {
                   overflow: "hidden",
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View style={s.sliderHeader}>
                 <Text style={s.sliderTitle}>Pleasant ↔ Unpleasant</Text>
                 <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
@@ -402,11 +407,10 @@ export default function ReflectionScreen() {
                 {
                   marginTop: 16,
                   overflow: "hidden",
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View style={s.sliderHeader}>
                 <Text style={s.sliderTitle}>Calm ↔ Activated</Text>
                 <Text style={[s.sliderValue, { color: primaryEmotionColor }]}>
@@ -433,11 +437,10 @@ export default function ReflectionScreen() {
                   s.distressBanner,
                   {
                     overflow: "hidden",
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderColor: "rgba(255, 255, 255, 0.20)",
                   },
                 ]}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.distressText}>
                   {distress === "high"
                     ? "⚠️  High distress detected — grounding may help"
@@ -451,11 +454,11 @@ export default function ReflectionScreen() {
               style={[
                 s.nextBtn,
                 {
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderColor: "rgba(255, 255, 255, 0.20)",
+                  overflow: "hidden",
                 },
               ]}
             >
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
               {isLast ? (
                 <Sparkles size={16} color="#FFFFFF" />
@@ -513,11 +516,10 @@ export default function ReflectionScreen() {
                   s.groundingBtn,
                   {
                     overflow: "hidden",
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderColor: "rgba(255, 255, 255, 0.20)",
                   },
                 ]}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.groundingEmoji}>🫁</Text>
                 <Text style={s.groundingTitle}>4-7-8 Breathing</Text>
                 <Text style={s.groundingDesc}>Calm your nervous system</Text>
@@ -531,11 +533,10 @@ export default function ReflectionScreen() {
                   s.groundingBtn,
                   {
                     overflow: "hidden",
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderColor: "rgba(255, 255, 255, 0.20)",
                   },
                 ]}
               >
+                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 <Text style={s.groundingEmoji}>🌿</Text>
                 <Text style={s.groundingTitle}>5-4-3-2-1 Senses</Text>
                 <Text style={s.groundingDesc}>Return to the present</Text>

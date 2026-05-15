@@ -26,6 +26,7 @@ import {
 } from "lucide-react-native";
 import { useWeeklyReflection } from "@/lib/hooks";
 import { BorderRadius } from "@/lib/theme";
+import { GlassLayers, hexToRgba } from "@/lib/glass";
 
 interface WeeklyReflectionCardProps {
   primaryColor: string;
@@ -77,11 +78,8 @@ export function WeeklyReflectionCard({
       >
         <View
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
             borderRadius: BorderRadius.xxlarge,
             overflow: "hidden",
-            borderWidth: 1,
-            borderColor: "rgba(255, 255, 255, 0.2)",
             shadowColor: dominantColor,
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.15,
@@ -89,6 +87,7 @@ export function WeeklyReflectionCard({
             elevation: Platform.OS === "android" ? 0 : 6,
           }}
         >
+          <GlassLayers primaryColor={dominantColor} borderRadius={BorderRadius.xxlarge} />
           {/* Subtle gradient overlay */}
           <LinearGradient
             colors={[`${dominantColor}18`, "rgba(255,255,255,0.0)"]}
