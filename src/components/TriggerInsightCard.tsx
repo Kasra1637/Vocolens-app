@@ -139,6 +139,9 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
           style={{
             borderRadius: BorderRadius.xxlarge,
             overflow: 'hidden',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.2)',
           }}
         >
           <GlassLayers primaryColor={emotionColor} borderRadius={BorderRadius.xxlarge} />

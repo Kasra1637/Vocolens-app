@@ -107,7 +107,7 @@ export default function EmotionBreakdownCard({
   if (!hasTop3 && !hasBlended && !hasAmbivalence) return null;
 
   return (
-    <Animated.View entering={FadeInUp.delay(200).duration(600)} style={[styles.card, { overflow: 'hidden' }]}>
+    <Animated.View entering={FadeInUp.delay(200).duration(600)} style={[styles.card, { overflow: 'hidden', backgroundColor: hexToRgba(themeColor, 0.1), borderColor: hexToRgba(themeColor, 0.15) }]}>
       <GlassLayers primaryColor={themeColor} borderRadius={20} />
       {/* Header */}
       <View style={styles.header}>
@@ -168,6 +168,7 @@ export default function EmotionBreakdownCard({
 const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
+    borderWidth: 1,
     padding: 18,
     marginBottom: 16,
   },
