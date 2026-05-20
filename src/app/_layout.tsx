@@ -1,4 +1,13 @@
-import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from "expo-router";
+import "react-native-get-random-values";
+import "react-native-reanimated";
+import "../../global.css";
+import { LogBox } from "react-native";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "@/lib/useColorScheme";
@@ -20,6 +29,9 @@ import {
   Fraunces_700Bold,
 } from "@expo-google-fonts/fraunces";
 import { useFrameworkReady } from "@/hooks/useFrameworkReady";
+
+// Suppress known harmless warnings
+LogBox.ignoreLogs(["Expo AV has been deprecated", "Disconnected from Metro"]);
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
