@@ -855,14 +855,14 @@ export default function SettingsScreen() {
                             borderWidth: 2,
                             borderColor:
                               emotionReflectionMode === mode
-                                ? Colors.primary
+                                ? "#FFFFFF"
                                 : "rgba(255,255,255,0.4)",
                           }}
                         >
                           {emotionReflectionMode === mode && (
                             <View
                               className="w-2.5 h-2.5 rounded-full"
-                              style={{ backgroundColor: Colors.primary }}
+                              style={{ backgroundColor: "#FFFFFF" }}
                             />
                           )}
                         </View>
