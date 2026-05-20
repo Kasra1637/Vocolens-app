@@ -1,4 +1,4 @@
-name: PR Preview (Expo Go)
+name: PR Preview (EAS Update)
 
 on:
   pull_request:
@@ -14,13 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-fund --no-audit
@@ -31,40 +32,35 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish EAS Update for PR
-        id: update
         run: |
           eas update \
-            --branch pr-${{ github.event.pull_request.number }} \
+            --branch main \
             --message "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}" \
             --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Comment on PR
+      - name: Comment on PR with preview info
         uses: actions/github-script@v7
         with:
           script: |
             const prNumber = context.issue.number;
             const sha = context.sha.slice(0, 7);
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const branch = `pr-${prNumber}`;
-            const account = '${{ github.repository_owner }}';
-            const easUrl = `https://expo.dev/accounts/${account}/projects/vocolens/updates`;
 
             const body = [
-              `## 📱 Expo Go Preview`,
+              `## 📱 OTA Preview Published`,
               ``,
-              `Your changes have been published as an OTA update. To preview:`,
+              `An update has been published to the \`main\` channel.`,
               ``,
-              `1. Open **Expo Go** on your phone`,
-              `2. Make sure you have the development build installed (or use Expo Go with the \`vocolens\` project)`,
-              `3. The update on branch \`${branch}\` will load automatically`,
+              `**To see the changes:**`,
+              `1. Open the **Vocolens** dev build on your phone`,
+              `2. Force-close the app completely`,
+              `3. Re-open it — the update downloads automatically`,
               ``,
               `| | |`,
               `|---|---|`,
               `| **Commit** | \`${sha}\` |`,
-              `| **Update branch** | \`${branch}\` |`,
-              `| **EAS Updates** | [View on dashboard](${easUrl}) |`,
               `| **CI run** | [View logs](${runUrl}) |`,
             ].join('\n');
 
@@ -74,7 +70,7 @@ jobs:
               repo: context.repo.repo,
             });
             const prev = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('Expo Go Preview')
+              c.user.type === 'Bot' && c.body.includes('OTA Preview Published')
             );
             if (prev) {
               await github.rest.issues.updateComment({

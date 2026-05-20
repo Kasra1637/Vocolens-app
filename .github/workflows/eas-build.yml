@@ -10,15 +10,16 @@ concurrency:
 
 jobs:
   update:
-    name: Publish OTA update
+    name: Publish OTA update to main channel
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-fund --no-audit
@@ -29,6 +30,10 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish EAS Update
-        run: eas update --auto --non-interactive
+        run: |
+          eas update \
+            --branch main \
+            --message "Push to main: $(git log -1 --pretty=%s)" \
+            --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
