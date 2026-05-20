@@ -2,6 +2,13 @@
 # cleanup-watchable.sh
 # Run this after `npm install` to stay under the container's inotify watcher limit (12288).
 # Removes TypeScript type defs, native source trees, and test-only deps that Metro doesn't need.
+
+# Skip cleanup on EAS Build — native source trees are required for compilation
+if [ -n "$EAS_BUILD" ]; then
+  echo "[cleanup] Skipping cleanup on EAS Build (native sources required)."
+  exit 0
+fi
+
 set -e
 
 echo "[cleanup] Removing @sinclair/typebox from jest nested modules..."
