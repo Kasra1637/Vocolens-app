@@ -19,7 +19,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { Easing } from "react-native-reanimated";
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { Check, Moon } from "lucide-react-native";
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import useOnboardingStore, {
@@ -126,7 +128,7 @@ export function ThemeSelectionScreen() {
 
           {/* Title */}
           <Animated.View
-            entering={FadeInDown.delay(60).duration(500)}
+            entering={FadeIn.delay(80).duration(700).easing(SOFT)}
             style={{ alignItems: "center", paddingBottom: 20 }}
             pointerEvents="none"
           >
@@ -328,7 +330,7 @@ export function ThemeSelectionScreen() {
 
           {/* Dot indicators + Continue */}
           <Animated.View
-            entering={FadeInUp.delay(200).duration(500)}
+            entering={FadeIn.delay(200).duration(700).easing(SOFT)}
             style={{
               paddingHorizontal: 24,
               paddingBottom: 32,

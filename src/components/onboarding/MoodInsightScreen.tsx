@@ -10,8 +10,7 @@ import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
+  FadeIn,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -19,6 +18,8 @@ import Animated, {
   withDelay,
   Easing,
 } from "react-native-reanimated";
+
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { successHaptic } from "@/lib/haptics";
 import { Sparkles } from "lucide-react-native";
 import useOnboardingStore, {
@@ -154,7 +155,7 @@ export function MoodInsightScreen() {
 
             {/* Insight Title */}
             <Animated.View
-              entering={FadeInUp.delay(300).duration(600)}
+              entering={FadeIn.delay(80).duration(700).easing(SOFT)}
               className="items-center mb-3"
             >
               <Text
@@ -173,7 +174,7 @@ export function MoodInsightScreen() {
 
             {/* Visual Reflection Card */}
             <Animated.View
-              entering={FadeInDown.delay(500).duration(600)}
+              entering={FadeIn.delay(200).duration(700).easing(SOFT)}
               style={{ marginBottom: 12 }}
             >
               <View
@@ -263,7 +264,7 @@ export function MoodInsightScreen() {
 
             {/* Continue Button */}
             <Animated.View
-              entering={FadeInUp.delay(700).duration(500)}
+              entering={FadeIn.delay(360).duration(600).easing(SOFT)}
               className="pb-6"
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />

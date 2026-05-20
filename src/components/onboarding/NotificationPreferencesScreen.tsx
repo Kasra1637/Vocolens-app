@@ -19,7 +19,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { Easing } from "react-native-reanimated";
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import { Clock, Bell, BellOff } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";

@@ -11,8 +11,7 @@ import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
+  FadeIn,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -20,6 +19,8 @@ import Animated, {
   interpolate,
   runOnJS,
 } from "react-native-reanimated";
+
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { successHaptic, tapHaptic } from "@/lib/haptics";
 import { FlaskConical } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
@@ -138,7 +139,7 @@ export function AccountPreparationScreen() {
 
             {/* Header */}
             <Animated.View
-              entering={FadeInDown.delay(100).duration(600)}
+              entering={FadeIn.delay(80).duration(700).easing(SOFT)}
               className="items-center mt-4 mb-8"
             >
               <Text
@@ -156,7 +157,7 @@ export function AccountPreparationScreen() {
 
             {/* Progress Card */}
             <Animated.View
-              entering={FadeInUp.delay(200).duration(500)}
+              entering={FadeIn.delay(200).duration(700).easing(SOFT)}
               className="rounded-3xl px-5 py-4 mb-4"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.12)",
@@ -236,7 +237,7 @@ export function AccountPreparationScreen() {
 
             {/* Plutchik Model Note */}
             <Animated.View
-              entering={FadeInUp.delay(350).duration(500)}
+              entering={FadeIn.delay(320).duration(700).easing(SOFT)}
               className="rounded-2xl px-5 py-4 mb-4"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.08)",
@@ -294,7 +295,7 @@ export function AccountPreparationScreen() {
 
             {/* Continue Button */}
             <Animated.View
-              entering={FadeInUp.delay(400).duration(500)}
+              entering={FadeIn.delay(440).duration(600).easing(SOFT)}
               className="pb-6"
             >
               <OnboardingCTAButton

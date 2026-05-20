@@ -15,12 +15,13 @@ import { View, Text, Pressable, Alert, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
+  FadeIn,
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import { Easing } from "react-native-reanimated";
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, selectHaptic, successHaptic } from "@/lib/haptics";
 import { Audio } from "expo-av";
 import { Eye, Database, Lock, Mic } from "lucide-react-native";

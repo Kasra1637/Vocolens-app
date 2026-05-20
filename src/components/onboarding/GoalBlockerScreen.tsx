@@ -9,7 +9,9 @@ import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, { FadeIn, Easing } from "react-native-reanimated";
+
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
 import useOnboardingStore, {
   THEME_COLORS,
@@ -127,7 +129,7 @@ export function GoalBlockerScreen() {
 
             {/* Dynamic Title */}
             <Animated.View
-              entering={FadeInUp.delay(400).duration(600)}
+              entering={FadeIn.delay(80).duration(700).easing(SOFT)}
               className="items-center mb-4"
             >
               <Text
@@ -146,7 +148,7 @@ export function GoalBlockerScreen() {
 
             {/* Blocker Options */}
             <Animated.View
-              entering={FadeInDown.delay(600).duration(600)}
+              entering={FadeIn.delay(200).duration(700).easing(SOFT)}
               style={{ marginTop: 4, marginBottom: 12 }}
             >
               <View className="gap-2">
@@ -155,9 +157,7 @@ export function GoalBlockerScreen() {
                   return (
                     <Animated.View
                       key={option.id}
-                      entering={FadeInDown.delay(700 + index * 80).duration(
-                        400,
-                      )}
+                      entering={FadeIn.delay(280 + index * 120).duration(600).easing(SOFT)}
                     >
                       <Pressable
                         onPress={() => handleBlockerSelect(option.id)}
@@ -198,7 +198,7 @@ export function GoalBlockerScreen() {
 
             {/* Continue */}
             <Animated.View
-              entering={FadeInUp.delay(400).duration(500)}
+              entering={FadeIn.delay(640).duration(600).easing(SOFT)}
               className="pb-6"
             >
               <OnboardingCTAButton

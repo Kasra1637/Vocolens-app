@@ -14,7 +14,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown, FadeIn, Easing } from "react-native-reanimated";
+import Animated, { FadeIn, Easing } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
@@ -22,11 +22,12 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 
-const EASE_OUT_QUAD = Easing.bezier(0.25, 0.46, 0.45, 0.94);
+// Soft surface easing — slow to start, settles gently. No bouncing.
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 
-const HEADLINE_ANIM = FadeInDown.duration(800).easing(EASE_OUT_QUAD);
-const SUBHEAD_ANIM = FadeInDown.duration(700).delay(200).easing(EASE_OUT_QUAD);
-const BUTTON_ANIM = FadeIn.duration(600).delay(100).easing(EASE_OUT_QUAD);
+const HEADLINE_ANIM = FadeIn.duration(700).delay(80).easing(SOFT);
+const SUBHEAD_ANIM  = FadeIn.duration(700).delay(220).easing(SOFT);
+const BUTTON_ANIM   = FadeIn.duration(600).delay(120).easing(SOFT);
 
 export function WelcomeScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
