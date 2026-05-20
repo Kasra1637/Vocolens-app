@@ -917,14 +917,14 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                   overflow: "hidden",
                 }}
               >
-                <View style={[progressStyle]}>
+                <Animated.View style={[progressStyle]}>
                   <LinearGradient
                     colors={Gradients.primary}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{ height: "100%", borderRadius: BorderRadius.round }}
                   />
-                </View>
+                </Animated.View>
               </View>
             </View>
           </View>
@@ -1000,7 +1000,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                   overflow: "hidden",
                 }}
               >
-                <View
+                <Animated.View
                   style={[
                     usageBarStyle,
                     {
@@ -1739,7 +1739,7 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
 
   return (
     <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
-      <View
+      <Animated.View
         style={[
           {
             backgroundColor: "rgba(255, 255, 255, 0.12)",
@@ -1782,7 +1782,7 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
             {count}
           </Text>
         </View>
-      </View>
+      </Animated.View>
     </Pressable>
   );
 }
@@ -1861,7 +1861,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
 
   return (
     <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
-      <View
+      <Animated.View
         style={[
           {
             backgroundColor: "rgba(255, 255, 255, 0.12)",
@@ -1915,7 +1915,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
         >
           {pattern.entries} {pattern.entries === 1 ? "entry" : "entries"}
         </Text>
-      </View>
+      </Animated.View>
     </Pressable>
   );
 }
