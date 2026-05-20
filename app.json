@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "vocolens",
+    "slug": "vocolens",
+    "scheme": "vocolens",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vocolens.app"
+    },
+    "android": {
+      "edgeToEdgeEnabled": true,
+      "package": "com.vocolens.app"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          },
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "743d876a-6e89-4b1f-9e42-816a67b84a35"
+      }
+    },
+    "owner": "kasra1637"
+  }
+}
