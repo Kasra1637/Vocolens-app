@@ -21,10 +21,22 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { Easing } from "react-native-reanimated";
-const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic, successHaptic } from "@/lib/haptics";
-import { Audio } from "expo-av";
 import { Eye, Database, Lock, Mic } from "lucide-react-native";
+
+// Lazy-load expo-av Audio to avoid "Cannot find native module ExponentAV" crash
+// in Expo Go SDK 53+ where expo-av requires a development build.
+function getAudio(): typeof import('expo-av').Audio | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mod = require('expo-av');
+    return mod?.Audio ?? null;
+  } catch (e) {
+    console.warn('[PrivacyPermissions] expo-av not available (Expo Go):', (e as Error)?.message);
+    return null;
+  }
+}
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -79,10 +91,25 @@ export function PrivacyPermissionsScreen() {
   }, []);
 
   const checkMicPermission = async () => {
-    const { status } = await Audio.getPermissionsAsync();
-    setPermissionStatus(status);
-    setMicPermission(status === "granted");
-    togglePosition.value = status === "granted" ? 1 : 0;
+    try {
+      const AudioModule = getAudio();
+      if (!AudioModule) {
+        // expo-av not available (Expo Go SDK 53+), default to undetermined
+        setPermissionStatus("undetermined");
+        setMicPermission(false);
+        togglePosition.value = 0;
+        return;
+      }
+      const { status } = await AudioModule.getPermissionsAsync();
+      setPermissionStatus(status);
+      setMicPermission(status === "granted");
+      togglePosition.value = status === "granted" ? 1 : 0;
+    } catch (e) {
+      console.warn('[PrivacyPermissions] checkMicPermission error:', (e as Error)?.message);
+      setPermissionStatus("undetermined");
+      setMicPermission(false);
+      togglePosition.value = 0;
+    }
   };
 
   const handleMicToggle = async () => {
@@ -100,17 +127,36 @@ export function PrivacyPermissionsScreen() {
     }
 
     // Request permission
-    const { status } = await Audio.requestPermissionsAsync();
+    try {
+      const AudioModule = getAudio();
+      if (!AudioModule) {
+        Alert.alert(
+          "Not Available",
+          "Microphone permission cannot be requested in this environment. It will be available when you use the full app.",
+          [{ text: "OK", style: "default" }],
+        );
+        return;
+      }
 
-    if (status === "granted") {
-      setMicPermission(true);
-      setPermissionStatus(status);
-      togglePosition.value = withSpring(1, { damping: 15, stiffness: 150 });
-      successHaptic();
-    } else {
+      const { status } = await AudioModule.requestPermissionsAsync();
+
+      if (status === "granted") {
+        setMicPermission(true);
+        setPermissionStatus(status);
+        togglePosition.value = withSpring(1, { damping: 15, stiffness: 150 });
+        successHaptic();
+      } else {
+        Alert.alert(
+          "Permission Denied",
+          "Microphone access is required for voice journaling. Please enable it in your device settings.",
+          [{ text: "OK", style: "default" }],
+        );
+      }
+    } catch (e) {
+      console.warn('[PrivacyPermissions] handleMicToggle error:', (e as Error)?.message);
       Alert.alert(
-        "Permission Denied",
-        "Microphone access is required for voice journaling. Please enable it in your device settings.",
+        "Not Available",
+        "Microphone permission is not available in this environment. It will work in the full app.",
         [{ text: "OK", style: "default" }],
       );
     }
@@ -184,7 +230,7 @@ export function PrivacyPermissionsScreen() {
 
             {/* Header */}
             <Animated.View
-              entering={FadeIn.delay(100).duration(600).easing(SOFT)}
+              entering={FadeIn.delay(100).duration(900).easing(SOFT)}
               className="items-center mb-3"
             >
               <Text
@@ -213,7 +259,7 @@ export function PrivacyPermissionsScreen() {
 
             {/* Privacy Shield Card — all four items together */}
             <Animated.View
-              entering={FadeIn.delay(200).duration(500).easing(SOFT)}
+              entering={FadeIn.delay(250).duration(900).easing(SOFT)}
               className="rounded-3xl mb-4"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -331,7 +377,7 @@ export function PrivacyPermissionsScreen() {
 
             {/* Continue Button */}
             <Animated.View
-              entering={FadeIn.delay(300).duration(500).easing(SOFT)}
+              entering={FadeIn.delay(400).duration(800).easing(SOFT)}
               className="pb-6"
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />

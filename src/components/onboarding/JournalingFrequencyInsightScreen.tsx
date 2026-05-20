@@ -19,7 +19,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 
-const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import { BookOpen } from "lucide-react-native";
 import useOnboardingStore, {
@@ -54,13 +54,14 @@ export function JournalingFrequencyInsightScreen() {
 
   useEffect(() => {
     successHaptic();
+    // Gentler animation timing for neurodivergent users
     progressWidth.value = withDelay(
-      400,
-      withTiming(100, { duration: 1400, easing: Easing.out(Easing.cubic) }),
+      500,
+      withTiming(100, { duration: 1800, easing: Easing.out(Easing.cubic) }),
     );
     ringScale.value = withDelay(
-      600,
-      withSpring(1, { damping: 12, stiffness: 100 }),
+      700,
+      withSpring(1, { damping: 18, stiffness: 80 }),
     );
   }, []);
 
@@ -116,7 +117,7 @@ export function JournalingFrequencyInsightScreen() {
 
             {/* Title */}
             <Animated.View
-              entering={FadeIn.delay(80).duration(700).easing(SOFT)}
+              entering={FadeIn.delay(100).duration(900).easing(SOFT)}
               className="items-center mb-3"
             >
               <Text
@@ -135,7 +136,7 @@ export function JournalingFrequencyInsightScreen() {
 
             {/* Insight Card */}
             <Animated.View
-              entering={FadeIn.delay(200).duration(700).easing(SOFT)}
+              entering={FadeIn.delay(250).duration(900).easing(SOFT)}
               style={{ marginBottom: 12 }}
             >
               <View
@@ -222,7 +223,7 @@ export function JournalingFrequencyInsightScreen() {
 
             {/* Continue */}
             <Animated.View
-              entering={FadeIn.delay(360).duration(600).easing(SOFT)}
+              entering={FadeIn.delay(400).duration(800).easing(SOFT)}
               className="pb-6"
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />
