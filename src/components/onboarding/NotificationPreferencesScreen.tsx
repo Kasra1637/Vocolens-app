@@ -33,7 +33,10 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
-import { NotificationService } from "@/lib/services/notification-service";
+function getNotificationService() {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require('@/lib/services/notification-service').NotificationService as typeof import('@/lib/services/notification-service').NotificationService;
+}
 
 const ALL_DAYS: { key: DayOfWeek; label: string; short: string }[] = [
   { key: "monday", label: "Monday", short: "M" },
@@ -80,14 +83,14 @@ export function NotificationPreferencesScreen() {
   const [permissionStatus, setPermissionStatus] = useState<
     "granted" | "denied" | "undetermined"
   >("undetermined");
-  const [timezone] = useState(NotificationService.getLocalTimezone());
+  const [timezone] = useState(getNotificationService().getLocalTimezone());
 
   useEffect(() => {
     checkPermissions();
   }, []);
 
   const checkPermissions = async () => {
-    const status = await NotificationService.checkPermissions();
+    const status = await getNotificationService().checkPermissions();
     setPermissionStatus(status.status);
   };
 
@@ -169,7 +172,7 @@ export function NotificationPreferencesScreen() {
     tapHaptic();
 
     if (!enableNotifications) {
-      const status = await NotificationService.requestPermissions();
+      const status = await getNotificationService().requestPermissions();
       setPermissionStatus(status.status);
       if (status.granted) {
         setEnableNotifications(true);
@@ -190,7 +193,7 @@ export function NotificationPreferencesScreen() {
     playClickSound();
     confirmHaptic();
 
-    const timeString = NotificationService.getTimeString(selectedTime);
+    const timeString = getNotificationService().getTimeString(selectedTime);
     const daysArray = enableNotifications ? Array.from(selectedDays) : [];
 
     setNotificationPreferences({
@@ -199,7 +202,7 @@ export function NotificationPreferencesScreen() {
     });
 
     if (enableNotifications && daysArray.length > 0) {
-      const ids = await NotificationService.scheduleWeeklyNotifications(
+      const ids = await getNotificationService().scheduleWeeklyNotifications(
         timeString,
         daysArray,
       );
@@ -207,7 +210,7 @@ export function NotificationPreferencesScreen() {
         `Scheduled ${ids.length} notifications for ${daysArray.join(", ")} at ${timeString} (${timezone})`,
       );
     } else {
-      await NotificationService.cancelAllNotifications();
+      await getNotificationService().cancelAllNotifications();
     }
 
     nextStep();

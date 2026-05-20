@@ -30,8 +30,14 @@ import {
 } from "@expo-google-fonts/fraunces";
 import { useFrameworkReady } from "@/hooks/useFrameworkReady";
 
-// Suppress known harmless warnings
-LogBox.ignoreLogs(["Expo AV has been deprecated", "Disconnected from Metro"]);
+// Suppress known harmless warnings that do not affect functionality in Expo Go
+LogBox.ignoreLogs([
+  "Expo AV has been deprecated",
+  "Disconnected from Metro",
+  "SafeAreaView has been deprecated",
+  "expo-notifications",
+  "[expo-notifications]",
+]);
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
