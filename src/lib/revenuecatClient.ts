@@ -2,53 +2,24 @@
  * RevenueCat Client Module
  *
  * This module provides a centralized RevenueCat SDK wrapper that gracefully handles
- * missing configuration. The app will work fine whether or not RevenueCat is configured.
+ * missing configuration AND missing native modules (e.g. running inside Expo Go
+ * without the react-native-purchases native binary).
+ *
+ * When the native module is unavailable (Expo Go), all functions return
+ * { ok: false, reason: "not_configured" } — the app continues without payments.
  *
  * Environment Variables:
  * - EXPO_PUBLIC_VIBECODE_REVENUECAT_TEST_KEY: Used in development/test builds (both platforms)
  * - EXPO_PUBLIC_VIBECODE_REVENUECAT_APPLE_KEY: Used in production builds (iOS)
  * - EXPO_PUBLIC_VIBECODE_REVENUECAT_GOOGLE_KEY: Used in production builds (Android)
- * These are automatically injected into the workspace by the Vibecode service once the user sets up RevenueCat in the Payments tab.
- *
- * Platform Support:
- * - iOS/Android: Fully supported via app stores
- * - Web: Disabled (RevenueCat only supports native app stores)
- *
- * The module automatically selects the correct key based on __DEV__ mode.
- * 
- * This module is used to get the current customer info, offerings, and purchase packages.
- * These exported functions are found at the bottom of the file.
  */
 
 import { Platform } from "react-native";
-import Purchases, {
-  type PurchasesOfferings,
-  type CustomerInfo,
-  type PurchasesPackage,
-} from "react-native-purchases";
 
-// Check if running on web
-const isWeb = Platform.OS === "web";
-
-// Check for environment keys
-const testKey = process.env.EXPO_PUBLIC_VIBECODE_REVENUECAT_TEST_KEY;
-const appleKey = process.env.EXPO_PUBLIC_VIBECODE_REVENUECAT_APPLE_KEY;
-const googleKey = process.env.EXPO_PUBLIC_VIBECODE_REVENUECAT_GOOGLE_KEY;
-
-// Use the test key in __DEV__ mode (points to the RevenueCat Test Store).
-// In production, use the platform-specific key (Apple / Google).
-const getApiKey = (): string | undefined => {
-  if (isWeb) return undefined;
-  if (__DEV__) return testKey;
-  return Platform.OS === "ios" ? appleKey : googleKey;
-};
-
-const apiKey = getApiKey();
-
-// Track if RevenueCat is enabled
-const isEnabled = !!apiKey && !isWeb;
-
-const LOG_PREFIX = "[RevenueCat]";
+// ── Types (re-exported so consumers don't need to import from react-native-purchases) ──
+export type PurchasesOfferings = any;
+export type CustomerInfo = any;
+export type PurchasesPackage = any;
 
 export type RevenueCatGuardReason =
   | "web_not_supported"
@@ -59,7 +30,42 @@ export type RevenueCatResult<T> =
   | { ok: true; data: T }
   | { ok: false; reason: RevenueCatGuardReason; error?: unknown };
 
-// Internal guard to get consistent success/failure results from RevenueCat.
+// ── Lazy-load the native module ──────────────────────────────────────────────
+// This is the critical fix: instead of a top-level `import Purchases from ...`
+// which crashes if the native module isn't linked (Expo Go), we try/catch it.
+let Purchases: any = null;
+let nativeModuleAvailable = false;
+
+try {
+  // require() is evaluated at bundle time but wrapped in try/catch so if
+  // the native module throws (Expo Go), we catch it gracefully.
+  Purchases = require("react-native-purchases").default;
+  nativeModuleAvailable = true;
+} catch (e) {
+  console.log(
+    "[RevenueCat] Native module not available (expected in Expo Go). Payments disabled.",
+  );
+  nativeModuleAvailable = false;
+}
+
+// ── Configuration ────────────────────────────────────────────────────────────
+const isWeb = Platform.OS === "web";
+const testKey = process.env.EXPO_PUBLIC_VIBECODE_REVENUECAT_TEST_KEY;
+const appleKey = process.env.EXPO_PUBLIC_VIBECODE_REVENUECAT_APPLE_KEY;
+const googleKey = process.env.EXPO_PUBLIC_VIBECODE_REVENUECAT_GOOGLE_KEY;
+
+const getApiKey = (): string | undefined => {
+  if (isWeb) return undefined;
+  if (__DEV__) return testKey;
+  return Platform.OS === "ios" ? appleKey : googleKey;
+};
+
+const apiKey = getApiKey();
+const isEnabled = !!apiKey && !isWeb && nativeModuleAvailable;
+
+const LOG_PREFIX = "[RevenueCat]";
+
+// ── Guard helper ─────────────────────────────────────────────────────────────
 const guardRevenueCatUsage = async <T>(
   action: string,
   operation: () => Promise<T>,
@@ -85,19 +91,14 @@ const guardRevenueCatUsage = async <T>(
   }
 };
 
-// Initialize RevenueCat if key exists
-if (isEnabled) {
+// ── Initialize RevenueCat (only if native module is available + keys set) ────
+if (isEnabled && Purchases) {
   try {
-    // Set up custom log handler to suppress Test Store and expected errors
-    // These are non-errors thrown as errors by the SDK, and will be confusing to the user.
-    Purchases.setLogHandler((logLevel, message) => {
-
-      // Log ERROR messages normally
-      if (logLevel === Purchases.LOG_LEVEL.ERROR) {
+    Purchases.setLogHandler((logLevel: any, message: string) => {
+      if (logLevel === Purchases.LOG_LEVEL?.ERROR) {
         console.log(LOG_PREFIX, message);
       }
     });
-
     Purchases.configure({ apiKey: apiKey! });
     console.log(`${LOG_PREFIX} SDK initialized successfully`);
   } catch (error) {
@@ -105,51 +106,18 @@ if (isEnabled) {
   }
 }
 
-/**
- * Check if RevenueCat is configured and enabled
- *
- * @returns true if RevenueCat is configured with valid API keys
- *
- * @example
- * if (isRevenueCatEnabled()) {
- *   // Show subscription features
- * } else {
- *   // Hide or disable subscription UI
- * }
- */
+// ── Public API ───────────────────────────────────────────────────────────────
+
 export const isRevenueCatEnabled = (): boolean => {
   return isEnabled;
 };
 
-/**
- * Get available offerings from RevenueCat
- *
- * @returns RevenueCatResult containing PurchasesOfferings data or a failure reason
- *
- * @example
- * const offeringsResult = await getOfferings();
- * if (offeringsResult.ok && offeringsResult.data.current) {
- *   // Display packages from offeringsResult.data.current.availablePackages
- * }
- */
 export const getOfferings = (): Promise<
   RevenueCatResult<PurchasesOfferings>
 > => {
   return guardRevenueCatUsage("getOfferings", () => Purchases.getOfferings());
 };
 
-/**
- * Purchase a package
- *
- * @param packageToPurchase - The package to purchase
- * @returns RevenueCatResult containing CustomerInfo data or a failure reason
- *
- * @example
- * const purchaseResult = await purchasePackage(selectedPackage);
- * if (purchaseResult.ok) {
- *   // Purchase successful, check entitlements
- * }
- */
 export const purchasePackage = (
   packageToPurchase: PurchasesPackage,
 ): Promise<RevenueCatResult<CustomerInfo>> => {
@@ -159,37 +127,12 @@ export const purchasePackage = (
   });
 };
 
-/**
- * Get current customer info including active entitlements
- *
- * @returns RevenueCatResult containing CustomerInfo data or a failure reason
- *
- * @example
- * const customerInfoResult = await getCustomerInfo();
- * if (
- *   customerInfoResult.ok &&
- *   customerInfoResult.data.entitlements.active["premium"]
- * ) {
- *   // User has active premium entitlement
- * }
- */
 export const getCustomerInfo = (): Promise<RevenueCatResult<CustomerInfo>> => {
   return guardRevenueCatUsage("getCustomerInfo", () =>
     Purchases.getCustomerInfo(),
   );
 };
 
-/**
- * Restore previous purchases
- *
- * @returns RevenueCatResult containing CustomerInfo data or a failure reason
- *
- * @example
- * const restoreResult = await restorePurchases();
- * if (restoreResult.ok) {
- *   // Purchases restored successfully
- * }
- */
 export const restorePurchases = (): Promise<
   RevenueCatResult<CustomerInfo>
 > => {
@@ -198,53 +141,18 @@ export const restorePurchases = (): Promise<
   );
 };
 
-/**
- * Set user ID for RevenueCat (useful for cross-platform user tracking)
- *
- * @param userId - The user ID to set
- * @returns RevenueCatResult<void> describing success/failure
- *
- * @example
- * const result = await setUserId(user.id);
- * if (!result.ok) {
- *   // Handle failure case
- * }
- */
 export const setUserId = (userId: string): Promise<RevenueCatResult<void>> => {
   return guardRevenueCatUsage("setUserId", async () => {
     await Purchases.logIn(userId);
   });
 };
 
-/**
- * Log out the current user
- *
- * @returns RevenueCatResult<void> describing success/failure
- *
- * @example
- * const result = await logoutUser();
- * if (!result.ok) {
- *   // Handle failure case
- * }
- */
 export const logoutUser = (): Promise<RevenueCatResult<void>> => {
   return guardRevenueCatUsage("logoutUser", async () => {
     await Purchases.logOut();
   });
 };
 
-/**
- * Check if user has a specific entitlement active
- *
- * @param entitlementId - The entitlement identifier (e.g., "premium", "pro")
- * @returns RevenueCatResult<boolean> describing entitlement state or failure
- *
- * @example
- * const premiumResult = await hasEntitlement("premium");
- * if (premiumResult.ok && premiumResult.data) {
- *   // Show premium features
- * }
- */
 export const hasEntitlement = async (
   entitlementId: string,
 ): Promise<RevenueCatResult<boolean>> => {
@@ -264,17 +172,6 @@ export const hasEntitlement = async (
   return { ok: true, data: isActive };
 };
 
-/**
- * Check if user has any active subscription
- *
- * @returns RevenueCatResult<boolean> describing subscription state or failure
- *
- * @example
- * const subscriptionResult = await hasActiveSubscription();
- * if (subscriptionResult.ok && subscriptionResult.data) {
- *   // User is a paying subscriber
- * }
- */
 export const hasActiveSubscription = async (): Promise<
   RevenueCatResult<boolean>
 > => {
@@ -293,18 +190,6 @@ export const hasActiveSubscription = async (): Promise<
   return { ok: true, data: hasSubscription };
 };
 
-/**
- * Get a specific package from the current offering
- *
- * @param packageIdentifier - The package identifier (e.g., "$rc_monthly", "$rc_annual")
- * @returns RevenueCatResult containing the package (or null) or a failure reason
- *
- * @example
- * const packageResult = await getPackage("$rc_monthly");
- * if (packageResult.ok && packageResult.data) {
- *   // Display monthly subscription option
- * }
- */
 export const getPackage = async (
   packageIdentifier: string,
 ): Promise<RevenueCatResult<PurchasesPackage | null>> => {
@@ -320,7 +205,8 @@ export const getPackage = async (
 
   const pkg =
     offeringsResult.data.current?.availablePackages.find(
-      (availablePackage) => availablePackage.identifier === packageIdentifier,
+      (availablePackage: any) =>
+        availablePackage.identifier === packageIdentifier,
     ) ?? null;
 
   return { ok: true, data: pkg };

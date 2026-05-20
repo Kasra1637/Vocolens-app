@@ -1,0 +1,178 @@
+name: Expo Preview (tunnel QR)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Starts the Expo dev server inside a GitHub Actions runner with tunnel mode,
+# captures the public ngrok URL, and posts it as a PR comment so reviewers
+# can scan the QR code directly from their phone.
+#
+# ⚠ This workflow intentionally runs for up to 30 minutes to keep the tunnel
+#    alive long enough for review. It is NOT triggered on push — only on PRs
+#    when the label "preview" is added, to avoid wasting runner minutes.
+#
+# Required GitHub secret:
+#   EXPO_TOKEN  — expo.dev/settings/access-tokens
+#
+# Optional GitHub secret (recommended to avoid ngrok rate-limits):
+#   NGROK_TOKEN — dashboard.ngrok.com/get-started/your-authtoken
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  preview:
+    name: Start tunnel & post QR
+    runs-on: ubuntu-latest
+    # Only run when the PR gets the "preview" label
+    if: github.event.label.name == 'preview'
+    timeout-minutes: 35
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-fund --no-audit
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # ── Optional: authenticate ngrok to avoid connection limits ────────────
+      - name: Configure ngrok auth (if token provided)
+        if: secrets.NGROK_TOKEN != ''
+        run: ngrok config add-authtoken ${{ secrets.NGROK_TOKEN }}
+        env:
+          NGROK_TOKEN: ${{ secrets.NGROK_TOKEN }}
+
+      # ── Start Expo in tunnel mode, capture tunnel URL ──────────────────────
+      - name: Start Expo tunnel & capture URL
+        id: tunnel
+        run: |
+          # Start Metro + ngrok tunnel in the background, output to log file
+          RCT_METRO_PORT=8084 \
+          EXPO_NO_PROMPT=1 \
+          npx expo start --tunnel --clear > /tmp/expo.log 2>&1 &
+          EXPO_PID=$!
+          echo "expo_pid=$EXPO_PID" >> "$GITHUB_OUTPUT"
+
+          echo "⏳ Waiting for tunnel to become available..."
+
+          # Poll the ngrok API for up to 90 seconds
+          TUNNEL_URL=""
+          for i in $(seq 1 45); do
+            sleep 2
+            TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null \
+              | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    for t in d.get('tunnels', []):
+        if t.get('proto') == 'https':
+            print(t['public_url'])
+            break
+except:
+    pass
+" 2>/dev/null || true)
+            if [[ -n "$TUNNEL_URL" ]]; then
+              echo "✓ Tunnel ready: $TUNNEL_URL"
+              break
+            fi
+          done
+
+          if [[ -z "$TUNNEL_URL" ]]; then
+            echo "❌ Tunnel did not start within 90s. Expo output:"
+            cat /tmp/expo.log
+            exit 1
+          fi
+
+          # Build the exp:// deep-link that Expo Go opens directly
+          # Format: exp+vocolens://expo-development-client/?url=<encoded-tunnel>
+          ENCODED=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]+'/manifest', safe=''))" "$TUNNEL_URL")
+          EXP_URL="exp+vocolens://expo-development-client/?url=${ENCODED}"
+
+          echo "tunnel_url=$TUNNEL_URL"  >> "$GITHUB_OUTPUT"
+          echo "exp_url=$EXP_URL"        >> "$GITHUB_OUTPUT"
+
+      # ── Generate QR code as ASCII art ─────────────────────────────────────
+      - name: Generate QR code
+        id: qr
+        run: |
+          URL="${{ steps.tunnel.outputs.tunnel_url }}"
+          # qrencode writes a UTF-8 QR to stdout; we encode it for embedding
+          QR_TEXT=$(qrencode -t UTF8 -o - "$URL" 2>/dev/null \
+            || echo "(qrencode not available — scan URL manually)")
+          # Store as multi-line output
+          {
+            echo 'qr_text<<QREOF'
+            echo "$QR_TEXT"
+            echo 'QREOF'
+          } >> "$GITHUB_OUTPUT"
+
+      # ── Post PR comment with URL + QR ────────────────────────────────────
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const tunnelUrl = '${{ steps.tunnel.outputs.tunnel_url }}';
+            const expUrl    = '${{ steps.tunnel.outputs.exp_url }}';
+            const sha       = context.sha.slice(0, 7);
+            const runUrl    = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            const body = [
+              `## 📱 Live Preview — scan QR to open in Expo Go`,
+              ``,
+              `| | |`,
+              `|---|---|`,
+              `| **Commit** | \`${sha}\` |`,
+              `| **Tunnel URL** | [${tunnelUrl}](${tunnelUrl}) |`,
+              `| **Expo Go deep-link** | \`${expUrl}\` |`,
+              `| **CI run** | [View logs](${runUrl}) |`,
+              ``,
+              `### How to open on your phone`,
+              `1. Install **Expo Go** from the [App Store](https://apps.apple.com/app/expo-go/id982107779) or [Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)`,
+              `2. Open Expo Go → tap **Scan QR code**`,
+              `3. Scan the QR below, **or** paste the Tunnel URL into Expo Go`,
+              ``,
+              `> ⏱ The tunnel stays alive for ~30 minutes (while the CI job runs). After that, trigger a new preview by re-adding the \`preview\` label.`,
+            ].join('\n');
+
+            // Replace any existing preview comment
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const prev = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('Live Preview')
+            );
+            if (prev) {
+              await github.rest.issues.updateComment({
+                comment_id: prev.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              });
+            }
+
+      # ── Keep the tunnel alive for the review window ───────────────────────
+      - name: Keep tunnel alive (30 min review window)
+        run: |
+          echo "✓ Tunnel is live. Keeping it open for 30 minutes..."
+          echo "  → ${{ steps.tunnel.outputs.tunnel_url }}"
+          sleep 1800
+          echo "⌛ 30-minute review window complete."

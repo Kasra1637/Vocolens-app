@@ -54,7 +54,7 @@ import {
   restorePurchases,
   isRevenueCatEnabled,
 } from "@/lib/revenuecatClient";
-import type { PurchasesPackage } from "react-native-purchases";
+import type { PurchasesPackage } from "@/lib/revenuecatClient";
 import { NotificationService } from "@/lib/services/notification-service";
 
 // ── Pricing constants ─────────────────────────────────────────────────────────

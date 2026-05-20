@@ -1,0 +1,121 @@
+{
+  "name": "Vocolens — Expo Cloud Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  // ── Port forwarding ─────────────────────────────────────────────────────────
+  // Codespaces automatically exposes these ports and makes them available via
+  // HTTPS forwarding URLs (e.g. https://<codespace>-8084.app.github.dev).
+  // The Expo tunnel (ngrok) creates its own public URL — the ones below are for
+  // direct LAN / web preview inside the Codespace browser.
+  "forwardPorts": [
+    8084,   // Metro bundler (Expo dev server)
+    8085,   // Metro fallback port
+    4040,   // ngrok inspection dashboard
+    19000,  // Expo manifest server
+    19001,  // Expo web
+    8081    // Legacy Metro / FastAPI backend (keep for compatibility)
+  ],
+  "portsAttributes": {
+    "8084": {
+      "label": "Metro (Expo)",
+      "onAutoForward": "notify",
+      "visibility": "public"
+    },
+    "8085": {
+      "label": "Metro (fallback)",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    },
+    "4040": {
+      "label": "ngrok dashboard",
+      "onAutoForward": "silent"
+    },
+    "19000": {
+      "label": "Expo manifest",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    },
+    "8081": {
+      "label": "Backend / legacy Metro",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // ── Lifecycle hooks ─────────────────────────────────────────────────────────
+  // postCreateCommand runs once after the container is first built.
+  // It installs dependencies and applies any necessary patches.
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
+
+  // ── VS Code extensions ──────────────────────────────────────────────────────
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // React Native / Expo
+        "msjsdiag.vscode-react-native",
+        "expo.vscode-expo-tools",
+
+        // TypeScript & JavaScript
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+
+        // Git
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+
+        // Productivity
+        "christian-kohler.path-intellisense",
+        "visualstudioexptteam.vscodeintellicode",
+        "formulahendry.auto-rename-tag",
+
+        // Theme (optional, consistent with the app's vibe)
+        "zhuangtongfa.material-theme"
+      ],
+      "settings": {
+        // Format on save using Prettier
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+
+        // TypeScript
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "typescript.enablePromptUseWorkspaceTsdk": true,
+
+        // Terminal shell
+        "terminal.integrated.defaultProfile.linux": "bash",
+
+        // Tailwind CSS autocomplete
+        "tailwindCSS.experimental.classRegex": [
+          ["className\\s*=\\s*['\"`]([^'\"` ]*)['\"`]"]
+        ],
+
+        // Node path (matches the devcontainer image)
+        "node.defaultVersion": "22"
+      }
+    }
+  },
+
+  // ── Environment variables available inside the container ────────────────────
+  // These are non-secret defaults. Secrets (EXPO_TOKEN, etc.) must be added
+  // as Codespaces encrypted secrets at github.com/settings/codespaces
+  "remoteEnv": {
+    // Tell Metro to use port 8084 so it doesn't conflict with the backend
+    "RCT_METRO_PORT": "8084",
+    // Disable interactive prompts when running inside Codespaces
+    "EXPO_NO_PROMPT": "1",
+    // Suppress Watchman (not available in the container)
+    "EXPO_USE_METRO_WORKSPACE_ROOT": "1"
+  },
+
+  // ── Run as non-root ─────────────────────────────────────────────────────────
+  "remoteUser": "node"
+}
