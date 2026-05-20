@@ -22,12 +22,13 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 
-// Soft surface easing — slow to start, settles gently. No bouncing.
-const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
+// Gentle easing — content appears smoothly without jarring movement.
+// Optimized for neurodivergent users: slower transitions, reduced visual overwhelm.
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 
-const HEADLINE_ANIM = FadeIn.duration(700).delay(80).easing(SOFT);
-const SUBHEAD_ANIM  = FadeIn.duration(700).delay(220).easing(SOFT);
-const BUTTON_ANIM   = FadeIn.duration(600).delay(120).easing(SOFT);
+const HEADLINE_ANIM = FadeIn.duration(900).delay(100).easing(SOFT);
+const SUBHEAD_ANIM  = FadeIn.duration(900).delay(250).easing(SOFT);
+const BUTTON_ANIM   = FadeIn.duration(800).delay(150).easing(SOFT);
 
 export function WelcomeScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -52,14 +53,15 @@ export function WelcomeScreen() {
     nextStep();
   };
 
-  // Staggered reveal sequence for Nordar-style polish
+  // Staggered reveal sequence — gentler timing for neurodivergent users
+  // Shorter waits reduce anticipatory anxiety while still providing visual flow
   useEffect(() => {
     if (currentPhase === "welcome") {
-      const t1 = setTimeout(() => setCurrentPhase("insights"), 1000);
+      const t1 = setTimeout(() => setCurrentPhase("insights"), 800);
       return () => clearTimeout(t1);
     }
     if (currentPhase === "insights") {
-      const t2 = setTimeout(() => setCurrentPhase("ready"), 600);
+      const t2 = setTimeout(() => setCurrentPhase("ready"), 500);
       return () => clearTimeout(t2);
     }
   }, [currentPhase]);

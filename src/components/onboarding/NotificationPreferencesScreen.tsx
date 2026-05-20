@@ -20,7 +20,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import { Clock, Bell, BellOff } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -34,8 +34,21 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 function getNotificationService() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return require('@/lib/services/notification-service').NotificationService as typeof import('@/lib/services/notification-service').NotificationService;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('@/lib/services/notification-service').NotificationService as typeof import('@/lib/services/notification-service').NotificationService;
+  } catch (e) {
+    console.warn('[NotificationPreferences] notification-service not available:', (e as Error)?.message);
+    // Return a safe stub that won't crash the app in Expo Go
+    return {
+      checkPermissions: async () => ({ granted: false, canAskAgain: false, status: 'denied' as const }),
+      requestPermissions: async () => ({ granted: false, canAskAgain: false, status: 'denied' as const }),
+      scheduleWeeklyNotifications: async () => [] as string[],
+      cancelAllNotifications: async () => {},
+      getTimeString: (date: Date) => `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`,
+      getLocalTimezone: () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+    } as any;
+  }
 }
 
 const ALL_DAYS: { key: DayOfWeek; label: string; short: string }[] = [
@@ -90,8 +103,13 @@ export function NotificationPreferencesScreen() {
   }, []);
 
   const checkPermissions = async () => {
-    const status = await getNotificationService().checkPermissions();
-    setPermissionStatus(status.status);
+    try {
+      const status = await getNotificationService().checkPermissions();
+      setPermissionStatus(status.status);
+    } catch (e) {
+      console.warn('[NotificationPreferences] checkPermissions error (Expo Go):', (e as Error)?.message);
+      setPermissionStatus('denied');
+    }
   };
 
   // ---------- day helpers ----------
@@ -257,7 +275,7 @@ export function NotificationPreferencesScreen() {
 
             {/* Title */}
             <Animated.View
-              entering={FadeIn.delay(300).duration(600).easing(SOFT)}
+              entering={FadeIn.delay(200).duration(900).easing(SOFT)}
               className="items-center mb-3"
             >
               <Text
@@ -285,7 +303,7 @@ export function NotificationPreferencesScreen() {
 
             {/* Enable / Disable toggle */}
             <Animated.View
-              entering={FadeIn.delay(380).duration(500).easing(SOFT)}
+              entering={FadeIn.delay(300).duration(800).easing(SOFT)}
               className="mb-4"
             >
               <Pressable
@@ -367,7 +385,7 @@ export function NotificationPreferencesScreen() {
               <>
                 {/* ---- Day selector ---- */}
                 <Animated.View
-                  entering={FadeIn.delay(440).duration(500).easing(SOFT)}
+                  entering={FadeIn.delay(380).duration(800).easing(SOFT)}
                   className="mb-4"
                 >
                   <Text
@@ -442,7 +460,7 @@ export function NotificationPreferencesScreen() {
 
                 {/* ---- Time picker button ---- */}
                 <Animated.View
-                  entering={FadeIn.delay(500).duration(500).easing(SOFT)}
+                  entering={FadeIn.delay(450).duration(800).easing(SOFT)}
                   className="mb-2"
                 >
                   <Text
@@ -507,7 +525,7 @@ export function NotificationPreferencesScreen() {
             {/* Disabled state */}
             {!enableNotifications && (
               <Animated.View
-                entering={FadeIn.delay(500).duration(500).easing(SOFT)}
+                entering={FadeIn.delay(400).duration(800).easing(SOFT)}
                 className="items-center py-10"
               >
                 <BellOff
@@ -542,7 +560,7 @@ export function NotificationPreferencesScreen() {
 
             {/* Continue button — directly below content, close to reminder time */}
             <Animated.View
-              entering={FadeIn.delay(580).duration(500).easing(SOFT)}
+              entering={FadeIn.delay(500).duration(800).easing(SOFT)}
               style={{ marginTop: 20, marginBottom: 8 }}
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />

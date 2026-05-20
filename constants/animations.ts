@@ -293,3 +293,45 @@ export const defaultAnimation = {
  * Use for most spring-based animations
  */
 export const defaultSpring = animationTimings.spring;
+
+// ============================================================================
+// NEURODIVERGENT-FRIENDLY ANIMATION PRESETS
+// ============================================================================
+
+/**
+ * Animation presets optimized for neurodivergent users.
+ *
+ * Design principles:
+ * - Slower, gentler transitions to reduce visual overwhelm
+ * - Minimal stagger between elements (less competing motion)
+ * - Higher damping on springs (less bounce = less distraction)
+ * - Longer durations give the brain time to process each change
+ * - Consistent, predictable timing across all screens
+ */
+export const ndFriendly = {
+  // Easing curve: gentle deceleration, no overshoot
+  easing: Easing.bezier(0.22, 1, 0.36, 1),
+
+  // Standard fade-in duration for content blocks
+  fadeDuration: 900,
+
+  // Duration for button/CTA appearance
+  ctaDuration: 800,
+
+  // Base delay before first element appears (short to reduce waiting anxiety)
+  baseDelay: 100,
+
+  // Delay increment between staggered items (tighter = less competing motion)
+  staggerIncrement: 80,
+
+  // Spring config for scale/ring animations (high damping = no bounce)
+  spring: {
+    damping: 18,
+    stiffness: 80,
+    mass: 1,
+  },
+
+  // Progress bar fill timing
+  progressDuration: 1600,
+  progressDelay: 500,
+};

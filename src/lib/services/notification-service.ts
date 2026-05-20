@@ -73,13 +73,21 @@ export interface NotificationPermissionStatus {
 // ── Lazy require helper ───────────────────────────────────────────────────────
 // Importing expo-notifications at module top level causes the side-effect file
 // DevicePushTokenAutoRegistration.fx.js to load, which calls addPushTokenListener
-// and throws "Android Push notifications removed from Expo Go" in Expo Go.
-// Requiring lazily inside methods avoids this entirely.
+// and throws "Android Push notifications removed from Expo Go" in SDK 53+.
+// We lazily require only the specific sub-modules we need (permissions, scheduling)
+// and catch any errors that occur during require or usage.
+let _notificationsModule: typeof import('expo-notifications') | null | undefined = undefined;
+
 function getNotifications(): typeof import('expo-notifications') | null {
+  if (_notificationsModule !== undefined) return _notificationsModule;
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require('expo-notifications');
-  } catch {
+    const mod = require('expo-notifications');
+    _notificationsModule = mod;
+    return mod;
+  } catch (e) {
+    console.warn('[NotificationService] expo-notifications not available in this environment:', (e as Error)?.message);
+    _notificationsModule = null;
     return null;
   }
 }
@@ -198,17 +206,18 @@ export class NotificationService {
   }
 
   static async checkPermissions(): Promise<NotificationPermissionStatus> {
-    const N = getNotifications();
-    if (!N) return DENIED;
-
     try {
+      const N = getNotifications();
+      if (!N) return DENIED;
+
       const { status } = await N.getPermissionsAsync();
       return {
         granted: status === 'granted',
         canAskAgain: status === 'undetermined',
         status: status as 'granted' | 'denied' | 'undetermined',
       };
-    } catch {
+    } catch (e) {
+      console.warn('[NotificationService] checkPermissions failed (likely Expo Go):', (e as Error)?.message);
       return DENIED;
     }
   }
