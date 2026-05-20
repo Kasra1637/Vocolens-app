@@ -20,14 +20,15 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
+  FadeIn,
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic } from "@/lib/haptics";
 import {
   Unlock,
@@ -539,7 +540,7 @@ export function PaywallScreen() {
           >
             {/* Header */}
             <Animated.View
-              entering={FadeInDown.delay(50).duration(600)}
+              entering={FadeIn.delay(50).duration(600).easing(SOFT)}
               style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 10, alignItems: "center" }}
             >
               <Text
@@ -564,13 +565,13 @@ export function PaywallScreen() {
             </Animated.View>
 
             {/* 1 ── Benefits carousel + testimonial (leads with value) */}
-            <Animated.View entering={FadeInUp.delay(150).duration(500)}>
+            <Animated.View entering={FadeIn.delay(150).duration(500).easing(SOFT)}>
               <BenefitsCarousel themeColors={themeColors} />
             </Animated.View>
 
             {/* 2 ── Trial timeline */}
             <Animated.View
-              entering={FadeInUp.delay(250).duration(500)}
+              entering={FadeIn.delay(250).duration(500).easing(SOFT)}
               style={{
                 marginHorizontal: 24,
                 borderRadius: 24,

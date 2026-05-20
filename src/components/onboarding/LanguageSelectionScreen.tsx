@@ -10,8 +10,7 @@ import React, { useState, useMemo } from "react";
 import { View, Text, Pressable, ScrollView, TextInput } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { Easing } from "react-native-reanimated";
+import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { Check, Search } from "lucide-react-native";
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
@@ -93,7 +92,7 @@ export function LanguageSelectionScreen() {
           pointerEvents="none"
         >
           <Animated.Text
-            entering={FadeInDown.delay(60).duration(500)}
+            entering={FadeIn.delay(60).duration(500).easing(SOFT)}
             style={{
               fontFamily: "Fraunces_700Bold",
               fontSize: 22,
@@ -105,7 +104,7 @@ export function LanguageSelectionScreen() {
             Select your native tongue
           </Animated.Text>
           <Animated.Text
-            entering={FadeInDown.delay(120).duration(500)}
+            entering={FadeIn.delay(120).duration(500).easing(SOFT)}
             style={{
               fontFamily: "Inter_400Regular",
               fontSize: 12,
@@ -120,7 +119,7 @@ export function LanguageSelectionScreen() {
 
         {/* Search bar */}
         <Animated.View
-          entering={FadeInDown.delay(160).duration(500)}
+          entering={FadeIn.delay(160).duration(500).easing(SOFT)}
           style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 }}
         >
           <View
@@ -156,7 +155,7 @@ export function LanguageSelectionScreen() {
 
         {/* Language list */}
         <Animated.View
-          entering={FadeInDown.delay(220).duration(500)}
+          entering={FadeIn.delay(220).duration(500).easing(SOFT)}
           style={{ flex: 1 }}
         >
           <ScrollView
@@ -273,7 +272,7 @@ export function LanguageSelectionScreen() {
 
         {/* Continue button */}
         <Animated.View
-          entering={FadeInUp.delay(200).duration(500)}
+          entering={FadeIn.delay(200).duration(500).easing(SOFT)}
           style={{ paddingHorizontal: 24, paddingBottom: 48, paddingTop: 8 }}
         >
           <OnboardingCTAButton onPress={handleContinue} label="Continue" />

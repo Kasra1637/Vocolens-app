@@ -10,8 +10,7 @@ import { View, Text, Pressable, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
+  FadeIn,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -20,6 +19,7 @@ import Animated, {
   withDelay,
   Easing,
 } from "react-native-reanimated";
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { successHaptic, tapHaptic } from "@/lib/haptics";
 import { Bell, ChevronRight } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
@@ -180,7 +180,7 @@ export function ReminderScreen() {
           <View style={{ flex: 1, paddingHorizontal: 24 }}>
             {/* Character + Title */}
             <Animated.View
-              entering={FadeInDown.delay(50).duration(600)}
+              entering={FadeIn.delay(50).duration(600).easing(SOFT)}
               style={{ alignItems: "center", marginTop: 4 }}
             >
               <View style={{ marginBottom: 16 }}>
@@ -207,7 +207,7 @@ export function ReminderScreen() {
 
             {/* Bell */}
             <Animated.View
-              entering={FadeInUp.delay(200).duration(700)}
+              entering={FadeIn.delay(200).duration(700).easing(SOFT)}
               style={{ alignItems: "center", marginTop: 28, marginBottom: 28 }}
             >
               <AnimatedBell primaryColor={themeColors.primary} />
@@ -215,7 +215,7 @@ export function ReminderScreen() {
 
             {/* CTA */}
             <Animated.View
-              entering={FadeInUp.delay(500).duration(600)}
+              entering={FadeIn.delay(500).duration(600).easing(SOFT)}
               style={{ alignItems: "center" }}
             >
               <Text

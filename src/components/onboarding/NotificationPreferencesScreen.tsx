@@ -19,8 +19,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { Easing } from "react-native-reanimated";
+import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import { Clock, Bell, BellOff } from "lucide-react-native";
@@ -255,7 +254,7 @@ export function NotificationPreferencesScreen() {
 
             {/* Title */}
             <Animated.View
-              entering={FadeInUp.delay(300).duration(600)}
+              entering={FadeIn.delay(300).duration(600).easing(SOFT)}
               className="items-center mb-3"
             >
               <Text
@@ -283,7 +282,7 @@ export function NotificationPreferencesScreen() {
 
             {/* Enable / Disable toggle */}
             <Animated.View
-              entering={FadeInDown.delay(380).duration(500)}
+              entering={FadeIn.delay(380).duration(500).easing(SOFT)}
               className="mb-4"
             >
               <Pressable
@@ -365,7 +364,7 @@ export function NotificationPreferencesScreen() {
               <>
                 {/* ---- Day selector ---- */}
                 <Animated.View
-                  entering={FadeInDown.delay(440).duration(500)}
+                  entering={FadeIn.delay(440).duration(500).easing(SOFT)}
                   className="mb-4"
                 >
                   <Text
@@ -440,7 +439,7 @@ export function NotificationPreferencesScreen() {
 
                 {/* ---- Time picker button ---- */}
                 <Animated.View
-                  entering={FadeInDown.delay(500).duration(500)}
+                  entering={FadeIn.delay(500).duration(500).easing(SOFT)}
                   className="mb-2"
                 >
                   <Text
@@ -505,7 +504,7 @@ export function NotificationPreferencesScreen() {
             {/* Disabled state */}
             {!enableNotifications && (
               <Animated.View
-                entering={FadeInDown.delay(500).duration(500)}
+                entering={FadeIn.delay(500).duration(500).easing(SOFT)}
                 className="items-center py-10"
               >
                 <BellOff
@@ -540,7 +539,7 @@ export function NotificationPreferencesScreen() {
 
             {/* Continue button — directly below content, close to reminder time */}
             <Animated.View
-              entering={FadeInUp.delay(580).duration(500)}
+              entering={FadeIn.delay(580).duration(500).easing(SOFT)}
               style={{ marginTop: 20, marginBottom: 8 }}
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />

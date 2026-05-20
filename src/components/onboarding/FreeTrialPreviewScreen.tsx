@@ -13,8 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path, Line } from "react-native-svg";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
+  FadeIn,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -23,6 +22,7 @@ import Animated, {
   withSequence,
   Easing,
 } from "react-native-reanimated";
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import {
   ChevronRight,
@@ -456,7 +456,7 @@ export function FreeTrialPreviewScreen() {
           >
             {/* Title */}
             <Animated.View
-              entering={FadeInDown.delay(50).duration(600)}
+              entering={FadeIn.delay(50).duration(600).easing(SOFT)}
               style={{ alignItems: "center", marginTop: 4 }}
             >
               <Text
@@ -476,7 +476,7 @@ export function FreeTrialPreviewScreen() {
 
             {/* ── Animated App Demo ── */}
             <Animated.View
-              entering={FadeInUp.delay(200).duration(700)}
+              entering={FadeIn.delay(200).duration(700).easing(SOFT)}
               style={[cardFloatStyle, { flex: 1, marginVertical: 16 }]}
             >
               <View
@@ -1059,7 +1059,7 @@ export function FreeTrialPreviewScreen() {
 
             {/* ── No payment text + CTA ── */}
             <Animated.View
-              entering={FadeInUp.delay(500).duration(600)}
+              entering={FadeIn.delay(500).duration(600).easing(SOFT)}
               style={{ alignItems: "center" }}
             >
               <View
