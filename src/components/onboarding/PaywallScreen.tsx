@@ -171,17 +171,11 @@ function BenefitsCarousel({
 
   return (
     <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
-      {/* Section title + social proof */}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+      {/* Section title */}
+      <View style={{ marginBottom: 10 }}>
         <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 18 }}>
           What you'll gain
         </Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Users size={12} color="rgba(255,255,255,0.65)" strokeWidth={2} />
-          <Text style={{ color: "rgba(255,255,255,0.65)", fontFamily: "Inter_400Regular", fontSize: 11 }}>
-            500+ users
-          </Text>
-        </View>
       </View>
 
       {/* Crossfading benefit card */}
@@ -549,7 +543,7 @@ export function PaywallScreen() {
               style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 10, alignItems: "center" }}
             >
               <Text
-                style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 22, textAlign: "center", lineHeight: 30 }}
+                style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 22, textAlign: "center", lineHeight: 30, letterSpacing: 0.2, opacity: 0.92 }}
               >
                 Start your 3-day FREE trial{"\n"}to continue.
               </Text>
