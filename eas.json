@@ -23,7 +23,8 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "main"
     }
   },
   "submit": {
