@@ -1,10 +1,5 @@
 name: Build Dev Client (one-time setup)
 
-# This workflow builds a custom development client for your phone.
-# Run it ONCE from GitHub Actions → "Run workflow" button.
-# After installing the resulting APK, you'll receive OTA updates
-# automatically on every push — no local dev setup needed.
-
 on:
   workflow_dispatch:
     inputs:
@@ -34,10 +29,8 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-fund --no-audit
 
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: 19.0.1
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@19.0.1
 
       - name: Build development client
         run: |

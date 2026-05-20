@@ -26,10 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-fund --no-audit
 
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: 19.0.1
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@19.0.1
 
       - name: Publish EAS Update for PR
         run: |
@@ -47,7 +45,6 @@ jobs:
             const prNumber = context.issue.number;
             const sha = context.sha.slice(0, 7);
             const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-
             const body = [
               `## 📱 OTA Preview Published`,
               ``,
@@ -63,7 +60,6 @@ jobs:
               `| **Commit** | \`${sha}\` |`,
               `| **CI run** | [View logs](${runUrl}) |`,
             ].join('\n');
-
             const { data: comments } = await github.rest.issues.listComments({
               issue_number: prNumber,
               owner: context.repo.owner,
