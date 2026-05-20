@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "postinstall": "bash /app/scripts/cleanup-watchable.sh 2>/dev/null || true",
+    "postinstall": "bash ./scripts/cleanup-watchable.sh 2>/dev/null || true",
     "start": "RCT_METRO_PORT=8084 EXPO_NO_PROMPT=1 npx expo start",
     "tunnel": "RCT_METRO_PORT=8084 EXPO_NO_PROMPT=1 npx expo start --tunnel --clear",
     "lan": "RCT_METRO_PORT=8084 EXPO_NO_PROMPT=1 npx expo start --lan --clear",
