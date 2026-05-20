@@ -27,7 +27,7 @@ jobs:
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 19.0.1
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish EAS Update for PR
