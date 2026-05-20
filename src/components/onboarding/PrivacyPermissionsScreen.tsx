@@ -184,7 +184,7 @@ export function PrivacyPermissionsScreen() {
 
             {/* Header */}
             <Animated.View
-              entering={FadeInDown.delay(100).duration(600)}
+              entering={FadeIn.delay(100).duration(600).easing(SOFT)}
               className="items-center mb-3"
             >
               <Text
@@ -213,7 +213,7 @@ export function PrivacyPermissionsScreen() {
 
             {/* Privacy Shield Card — all four items together */}
             <Animated.View
-              entering={FadeInUp.delay(200).duration(500)}
+              entering={FadeIn.delay(200).duration(500).easing(SOFT)}
               className="rounded-3xl mb-4"
               style={{
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -331,7 +331,7 @@ export function PrivacyPermissionsScreen() {
 
             {/* Continue Button */}
             <Animated.View
-              entering={FadeInUp.delay(300).duration(500)}
+              entering={FadeIn.delay(300).duration(500).easing(SOFT)}
               className="pb-6"
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />

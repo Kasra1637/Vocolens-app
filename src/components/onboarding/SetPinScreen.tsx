@@ -15,8 +15,6 @@ import { View, Text, TextInput, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
   FadeIn,
   useSharedValue,
   useAnimatedStyle,
@@ -24,6 +22,8 @@ import Animated, {
   withTiming,
   withSpring,
 } from "react-native-reanimated";
+import { Easing } from "react-native-reanimated";
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { ShieldCheck } from "lucide-react-native";
 import {
   successHaptic,
@@ -254,7 +254,7 @@ export function SetPinScreen() {
             >
               {/* Top: character + text */}
               <Animated.View
-                entering={FadeInDown.duration(500)}
+                entering={FadeIn.duration(500).easing(SOFT)}
                 style={{ alignItems: "center", gap: 16 }}
               >
                 <EmotionalCompanion
@@ -295,7 +295,7 @@ export function SetPinScreen() {
 
               {/* Middle: dots + error / success icon */}
               <Animated.View
-                entering={FadeInDown.delay(100).duration(500)}
+                entering={FadeIn.delay(100).duration(500).easing(SOFT)}
                 style={{ alignItems: "center", gap: 20 }}
               >
                 {phase === "success" ? (
@@ -387,7 +387,7 @@ export function SetPinScreen() {
               {/* Bottom: keyboard hint */}
               {phase !== "success" && (
                 <Animated.View
-                  entering={FadeInUp.delay(160).duration(500)}
+                  entering={FadeIn.delay(160).duration(500).easing(SOFT)}
                   style={{ alignItems: "center", gap: 10 }}
                 >
                   <View

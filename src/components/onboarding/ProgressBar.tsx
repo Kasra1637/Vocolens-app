@@ -6,7 +6,8 @@
 
 import React from 'react';
 import { View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn, Easing } from 'react-native-reanimated';
+const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 
 interface ProgressBarProps {
   currentStep: number;
@@ -18,7 +19,7 @@ export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
 
   return (
     <Animated.View
-      entering={FadeInDown.duration(400)}
+      entering={FadeIn.duration(400).easing(SOFT)}
       className="w-full"
       style={{
         height: 5,
