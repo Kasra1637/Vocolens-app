@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 13.2.0"
+    "version": ">= 13.2.0",
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -9,6 +10,9 @@
       "channel": "development",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "NPM_FLAGS": "--legacy-peer-deps"
       }
     },
     "preview": {
@@ -18,7 +22,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_BLINK_PREVIEW_ENABLED": "true"
+        "EXPO_PUBLIC_BLINK_PREVIEW_ENABLED": "true",
+        "NPM_FLAGS": "--legacy-peer-deps"
       }
     },
     "production": {
