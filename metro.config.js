@@ -40,6 +40,11 @@ config.resolver = {
         "react-native-purchases-ui",
         "react-native-mmkv",
         "react-native-vision-camera",
+        "react-native-maps",
+        "react-native-ios-context-menu",
+        "react-native-ios-utilities",
+        "@shopify/react-native-skia",
+        "lottie-react-native",
       ];
       if (webStubs.some((mod) => moduleName.startsWith(mod))) {
         return { type: "empty" };

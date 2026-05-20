@@ -8,17 +8,7 @@ import {
   SettingsTabIcon,
 } from "@/components/TabIcons";
 import { tabSwitchHaptic } from "@/lib/haptics";
-// Minimal inline type for the tabBar prop — avoids @react-navigation/bottom-tabs import
-// (direct @react-navigation/* imports are blocked in SDK 56 app code; expo-router re-exports
-// the runtime but not all types yet). These three fields are all CustomTabBar uses.
-type BottomTabBarProps = {
-  state: { index: number; routes: Array<{ key: string; name: string; params?: object }> };
-  descriptors: Record<string, { options: Record<string, unknown> }>;
-  navigation: {
-    emit: (opts: { type: string; target: string; canPreventDefault: boolean }) => { defaultPrevented: boolean };
-    navigate: (name: string, params?: object) => void;
-  };
-};
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
