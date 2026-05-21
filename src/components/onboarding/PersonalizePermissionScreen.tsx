@@ -2,7 +2,7 @@
  * Onboarding Screen: Personalize Permission Screen
  *
  * Inserted between "Pick Your Colors" (ThemeSelectionScreen, step 1)
- * and "How Are You Feeling Today?" (MoodSelectionScreen, step 3).
+ * and the Name Collection screen (step 3).
  *
  * Goal: gain user consent to proceed through the personalization setup
  * while clearly reinforcing privacy and security.
@@ -16,6 +16,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 import { Lock } from "lucide-react-native";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
@@ -57,64 +58,36 @@ export function PersonalizePermissionScreen() {
         <SafeAreaView style={{ flex: 1 }}>
           <BackButton onPress={handleBack} show={currentStep > 0} />
 
-          <View
-            style={{
-              flex: 1,
-              paddingHorizontal: 24,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            {/* Lock icon with glow ring */}
-            <Animated.View
-              entering={FadeIn.delay(80).duration(900).easing(SOFT)}
-              style={{ alignItems: "center", marginBottom: 36 }}
+          <View style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 12 }}>
+            {/* Character — same container dimensions as MoodSelectionScreen */}
+            <View
+              style={{
+                height: 120,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              {/* Outer glow ring */}
-              <View
-                style={{
-                  width: 116,
-                  height: 116,
-                  borderRadius: 58,
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  borderWidth: 1.5,
-                  borderColor: "rgba(255,255,255,0.22)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {/* Inner circle */}
-                <View
-                  style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 40,
-                    backgroundColor: "rgba(255,255,255,0.14)",
-                    borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.28)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Lock size={36} color="#FFFFFF" strokeWidth={2} />
-                </View>
-              </View>
-            </Animated.View>
+              <EmotionalCompanion
+                state="idle"
+                size={120}
+                themeColor={themeColors.primary}
+              />
+            </View>
 
             {/* Title */}
             <Animated.View
-              entering={FadeIn.delay(180).duration(900).easing(SOFT)}
+              entering={FadeIn.delay(100).duration(900).easing(SOFT)}
               style={{ alignItems: "center", marginBottom: 14 }}
             >
               <Text
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 26,
+                  fontSize: 22,
                   textAlign: "center",
-                  opacity: 0.95,
+                  opacity: 0.92,
                   letterSpacing: 0.2,
-                  lineHeight: 34,
+                  lineHeight: 30,
                 }}
               >
                 Personalize your experience
@@ -123,7 +96,7 @@ export function PersonalizePermissionScreen() {
 
             {/* Subtitle */}
             <Animated.View
-              entering={FadeIn.delay(310).duration(900).easing(SOFT)}
+              entering={FadeIn.delay(230).duration(900).easing(SOFT)}
               style={{ alignItems: "center", marginBottom: 40 }}
             >
               <Text
@@ -144,8 +117,8 @@ export function PersonalizePermissionScreen() {
 
             {/* Trust / Privacy badge */}
             <Animated.View
-              entering={FadeIn.delay(440).duration(900).easing(SOFT)}
-              style={{ marginBottom: 44, width: "100%" }}
+              entering={FadeIn.delay(360).duration(900).easing(SOFT)}
+              style={{ marginBottom: 44 }}
             >
               <View
                 style={{
@@ -178,11 +151,12 @@ export function PersonalizePermissionScreen() {
 
             {/* CTA button */}
             <Animated.View
-              entering={FadeIn.delay(560).duration(800).easing(SOFT)}
-              style={{ width: "100%" }}
+              entering={FadeIn.delay(480).duration(800).easing(SOFT)}
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />
             </Animated.View>
+
+            <View style={{ flex: 1 }} />
           </View>
         </SafeAreaView>
       </LinearGradient>

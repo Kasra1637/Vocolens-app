@@ -111,7 +111,7 @@ export function NameCollectionScreen() {
                     lineHeight: 34,
                   }}
                 >
-                  What's your first name?
+                  How should we call you?
                 </Text>
               </Animated.View>
 
