@@ -13,7 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
-import { Check, Search, ChevronDown } from "lucide-react-native";
+import { Check, Search } from "lucide-react-native";
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -266,21 +266,6 @@ export function LanguageSelectionScreen() {
             {!isSearching && (
               <View style={{ marginTop: 4, marginBottom: 16 }}>
                 <OnboardingCTAButton onPress={handleContinue} label="Continue" />
-
-                {/* Scroll hint */}
-                <View style={{ alignItems: "center", marginTop: 14 }}>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.5)",
-                      marginBottom: 4,
-                    }}
-                  >
-                    More languages below
-                  </Text>
-                  <ChevronDown size={16} color="rgba(255,255,255,0.4)" strokeWidth={2} />
-                </View>
               </View>
             )}
 
