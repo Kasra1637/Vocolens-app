@@ -805,13 +805,15 @@ export default function SpeakScreen() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: hexToRgba(Colors.primary, 0.1),
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
-                ...Shadows.medium,
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 8,
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View className="p-4">
                 {/* Topic Selector */}
                 <View className="flex-row items-center justify-between mb-3">
@@ -857,15 +859,11 @@ export default function SpeakScreen() {
                   <View
                     className="mb-3 rounded-2xl overflow-hidden"
                     style={{
-                      backgroundColor: hexToRgba(Colors.primary, 0.1),
-                      borderWidth: 1,
-                      borderColor: hexToRgba(Colors.primary, 0.15),
+                      backgroundColor: "rgba(255, 255, 255, 0.12)",
+                      borderWidth: 2,
+                      borderColor: "rgba(255, 255, 255, 0.20)",
                     }}
                   >
-                    <GlassLayers
-                      primaryColor={Colors.primary}
-                      borderRadius={16}
-                    />
                     {(Object.keys(TOPIC_LABELS) as TopicCategory[]).map(
                       (topic) => (
                         <Pressable
