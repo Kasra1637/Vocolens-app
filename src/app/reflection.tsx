@@ -496,8 +496,8 @@ export default function ReflectionScreen() {
                 s.nextBtn,
                 {
                   marginTop: 28,
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderColor: "rgba(255, 255, 255, 0.20)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  borderColor: hexToRgba(Colors.primary, 0.2),
                 },
               ]}
             >
@@ -701,12 +701,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.06)",
     borderRadius: 24,
     paddingVertical: 16,
     marginTop: 24,
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.20)",
+    borderColor: "rgba(255,255,255,0.12)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,

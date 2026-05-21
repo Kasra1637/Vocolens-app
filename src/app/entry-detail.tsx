@@ -431,9 +431,9 @@ export default function EntryDetailScreen() {
               onPress={() => toggleSection("reflection")}
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
+                borderWidth: 1.5,
+                borderColor: hexToRgba(Colors.primary, 0.2),
                 overflow: "hidden",
               }}
             >
@@ -537,9 +537,9 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-2xl p-4"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
+                borderWidth: 1.5,
+                borderColor: hexToRgba(Colors.primary, 0.2),
                 overflow: "hidden",
               }}
             >
@@ -579,9 +579,9 @@ export default function EntryDetailScreen() {
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              borderWidth: 2,
-              borderColor: "rgba(255, 255, 255, 0.20)",
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
+              borderWidth: 1.5,
+              borderColor: hexToRgba(Colors.primary, 0.2),
               overflow: "hidden",
             }}
           >
@@ -671,9 +671,9 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
+                borderWidth: 1.5,
+                borderColor: hexToRgba(Colors.primary, 0.2),
                 overflow: "hidden",
               }}
             >
@@ -713,9 +713,9 @@ export default function EntryDetailScreen() {
             onPress={() => toggleSection("emotions")}
             className="rounded-3xl overflow-hidden mb-6"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              borderWidth: 2,
-              borderColor: "rgba(255, 255, 255, 0.20)",
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
+              borderWidth: 1.5,
+              borderColor: hexToRgba(Colors.primary, 0.2),
               overflow: "hidden",
             }}
           >
@@ -1013,9 +1013,9 @@ export default function EntryDetailScreen() {
             <View
               className="rounded-3xl overflow-hidden mb-6"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
+                borderWidth: 1.5,
+                borderColor: hexToRgba(Colors.primary, 0.2),
                 overflow: "hidden",
               }}
             >
@@ -1377,9 +1377,9 @@ export default function EntryDetailScreen() {
               }}
               className="flex-row items-center justify-center rounded-3xl py-4 px-5"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
+                backgroundColor: hexToRgba(Colors.primary, 0.15),
+                borderWidth: 1.5,
+                borderColor: hexToRgba(Colors.primary, 0.35),
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.08,
@@ -1408,9 +1408,9 @@ export default function EntryDetailScreen() {
               onPress={() => toggleSection("analysis")}
               className="rounded-3xl overflow-hidden mb-6"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
+                borderWidth: 1.5,
+                borderColor: hexToRgba(Colors.primary, 0.2),
                 overflow: "hidden",
               }}
             >
@@ -1481,9 +1481,9 @@ export default function EntryDetailScreen() {
               <View
                 className="rounded-3xl overflow-hidden mb-6"
                 style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderWidth: 2,
-                  borderColor: "rgba(255, 255, 255, 0.20)",
+                  backgroundColor: hexToRgba(Colors.primary, 0.1),
+                  borderWidth: 1.5,
+                  borderColor: hexToRgba(Colors.primary, 0.2),
                   overflow: "hidden",
                 }}
               >
