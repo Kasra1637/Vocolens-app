@@ -2,12 +2,13 @@
  * Enter PIN Screen
  *
  * Shown every time the app is opened after PIN is set.
+ * Uses the same hidden-TextInput + native-keyboard pattern as PIN creation.
  * Correct PIN → sets isPinVerified → AuthGate lets the user through.
  * Wrong PIN → shake animation, 3 failed attempts shows "Forgot PIN?" option.
  */
 
-import React, { useState, useCallback } from "react";
-import { View, Text, Pressable } from "react-native";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { View, Text, Pressable, TextInput } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -17,9 +18,8 @@ import Animated, {
   useAnimatedStyle,
   withSequence,
   withTiming,
-  withSpring,
 } from "react-native-reanimated";
-import { Delete, Lock } from "lucide-react-native";
+import { Lock } from "lucide-react-native";
 import { successHaptic, tapHaptic, errorHaptic } from "@/lib/haptics";
 import usePinStore from "@/lib/state/pin-store";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
@@ -61,77 +61,6 @@ function PinDots({
   );
 }
 
-// ── Numpad ────────────────────────────────────────────────────────────────────
-const KEYS = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "",
-  "0",
-  "del",
-] as const;
-
-function Numpad({ onKey }: { onKey: (k: string) => void }) {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        flexWrap: "wrap",
-        width: 260,
-        justifyContent: "center",
-        gap: 16,
-      }}
-    >
-      {KEYS.map((key, idx) => {
-        if (key === "")
-          return <View key={idx} style={{ width: 72, height: 72 }} />;
-        return (
-          <Pressable
-            key={idx}
-            onPress={() => onKey(key)}
-            android_ripple={{
-              color: "rgba(255,255,255,0.25)",
-              borderless: true,
-            }}
-            style={({ pressed }) => ({
-              width: 72,
-              height: 72,
-              borderRadius: 36,
-              backgroundColor: pressed
-                ? "rgba(255,255,255,0.25)"
-                : "rgba(255,255,255,0.14)",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.2)",
-              alignItems: "center",
-              justifyContent: "center",
-            })}
-          >
-            {key === "del" ? (
-              <Delete size={22} color="#FFFFFF" strokeWidth={2} />
-            ) : (
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 26,
-                  fontFamily: "Inter_700Bold",
-                }}
-              >
-                {key}
-              </Text>
-            )}
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 // ── Main screen ───────────────────────────────────────────────────────────────
 export function EnterPinScreen() {
   const verifyPin = usePinStore((s) => s.verifyPin);
@@ -144,6 +73,13 @@ export function EnterPinScreen() {
   const [failCount, setFailCount] = useState(0);
 
   const shake = useSharedValue(0);
+  const inputRef = useRef<TextInput>(null);
+
+  // Auto-focus the hidden input when the screen mounts
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 350);
+    return () => clearTimeout(t);
+  }, []);
 
   const doShake = useCallback((msg: string) => {
     errorHaptic();
@@ -177,26 +113,21 @@ export function EnterPinScreen() {
     [verifyPin, failCount, doShake],
   );
 
-  const handleKey = useCallback(
-    (key: string) => {
+  const handleChangeText = useCallback(
+    (text: string) => {
+      // Strip non-digits, cap at 4
+      const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
       tapHaptic();
-      if (key === "del") {
-        setDigits((d) => d.slice(0, -1));
-        setError("");
-        return;
-      }
-      if (digits.length >= 4) return;
-      const next = digits + key;
-      setDigits(next);
-      if (next.length === 4) {
-        setTimeout(() => handleComplete(next), 120);
+      setDigits(cleaned);
+      setError("");
+      if (cleaned.length === 4) {
+        setTimeout(() => handleComplete(cleaned), 120);
       }
     },
-    [digits, handleComplete],
+    [handleComplete],
   );
 
   const handleForgotPin = useCallback(() => {
-    // Clear PIN and reset onboarding so user goes through flow again
     clearPin();
   }, [clearPin]);
 
@@ -211,17 +142,29 @@ export function EnterPinScreen() {
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
-          <View
+          {/* Hidden native keyboard input — exactly like PIN creation */}
+          <TextInput
+            ref={inputRef}
+            value={digits}
+            onChangeText={handleChangeText}
+            keyboardType="number-pad"
+            maxLength={4}
+            caretHidden
+            style={{ position: "absolute", opacity: 0, width: 1, height: 1 }}
+          />
+
+          <Pressable
             style={{
               flex: 1,
               alignItems: "center",
               justifyContent: "space-between",
               paddingHorizontal: 24,
-              paddingBottom: 40,
+              paddingBottom: 60,
               paddingTop: 32,
             }}
+            onPress={() => inputRef.current?.focus()}
           >
-            {/* Top: lock icon + greeting */}
+            {/* Top: companion + greeting */}
             <Animated.View
               entering={FadeInDown.duration(500)}
               style={{ alignItems: "center", gap: 20 }}
@@ -265,12 +208,13 @@ export function EnterPinScreen() {
               </View>
             </Animated.View>
 
-            {/* Middle: dots + error */}
+            {/* Middle: dots + hint/error */}
             <Animated.View
               entering={FadeInDown.delay(100).duration(500)}
               style={{ alignItems: "center", gap: 18 }}
             >
               <PinDots filled={digits.length} shake={shake} />
+
               {error ? (
                 <Animated.Text
                   entering={FadeIn.duration(200)}
@@ -289,19 +233,19 @@ export function EnterPinScreen() {
                     fontFamily: "Inter_400Regular",
                     fontSize: 13,
                     color: "rgba(255,255,255,0.4)",
+                    textAlign: "center",
                   }}
                 >
-                  Enter 4-digit PIN
+                  Tap anywhere to open keyboard
                 </Text>
               )}
             </Animated.View>
 
-            {/* Bottom: numpad + forgot */}
+            {/* Bottom: forgot PIN (appears after 3 failures) */}
             <Animated.View
               entering={FadeInDown.delay(180).duration(500)}
-              style={{ alignItems: "center", gap: 24 }}
+              style={{ alignItems: "center", minHeight: 44 }}
             >
-              <Numpad onKey={handleKey} />
               {failCount >= 3 && (
                 <Animated.View entering={FadeIn.duration(300)}>
                   <Pressable
@@ -322,7 +266,7 @@ export function EnterPinScreen() {
                 </Animated.View>
               )}
             </Animated.View>
-          </View>
+          </Pressable>
         </SafeAreaView>
       </LinearGradient>
     </View>

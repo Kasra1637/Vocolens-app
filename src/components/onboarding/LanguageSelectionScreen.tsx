@@ -161,24 +161,16 @@ export function LanguageSelectionScreen() {
           </View>
         </Animated.View>
 
-        {/* Continue button — positioned above the list for easy access */}
+        {/* Language list — fills available space, Continue button anchored inside at the bottom */}
         <Animated.View
           entering={FadeIn.delay(200).duration(500).easing(SOFT)}
-          style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 6 }}
-        >
-          <OnboardingCTAButton onPress={handleContinue} label="Continue" />
-        </Animated.View>
-
-        {/* Language list — constrained to ~4 visible rows before scroll */}
-        <Animated.View
-          entering={FadeIn.delay(220).duration(500).easing(SOFT)}
           style={{ flex: 1 }}
         >
           <ScrollView
             contentContainerStyle={{
               paddingHorizontal: 24,
               paddingTop: 4,
-              paddingBottom: 16,
+              paddingBottom: 24,
             }}
             showsVerticalScrollIndicator={true}
             keyboardShouldPersistTaps="handled"
@@ -283,6 +275,11 @@ export function LanguageSelectionScreen() {
                 No languages match "{query}"
               </Text>
             )}
+
+            {/* Continue button — directly below the language list */}
+            <View style={{ marginTop: 12 }}>
+              <OnboardingCTAButton onPress={handleContinue} label="Continue" />
+            </View>
           </ScrollView>
         </Animated.View>
 

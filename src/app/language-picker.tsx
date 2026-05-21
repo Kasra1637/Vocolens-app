@@ -19,7 +19,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { X, Search, Globe } from "lucide-react-native";
+import { X, Search, Globe, Check } from "lucide-react-native";
 import { router } from "expo-router";
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
@@ -238,7 +238,7 @@ export default function LanguagePickerModal() {
                     }}
                   >
                     {isSelected && (
-                      <Text style={{ fontSize: 13, color: "#1A1A2E" }}>✓</Text>
+                      <Check size={13} color="#1A1A2E" strokeWidth={3} />
                     )}
                   </View>
                 </View>
