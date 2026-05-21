@@ -805,9 +805,9 @@ export default function SpeakScreen() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
+                backgroundColor: hexToRgba(Colors.primary, 0.1),
+                borderWidth: 1.5,
+                borderColor: hexToRgba(Colors.primary, 0.2),
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.08,
@@ -859,9 +859,9 @@ export default function SpeakScreen() {
                   <View
                     className="mb-3 rounded-2xl overflow-hidden"
                     style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.12)",
-                      borderWidth: 2,
-                      borderColor: "rgba(255, 255, 255, 0.20)",
+                      backgroundColor: hexToRgba(Colors.primary, 0.1),
+                      borderWidth: 1.5,
+                      borderColor: hexToRgba(Colors.primary, 0.2),
                     }}
                   >
                     {(Object.keys(TOPIC_LABELS) as TopicCategory[]).map(
@@ -1026,7 +1026,9 @@ export default function SpeakScreen() {
           <View
             className="w-full rounded-3xl overflow-hidden"
             style={{
-              backgroundColor: Colors.surface,
+              backgroundColor: hexToRgba(Colors.primary, 0.1),
+              borderWidth: 1.5,
+              borderColor: hexToRgba(Colors.primary, 0.2),
               ...Shadows.medium,
               maxHeight: 200,
             }}

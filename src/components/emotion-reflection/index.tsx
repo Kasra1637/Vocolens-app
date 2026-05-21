@@ -183,7 +183,7 @@ export default function EmotionReflectionScreen({
 
         {/* Bottom bar */}
         <View style={[s.bottomBar, { borderTopColor: hexToRgba(themeColors.primary, 0.2), backgroundColor: hexToRgba(themeColors.primary, 0.08) }]}>
-          <Pressable onPress={handleSave} style={[s.saveButton, { backgroundColor: themeColors.primary }]}>
+          <Pressable onPress={handleSave} style={[s.saveButton, { backgroundColor: hexToRgba(themeColors.primary, 0.25), borderWidth: 1.5, borderColor: hexToRgba(themeColors.primary, 0.55) }]}>
             <Sparkles size={18} color="#FFFFFF" />
             <Text style={s.saveButtonText}>Save Entry</Text>
           </Pressable>
