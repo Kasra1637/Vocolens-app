@@ -62,33 +62,46 @@ function PinDots({
 }
 
 // ── Numpad ────────────────────────────────────────────────────────────────────
-const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"] as const;
+// Two equal rows: [1 2 3 4 5] and [6 7 8 9 0], delete sits beside the dots
+const ROW1 = ["1", "2", "3", "4", "5"] as const;
+const ROW2 = ["6", "7", "8", "9", "0"] as const;
+
+function NumKey({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: "rgba(255,255,255,0.2)", borderless: true }}
+      style={({ pressed }) => [
+        styles.numpadKey,
+        pressed && styles.numpadKeyPressed,
+      ]}
+    >
+      <Text style={styles.numpadKeyText}>{label}</Text>
+    </Pressable>
+  );
+}
 
 function Numpad({ onKey }: { onKey: (k: string) => void }) {
   return (
     <View style={styles.numpadContainer}>
-      {KEYS.map((key, idx) => {
-        if (key === "") {
-          return <View key={idx} style={styles.numpadKeyEmpty} />;
-        }
-        return (
-          <Pressable
-            key={idx}
-            onPress={() => onKey(key)}
-            android_ripple={{ color: "rgba(255,255,255,0.2)", borderless: true }}
-            style={({ pressed }) => [
-              styles.numpadKey,
-              pressed && styles.numpadKeyPressed,
-            ]}
-          >
-            {key === "del" ? (
-              <Delete size={24} color="#FFFFFF" strokeWidth={1.8} />
-            ) : (
-              <Text style={styles.numpadKeyText}>{key}</Text>
-            )}
-          </Pressable>
-        );
-      })}
+      {/* Row 1: 1 – 5 */}
+      <View style={styles.numpadRow}>
+        {ROW1.map((k) => (
+          <NumKey key={k} label={k} onPress={() => onKey(k)} />
+        ))}
+      </View>
+      {/* Row 2: 6 – 0 */}
+      <View style={styles.numpadRow}>
+        {ROW2.map((k) => (
+          <NumKey key={k} label={k} onPress={() => onKey(k)} />
+        ))}
+      </View>
     </View>
   );
 }
@@ -193,12 +206,25 @@ export function EnterPinScreen() {
               </View>
             </Animated.View>
 
-            {/* Middle: dots + error */}
+            {/* Middle: dots + delete + error */}
             <Animated.View
               entering={FadeInDown.delay(100).duration(500)}
-              style={{ alignItems: "center", gap: 14 }}
+              style={{ alignItems: "center", gap: 14, width: "100%" }}
             >
-              <PinDots filled={digits.length} shake={shake} />
+              {/* Dots row with inline delete button */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                <PinDots filled={digits.length} shake={shake} />
+                <Pressable
+                  onPress={() => handleKey("del")}
+                  android_ripple={{ color: "rgba(255,255,255,0.2)", borderless: true }}
+                  style={({ pressed }) => ({
+                    padding: 8,
+                    opacity: pressed ? 0.5 : 1,
+                  })}
+                >
+                  <Delete size={22} color="rgba(255,255,255,0.7)" strokeWidth={1.8} />
+                </Pressable>
+              </View>
               {error ? (
                 <Animated.Text entering={FadeIn.duration(200)} style={styles.errorText}>
                   {error}
@@ -271,16 +297,19 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   numpadContainer: {
+    width: "100%",
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  numpadRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    width: 264,
-    justifyContent: "center",
-    gap: 14,
+    justifyContent: "space-between",
+    gap: 10,
   },
   numpadKey: {
-    width: 72,
+    flex: 1,
     height: 72,
-    borderRadius: 36,
+    borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.10)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
@@ -288,15 +317,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   numpadKeyPressed: {
-    backgroundColor: "rgba(255,255,255,0.22)",
-  },
-  numpadKeyEmpty: {
-    width: 72,
-    height: 72,
+    backgroundColor: "rgba(255,255,255,0.25)",
   },
   numpadKeyText: {
     color: "#FFFFFF",
-    fontSize: 28,
+    fontSize: 32,
     fontFamily: "Inter_400Regular",
     letterSpacing: 0.5,
   },
