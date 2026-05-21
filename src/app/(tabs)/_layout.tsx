@@ -25,8 +25,8 @@ import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 
 const ICON_SIZE = 22;
-// Top-only rounded corners — flat on the bottom so it merges with the screen edge
-const TOP_RADIUS = 20;
+// No rounded corners — completely flush with the screen edge on all sides
+const TOP_RADIUS = 0;
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
@@ -89,8 +89,8 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const TAB_ROW_HEIGHT = 64;
 
   return (
-    // Outer wrapper sits at the very bottom, zero margins, full width
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    // Full-width container anchored to the bottom — completely flush, no gaps
+    <View style={[styles.container, { backgroundColor: "rgba(0,0,0,0.72)" }]}>
       {/* ── Glassmorphic surface ────────────────────────────────────────────── */}
 
       {/* Deep blur base */}
@@ -110,17 +110,14 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         style={styles.topLight}
       />
 
-      {/* Specular highlight line on the very top edge */}
+      {/* Specular highlight line on the very top edge — top only, no side borders */}
       <View style={[styles.specularLine, { backgroundColor: specularColor }]} />
 
-      {/* Outer border (top + sides only; bottom flush with screen edge) */}
-      <View style={[styles.outerBorder, { borderColor: outerBorderColor }]} />
-
-      {/* Inner glow border */}
-      <View style={[styles.innerBorder, { borderColor: innerBorderColor }]} />
+      {/* Single top border line only — no sides, no corners, no rounding */}
+      <View style={[styles.topBorder, { backgroundColor: outerBorderColor }]} />
 
       {/* ── Tab row ─────────────────────────────────────────────────────────── */}
-      <View style={[styles.content, { height: TAB_ROW_HEIGHT }]}>
+      <View style={[styles.content, { height: TAB_ROW_HEIGHT + insets.bottom, paddingBottom: insets.bottom }]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
 
@@ -169,14 +166,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  // Full-width, anchored to bottom — no absolute positioning, no side margins
+  // Full-width, anchored to bottom — no border radius, no overflow hidden, no gaps
   container: {
     width: "100%",
-    // Rounded top corners only; bottom is flush with the screen / nav bar
-    borderTopLeftRadius: TOP_RADIUS,
-    borderTopRightRadius: TOP_RADIUS,
-    overflow: "hidden",
-    // Lift the container above any gesture handling layers
     zIndex: 100,
   },
   darkBase: {
@@ -200,32 +192,13 @@ const styles = StyleSheet.create({
     height: 1,
     borderRadius: 0.5,
   },
-  // Border only on top + sides; omit bottom so edge merges cleanly with screen
-  outerBorder: {
+  // Single 1px line across the very top — no side/bottom borders, no radius
+  topBorder: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    borderTopLeftRadius: TOP_RADIUS,
-    borderTopRightRadius: TOP_RADIUS,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderBottomWidth: 0,
-  },
-  innerBorder: {
-    position: "absolute",
-    top: 1,
-    left: 1,
-    right: 1,
-    bottom: 0,
-    borderTopLeftRadius: TOP_RADIUS - 1,
-    borderTopRightRadius: TOP_RADIUS - 1,
-    borderTopWidth: 0.5,
-    borderLeftWidth: 0.5,
-    borderRightWidth: 0.5,
-    borderBottomWidth: 0,
+    height: 1,
   },
   content: {
     flexDirection: "row",
@@ -239,7 +212,6 @@ const styles = StyleSheet.create({
     gap: 3,
     paddingHorizontal: 2,
     paddingTop: 4,
-    paddingBottom: 4,
     height: "100%",
   },
   iconContainer: {
