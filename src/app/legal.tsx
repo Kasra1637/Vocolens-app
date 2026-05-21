@@ -193,6 +193,10 @@ function Section({
           borderWidth: 2,
           borderColor: "rgba(255, 255, 255, 0.20)",
           overflow: "hidden",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
         }}
       >
         <GlassLayers primaryColor={primaryColor} borderRadius={24} />
@@ -334,6 +338,10 @@ function PrivacyPolicy({
             borderWidth: 2,
             borderColor: "rgba(255, 255, 255, 0.20)",
             overflow: "hidden",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
           }}
         >
           <GlassLayers primaryColor={primaryColor} borderRadius={24} />
@@ -621,6 +629,10 @@ function TermsOfService({
             borderWidth: 2,
             borderColor: "rgba(255, 255, 255, 0.20)",
             overflow: "hidden",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
           }}
         >
           <GlassLayers primaryColor={primaryColor} borderRadius={24} />
