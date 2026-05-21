@@ -561,7 +561,7 @@ export function NotificationPreferencesScreen() {
             {/* Continue button — directly below content, close to reminder time */}
             <Animated.View
               entering={FadeIn.delay(500).duration(800).easing(SOFT)}
-              style={{ marginTop: 20, marginBottom: 8 }}
+              style={{ marginTop: 16, marginBottom: 8 }}
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />
             </Animated.View>

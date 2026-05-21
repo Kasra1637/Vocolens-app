@@ -336,7 +336,7 @@ export function ThemeSelectionScreen() {
               paddingBottom: 32,
               paddingTop: 8,
               alignItems: "center",
-              gap: 18,
+              gap: 16,
             }}
           >
             <View

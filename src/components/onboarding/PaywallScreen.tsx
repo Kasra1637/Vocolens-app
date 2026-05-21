@@ -402,6 +402,7 @@ export function PaywallScreen() {
             {/* ── Annual plan card (only plan on main screen) ── */}
             <Animated.View
               entering={FadeIn.delay(180).duration(700).easing(SOFT)}
+              style={{ marginBottom: 16 }}
             >
               <View
                 style={{

@@ -119,7 +119,7 @@ export function MoodSelectionScreen() {
             {/* Mood Options */}
             <Animated.View
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: 16, marginTop: 4 }}
             >
               <View className="gap-2">
                 {MOOD_OPTIONS.map((mood, index) => {

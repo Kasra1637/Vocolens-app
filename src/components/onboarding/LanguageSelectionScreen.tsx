@@ -273,7 +273,7 @@ export function LanguageSelectionScreen() {
         {/* Continue button */}
         <Animated.View
           entering={FadeIn.delay(200).duration(500).easing(SOFT)}
-          style={{ paddingHorizontal: 24, paddingBottom: 48, paddingTop: 8 }}
+          style={{ paddingHorizontal: 24, paddingBottom: 48, paddingTop: 16 }}
         >
           <OnboardingCTAButton onPress={handleContinue} label="Continue" />
         </Animated.View>

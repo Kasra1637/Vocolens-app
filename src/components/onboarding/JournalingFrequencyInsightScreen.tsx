@@ -137,7 +137,7 @@ export function JournalingFrequencyInsightScreen() {
             {/* Insight Card */}
             <Animated.View
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
-              style={{ marginBottom: 12 }}
+              style={{ marginBottom: 16 }}
             >
               <View
                 className="rounded-3xl p-6 mx-1"

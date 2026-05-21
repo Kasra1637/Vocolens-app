@@ -267,6 +267,7 @@ export function PrivacyPermissionsScreen() {
                 borderColor: "rgba(255, 255, 255, 0.2)",
                 paddingHorizontal: 16,
                 paddingVertical: 4,
+                marginBottom: 16,
               }}
             >
               {privacyFeatures.map((feature, index) => (

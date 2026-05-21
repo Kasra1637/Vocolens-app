@@ -130,7 +130,7 @@ export function GoalSelectionScreen() {
             {/* Goal Options */}
             <Animated.View
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
-              style={{ marginTop: 4, marginBottom: 12 }}
+              style={{ marginTop: 4, marginBottom: 16 }}
             >
               <View className="gap-2">
                 {GOAL_OPTIONS.map((goal, index) => {

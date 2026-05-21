@@ -118,7 +118,7 @@ export function PersonalizePermissionScreen() {
             {/* Trust / Privacy badge */}
             <Animated.View
               entering={FadeIn.delay(360).duration(900).easing(SOFT)}
-              style={{ marginBottom: 44 }}
+              style={{ marginBottom: 16 }}
             >
               <View
                 style={{

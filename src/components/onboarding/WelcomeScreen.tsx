@@ -130,7 +130,7 @@ export function WelcomeScreen() {
             {currentPhase === "ready" && (
               <Animated.View
                 entering={BUTTON_ANIM}
-                style={{ marginTop: 40, width: "100%" }}
+                style={{ marginTop: 16, width: "100%" }}
               >
                 <OnboardingCTAButton
                   label="Start Journaling Free"
