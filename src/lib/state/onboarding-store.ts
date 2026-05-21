@@ -180,6 +180,9 @@ interface OnboardingState {
   hasCompletedOnboarding: boolean;
   hasExistingAccount: boolean;
 
+  // User profile
+  userName: string | null;
+
   // User preferences
   selectedTheme: ThemeColorType;
   selectedMood: MoodType | null;
@@ -199,6 +202,7 @@ interface OnboardingState {
   // Actions
   setHasCompletedOnboarding: (completed: boolean) => void;
   setHasExistingAccount: (existing: boolean) => void;
+  setUserName: (name: string) => void;
   setSelectedTheme: (theme: ThemeColorType) => void;
   setSelectedMood: (mood: MoodType) => void;
   setSelectedMoodFollowUp: (followUp: MoodFollowUpType) => void;
@@ -222,6 +226,7 @@ const useOnboardingStore = create<OnboardingState>()(
     (set, get) => ({
       hasCompletedOnboarding: false,
       hasExistingAccount: false,
+      userName: null,
       selectedTheme: "lavenderBliss",
       selectedMood: null,
       selectedMoodFollowUp: null,
@@ -239,6 +244,7 @@ const useOnboardingStore = create<OnboardingState>()(
         set({ hasCompletedOnboarding: completed }),
       setHasExistingAccount: (existing) =>
         set({ hasExistingAccount: existing }),
+      setUserName: (name) => set({ userName: name }),
       setSelectedTheme: (theme) => set({ selectedTheme: theme }),
       setSelectedMood: (mood) => set({ selectedMood: mood }),
       setSelectedMoodFollowUp: (followUp) =>
@@ -260,13 +266,14 @@ const useOnboardingStore = create<OnboardingState>()(
         set({ selectedTranscriptionLanguage: language }),
       setCurrentStep: (step) => set({ currentStep: step }),
       nextStep: () =>
-        set((state) => ({ currentStep: Math.min(state.currentStep + 1, 18) })),
+        set((state) => ({ currentStep: Math.min(state.currentStep + 1, 19) })),
       prevStep: () =>
         set((state) => ({ currentStep: Math.max(state.currentStep - 1, 0) })),
       resetOnboarding: () =>
         set({
           hasCompletedOnboarding: false,
           hasExistingAccount: false,
+          userName: null,
           selectedTheme: "lavenderBliss",
           selectedMood: null,
           selectedMoodFollowUp: null,
@@ -293,6 +300,7 @@ const useOnboardingStore = create<OnboardingState>()(
       partialize: (state) => ({
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         hasExistingAccount: state.hasExistingAccount,
+        userName: state.userName,
         selectedTheme: state.selectedTheme,
         selectedMood: state.selectedMood,
         selectedMoodFollowUp: state.selectedMoodFollowUp,

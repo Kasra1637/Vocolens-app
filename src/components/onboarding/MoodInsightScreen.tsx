@@ -33,6 +33,15 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
+// Time-of-day aware greeting prefix
+function getGreetingPrefix(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  if (hour >= 17 && hour < 21) return "Good evening";
+  return "Hey";
+}
+
 const MOOD_LABELS: Record<MoodType, string> = {
   happy: "Happy",
   stressed: "Stressed",
@@ -78,6 +87,7 @@ export function MoodInsightScreen() {
   );
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const currentStep = useOnboardingStore((s) => s.currentStep);
+  const userName = useOnboardingStore((s) => s.userName);
   const themeColors = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
 
@@ -153,6 +163,26 @@ export function MoodInsightScreen() {
               />
             </View>
 
+            {/* Personalized greeting */}
+            <Animated.View
+              entering={FadeIn.delay(60).duration(900).easing(SOFT)}
+              style={{ alignItems: "center", marginBottom: 4 }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.70)",
+                  fontSize: 14,
+                  letterSpacing: 0.3,
+                  textTransform: "uppercase",
+                }}
+              >
+                {userName
+                  ? `${getGreetingPrefix()}, ${userName} ✦`
+                  : `${getGreetingPrefix()} ✦`}
+              </Text>
+            </Animated.View>
+
             {/* Insight Title */}
             <Animated.View
               entering={FadeIn.delay(100).duration(900).easing(SOFT)}
@@ -168,7 +198,23 @@ export function MoodInsightScreen() {
                   letterSpacing: 0.2,
                 }}
               >
-                We hear you
+                {userName
+                  ? `Your voice matters, ${userName}.`
+                  : "We hear you"}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.62)",
+                  fontSize: 13,
+                  textAlign: "center",
+                  marginTop: 6,
+                  lineHeight: 20,
+                  letterSpacing: 0.1,
+                  maxWidth: 260,
+                }}
+              >
+                You just took the first step toward deeper self-awareness.
               </Text>
             </Animated.View>
 

@@ -1,13 +1,16 @@
 /**
  * Onboarding Flow Component
  *
- * Main container that manages the 15-screen onboarding flow.
+ * Main container that manages the 20-screen onboarding flow.
  */
 
 import React from 'react';
 import { View } from 'react-native';
 import useOnboardingStore from '@/lib/state/onboarding-store';
 import { WelcomeScreen } from './WelcomeScreen';
+import { ThemeSelectionScreen } from './ThemeSelectionScreen';
+import { PersonalizePermissionScreen } from './PersonalizePermissionScreen';
+import { NameCollectionScreen } from './NameCollectionScreen';
 import { MoodSelectionScreen } from './MoodSelectionScreen';
 import { MoodFollowUpScreen } from './MoodFollowUpScreen';
 import { MoodInsightScreen } from './MoodInsightScreen';
@@ -18,11 +21,9 @@ import { ReflectionFeelingsScreen } from './ReflectionFeelingsScreen';
 import { JournalingFrequencyInsightScreen } from './JournalingFrequencyInsightScreen';
 import { NotificationPreferencesScreen } from './NotificationPreferencesScreen';
 import { LanguageSelectionScreen } from './LanguageSelectionScreen';
-import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { PrivacyPermissionsScreen } from './PrivacyPermissionsScreen';
 import { AccountPreparationScreen } from './AccountPreparationScreen';
 import { FreeTrialPreviewScreen } from './FreeTrialPreviewScreen';
-import { PersonalizePermissionScreen } from './PersonalizePermissionScreen';
 import { ReminderScreen } from './ReminderScreen';
 import { PaywallScreen } from './PaywallScreen';
 import { SetPinScreen } from './SetPinScreen';
@@ -39,36 +40,38 @@ export function OnboardingFlow() {
       case 2:
         return <PersonalizePermissionScreen />;
       case 3:
-        return <MoodSelectionScreen />;
+        return <NameCollectionScreen />;
       case 4:
-        return <MoodFollowUpScreen />;
+        return <MoodSelectionScreen />;
       case 5:
-        return <MoodInsightScreen />;
+        return <MoodFollowUpScreen />;
       case 6:
-        return <GoalSelectionScreen />;
+        return <MoodInsightScreen />;
       case 7:
-        return <GoalBlockerScreen />;
+        return <GoalSelectionScreen />;
       case 8:
-        return <GoalInsightScreen />;
+        return <GoalBlockerScreen />;
       case 9:
-        return <ReflectionFeelingsScreen />;
+        return <GoalInsightScreen />;
       case 10:
-        return <JournalingFrequencyInsightScreen />;
+        return <ReflectionFeelingsScreen />;
       case 11:
-        return <NotificationPreferencesScreen />;
+        return <JournalingFrequencyInsightScreen />;
       case 12:
-        return <LanguageSelectionScreen />;
+        return <NotificationPreferencesScreen />;
       case 13:
-        return <PrivacyPermissionsScreen />;
+        return <LanguageSelectionScreen />;
       case 14:
-        return <AccountPreparationScreen />;
+        return <PrivacyPermissionsScreen />;
       case 15:
-        return <FreeTrialPreviewScreen />;
+        return <AccountPreparationScreen />;
       case 16:
-        return <ReminderScreen />;
+        return <FreeTrialPreviewScreen />;
       case 17:
-        return <PaywallScreen />;
+        return <ReminderScreen />;
       case 18:
+        return <PaywallScreen />;
+      case 19:
         return <SetPinScreen />;
       default:
         return <WelcomeScreen />;
@@ -83,6 +86,9 @@ export function OnboardingFlow() {
 }
 
 export { WelcomeScreen } from './WelcomeScreen';
+export { ThemeSelectionScreen } from './ThemeSelectionScreen';
+export { PersonalizePermissionScreen } from './PersonalizePermissionScreen';
+export { NameCollectionScreen } from './NameCollectionScreen';
 export { MoodSelectionScreen } from './MoodSelectionScreen';
 export { MoodFollowUpScreen } from './MoodFollowUpScreen';
 export { MoodInsightScreen } from './MoodInsightScreen';
@@ -91,14 +97,12 @@ export { GoalBlockerScreen } from './GoalBlockerScreen';
 export { GoalInsightScreen } from './GoalInsightScreen';
 export { ReflectionFeelingsScreen } from './ReflectionFeelingsScreen';
 export { JournalingFrequencyInsightScreen } from './JournalingFrequencyInsightScreen';
-export { LanguageSelectionScreen } from './LanguageSelectionScreen';
 export { NotificationPreferencesScreen } from './NotificationPreferencesScreen';
-export { ThemeSelectionScreen } from './ThemeSelectionScreen';
+export { LanguageSelectionScreen } from './LanguageSelectionScreen';
 export { PrivacyPermissionsScreen } from './PrivacyPermissionsScreen';
 export { AccountPreparationScreen } from './AccountPreparationScreen';
 export { FreeTrialPreviewScreen } from './FreeTrialPreviewScreen';
 export { ReminderScreen } from './ReminderScreen';
 export { PaywallScreen } from './PaywallScreen';
 export { SetPinScreen } from './SetPinScreen';
-export { PersonalizePermissionScreen } from './PersonalizePermissionScreen';
 export { BackButton } from './BackButton';
