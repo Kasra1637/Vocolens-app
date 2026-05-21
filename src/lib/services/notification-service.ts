@@ -346,6 +346,62 @@ export class NotificationService {
     }
   }
 
+  /**
+   * Schedule a "Your trial ends in 2 days" notification — fires on Day 5 of a 7-day trial.
+   * If rcExpirationDate is provided, fires 2 days before expiry.
+   * Otherwise falls back to 5 days from now (= Day 5 of 7-day trial).
+   */
+  static async scheduleTrialDay5Reminder(
+    rcExpirationDate?: string | null,
+  ): Promise<string | null> {
+    const N = getNotifications();
+    if (!N) return null;
+
+    try {
+      const { granted } = await this.checkPermissions();
+      if (!granted) return null;
+
+      let triggerDate: Date;
+
+      if (rcExpirationDate) {
+        const expiry = new Date(rcExpirationDate);
+        // 2 days before expiry
+        triggerDate = isNaN(expiry.getTime())
+          ? new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) // fallback: 5 days from now
+          : new Date(expiry.getTime() - 2 * 24 * 60 * 60 * 1000);
+      } else {
+        // No expiration date — assume 7-day trial started now, fire at Day 5
+        triggerDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+      }
+
+      // Don't schedule if trigger is in the past
+      if (triggerDate.getTime() <= Date.now()) return null;
+
+      ensureHandlerConfigured();
+
+      const id = await N.scheduleNotificationAsync({
+        content: {
+          title: 'Your free trial ends in 2 days',
+          body: "You're making great progress. Keep your journal going — continue your subscription to stay on track.",
+          sound: 'default',
+          data: { type: 'trial-day5-reminder' },
+        },
+        trigger: {
+          type: (N as any).SchedulableTriggerInputTypes?.DATE ?? 'date',
+          date: triggerDate,
+        },
+      });
+
+      console.log(
+        `[NotificationService] Scheduled Day 5 trial reminder for ${triggerDate.toISOString()} (id: ${id})`,
+      );
+      return id;
+    } catch (error) {
+      console.error('[NotificationService] scheduleTrialDay5Reminder error:', error);
+      return null;
+    }
+  }
+
   static async scheduleTrialEndReminder(
     rcExpirationDate?: string | null,
   ): Promise<string | null> {

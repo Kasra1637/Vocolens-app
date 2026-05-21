@@ -2,10 +2,9 @@
  * PaywallScreen v2 — High-converting annual-first paywall
  *
  * Design principles:
+ * - Annual-only on main screen; monthly shown as downsell on back/close
  * - Warm, reflective, trustworthy, premium — not aggressive or salesy
- * - Annual plan selected by default with 7-day free trial
- * - Monthly plan visible for flexibility (no trial)
- * - Single-screen layout: headline → plans → CTA → reassurance
+ * - 7-day free trial on annual plan
  * - Feature flag support for A/B testing
  * - Analytics events for full funnel visibility
  */
@@ -18,13 +17,14 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
-import { Check, ChevronRight, Shield } from "lucide-react-native";
+import { Check, ChevronRight, FlaskConical, X } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -40,17 +40,15 @@ import type { PurchasesPackage } from "@/lib/revenuecatClient";
 import { NotificationService } from "@/lib/services/notification-service";
 
 // ── Feature Flags ─────────────────────────────────────────────────────────────
-// Toggle these for A/B testing via remote config or hard-code for now
 const FEATURE_FLAGS = {
   paywall_v2: true,
-  trial_on_annual: true, // 7-day free trial on annual plan
-  savings_label: true, // Show "Save 33%" badge
+  trial_on_annual: true,
+  savings_label: true,
   default_selected_plan: "yearly" as "yearly" | "monthly",
 };
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 function trackEvent(event: string, properties?: Record<string, any>) {
-  // Replace with your analytics provider (Mixpanel, Amplitude, PostHog, etc.)
   if (__DEV__) {
     console.log(`[Analytics] ${event}`, properties ?? "");
   }
@@ -65,6 +63,134 @@ const TRIAL_DAYS = 7;
 
 type PlanType = "yearly" | "monthly";
 
+// ── Monthly Exit-Offer Modal ──────────────────────────────────────────────────
+function MonthlyExitModal({
+  visible,
+  themeColors,
+  onAccept,
+  onDecline,
+  isPurchasing,
+}: {
+  visible: boolean;
+  themeColors: (typeof THEME_COLORS)[keyof typeof THEME_COLORS];
+  onAccept: () => void;
+  onDecline: () => void;
+  isPurchasing: boolean;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent>
+      <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.6)" }}>
+        <LinearGradient
+          colors={[themeColors.gradientStart, themeColors.gradientEnd]}
+          style={{
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            padding: 24,
+            paddingBottom: 40,
+          }}
+        >
+          {/* Close row */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 20 }}>
+              Not ready to commit?
+            </Text>
+            <Pressable onPress={onDecline} hitSlop={12}>
+              <X size={22} color="rgba(255,255,255,0.6)" strokeWidth={2} />
+            </Pressable>
+          </View>
+
+          <Text style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 21, marginBottom: 20 }}>
+            Try Vocolens monthly — no long-term commitment, cancel anytime. Your journal entries stay with you either way.
+          </Text>
+
+          {/* Monthly card */}
+          <View
+            style={{
+              borderRadius: 18,
+              borderWidth: 2,
+              borderColor: "rgba(255,255,255,0.50)",
+              backgroundColor: "rgba(255,255,255,0.14)",
+              paddingVertical: 16,
+              paddingHorizontal: 18,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 20,
+            }}
+          >
+            <View>
+              <Text style={{ color: "rgba(255,255,255,0.7)", fontFamily: "Inter_600SemiBold", fontSize: 12, marginBottom: 4 }}>
+                Monthly Plan
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5 }}>
+                <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 24 }}>
+                  {MONTHLY_PRICE}
+                </Text>
+                <Text style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Inter_400Regular", fontSize: 12 }}>
+                  /month
+                </Text>
+              </View>
+            </View>
+            <View style={{ alignItems: "flex-end" }}>
+              <Text style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Inter_400Regular", fontSize: 11 }}>
+                Cancel anytime
+              </Text>
+              <Text style={{ color: "rgba(255,255,255,0.45)", fontFamily: "Inter_400Regular", fontSize: 11, marginTop: 2 }}>
+                No free trial
+              </Text>
+            </View>
+          </View>
+
+          {/* Accept CTA */}
+          <Pressable
+            onPress={onAccept}
+            disabled={isPurchasing}
+            style={{
+              borderRadius: 18,
+              borderWidth: 2,
+              borderColor: "#FFFFFF",
+              overflow: "hidden",
+              opacity: isPurchasing ? 0.7 : 1,
+              marginBottom: 12,
+            }}
+          >
+            <LinearGradient
+              colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 15,
+                gap: 6,
+              }}
+            >
+              {isPurchasing ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 16 }}>
+                    Start Monthly Plan
+                  </Text>
+                  <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />
+                </>
+              )}
+            </LinearGradient>
+          </Pressable>
+
+          {/* Decline */}
+          <Pressable onPress={onDecline} style={{ alignItems: "center", paddingTop: 4 }}>
+            <Text style={{ color: "rgba(255,255,255,0.40)", fontFamily: "Inter_400Regular", fontSize: 13 }}>
+              No thanks, I'll pass
+            </Text>
+          </Pressable>
+        </LinearGradient>
+      </View>
+    </Modal>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 export function PaywallScreen() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
@@ -75,19 +201,18 @@ export function PaywallScreen() {
   const playClickSound = useClickSound();
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
 
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>(
-    FEATURE_FLAGS.default_selected_plan,
-  );
   const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
   const [yearlyPackage, setYearlyPackage] = useState<PurchasesPackage | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isPurchasingMonthly, setIsPurchasingMonthly] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   useEffect(() => {
     trackEvent("paywall_shown", {
       version: "v2",
-      default_plan: FEATURE_FLAGS.default_selected_plan,
+      default_plan: "yearly",
       trial_enabled: FEATURE_FLAGS.trial_on_annual,
     });
 
@@ -100,45 +225,65 @@ export function PaywallScreen() {
     });
   }, []);
 
-  // ── Plan selection ────────────────────────────────────────────────────────
-  const handleSelectPlan = (plan: PlanType) => {
-    if (plan === selectedPlan) return;
-    playClickSound();
-    selectHaptic();
-    setSelectedPlan(plan);
-    trackEvent("plan_selected", { plan });
-  };
-
-  // ── Purchase ──────────────────────────────────────────────────────────────
+  // ── Purchase (Annual) ─────────────────────────────────────────────────────
   const handleCTA = async () => {
     playClickSound();
     tapHaptic();
-    trackEvent("cta_tapped", { plan: selectedPlan });
+    trackEvent("cta_tapped", { plan: "yearly" });
 
     if (!isRevenueCatEnabled()) {
-      grantAccess(selectedPlan);
+      grantAccess("yearly");
       return;
     }
 
-    const pkg = selectedPlan === "yearly" ? yearlyPackage : monthlyPackage;
-    if (!pkg) {
-      grantAccess(selectedPlan);
+    if (!yearlyPackage) {
+      grantAccess("yearly");
       return;
     }
 
     setIsPurchasing(true);
-    const result = await purchasePackage(pkg);
+    const result = await purchasePackage(yearlyPackage);
     setIsPurchasing(false);
 
     if (result.ok) {
       const expDate = result.data.entitlements.active?.["premium"]?.expirationDate;
-      grantAccess(selectedPlan, expDate);
+      grantAccess("yearly", expDate);
     } else if (result.reason === "sdk_error") {
       const userCancelled = (result.error as any)?.userCancelled === true;
       if (userCancelled) {
         errorHaptic();
       } else {
-        grantAccess(selectedPlan);
+        grantAccess("yearly");
+      }
+    }
+  };
+
+  // ── Purchase (Monthly — from exit modal) ──────────────────────────────────
+  const handleMonthlyAccept = async () => {
+    playClickSound();
+    trackEvent("cta_tapped", { plan: "monthly" });
+
+    if (!isRevenueCatEnabled()) {
+      grantAccess("monthly");
+      return;
+    }
+
+    if (!monthlyPackage) {
+      grantAccess("monthly");
+      return;
+    }
+
+    setIsPurchasingMonthly(true);
+    const result = await purchasePackage(monthlyPackage);
+    setIsPurchasingMonthly(false);
+
+    if (result.ok) {
+      grantAccess("monthly");
+    } else if (result.reason === "sdk_error") {
+      const userCancelled = (result.error as any)?.userCancelled === true;
+      if (!userCancelled) {
+        errorHaptic();
+        Alert.alert("Payment Error", "Something went wrong. Please try again.");
       }
     }
   };
@@ -147,8 +292,12 @@ export function PaywallScreen() {
     successHaptic();
     setSubscription(true, plan);
     if (plan === "yearly" && FEATURE_FLAGS.trial_on_annual) {
+      // Schedule Day 5 reminder (2 days before trial end)
+      NotificationService.scheduleTrialDay5Reminder(expirationDate ?? null);
+      // Schedule end-of-trial reminder (existing)
       NotificationService.scheduleTrialEndReminder(expirationDate ?? null);
     }
+    setShowExitModal(false);
     nextStep();
   };
 
@@ -168,33 +317,26 @@ export function PaywallScreen() {
         nextStep();
       } else {
         errorHaptic();
-        Alert.alert(
-          "No Active Subscription",
-          "We couldn't find an active subscription to restore.",
-        );
+        Alert.alert("No Active Subscription", "We couldn't find an active subscription to restore.");
       }
     } else {
       errorHaptic();
-      Alert.alert(
-        "Restore Failed",
-        "We couldn't find any previous purchases to restore.",
-      );
+      Alert.alert("Restore Failed", "We couldn't find any previous purchases to restore.");
     }
   };
 
-  // ── Back / Close ──────────────────────────────────────────────────────────
+  // ── Back → show monthly downsell ──────────────────────────────────────────
   const handleBack = () => {
     playClickSound();
     tapHaptic();
     trackEvent("paywall_closed");
-    prevStep();
+    setShowExitModal(true);
   };
 
-  // ── CTA label ─────────────────────────────────────────────────────────────
-  const ctaLabel =
-    selectedPlan === "yearly" && FEATURE_FLAGS.trial_on_annual
-      ? `Start Free ${TRIAL_DAYS}-Day Trial`
-      : "Subscribe Now";
+  const handleExitDecline = () => {
+    setShowExitModal(false);
+    prevStep();
+  };
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -252,250 +394,111 @@ export function PaywallScreen() {
               </Text>
             </Animated.View>
 
-            {/* ── Plan cards ── */}
+            {/* ── Annual plan card (only plan on main screen) ── */}
             <Animated.View
               entering={FadeIn.delay(180).duration(700).easing(SOFT)}
-              style={{ gap: 12 }}
             >
-              {/* Annual card */}
-              <Pressable onPress={() => handleSelectPlan("yearly")}>
-                <View
-                  style={{
-                    borderRadius: 20,
-                    borderWidth: selectedPlan === "yearly" ? 2.5 : 1.5,
-                    borderColor:
-                      selectedPlan === "yearly"
-                        ? "#FFFFFF"
-                        : "rgba(255,255,255,0.20)",
-                    backgroundColor:
-                      selectedPlan === "yearly"
-                        ? "rgba(255,255,255,0.18)"
-                        : "rgba(255,255,255,0.06)",
-                    padding: 18,
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  {/* Best value badge */}
-                  {FEATURE_FLAGS.savings_label && (
+              <View
+                style={{
+                  borderRadius: 20,
+                  borderWidth: 2.5,
+                  borderColor: "#FFFFFF",
+                  backgroundColor: "rgba(255,255,255,0.18)",
+                  padding: 18,
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Best value badge */}
+                {FEATURE_FLAGS.savings_label && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                      backgroundColor: "#FFFFFF",
+                      borderBottomLeftRadius: 12,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Inter_700Bold",
+                        fontSize: 10,
+                        color: themeColors.primary,
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      BEST VALUE
+                    </Text>
+                  </View>
+                )}
+
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_700Bold",
+                      color: "#FFFFFF",
+                      fontSize: 16,
+                    }}
+                  >
+                    Annual
+                  </Text>
+                  {FEATURE_FLAGS.trial_on_annual && (
                     <View
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        right: 0,
-                        backgroundColor: "#FFFFFF",
-                        borderBottomLeftRadius: 12,
-                        paddingHorizontal: 10,
-                        paddingVertical: 5,
+                        backgroundColor: "rgba(255,255,255,0.20)",
+                        borderRadius: 8,
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
                       }}
                     >
                       <Text
                         style={{
-                          fontFamily: "Inter_700Bold",
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
                           fontSize: 10,
-                          color: themeColors.primary,
-                          letterSpacing: 0.5,
+                          letterSpacing: 0.3,
                         }}
                       >
-                        BEST VALUE
+                        {TRIAL_DAYS}-DAY FREE TRIAL
                       </Text>
                     </View>
                   )}
+                </View>
 
-                  <View
+                <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+                  <Text
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
+                      fontFamily: "Fraunces_700Bold",
+                      color: "#FFFFFF",
+                      fontSize: 32,
                     }}
                   >
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                        <Text
-                          style={{
-                            fontFamily: "Inter_700Bold",
-                            color: "#FFFFFF",
-                            fontSize: 16,
-                          }}
-                        >
-                          Annual
-                        </Text>
-                        {FEATURE_FLAGS.trial_on_annual && (
-                          <View
-                            style={{
-                              backgroundColor: "rgba(255,255,255,0.20)",
-                              borderRadius: 8,
-                              paddingHorizontal: 8,
-                              paddingVertical: 3,
-                            }}
-                          >
-                            <Text
-                              style={{
-                                fontFamily: "Inter_600SemiBold",
-                                color: "#FFFFFF",
-                                fontSize: 10,
-                                letterSpacing: 0.3,
-                              }}
-                            >
-                              {TRIAL_DAYS}-DAY FREE TRIAL
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-
-                      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-                        <Text
-                          style={{
-                            fontFamily: "Fraunces_700Bold",
-                            color: "#FFFFFF",
-                            fontSize: 28,
-                          }}
-                        >
-                          {YEARLY_PRICE}
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: "Inter_400Regular",
-                            color: "rgba(255,255,255,0.55)",
-                            fontSize: 12,
-                          }}
-                        >
-                          /year
-                        </Text>
-                      </View>
-
-                      <Text
-                        style={{
-                          fontFamily: "Inter_400Regular",
-                          color: "rgba(255,255,255,0.6)",
-                          fontSize: 12,
-                          marginTop: 4,
-                        }}
-                      >
-                        Just {YEARLY_MONTHLY_EQUIVALENT}/month · Save {YEARLY_SAVINGS}
-                      </Text>
-                    </View>
-
-                    {/* Radio indicator */}
-                    <View
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
-                        borderWidth: 2,
-                        borderColor:
-                          selectedPlan === "yearly"
-                            ? "#FFFFFF"
-                            : "rgba(255,255,255,0.35)",
-                        backgroundColor:
-                          selectedPlan === "yearly"
-                            ? "#FFFFFF"
-                            : "transparent",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {selectedPlan === "yearly" && (
-                        <Check size={14} color={themeColors.primary} strokeWidth={3} />
-                      )}
-                    </View>
-                  </View>
+                    {YEARLY_PRICE}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.55)",
+                      fontSize: 13,
+                    }}
+                  >
+                    /year
+                  </Text>
                 </View>
-              </Pressable>
 
-              {/* Monthly card */}
-              <Pressable onPress={() => handleSelectPlan("monthly")}>
-                <View
+                <Text
                   style={{
-                    borderRadius: 20,
-                    borderWidth: selectedPlan === "monthly" ? 2.5 : 1.5,
-                    borderColor:
-                      selectedPlan === "monthly"
-                        ? "#FFFFFF"
-                        : "rgba(255,255,255,0.20)",
-                    backgroundColor:
-                      selectedPlan === "monthly"
-                        ? "rgba(255,255,255,0.18)"
-                        : "rgba(255,255,255,0.06)",
-                    padding: 18,
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255,255,255,0.65)",
+                    fontSize: 13,
                   }}
                 >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <View>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_700Bold",
-                          color: "#FFFFFF",
-                          fontSize: 16,
-                          marginBottom: 6,
-                        }}
-                      >
-                        Monthly
-                      </Text>
-                      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-                        <Text
-                          style={{
-                            fontFamily: "Fraunces_700Bold",
-                            color: "#FFFFFF",
-                            fontSize: 28,
-                          }}
-                        >
-                          {MONTHLY_PRICE}
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: "Inter_400Regular",
-                            color: "rgba(255,255,255,0.55)",
-                            fontSize: 12,
-                          }}
-                        >
-                          /month
-                        </Text>
-                      </View>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_400Regular",
-                          color: "rgba(255,255,255,0.5)",
-                          fontSize: 12,
-                          marginTop: 4,
-                        }}
-                      >
-                        No commitment · Cancel anytime
-                      </Text>
-                    </View>
-
-                    {/* Radio indicator */}
-                    <View
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
-                        borderWidth: 2,
-                        borderColor:
-                          selectedPlan === "monthly"
-                            ? "#FFFFFF"
-                            : "rgba(255,255,255,0.35)",
-                        backgroundColor:
-                          selectedPlan === "monthly"
-                            ? "#FFFFFF"
-                            : "transparent",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {selectedPlan === "monthly" && (
-                        <Check size={14} color={themeColors.primary} strokeWidth={3} />
-                      )}
-                    </View>
-                  </View>
-                </View>
-              </Pressable>
+                  Just {YEARLY_MONTHLY_EQUIVALENT}/month · Save {YEARLY_SAVINGS}
+                </Text>
+              </View>
             </Animated.View>
 
             {/* ── CTA + reassurance ── */}
@@ -544,7 +547,7 @@ export function PaywallScreen() {
                           fontSize: 17,
                         }}
                       >
-                        {ctaLabel}
+                        Start Free {TRIAL_DAYS}-Day Trial
                       </Text>
                       <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
                     </>
@@ -563,22 +566,20 @@ export function PaywallScreen() {
                   lineHeight: 18,
                 }}
               >
-                {selectedPlan === "yearly" && FEATURE_FLAGS.trial_on_annual
-                  ? `No charge for ${TRIAL_DAYS} days · Then ${YEARLY_PRICE}/yr · Cancel anytime`
-                  : `${MONTHLY_PRICE}/month · Cancel anytime`}
+                No charge for {TRIAL_DAYS} days · Then {YEARLY_PRICE}/yr · Cancel anytime
               </Text>
 
-              {/* Trust cue */}
+              {/* Trust cue — research-backed, app-native */}
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 6,
                   marginTop: 14,
-                  opacity: 0.55,
+                  opacity: 0.6,
                 }}
               >
-                <Shield size={12} color="#FFFFFF" strokeWidth={2} />
+                <FlaskConical size={12} color="#FFFFFF" strokeWidth={2} />
                 <Text
                   style={{
                     fontFamily: "Inter_400Regular",
@@ -586,7 +587,7 @@ export function PaywallScreen() {
                     fontSize: 11,
                   }}
                 >
-                  Trusted by people building a daily reflection habit
+                  Powered by the scientifically validated Plutchik Model
                 </Text>
               </View>
 
@@ -610,6 +611,15 @@ export function PaywallScreen() {
           </View>
         </SafeAreaView>
       </LinearGradient>
+
+      {/* Monthly exit-offer modal (shown on back/close) */}
+      <MonthlyExitModal
+        visible={showExitModal}
+        themeColors={themeColors}
+        onAccept={handleMonthlyAccept}
+        onDecline={handleExitDecline}
+        isPurchasing={isPurchasingMonthly}
+      />
     </View>
   );
 }
