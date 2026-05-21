@@ -172,6 +172,8 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                   {renderIcon(index, isFocused)}
                 </View>
                 <Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                   style={[
                     styles.label,
                     {
@@ -277,7 +279,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
+    textAlign: "center",
   },
   pill: {
     position: "absolute",

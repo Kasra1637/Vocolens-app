@@ -176,7 +176,7 @@ export function MoodInsightScreen() {
                   textAlign: "center",
                   opacity: 0.92,
                   letterSpacing: 0.2,
-                  lineHeight: 36,
+                  lineHeight: 38,
                 }}
               >
                 {userName
@@ -192,7 +192,7 @@ export function MoodInsightScreen() {
                   marginTop: 5,
                   lineHeight: 20,
                   letterSpacing: 0.1,
-                  maxWidth: 260,
+                  maxWidth: "85%",
                 }}
               >
                 You just took the first step toward deeper self-awareness.

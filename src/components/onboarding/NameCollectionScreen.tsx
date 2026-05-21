@@ -121,7 +121,7 @@ export function NameCollectionScreen() {
                   textAlign: "center",
                   lineHeight: 22,
                   letterSpacing: 0.1,
-                  maxWidth: 280,
+                  maxWidth: "85%",
                 }}
               >
                 I'll use it to make your experience feel personal.

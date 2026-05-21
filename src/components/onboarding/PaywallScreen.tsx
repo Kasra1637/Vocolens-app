@@ -392,7 +392,7 @@ export function PaywallScreen() {
                   textAlign: "center",
                   marginTop: 10,
                   lineHeight: 22,
-                  maxWidth: 280,
+                  maxWidth: "85%",
                 }}
               >
                 Unlimited voice entries, AI insights, and emotional clarity — starting today.

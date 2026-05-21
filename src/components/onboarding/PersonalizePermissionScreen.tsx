@@ -87,7 +87,7 @@ export function PersonalizePermissionScreen() {
                   textAlign: "center",
                   opacity: 0.92,
                   letterSpacing: 0.2,
-                  lineHeight: 30,
+                  lineHeight: 38,
                 }}
               >
                 Personalize your experience
@@ -107,7 +107,7 @@ export function PersonalizePermissionScreen() {
                   textAlign: "center",
                   lineHeight: 24,
                   letterSpacing: 0.1,
-                  maxWidth: 300,
+                  maxWidth: "85%",
                 }}
               >
                 Answer a few quick questions so we can tailor everything just

@@ -149,6 +149,7 @@ export function AccountPreparationScreen() {
                   fontSize: 30,
                   textAlign: "center",
                   marginBottom: 10,
+                  lineHeight: 38,
                 }}
               >
                 Almost there

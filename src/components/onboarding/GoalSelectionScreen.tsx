@@ -121,6 +121,7 @@ export function GoalSelectionScreen() {
                   fontSize: 30,
                   opacity: 0.92,
                   letterSpacing: 0.2,
+                  lineHeight: 38,
                 }}
               >
                 What's your main goal for using Vocolens?

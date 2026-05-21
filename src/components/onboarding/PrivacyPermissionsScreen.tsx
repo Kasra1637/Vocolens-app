@@ -241,6 +241,7 @@ export function PrivacyPermissionsScreen() {
                   fontSize: 30,
                   opacity: 0.92,
                   letterSpacing: 0.2,
+                  lineHeight: 38,
                 }}
               >
                 Your privacy

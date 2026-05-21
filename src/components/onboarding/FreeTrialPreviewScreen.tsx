@@ -466,7 +466,7 @@ export function FreeTrialPreviewScreen() {
                   color: "#FFFFFF",
                   fontSize: 30,
                   textAlign: "center",
-                  lineHeight: 36,
+                  lineHeight: 38,
                   opacity: 0.92,
                   letterSpacing: 0.2,
                 }}

@@ -107,6 +107,7 @@ export function ReflectionFeelingsScreen() {
                   fontSize: 30,
                   opacity: 0.92,
                   letterSpacing: 0.2,
+                  lineHeight: 38,
                 }}
               >
                 How often do you journal per week?

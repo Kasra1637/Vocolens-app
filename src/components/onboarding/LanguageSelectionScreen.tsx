@@ -88,7 +88,12 @@ export function LanguageSelectionScreen() {
       >
         {/* Header */}
         <View
-          style={{ paddingTop: 90, paddingBottom: 8, alignItems: "center" }}
+          style={{
+            paddingTop: 90,
+            paddingBottom: 8,
+            paddingHorizontal: 24,
+            alignItems: "center",
+          }}
           pointerEvents="none"
         >
           <Animated.Text
@@ -99,6 +104,8 @@ export function LanguageSelectionScreen() {
               color: "#FFFFFF",
               opacity: 0.92,
               letterSpacing: 0.2,
+              textAlign: "center",
+              lineHeight: 38,
             }}
           >
             Select your native tongue
@@ -111,6 +118,7 @@ export function LanguageSelectionScreen() {
               color: "rgba(255,255,255,0.65)",
               marginTop: 3,
               letterSpacing: 0.1,
+              textAlign: "center",
             }}
           >
             Used for all voice recordings
@@ -120,7 +128,7 @@ export function LanguageSelectionScreen() {
         {/* Search bar */}
         <Animated.View
           entering={FadeIn.delay(160).duration(500).easing(SOFT)}
-          style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 }}
+          style={{ paddingHorizontal: 24, paddingTop: 14, paddingBottom: 6 }}
         >
           <View
             style={{
@@ -153,18 +161,18 @@ export function LanguageSelectionScreen() {
           </View>
         </Animated.View>
 
-        {/* Language list */}
+        {/* Language list — constrained to ~6 visible rows before scroll */}
         <Animated.View
           entering={FadeIn.delay(220).duration(500).easing(SOFT)}
           style={{ flex: 1 }}
         >
           <ScrollView
             contentContainerStyle={{
-              paddingHorizontal: 20,
+              paddingHorizontal: 24,
               paddingTop: 4,
               paddingBottom: 16,
             }}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
             keyboardShouldPersistTaps="handled"
           >
             {filtered.map((lang) => {

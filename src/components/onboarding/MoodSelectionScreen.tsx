@@ -110,6 +110,7 @@ export function MoodSelectionScreen() {
                   fontSize: 30,
                   opacity: 0.92,
                   letterSpacing: 0.2,
+                  lineHeight: 38,
                 }}
               >
                 How are you feeling today?

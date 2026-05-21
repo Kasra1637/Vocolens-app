@@ -90,15 +90,19 @@ export default function LanguagePickerModal() {
             }}
           >
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1, marginRight: 12 }}
             >
-              <Globe size={20} color="#FFFFFF" strokeWidth={2} />
+              <Globe size={20} color="#FFFFFF" strokeWidth={2} flexShrink={0} />
               <Text
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   fontSize: 20,
                   color: "#FFFFFF",
+                  flex: 1,
+                  flexShrink: 1,
                 }}
+                numberOfLines={1}
+                adjustsFontSizeToFit
               >
                 Recording Language
               </Text>

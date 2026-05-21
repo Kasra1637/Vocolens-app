@@ -100,6 +100,7 @@ export function WelcomeScreen() {
                   textAlign: "center",
                   opacity: 0.92,
                   letterSpacing: 0.2,
+                  lineHeight: 40,
                 }}
               >
                 Welcome to Vocolens
