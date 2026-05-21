@@ -361,15 +361,15 @@ export function PaywallScreen() {
             style={{
               flex: 1,
               paddingHorizontal: 24,
-              justifyContent: "space-between",
-              paddingTop: 16,
+              justifyContent: "flex-end",
+              paddingTop: 12,
               paddingBottom: 24,
             }}
           >
             {/* ── Hero headline ── */}
             <Animated.View
               entering={FadeIn.delay(50).duration(700).easing(SOFT)}
-              style={{ alignItems: "center", marginBottom: 8 }}
+              style={{ alignItems: "center", marginBottom: 6 }}
             >
               <Text
                 style={{
@@ -387,11 +387,11 @@ export function PaywallScreen() {
               <Text
                 style={{
                   fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.65)",
-                  fontSize: 15,
+                  color: "rgba(255,255,255,0.60)",
+                  fontSize: 14,
                   textAlign: "center",
-                  marginTop: 10,
-                  lineHeight: 22,
+                  marginTop: 8,
+                  lineHeight: 20,
                   maxWidth: "85%",
                 }}
               >
@@ -399,10 +399,54 @@ export function PaywallScreen() {
               </Text>
             </Animated.View>
 
+            {/* ── Outcome-driven benefits ── */}
+            <Animated.View
+              entering={FadeIn.delay(120).duration(700).easing(SOFT)}
+              style={{ marginTop: 16, marginBottom: 16 }}
+            >
+              {[
+                { icon: "✦", text: "Understand what you're really feeling — not just surface emotions" },
+                { icon: "✦", text: "Reduce stress & anxiety with guided voice reflection" },
+                { icon: "✦", text: "Track your emotional growth over weeks and months" },
+                { icon: "✦", text: "Make clearer decisions by uncovering hidden patterns" },
+              ].map((item, idx) => (
+                <View
+                  key={idx}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    marginBottom: idx < 3 ? 10 : 0,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.80)",
+                      fontSize: 12,
+                      marginRight: 8,
+                      marginTop: 1,
+                    }}
+                  >
+                    {item.icon}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.80)",
+                      fontSize: 13,
+                      lineHeight: 19,
+                      flex: 1,
+                    }}
+                  >
+                    {item.text}
+                  </Text>
+                </View>
+              ))}
+            </Animated.View>
+
             {/* ── Annual plan card (only plan on main screen) ── */}
             <Animated.View
               entering={FadeIn.delay(180).duration(700).easing(SOFT)}
-              style={{ marginBottom: 16 }}
+              style={{ marginBottom: 14 }}
             >
               <View
                 style={{
