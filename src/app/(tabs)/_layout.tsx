@@ -9,11 +9,10 @@ import {
 } from "@/components/TabIcons";
 import { tabSwitchHaptic } from "@/lib/haptics";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import Animated, {
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
   Easing,
@@ -25,11 +24,9 @@ import { useClientOnlyValue } from "@/lib/useClientOnlyValue";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ICON_SIZE = 22;
-const TRAY_MARGIN = 20;
-const TRAY_WIDTH = SCREEN_WIDTH - TRAY_MARGIN * 2;
-const TAB_WIDTH = TRAY_WIDTH / 5;
+// Top-only rounded corners — flat on the bottom so it merges with the screen edge
+const TOP_RADIUS = 20;
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
@@ -50,12 +47,6 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     });
   }, [state.index, reducedMotion]);
 
-  const pillStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: activeIndex.value * TAB_WIDTH }],
-    };
-  });
-
   const renderIcon = (index: number, isFocused: boolean) => {
     const color = isFocused ? "#FFFFFF" : "rgba(255,255,255,0.5)";
 
@@ -63,21 +54,13 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       case 0:
         return <MicTabIcon size={ICON_SIZE} color={color} filled={isFocused} />;
       case 1:
-        return (
-          <BookTabIcon size={ICON_SIZE} color={color} filled={isFocused} />
-        );
+        return <BookTabIcon size={ICON_SIZE} color={color} filled={isFocused} />;
       case 2:
-        return (
-          <BarChartTabIcon size={ICON_SIZE} color={color} filled={isFocused} />
-        );
+        return <BarChartTabIcon size={ICON_SIZE} color={color} filled={isFocused} />;
       case 3:
-        return (
-          <AwardTabIcon size={ICON_SIZE} color={color} filled={isFocused} />
-        );
+        return <AwardTabIcon size={ICON_SIZE} color={color} filled={isFocused} />;
       case 4:
-        return (
-          <SettingsTabIcon size={ICON_SIZE} color={color} filled={isFocused} />
-        );
+        return <SettingsTabIcon size={ICON_SIZE} color={color} filled={isFocused} />;
       default:
         return null;
     }
@@ -96,124 +79,111 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   };
 
   // All surface / border / accent colors derived from theme primary
-  const glassTint = hexToRgba(primaryColor, 0.2);
   const tintWash = hexToRgba(primaryColor, 0.22);
   const specularColor = hexToRgba(primaryColor, 0.30);
-  const bottomShadowColor = hexToRgba(primaryColor, 0.20);
   const outerBorderColor = hexToRgba(primaryColor, 0.28);
   const innerBorderColor = hexToRgba(primaryColor, 0.12);
-  const pillGradientStart = hexToRgba(primaryColor, 0.35);
-  const pillGradientEnd = hexToRgba(primaryColor, 0.15);
-  const pillSpecularColor = hexToRgba(primaryColor, 0.25);
-  const pillBorderColor = hexToRgba(primaryColor, 0.15);
-  const iconGlowColor = hexToRgba(primaryColor, 0.22);
   const inactiveLabelOpacity = 0.5;
 
+  // Height of the icon+label row — safe-area padding added below as extra fill
+  const TAB_ROW_HEIGHT = 64;
+
   return (
-    <View
-      style={[styles.container, { bottom: Math.max(insets.bottom, 12) + 8 }]}
-    >
-      {/* Glass Tray Container */}
-      <View style={styles.tray}>
-        {/* Deep blur base layer */}
-        <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
+    // Outer wrapper sits at the very bottom, zero margins, full width
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+      {/* ── Glassmorphic surface ────────────────────────────────────────────── */}
 
-        {/* Tint wash layer - subtle theme color */}
-        <View style={[styles.tintWash, { backgroundColor: tintWash }]} />
+      {/* Deep blur base */}
+      <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
 
-        {/* Top light gradient - subtle shine from top */}
-        <LinearGradient
-          colors={[hexToRgba(primaryColor, 0.08), "transparent"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.topLight}
-        />
+      {/* Solid dark base so blur has something to tint against */}
+      <View style={[StyleSheet.absoluteFill, styles.darkBase]} />
 
-        {/* Specular highlight line - top edge (theme-derived) */}
-        <View
-          style={[styles.specularLine, { backgroundColor: specularColor }]}
-        />
+      {/* Theme-tinted colour wash */}
+      <View style={[StyleSheet.absoluteFill, styles.tintWash, { backgroundColor: tintWash }]} />
 
-        {/* Bottom shadow line (theme-derived) */}
-        <View
-          style={[styles.bottomShadow, { backgroundColor: bottomShadowColor }]}
-        />
+      {/* Top-edge light gradient (shine) */}
+      <LinearGradient
+        colors={[hexToRgba(primaryColor, 0.12), "transparent"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.topLight}
+      />
 
-        {/* Fine outer border (theme-derived) */}
-        <View style={[styles.outerBorder, { borderColor: outerBorderColor }]} />
+      {/* Specular highlight line on the very top edge */}
+      <View style={[styles.specularLine, { backgroundColor: specularColor }]} />
 
-        {/* Inner border glow (theme-derived) */}
-        <View style={[styles.innerBorder, { borderColor: innerBorderColor }]} />
+      {/* Outer border (top + sides only; bottom flush with screen edge) */}
+      <View style={[styles.outerBorder, { borderColor: outerBorderColor }]} />
 
-        {/* Tab Content */}
-        <View style={styles.content}>
-          {state.routes.map((route, index) => {
-            const isFocused = state.index === index;
+      {/* Inner glow border */}
+      <View style={[styles.innerBorder, { borderColor: innerBorderColor }]} />
 
-            const onPress = () => {
-              if (!isFocused) tabSwitchHaptic();
-              const event = navigation.emit({
-                type: "tabPress",
-                target: route.key,
-                canPreventDefault: true,
-              });
-              if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name, route.params);
-              }
-            };
+      {/* ── Tab row ─────────────────────────────────────────────────────────── */}
+      <View style={[styles.content, { height: TAB_ROW_HEIGHT }]}>
+        {state.routes.map((route, index) => {
+          const isFocused = state.index === index;
 
-            return (
-              <Pressable
-                key={route.key}
-                onPress={onPress}
-                style={styles.tabItem}
+          const onPress = () => {
+            if (!isFocused) tabSwitchHaptic();
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
+
+          return (
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              style={styles.tabItem}
+            >
+              <View style={styles.iconContainer}>
+                {renderIcon(index, isFocused)}
+              </View>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={[
+                  styles.label,
+                  {
+                    fontFamily: isFocused ? "Inter_700Bold" : "Inter_400Regular",
+                    color: isFocused
+                      ? "#FFFFFF"
+                      : `rgba(255,255,255,${inactiveLabelOpacity})`,
+                  },
+                ]}
               >
-                <View style={styles.iconContainer}>
-                  {renderIcon(index, isFocused)}
-                </View>
-                <Text
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  style={[
-                    styles.label,
-                    {
-                      fontFamily: isFocused
-                        ? "Inter_700Bold"
-                        : "Inter_400Regular",
-                      color: isFocused
-                        ? "#FFFFFF"
-                        : `rgba(255,255,255,${inactiveLabelOpacity})`,
-                    },
-                  ]}
-                >
-                  {LABELS[index]}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+                {LABELS[index]}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Full-width, anchored to bottom — no absolute positioning, no side margins
   container: {
-    position: "absolute",
-    left: TRAY_MARGIN,
-    right: TRAY_MARGIN,
-    height: 76,
+    width: "100%",
+    // Rounded top corners only; bottom is flush with the screen / nav bar
+    borderTopLeftRadius: TOP_RADIUS,
+    borderTopRightRadius: TOP_RADIUS,
+    overflow: "hidden",
+    // Lift the container above any gesture handling layers
     zIndex: 100,
   },
-  tray: {
-    flex: 1,
-    borderRadius: 24,
-    overflow: "hidden",
+  darkBase: {
     backgroundColor: "rgba(0, 0, 0, 0.72)",
   },
   tintWash: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 24,
+    // filled dynamically
   },
   topLight: {
     position: "absolute",
@@ -221,56 +191,56 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 30,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
   },
   specularLine: {
     position: "absolute",
     top: 0.5,
-    left: 12,
-    right: 12,
+    left: 16,
+    right: 16,
     height: 1,
     borderRadius: 0.5,
   },
-  bottomShadow: {
-    position: "absolute",
-    bottom: 0.5,
-    left: 12,
-    right: 12,
-    height: 1,
-    borderRadius: 0.5,
-  },
+  // Border only on top + sides; omit bottom so edge merges cleanly with screen
   outerBorder: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 24,
-    borderWidth: 1,
+    borderTopLeftRadius: TOP_RADIUS,
+    borderTopRightRadius: TOP_RADIUS,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 0,
   },
   innerBorder: {
     position: "absolute",
     top: 1,
     left: 1,
     right: 1,
-    bottom: 1,
-    borderRadius: 22,
-    borderWidth: 0.5,
+    bottom: 0,
+    borderTopLeftRadius: TOP_RADIUS - 1,
+    borderTopRightRadius: TOP_RADIUS - 1,
+    borderTopWidth: 0.5,
+    borderLeftWidth: 0.5,
+    borderRightWidth: 0.5,
+    borderBottomWidth: 0,
   },
   content: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 4,
   },
   tabItem: {
     flex: 1,
-    height: "100%",
     alignItems: "center",
     justifyContent: "center",
     gap: 3,
     paddingHorizontal: 2,
+    paddingTop: 4,
+    paddingBottom: 4,
+    height: "100%",
   },
   iconContainer: {
     height: 32,
@@ -282,32 +252,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.1,
     textAlign: "center",
-  },
-  pill: {
-    position: "absolute",
-    width: TAB_WIDTH - 12,
-    height: 60,
-    borderRadius: 22,
-    marginHorizontal: 6,
-    marginTop: 10,
-    overflow: "hidden",
-  },
-  pillSpecular: {
-    position: "absolute",
-    top: 0.5,
-    left: 6,
-    right: 6,
-    height: 1,
-    borderRadius: 0.5,
-  },
-  pillBorder: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 22,
-    borderWidth: 1,
   },
 });
 
