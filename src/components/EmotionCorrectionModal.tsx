@@ -677,12 +677,12 @@ export default function EmotionCorrectionModal({
                 onPress={handleReject}
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255,255,255,0.12)",
+                  backgroundColor: "rgba(255, 255, 255, 0.10)",
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
                   borderWidth: 1.5,
-                  borderColor: "rgba(255,255,255,0.22)",
+                  borderColor: "rgba(255, 255, 255, 0.18)",
                 }}
               >
                 <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>
@@ -694,27 +694,29 @@ export default function EmotionCorrectionModal({
                 onPress={handleSliderAdjustment}
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255,255,255,0.18)",
+                  backgroundColor: "rgba(255, 255, 255, 0.10)",
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
                   borderWidth: 1.5,
-                  borderColor: "rgba(255,255,255,0.28)",
+                  borderColor: "rgba(255, 255, 255, 0.18)",
                 }}
               >
                 <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>
                   Adjust
                 </Text>
               </Pressable>
-              {/* Yes, that's me — theme primary color */}
+              {/* Yes, that's me — elevated glass with theme border */}
               <Pressable
                 onPress={handleConfirm}
                 style={{
                   flex: 1,
-                  backgroundColor: Colors.primary,
+                  backgroundColor: hexToRgba(Colors.primary, 0.25),
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
+                  borderWidth: 1.5,
+                  borderColor: hexToRgba(Colors.primary, 0.55),
                 }}
               >
                 <Text style={{ fontFamily: "Inter_700Bold", fontSize: 13, color: "#FFFFFF" }}>
