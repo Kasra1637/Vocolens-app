@@ -450,7 +450,9 @@ export function FreeTrialPreviewScreen() {
             style={{
               flex: 1,
               paddingHorizontal: 24,
-              paddingVertical: 12,
+              justifyContent: "space-between",
+              paddingTop: 12,
+              paddingBottom: 24,
             }}
           >
             {/* Title */}
@@ -476,7 +478,7 @@ export function FreeTrialPreviewScreen() {
             {/* ── Animated App Demo ── */}
             <Animated.View
               entering={FadeIn.delay(200).duration(700).easing(SOFT)}
-              style={[cardFloatStyle, { maxHeight: 340, marginTop: 12, marginBottom: 16 }]}
+              style={[cardFloatStyle, { flex: 1, maxHeight: 460, marginTop: 12, marginBottom: 16 }]}
             >
               <View
                 style={{
@@ -1128,9 +1130,6 @@ export function FreeTrialPreviewScreen() {
                 </LinearGradient>
               </Pressable>
             </Animated.View>
-
-            {/* Spacer — pushes content up, aligns button with other screens */}
-            <View style={{ flex: 1 }} />
           </View>
         </SafeAreaView>
       </LinearGradient>
