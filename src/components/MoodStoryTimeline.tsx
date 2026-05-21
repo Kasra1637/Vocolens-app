@@ -85,9 +85,9 @@ export function MoodStoryTimeline({
     <View
       className="mb-6"
       style={{
-        backgroundColor: "rgba(255,255,255,0.08)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.18)",
+        backgroundColor: "rgba(255,255,255,0.12)",
+        borderWidth: 2,
+        borderColor: "rgba(255,255,255,0.20)",
         borderRadius: 24,
         overflow: "hidden",
       }}

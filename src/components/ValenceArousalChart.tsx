@@ -229,10 +229,6 @@ export default function ValenceArousalChart({
   return (
     <View
       style={{
-        backgroundColor: "rgba(255,255,255,0.08)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.18)",
-        borderRadius: 24,
         overflow: "hidden",
       }}
     >
@@ -486,7 +482,7 @@ export default function ValenceArousalChart({
                   style={{
                     fontFamily: "Inter_600SemiBold",
                     fontSize: 14,
-                    color: dominantQuadrant.color,
+                    color: "#FFFFFF",
                   }}
                 >
                   Mostly {dominantQuadrant.label}
@@ -504,7 +500,7 @@ export default function ValenceArousalChart({
                     style={{
                       fontFamily: "Inter_700Bold",
                       fontSize: 11,
-                      color: dominantQuadrant.color,
+                      color: "#FFFFFF",
                     }}
                   >
                     {quadrantCounts[dominantQuadrant.key]}/{totalPoints}

@@ -795,7 +795,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   return (
     <View className="mb-6">
       {/* Emotional Companion */}
-      <View className="flex-row items-center mb-6">
+      <View className="flex-row items-center mb-6" style={{ justifyContent: 'center' }}>
         <EmotionalCompanion
           state="idle"
           size={120}
@@ -803,10 +803,6 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
         />
       </View>
 
-      {/* Greeting */}
-      <View>
-        <WeeklyReflectionCard primaryColor={Colors.primary} />
-      </View>
       <View>
         <Text
           style={{

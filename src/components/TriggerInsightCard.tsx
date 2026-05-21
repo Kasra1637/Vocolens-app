@@ -139,9 +139,9 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
           style={{
             borderRadius: BorderRadius.xxlarge,
             overflow: 'hidden',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'rgba(255, 255, 255, 0.12)',
+            borderWidth: 2,
+            borderColor: 'rgba(255, 255, 255, 0.20)',
           }}
         >
           <GlassLayers primaryColor={emotionColor} borderRadius={BorderRadius.xxlarge} />
@@ -277,10 +277,10 @@ export function TriggerEmptyState({ currentEntries, minRequired }: TriggerEmptyS
     <Animated.View entering={FadeInDown.duration(500)}>
       <View
         style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: 'rgba(255, 255, 255, 0.12)',
           borderRadius: BorderRadius.xxlarge,
-          borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderWidth: 2,
+          borderColor: 'rgba(255, 255, 255, 0.20)',
           padding: 24,
           alignItems: 'center',
         }}
