@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { View, Text, Pressable, TextInput } from "react-native";
+import { View, Text, Pressable, TextInput, Platform, Keyboard } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -75,11 +75,19 @@ export function EnterPinScreen() {
   const shake = useSharedValue(0);
   const inputRef = useRef<TextInput>(null);
 
+  // Ensure the input is focused and keyboard visible
+  const openKeyboard = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   // Auto-focus the hidden input when the screen mounts
   useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 350);
+    // Delay to let the screen fully render before requesting focus
+    const t = setTimeout(openKeyboard, 500);
     return () => clearTimeout(t);
-  }, []);
+  }, [openKeyboard]);
 
   const doShake = useCallback((msg: string) => {
     errorHaptic();
@@ -95,6 +103,8 @@ export function EnterPinScreen() {
     setTimeout(() => {
       setDigits("");
       setError("");
+      // Re-focus input after clearing so keyboard stays open
+      inputRef.current?.focus();
     }, 700);
   }, []);
 
@@ -142,7 +152,12 @@ export function EnterPinScreen() {
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
-          {/* Hidden native keyboard input — exactly like PIN creation */}
+          {/* 
+            Hidden TextInput that drives the native keyboard.
+            Must have real dimensions to be focusable on Android.
+            We position it absolutely at top-left, full-width but zero-height visually,
+            with opacity 0 so it's invisible. The Pressable wrapper below calls .focus() on tap.
+          */}
           <TextInput
             ref={inputRef}
             value={digits}
@@ -150,7 +165,19 @@ export function EnterPinScreen() {
             keyboardType="number-pad"
             maxLength={4}
             caretHidden
-            style={{ position: "absolute", opacity: 0, width: 1, height: 1 }}
+            autoFocus={false}
+            contextMenuHidden
+            selectTextOnFocus={false}
+            importantForAccessibility="no"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: 50,
+              opacity: 0,
+              zIndex: -1,
+            }}
           />
 
           <Pressable
@@ -162,7 +189,7 @@ export function EnterPinScreen() {
               paddingBottom: 60,
               paddingTop: 32,
             }}
-            onPress={() => inputRef.current?.focus()}
+            onPress={openKeyboard}
           >
             {/* Top: companion + greeting */}
             <Animated.View
