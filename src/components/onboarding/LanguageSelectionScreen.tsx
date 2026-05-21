@@ -95,7 +95,7 @@ export function LanguageSelectionScreen() {
             entering={FadeIn.delay(60).duration(500).easing(SOFT)}
             style={{
               fontFamily: "Fraunces_700Bold",
-              fontSize: 26,
+              fontSize: 30,
               color: "#FFFFFF",
               opacity: 0.92,
               letterSpacing: 0.2,

@@ -104,7 +104,7 @@ export function ReflectionFeelingsScreen() {
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 26,
+                  fontSize: 30,
                   opacity: 0.92,
                   letterSpacing: 0.2,
                 }}

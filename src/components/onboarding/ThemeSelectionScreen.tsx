@@ -135,7 +135,7 @@ export function ThemeSelectionScreen() {
             <Text
               style={{
                 fontFamily: "Fraunces_700Bold",
-                fontSize: 26,
+                fontSize: 30,
                 color: "#FFFFFF",
                 opacity: 0.92,
                 letterSpacing: 0.2,
@@ -298,7 +298,7 @@ export function ThemeSelectionScreen() {
                         <Text
                           style={{
                             fontFamily: "Inter_700Bold",
-                            fontSize: 22,
+                            fontSize: 24,
                             color: "#FFFFFF",
                             textAlign: "center",
                             opacity: isActive ? 1 : 0.65,

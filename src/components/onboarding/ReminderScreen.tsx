@@ -194,9 +194,9 @@ export function ReminderScreen() {
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 26,
+                  fontSize: 30,
                   textAlign: "center",
-                  lineHeight: 27,
+                  lineHeight: 36,
                   opacity: 0.92,
                   letterSpacing: 0.2,
                 }}
@@ -262,7 +262,7 @@ export function ReminderScreen() {
                     style={{
                       color: "#FFFFFF",
                       fontFamily: "Inter_700Bold",
-                      fontSize: 17,
+                      fontSize: 18,
                       marginRight: 6,
                     }}
                   >

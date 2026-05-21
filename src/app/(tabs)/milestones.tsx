@@ -256,7 +256,7 @@ export default function MilestonesScreen() {
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 22,
+                  fontSize: 30,
                 }}
                 className="mb-2"
               >

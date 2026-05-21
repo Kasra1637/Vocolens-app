@@ -375,9 +375,9 @@ export function PaywallScreen() {
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 26,
+                  fontSize: 30,
                   textAlign: "center",
-                  lineHeight: 34,
+                  lineHeight: 38,
                   opacity: 0.92,
                   letterSpacing: 0.2,
                 }}
@@ -388,10 +388,10 @@ export function PaywallScreen() {
                 style={{
                   fontFamily: "Inter_400Regular",
                   color: "rgba(255,255,255,0.65)",
-                  fontSize: 14,
+                  fontSize: 15,
                   textAlign: "center",
                   marginTop: 10,
-                  lineHeight: 21,
+                  lineHeight: 22,
                   maxWidth: 280,
                 }}
               >
@@ -549,7 +549,7 @@ export function PaywallScreen() {
                         style={{
                           color: "#FFFFFF",
                           fontFamily: "Inter_700Bold",
-                          fontSize: 17,
+                          fontSize: 18,
                         }}
                       >
                         Start Free {TRIAL_DAYS}-Day Trial

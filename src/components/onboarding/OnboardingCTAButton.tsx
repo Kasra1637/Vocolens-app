@@ -24,7 +24,7 @@ interface OnboardingCTAButtonProps {
   icon?: React.ReactNode | null;
   /** Vertical padding inside the button. Defaults to 16. */
   paddingVertical?: number;
-  /** Font size for the label. Defaults to 17. */
+  /** Font size for the label. Defaults to 18. */
   fontSize?: number;
 }
 
@@ -34,7 +34,7 @@ export function OnboardingCTAButton({
   disabled = false,
   icon = <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />,
   paddingVertical = 16,
-  fontSize = 17,
+  fontSize = 18,
 }: OnboardingCTAButtonProps) {
   return (
     <Pressable

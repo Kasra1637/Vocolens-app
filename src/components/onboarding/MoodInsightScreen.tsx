@@ -172,11 +172,11 @@ export function MoodInsightScreen() {
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 26,
+                  fontSize: 30,
                   textAlign: "center",
                   opacity: 0.92,
                   letterSpacing: 0.2,
-                  lineHeight: 30,
+                  lineHeight: 36,
                 }}
               >
                 {userName
