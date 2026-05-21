@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   update:
-    name: Publish OTA update to main channel
+    name: Publish OTA update
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -27,10 +27,10 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli@19.0.1
 
-      - name: Publish EAS Update
+      - name: Publish EAS Update to development branch
         run: |
           eas update \
-            --branch main \
+            --branch development \
             --message "Push to main: $(git log -1 --pretty=%s)" \
             --non-interactive
         env:
