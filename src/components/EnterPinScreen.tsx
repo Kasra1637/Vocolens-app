@@ -2,20 +2,13 @@
  * Enter PIN Screen
  *
  * Shown every time the app is opened after PIN is set.
- * Uses a hidden TextInput to trigger the native number keyboard.
+ * Displays a sleek on-screen numpad for the user to tap digits.
  * Correct PIN → sets isPinVerified → AuthGate lets the user through.
  * Wrong PIN → shake animation, 3 failed attempts shows "Forgot PIN?" option.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
-  StyleSheet,
-  Platform,
-} from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -26,7 +19,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { Lock } from "lucide-react-native";
+import { Lock, Delete } from "lucide-react-native";
 import { successHaptic, tapHaptic, errorHaptic } from "@/lib/haptics";
 import usePinStore from "@/lib/state/pin-store";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
@@ -68,6 +61,38 @@ function PinDots({
   );
 }
 
+// ── Numpad ────────────────────────────────────────────────────────────────────
+const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"] as const;
+
+function Numpad({ onKey }: { onKey: (k: string) => void }) {
+  return (
+    <View style={styles.numpadContainer}>
+      {KEYS.map((key, idx) => {
+        if (key === "") {
+          return <View key={idx} style={styles.numpadKeyEmpty} />;
+        }
+        return (
+          <Pressable
+            key={idx}
+            onPress={() => onKey(key)}
+            android_ripple={{ color: "rgba(255,255,255,0.2)", borderless: true }}
+            style={({ pressed }) => [
+              styles.numpadKey,
+              pressed && styles.numpadKeyPressed,
+            ]}
+          >
+            {key === "del" ? (
+              <Delete size={24} color="#FFFFFF" strokeWidth={1.8} />
+            ) : (
+              <Text style={styles.numpadKeyText}>{key}</Text>
+            )}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 export function EnterPinScreen() {
   const verifyPin = usePinStore((s) => s.verifyPin);
@@ -80,26 +105,6 @@ export function EnterPinScreen() {
   const [failCount, setFailCount] = useState(0);
 
   const shake = useSharedValue(0);
-  const inputRef = useRef<TextInput>(null);
-
-  // Focus the TextInput to bring up the native keyboard
-  const openKeyboard = useCallback(() => {
-    // Small delay ensures the ref is mounted and the system is ready
-    setTimeout(() => {
-      inputRef.current?.blur();
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
-    }, 10);
-  }, []);
-
-  // Auto-open the keyboard when the screen mounts
-  useEffect(() => {
-    const t = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 600);
-    return () => clearTimeout(t);
-  }, []);
 
   const doShake = useCallback((msg: string) => {
     errorHaptic();
@@ -115,8 +120,6 @@ export function EnterPinScreen() {
     setTimeout(() => {
       setDigits("");
       setError("");
-      // Re-focus so keyboard stays open for retry
-      inputRef.current?.focus();
     }, 700);
   }, []);
 
@@ -125,6 +128,7 @@ export function EnterPinScreen() {
       const ok = verifyPin(pin);
       if (ok) {
         successHaptic();
+        // AuthGate re-renders automatically via store subscription
       } else {
         const next = failCount + 1;
         setFailCount(next);
@@ -134,17 +138,22 @@ export function EnterPinScreen() {
     [verifyPin, failCount, doShake],
   );
 
-  const handleChangeText = useCallback(
-    (text: string) => {
-      const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
+  const handleKey = useCallback(
+    (key: string) => {
       tapHaptic();
-      setDigits(cleaned);
-      setError("");
-      if (cleaned.length === 4) {
-        setTimeout(() => handleComplete(cleaned), 120);
+      if (key === "del") {
+        setDigits((d) => d.slice(0, -1));
+        setError("");
+        return;
+      }
+      if (digits.length >= 4) return;
+      const next = digits + key;
+      setDigits(next);
+      if (next.length === 4) {
+        setTimeout(() => handleComplete(next), 120);
       }
     },
-    [handleComplete],
+    [digits, handleComplete],
   );
 
   const handleForgotPin = useCallback(() => {
@@ -162,139 +171,60 @@ export function EnterPinScreen() {
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
-          <View style={{ flex: 1 }}>
-            {/*
-              The TextInput is rendered with full width at the top of the screen
-              but with height: 0 + overflow visible on iOS / transparent text on Android.
-              This ensures the native system considers it a valid focusable element.
-            */}
-            <TextInput
-              ref={inputRef}
-              value={digits}
-              onChangeText={handleChangeText}
-              keyboardType="number-pad"
-              maxLength={4}
-              caretHidden
-              autoCorrect={false}
-              autoComplete="off"
-              secureTextEntry={Platform.OS === "android"}
-              style={styles.hiddenInput}
-            />
-
-            {/* Full-screen pressable overlay that triggers keyboard on tap */}
-            <Pressable
-              style={styles.overlay}
-              onPress={openKeyboard}
+          <View style={styles.content}>
+            {/* Top: companion + greeting */}
+            <Animated.View
+              entering={FadeInDown.duration(500)}
+              style={{ alignItems: "center", gap: 16 }}
             >
-              {/* Top: companion + greeting */}
-              <Animated.View
-                entering={FadeInDown.duration(500)}
-                style={{ alignItems: "center", gap: 20 }}
-              >
-                <EmotionalCompanion
-                  state="idle"
-                  size={110}
-                  themeColor={
-                    selectedTheme === "darkMode"
-                      ? "#9370DB"
-                      : themeColors.primary
-                  }
-                />
-                <View style={{ alignItems: "center", gap: 8 }}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <Lock
-                      size={18}
-                      color="rgba(255,255,255,0.7)"
-                      strokeWidth={2}
-                    />
-                    <Text
-                      style={{
-                        fontFamily: "Fraunces_700Bold",
-                        fontSize: 26,
-                        color: "#FFFFFF",
-                      }}
-                    >
-                      Welcome back
-                    </Text>
-                  </View>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      fontSize: 15,
-                      color: "rgba(255,255,255,0.75)",
-                      textAlign: "center",
-                    }}
-                  >
-                    Enter your PIN to continue
-                  </Text>
+              <EmotionalCompanion
+                state="idle"
+                size={90}
+                themeColor={
+                  selectedTheme === "darkMode" ? "#9370DB" : themeColors.primary
+                }
+              />
+              <View style={{ alignItems: "center", gap: 6 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Lock size={16} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                  <Text style={styles.title}>Welcome back</Text>
                 </View>
-              </Animated.View>
+                <Text style={styles.subtitle}>Enter your PIN to continue</Text>
+              </View>
+            </Animated.View>
 
-              {/* Middle: dots + hint/error */}
-              <Animated.View
-                entering={FadeInDown.delay(100).duration(500)}
-                style={{ alignItems: "center", gap: 18 }}
-              >
-                <PinDots filled={digits.length} shake={shake} />
+            {/* Middle: dots + error */}
+            <Animated.View
+              entering={FadeInDown.delay(100).duration(500)}
+              style={{ alignItems: "center", gap: 14 }}
+            >
+              <PinDots filled={digits.length} shake={shake} />
+              {error ? (
+                <Animated.Text entering={FadeIn.duration(200)} style={styles.errorText}>
+                  {error}
+                </Animated.Text>
+              ) : (
+                <Text style={styles.hintText}>4-digit PIN</Text>
+              )}
+            </Animated.View>
 
-                {error ? (
-                  <Animated.Text
-                    entering={FadeIn.duration(200)}
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 13,
-                      color: "rgba(255,120,120,1)",
-                      textAlign: "center",
-                    }}
+            {/* Bottom: numpad + forgot */}
+            <Animated.View
+              entering={FadeInDown.delay(180).duration(500)}
+              style={{ alignItems: "center", gap: 20 }}
+            >
+              <Numpad onKey={handleKey} />
+              {failCount >= 3 && (
+                <Animated.View entering={FadeIn.duration(300)}>
+                  <Pressable
+                    onPress={handleForgotPin}
+                    style={{ paddingHorizontal: 20, paddingVertical: 10 }}
                   >
-                    {error}
-                  </Animated.Text>
-                ) : (
-                  <Text
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      fontSize: 13,
-                      color: "rgba(255,255,255,0.4)",
-                      textAlign: "center",
-                    }}
-                  >
-                    Tap anywhere to open keyboard
-                  </Text>
-                )}
-              </Animated.View>
-
-              {/* Bottom: forgot PIN (appears after 3 failures) */}
-              <Animated.View
-                entering={FadeInDown.delay(180).duration(500)}
-                style={{ alignItems: "center", minHeight: 44 }}
-              >
-                {failCount >= 3 && (
-                  <Animated.View entering={FadeIn.duration(300)}>
-                    <Pressable
-                      onPress={handleForgotPin}
-                      style={{ paddingHorizontal: 20, paddingVertical: 10 }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          fontSize: 14,
-                          color: "rgba(255,255,255,0.6)",
-                          textDecorationLine: "underline",
-                        }}
-                      >
-                        Forgot PIN? Reset access
-                      </Text>
-                    </Pressable>
-                  </Animated.View>
-                )}
-              </Animated.View>
-            </Pressable>
+                    <Text style={styles.forgotText}>Forgot PIN? Reset access</Text>
+                  </Pressable>
+                </Animated.View>
+              )}
+            </Animated.View>
           </View>
         </SafeAreaView>
       </LinearGradient>
@@ -303,33 +233,71 @@ export function EnterPinScreen() {
 }
 
 const styles = StyleSheet.create({
-  // The TextInput must be "visible" to the native focus system.
-  // We achieve invisibility by:
-  //   - Making text color transparent (no cursor shown via caretHidden)
-  //   - Setting height to 1 with no border/background
-  //   - Positioning it at the top so it's within the visible screen bounds
-  //     (off-screen elements can't receive focus on Android)
-  // On Android, secureTextEntry hides any residual dots that might flash.
-  hiddenInput: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    color: "transparent",
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    padding: 0,
-    margin: 0,
-    // DO NOT use opacity: 0 — Android won't focus invisible views
-    // DO NOT use zIndex: -1 — Android won't focus views behind others
-  },
-  overlay: {
+  content: {
     flex: 1,
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 24,
-    paddingBottom: 60,
-    paddingTop: 32,
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  title: {
+    fontFamily: "Fraunces_700Bold",
+    fontSize: 26,
+    color: "#FFFFFF",
+  },
+  subtitle: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 15,
+    color: "rgba(255,255,255,0.75)",
+    textAlign: "center",
+  },
+  errorText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    color: "rgba(255,120,120,1)",
+    textAlign: "center",
+  },
+  hintText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    color: "rgba(255,255,255,0.4)",
+    textAlign: "center",
+  },
+  forgotText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: "rgba(255,255,255,0.6)",
+    textDecorationLine: "underline",
+  },
+  numpadContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: 264,
+    justifyContent: "center",
+    gap: 14,
+  },
+  numpadKey: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  numpadKeyPressed: {
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+  numpadKeyEmpty: {
+    width: 72,
+    height: 72,
+  },
+  numpadKeyText: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontFamily: "Inter_400Regular",
+    letterSpacing: 0.5,
   },
 });
