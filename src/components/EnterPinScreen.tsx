@@ -2,13 +2,20 @@
  * Enter PIN Screen
  *
  * Shown every time the app is opened after PIN is set.
- * Uses the same hidden-TextInput + native-keyboard pattern as PIN creation.
+ * Uses a hidden TextInput to trigger the native number keyboard.
  * Correct PIN → sets isPinVerified → AuthGate lets the user through.
  * Wrong PIN → shake animation, 3 failed attempts shows "Forgot PIN?" option.
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { View, Text, Pressable, TextInput, Platform, Keyboard } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  TextInput,
+  StyleSheet,
+  Platform,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -75,19 +82,24 @@ export function EnterPinScreen() {
   const shake = useSharedValue(0);
   const inputRef = useRef<TextInput>(null);
 
-  // Ensure the input is focused and keyboard visible
+  // Focus the TextInput to bring up the native keyboard
   const openKeyboard = useCallback(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    // Small delay ensures the ref is mounted and the system is ready
+    setTimeout(() => {
+      inputRef.current?.blur();
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    }, 10);
   }, []);
 
-  // Auto-focus the hidden input when the screen mounts
+  // Auto-open the keyboard when the screen mounts
   useEffect(() => {
-    // Delay to let the screen fully render before requesting focus
-    const t = setTimeout(openKeyboard, 500);
+    const t = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 600);
     return () => clearTimeout(t);
-  }, [openKeyboard]);
+  }, []);
 
   const doShake = useCallback((msg: string) => {
     errorHaptic();
@@ -103,7 +115,7 @@ export function EnterPinScreen() {
     setTimeout(() => {
       setDigits("");
       setError("");
-      // Re-focus input after clearing so keyboard stays open
+      // Re-focus so keyboard stays open for retry
       inputRef.current?.focus();
     }, 700);
   }, []);
@@ -113,7 +125,6 @@ export function EnterPinScreen() {
       const ok = verifyPin(pin);
       if (ok) {
         successHaptic();
-        // AuthGate re-renders automatically via store subscription
       } else {
         const next = failCount + 1;
         setFailCount(next);
@@ -125,7 +136,6 @@ export function EnterPinScreen() {
 
   const handleChangeText = useCallback(
     (text: string) => {
-      // Strip non-digits, cap at 4
       const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
       tapHaptic();
       setDigits(cleaned);
@@ -152,150 +162,174 @@ export function EnterPinScreen() {
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
-          {/* 
-            Hidden TextInput that drives the native keyboard.
-            Must have real dimensions to be focusable on Android.
-            We position it absolutely at top-left, full-width but zero-height visually,
-            with opacity 0 so it's invisible. The Pressable wrapper below calls .focus() on tap.
-          */}
-          <TextInput
-            ref={inputRef}
-            value={digits}
-            onChangeText={handleChangeText}
-            keyboardType="number-pad"
-            maxLength={4}
-            caretHidden
-            autoFocus={false}
-            contextMenuHidden
-            selectTextOnFocus={false}
-            importantForAccessibility="no"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: 50,
-              opacity: 0,
-              zIndex: -1,
-            }}
-          />
+          <View style={{ flex: 1 }}>
+            {/*
+              The TextInput is rendered with full width at the top of the screen
+              but with height: 0 + overflow visible on iOS / transparent text on Android.
+              This ensures the native system considers it a valid focusable element.
+            */}
+            <TextInput
+              ref={inputRef}
+              value={digits}
+              onChangeText={handleChangeText}
+              keyboardType="number-pad"
+              maxLength={4}
+              caretHidden
+              autoCorrect={false}
+              autoComplete="off"
+              secureTextEntry={Platform.OS === "android"}
+              style={styles.hiddenInput}
+            />
 
-          <Pressable
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingHorizontal: 24,
-              paddingBottom: 60,
-              paddingTop: 32,
-            }}
-            onPress={openKeyboard}
-          >
-            {/* Top: companion + greeting */}
-            <Animated.View
-              entering={FadeInDown.duration(500)}
-              style={{ alignItems: "center", gap: 20 }}
+            {/* Full-screen pressable overlay that triggers keyboard on tap */}
+            <Pressable
+              style={styles.overlay}
+              onPress={openKeyboard}
             >
-              <EmotionalCompanion
-                state="idle"
-                size={110}
-                themeColor={
-                  selectedTheme === "darkMode" ? "#9370DB" : themeColors.primary
-                }
-              />
-              <View style={{ alignItems: "center", gap: 8 }}>
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-                >
-                  <Lock
-                    size={18}
-                    color="rgba(255,255,255,0.7)"
-                    strokeWidth={2}
-                  />
-                  <Text
+              {/* Top: companion + greeting */}
+              <Animated.View
+                entering={FadeInDown.duration(500)}
+                style={{ alignItems: "center", gap: 20 }}
+              >
+                <EmotionalCompanion
+                  state="idle"
+                  size={110}
+                  themeColor={
+                    selectedTheme === "darkMode"
+                      ? "#9370DB"
+                      : themeColors.primary
+                  }
+                />
+                <View style={{ alignItems: "center", gap: 8 }}>
+                  <View
                     style={{
-                      fontFamily: "Fraunces_700Bold",
-                      fontSize: 26,
-                      color: "#FFFFFF",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
                     }}
                   >
-                    Welcome back
-                  </Text>
-                </View>
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    fontSize: 15,
-                    color: "rgba(255,255,255,0.75)",
-                    textAlign: "center",
-                  }}
-                >
-                  Enter your PIN to continue
-                </Text>
-              </View>
-            </Animated.View>
-
-            {/* Middle: dots + hint/error */}
-            <Animated.View
-              entering={FadeInDown.delay(100).duration(500)}
-              style={{ alignItems: "center", gap: 18 }}
-            >
-              <PinDots filled={digits.length} shake={shake} />
-
-              {error ? (
-                <Animated.Text
-                  entering={FadeIn.duration(200)}
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    fontSize: 13,
-                    color: "rgba(255,120,120,1)",
-                    textAlign: "center",
-                  }}
-                >
-                  {error}
-                </Animated.Text>
-              ) : (
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.4)",
-                    textAlign: "center",
-                  }}
-                >
-                  Tap anywhere to open keyboard
-                </Text>
-              )}
-            </Animated.View>
-
-            {/* Bottom: forgot PIN (appears after 3 failures) */}
-            <Animated.View
-              entering={FadeInDown.delay(180).duration(500)}
-              style={{ alignItems: "center", minHeight: 44 }}
-            >
-              {failCount >= 3 && (
-                <Animated.View entering={FadeIn.duration(300)}>
-                  <Pressable
-                    onPress={handleForgotPin}
-                    style={{ paddingHorizontal: 20, paddingVertical: 10 }}
-                  >
+                    <Lock
+                      size={18}
+                      color="rgba(255,255,255,0.7)"
+                      strokeWidth={2}
+                    />
                     <Text
                       style={{
-                        fontFamily: "Inter_600SemiBold",
-                        fontSize: 14,
-                        color: "rgba(255,255,255,0.6)",
-                        textDecorationLine: "underline",
+                        fontFamily: "Fraunces_700Bold",
+                        fontSize: 26,
+                        color: "#FFFFFF",
                       }}
                     >
-                      Forgot PIN? Reset access
+                      Welcome back
                     </Text>
-                  </Pressable>
-                </Animated.View>
-              )}
-            </Animated.View>
-          </Pressable>
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      fontSize: 15,
+                      color: "rgba(255,255,255,0.75)",
+                      textAlign: "center",
+                    }}
+                  >
+                    Enter your PIN to continue
+                  </Text>
+                </View>
+              </Animated.View>
+
+              {/* Middle: dots + hint/error */}
+              <Animated.View
+                entering={FadeInDown.delay(100).duration(500)}
+                style={{ alignItems: "center", gap: 18 }}
+              >
+                <PinDots filled={digits.length} shake={shake} />
+
+                {error ? (
+                  <Animated.Text
+                    entering={FadeIn.duration(200)}
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      fontSize: 13,
+                      color: "rgba(255,120,120,1)",
+                      textAlign: "center",
+                    }}
+                  >
+                    {error}
+                  </Animated.Text>
+                ) : (
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      fontSize: 13,
+                      color: "rgba(255,255,255,0.4)",
+                      textAlign: "center",
+                    }}
+                  >
+                    Tap anywhere to open keyboard
+                  </Text>
+                )}
+              </Animated.View>
+
+              {/* Bottom: forgot PIN (appears after 3 failures) */}
+              <Animated.View
+                entering={FadeInDown.delay(180).duration(500)}
+                style={{ alignItems: "center", minHeight: 44 }}
+              >
+                {failCount >= 3 && (
+                  <Animated.View entering={FadeIn.duration(300)}>
+                    <Pressable
+                      onPress={handleForgotPin}
+                      style={{ paddingHorizontal: 20, paddingVertical: 10 }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          fontSize: 14,
+                          color: "rgba(255,255,255,0.6)",
+                          textDecorationLine: "underline",
+                        }}
+                      >
+                        Forgot PIN? Reset access
+                      </Text>
+                    </Pressable>
+                  </Animated.View>
+                )}
+              </Animated.View>
+            </Pressable>
+          </View>
         </SafeAreaView>
       </LinearGradient>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // The TextInput must be "visible" to the native focus system.
+  // We achieve invisibility by:
+  //   - Making text color transparent (no cursor shown via caretHidden)
+  //   - Setting height to 1 with no border/background
+  //   - Positioning it at the top so it's within the visible screen bounds
+  //     (off-screen elements can't receive focus on Android)
+  // On Android, secureTextEntry hides any residual dots that might flash.
+  hiddenInput: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    color: "transparent",
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    padding: 0,
+    margin: 0,
+    // DO NOT use opacity: 0 — Android won't focus invisible views
+    // DO NOT use zIndex: -1 — Android won't focus views behind others
+  },
+  overlay: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingBottom: 60,
+    paddingTop: 32,
+  },
+});
