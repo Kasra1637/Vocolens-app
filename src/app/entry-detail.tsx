@@ -1033,17 +1033,21 @@ export default function EntryDetailScreen() {
                       Your Reflection
                     </Text>
                   </View>
-                  {/* User validation chip */}
+                  {/* User validation chip — always glassmorphic with white text */}
                   {entry.userValidated ? (
                     <View
                       className="flex-row items-center px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: "rgba(34, 197, 94, 0.25)" }}
+                      style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.14)",
+                        borderWidth: 1,
+                        borderColor: "rgba(255, 255, 255, 0.25)",
+                      }}
                     >
-                      <CheckCircle2 size={12} color="#22C55E" strokeWidth={2} />
+                      <CheckCircle2 size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text
                         style={{
                           fontFamily: "Inter_600SemiBold",
-                          color: "#22C55E",
+                          color: "#FFFFFF",
                           fontSize: 10,
                           marginLeft: 4,
                         }}
@@ -1054,13 +1058,17 @@ export default function EntryDetailScreen() {
                   ) : entry.aiCorrected ? (
                     <View
                       className="flex-row items-center px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: "rgba(234, 179, 8, 0.25)" }}
+                      style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.14)",
+                        borderWidth: 1,
+                        borderColor: "rgba(255, 255, 255, 0.25)",
+                      }}
                     >
-                      <RefreshCw size={12} color="#EAB308" strokeWidth={2} />
+                      <RefreshCw size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text
                         style={{
                           fontFamily: "Inter_600SemiBold",
-                          color: "#EAB308",
+                          color: "#FFFFFF",
                           fontSize: 10,
                           marginLeft: 4,
                         }}
@@ -1109,8 +1117,7 @@ export default function EntryDetailScreen() {
                             className="h-full rounded-full"
                             style={{
                               width: `${Math.abs(entry.valence)}%`,
-                              backgroundColor:
-                                entry.valence >= 0 ? "#22C55E" : "#EF4444",
+                              backgroundColor: "#FFFFFF",
                               marginLeft:
                                 entry.valence < 0
                                   ? `${100 - Math.abs(entry.valence)}%`
@@ -1257,30 +1264,15 @@ export default function EntryDetailScreen() {
                     <View
                       className="flex-row items-center px-3 py-2 rounded-full"
                       style={{
-                        backgroundColor:
-                          entry.distressLevel === "high"
-                            ? "rgba(239, 68, 68, 0.2)"
-                            : entry.distressLevel === "moderate"
-                              ? "rgba(234, 179, 8, 0.2)"
-                              : "rgba(34, 197, 94, 0.2)",
+                        backgroundColor: "rgba(255, 255, 255, 0.12)",
                         borderWidth: 1,
-                        borderColor:
-                          entry.distressLevel === "high"
-                            ? "rgba(239, 68, 68, 0.4)"
-                            : entry.distressLevel === "moderate"
-                              ? "rgba(234, 179, 8, 0.4)"
-                              : "rgba(34, 197, 94, 0.4)",
+                        borderColor: "rgba(255, 255, 255, 0.22)",
                       }}
                     >
                       <Text
                         style={{
                           fontFamily: "Inter_500Medium",
-                          color:
-                            entry.distressLevel === "high"
-                              ? "#EF4444"
-                              : entry.distressLevel === "moderate"
-                                ? "#EAB308"
-                                : "#22C55E",
+                          color: "#FFFFFF",
                           fontSize: 11,
                           textTransform: "capitalize",
                         }}
@@ -1293,16 +1285,16 @@ export default function EntryDetailScreen() {
                     <View
                       className="flex-row items-center px-3 py-2 rounded-full"
                       style={{
-                        backgroundColor: "rgba(34, 197, 94, 0.2)",
+                        backgroundColor: "rgba(255, 255, 255, 0.12)",
                         borderWidth: 1,
-                        borderColor: "rgba(34, 197, 94, 0.4)",
+                        borderColor: "rgba(255, 255, 255, 0.22)",
                       }}
                     >
-                      <CheckCircle2 size={12} color="#22C55E" strokeWidth={2} />
+                      <CheckCircle2 size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text
                         style={{
                           fontFamily: "Inter_500Medium",
-                          color: "#22C55E",
+                          color: "#FFFFFF",
                           fontSize: 11,
                           marginLeft: 6,
                         }}
