@@ -15,7 +15,7 @@ import {
   TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useFonts,
   Inter_400Regular,
@@ -33,6 +33,7 @@ import {
   Shield,
   ChevronRight,
   Moon,
+  Waves,
   Brain,
   BarChart3,
   AlertTriangle,
@@ -82,7 +83,7 @@ import { getLanguageByCode } from "@/lib/languages";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 export default function SettingsScreen() {
-  const insets = { top: 0, bottom: 0 }; // SafeAreaView handles this
+  const insets = useSafeAreaInsets();
   const [pinModalVisible, setPinModalVisible] = useState(false);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
   const [currentPin, setCurrentPin] = useState("");
@@ -391,7 +392,7 @@ export default function SettingsScreen() {
           <ScrollView
             className="flex-1 px-6"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 40 }}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
           >
             {/* Usage Limit Card */}
             <View className="mb-6">
@@ -542,8 +543,9 @@ export default function SettingsScreen() {
                 <View
                   style={{
                     flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
+                    flexWrap: "wrap",
+                    gap: 16,
+                    justifyContent: "flex-start",
                   }}
                 >
                   {(
@@ -552,6 +554,7 @@ export default function SettingsScreen() {
                       "softPink",
                       "lavenderBliss",
                       "violetWhisper",
+                      "oceanCalm",
                       "darkMode",
                     ] as ThemeColorType[]
                   ).map((theme) => {
@@ -634,6 +637,12 @@ export default function SettingsScreen() {
                             />
                           ) : theme === "darkMode" ? (
                             <Moon
+                              size={16}
+                              color="rgba(255,255,255,0.7)"
+                              strokeWidth={2}
+                            />
+                          ) : theme === "oceanCalm" ? (
+                            <Waves
                               size={16}
                               color="rgba(255,255,255,0.7)"
                               strokeWidth={2}
