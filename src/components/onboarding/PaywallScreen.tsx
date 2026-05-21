@@ -23,6 +23,7 @@ import {
   Alert,
   Platform,
   Modal,
+  BackHandler,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -229,6 +230,20 @@ export function PaywallScreen() {
       setYearlyPackage(pkgs.find((p) => p.identifier === "$rc_annual") ?? null);
     });
   }, []);
+
+  // ── BackHandler: intercept Android hardware back + iOS swipe-to-dismiss ──
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      // Only intercept when the exit modal is not already showing
+      if (!showExitModal) {
+        trackEvent("paywall_hardware_back");
+        setShowExitModal(true);
+      }
+      return true; // prevent default navigation
+    });
+    return () => sub.remove();
+  }, [showExitModal]);
 
   // ── Purchase (Annual) ─────────────────────────────────────────────────────
   const handleCTA = async () => {
