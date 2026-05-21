@@ -433,8 +433,10 @@ function InsightsContent({
     );
   }
 
+  const userName = useOnboardingStore((s) => s.userName);
+
   const user = {
-    name: "Friend",
+    name: userName ? userName.split(" ")[0] : "Friend",
     streak: stats.currentStreak,
     nextBadge,
     usageMinutes,
@@ -762,6 +764,27 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   const isNearLimit = usagePct >= 0.8 && usagePct < 1;
   const isAtLimit = usagePct >= 1;
 
+  // Dynamic time-of-day greeting
+  const greeting = React.useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return `Good morning, ${user.name}.`;
+    if (hour >= 12 && hour < 17) return `Good afternoon, ${user.name}.`;
+    if (hour >= 17 && hour < 21) return `Good evening, ${user.name}.`;
+    return `Hey, ${user.name}.`;
+  }, [user.name]);
+
+  // Dynamic punchy subline that shifts each visit
+  const subline = React.useMemo(() => {
+    const lines = [
+      "Here's what your journal reveals about you.",
+      "Your emotions have been speaking. Let's listen.",
+      "Every entry shapes a clearer picture of you.",
+      "Ready to understand yourself a little better?",
+    ];
+    const idx = new Date().getDate() % lines.length;
+    return lines[idx];
+  }, []);
+
   React.useEffect(() => {
     progressWidth.value = withSpring(user.nextBadge.progress * 100, {
       damping: 15,
@@ -807,12 +830,29 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
       <View>
         <Text
           style={{
-            fontFamily: "Inter_400Regular",
-            color: "rgba(255, 255, 255, 0.8)",
+            fontFamily: "Fraunces_700Bold",
+            color: "#FFFFFF",
+            fontSize: 30,
+            textAlign: "center",
+            lineHeight: 38,
+            opacity: 0.92,
+            letterSpacing: 0.2,
+            marginBottom: 6,
           }}
-          className="text-base mb-5 text-center"
         >
-          Here are your journaling insights
+          {greeting}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Inter_400Regular",
+            color: "rgba(255, 255, 255, 0.65)",
+            fontSize: 14,
+            textAlign: "center",
+            lineHeight: 20,
+          }}
+          className="mb-5"
+        >
+          {subline}
         </Text>
       </View>
 
