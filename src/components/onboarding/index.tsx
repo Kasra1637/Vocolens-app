@@ -22,6 +22,7 @@ import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { PrivacyPermissionsScreen } from './PrivacyPermissionsScreen';
 import { AccountPreparationScreen } from './AccountPreparationScreen';
 import { FreeTrialPreviewScreen } from './FreeTrialPreviewScreen';
+import { PersonalizePermissionScreen } from './PersonalizePermissionScreen';
 import { ReminderScreen } from './ReminderScreen';
 import { PaywallScreen } from './PaywallScreen';
 import { SetPinScreen } from './SetPinScreen';
@@ -36,36 +37,38 @@ export function OnboardingFlow() {
       case 1:
         return <ThemeSelectionScreen />;
       case 2:
-        return <MoodSelectionScreen />;
+        return <PersonalizePermissionScreen />;
       case 3:
-        return <MoodFollowUpScreen />;
+        return <MoodSelectionScreen />;
       case 4:
-        return <MoodInsightScreen />;
+        return <MoodFollowUpScreen />;
       case 5:
-        return <GoalSelectionScreen />;
+        return <MoodInsightScreen />;
       case 6:
-        return <GoalBlockerScreen />;
+        return <GoalSelectionScreen />;
       case 7:
-        return <GoalInsightScreen />;
+        return <GoalBlockerScreen />;
       case 8:
-        return <ReflectionFeelingsScreen />;
+        return <GoalInsightScreen />;
       case 9:
-        return <JournalingFrequencyInsightScreen />;
+        return <ReflectionFeelingsScreen />;
       case 10:
-        return <NotificationPreferencesScreen />;
+        return <JournalingFrequencyInsightScreen />;
       case 11:
-        return <LanguageSelectionScreen />;
+        return <NotificationPreferencesScreen />;
       case 12:
-        return <PrivacyPermissionsScreen />;
+        return <LanguageSelectionScreen />;
       case 13:
-        return <AccountPreparationScreen />;
+        return <PrivacyPermissionsScreen />;
       case 14:
-        return <FreeTrialPreviewScreen />;
+        return <AccountPreparationScreen />;
       case 15:
-        return <ReminderScreen />;
+        return <FreeTrialPreviewScreen />;
       case 16:
-        return <PaywallScreen />;
+        return <ReminderScreen />;
       case 17:
+        return <PaywallScreen />;
+      case 18:
         return <SetPinScreen />;
       default:
         return <WelcomeScreen />;
@@ -97,4 +100,5 @@ export { FreeTrialPreviewScreen } from './FreeTrialPreviewScreen';
 export { ReminderScreen } from './ReminderScreen';
 export { PaywallScreen } from './PaywallScreen';
 export { SetPinScreen } from './SetPinScreen';
+export { PersonalizePermissionScreen } from './PersonalizePermissionScreen';
 export { BackButton } from './BackButton';
