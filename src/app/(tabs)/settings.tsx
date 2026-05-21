@@ -390,7 +390,7 @@ export default function SettingsScreen() {
           <ScrollView
             className="flex-1 px-6"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
           >
             {/* Usage Limit Card */}
             <View className="mb-6">
@@ -1086,27 +1086,42 @@ export default function SettingsScreen() {
                     tapHaptic();
                     router.push("/legal");
                   }}
-                  className="p-5 active:opacity-70"
+                  className="active:opacity-70"
                   style={{
-                    borderBottomWidth: 1,
-                    borderBottomColor: hexToRgba(Colors.primary, 0.1),
+                    margin: 12,
+                    marginTop: 0,
+                    borderRadius: 20,
+                    overflow: "hidden",
                   }}
                 >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
+                  <View
+                    style={{
+                      paddingVertical: 16,
+                      paddingHorizontal: 18,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      backgroundColor: hexToRgba(Colors.primary, 0.12),
+                      borderWidth: 2,
+                      borderColor: hexToRgba(Colors.primary, 0.25),
+                      borderRadius: 20,
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
                       <Text
-                        className="text-base font-semibold mb-1"
                         style={{
                           fontFamily: "Inter_600SemiBold",
                           color: "#FFFFFF",
+                          fontSize: 15,
+                          marginBottom: 2,
                         }}
                       >
                         Privacy Policy & Terms
                       </Text>
                       <Text
                         style={{
-                          color: "rgba(255, 255, 255, 0.8)",
-                          fontSize: 15,
+                          color: "rgba(255, 255, 255, 0.7)",
+                          fontSize: 13,
                         }}
                       >
                         How your data is used & protected
@@ -1159,9 +1174,9 @@ export default function SettingsScreen() {
                         alignItems: "center",
                         justifyContent: "center",
                         backgroundColor: hexToRgba(Colors.primary, 0.15),
-                        borderWidth: 1,
-                        borderColor: hexToRgba(Colors.primary, 0.2),
-                        borderRadius: 16,
+                        borderWidth: 2,
+                        borderColor: hexToRgba(Colors.primary, 0.30),
+                        borderRadius: 24,
                       }}
                     >
                       <Download
