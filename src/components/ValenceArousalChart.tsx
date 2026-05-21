@@ -23,15 +23,11 @@ import {
   ScrollView,
 } from "react-native";
 import Svg, {
-  Rect,
   Line,
   Circle,
   Text as SvgText,
   G,
   Path,
-  Defs,
-  LinearGradient as SvgGradient,
-  Stop,
 } from "react-native-svg";
 import Animated, {
   FadeIn,
@@ -462,11 +458,9 @@ export default function ValenceArousalChart({
                 marginBottom: 20,
                 padding: 14,
                 borderRadius: 16,
-                backgroundColor: `${dominantQuadrant.color}18`,
-                borderWidth: 1,
-                borderLeftWidth: 4,
-                borderColor: `${dominantQuadrant.color}40`,
-                borderLeftColor: dominantQuadrant.color,
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
               }}
             >
               <View
@@ -544,70 +538,12 @@ function ChartSvg({
 
   return (
     <Svg width={chartSize} height={chartSize} style={{ borderRadius: 16 }}>
-      <Defs>
-        {/* Quadrant fills */}
-        <SvgGradient id="qUA" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#EF4444" stopOpacity="0.12" />
-          <Stop offset="1" stopColor="#EF4444" stopOpacity="0.04" />
-        </SvgGradient>
-        <SvgGradient id="qPA" x1="1" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#F59E0B" stopOpacity="0.12" />
-          <Stop offset="1" stopColor="#F59E0B" stopOpacity="0.04" />
-        </SvgGradient>
-        <SvgGradient id="qUC" x1="0" y1="1" x2="1" y2="0">
-          <Stop offset="0" stopColor="#6B7280" stopOpacity="0.10" />
-          <Stop offset="1" stopColor="#6B7280" stopOpacity="0.03" />
-        </SvgGradient>
-        <SvgGradient id="qPC" x1="1" y1="1" x2="0" y2="0">
-          <Stop offset="0" stopColor="#10B981" stopOpacity="0.12" />
-          <Stop offset="1" stopColor="#10B981" stopOpacity="0.04" />
-        </SvgGradient>
-      </Defs>
-
-      {/* Quadrant backgrounds */}
-      <Rect
-        x={0}
-        y={0}
-        width={half}
-        height={half}
-        fill="url(#qUA)"
-        rx={16}
-        ry={0}
-      />
-      <Rect
-        x={half}
-        y={0}
-        width={half}
-        height={half}
-        fill="url(#qPA)"
-        rx={0}
-        ry={0}
-      />
-      <Rect
-        x={0}
-        y={half}
-        width={half}
-        height={half}
-        fill="url(#qUC)"
-        rx={0}
-        ry={0}
-      />
-      <Rect
-        x={half}
-        y={half}
-        width={half}
-        height={half}
-        fill="url(#qPC)"
-        rx={0}
-        ry={0}
-      />
-
       {/* Quadrant corner labels */}
       <SvgText
         x={8}
         y={16}
         fontSize={9}
-        fill="rgba(239,68,68,0.6)"
+        fill="rgba(255,255,255,0.45)"
         fontFamily="Inter_600SemiBold"
       >
         TENSE
@@ -616,7 +552,7 @@ function ChartSvg({
         x={half + 6}
         y={16}
         fontSize={9}
-        fill="rgba(245,158,11,0.6)"
+        fill="rgba(255,255,255,0.45)"
         fontFamily="Inter_600SemiBold"
       >
         EXCITED
@@ -625,7 +561,7 @@ function ChartSvg({
         x={8}
         y={chartSize - 6}
         fontSize={9}
-        fill="rgba(107,114,128,0.6)"
+        fill="rgba(255,255,255,0.45)"
         fontFamily="Inter_600SemiBold"
       >
         DOWN
@@ -634,7 +570,7 @@ function ChartSvg({
         x={half + 6}
         y={chartSize - 6}
         fontSize={9}
-        fill="rgba(16,185,129,0.6)"
+        fill="rgba(255,255,255,0.45)"
         fontFamily="Inter_600SemiBold"
       >
         CALM
@@ -803,7 +739,7 @@ function QuadrantDistribution({
             key={s.key}
             style={{
               flex: s.pct,
-              backgroundColor: s.color,
+              backgroundColor: "#FFFFFF",
               opacity: 0.75,
             }}
           />
@@ -822,7 +758,7 @@ function QuadrantDistribution({
                 width: 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: s.color,
+                backgroundColor: "#FFFFFF",
                 opacity: 0.75,
               }}
             />

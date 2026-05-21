@@ -3,7 +3,6 @@
 
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   FadeInDown,
   useAnimatedStyle,
@@ -37,7 +36,6 @@ import {
 } from '@/lib/trigger-detection';
 import { EMOTION_COLORS, EmotionType } from '@/lib/types';
 import { BorderRadius } from '@/lib/theme';
-import { GlassLayers, hexToRgba } from '@/lib/glass';
 
 // Map each trigger category to a relevant icon
 const TRIGGER_ICONS: Record<string, React.ComponentType<{ size: number; color: string; strokeWidth: number }>> = {
@@ -144,24 +142,6 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
             borderColor: 'rgba(255, 255, 255, 0.20)',
           }}
         >
-          <GlassLayers primaryColor={emotionColor} borderRadius={BorderRadius.xxlarge} />
-          {/* Subtle gradient accent */}
-          <LinearGradient
-            colors={
-              isPositive
-                ? ['rgba(255, 255, 255, 0.07)', 'rgba(255, 255, 255, 0.02)']
-                : ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.01)']
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-            }}
-          />
 
           <View style={{ padding: 18 }}>
             {/* Header with trigger type indicator */}

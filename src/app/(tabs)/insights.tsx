@@ -541,11 +541,12 @@ function InsightsContent({
 
         {/* Valence-Arousal Emotional Landscape */}
         <View
-          className="rounded-2xl overflow-hidden mb-6"
+          className="overflow-hidden mb-6"
           style={{
             backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 2,
             borderColor: "rgba(255, 255, 255, 0.20)",
+            borderRadius: 24,
           }}
         >
           <ValenceArousalChart
