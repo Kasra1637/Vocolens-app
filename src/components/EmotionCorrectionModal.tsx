@@ -214,17 +214,13 @@ export default function EmotionCorrectionModal({
 
   const aiDef = getEmotionDefinition(aiEmotion);
 
-  // ── Glassmorphic card style — matches Insights "Emotional Breakdown" token ─
+  // ── Glassmorphic card style — matches Insights screen cards exactly ─────────
   const glassCard = {
     backgroundColor: "rgba(255, 255, 255, 0.12)",
-    borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.20)",
+    borderWidth: 1,
+    borderColor: hexToRgba(Colors.primary, 0.15),
     borderRadius: 20,
     overflow: "hidden" as const,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
   };
 
 
@@ -254,7 +250,7 @@ export default function EmotionCorrectionModal({
             paddingTop: insets.top + 16,
             paddingBottom: 14,
             borderBottomWidth: 1,
-            borderBottomColor: "rgba(255,255,255,0.12)",
+            borderBottomColor: hexToRgba(Colors.primary, 0.12),
           }}
         >
           <Pressable
@@ -390,9 +386,9 @@ export default function EmotionCorrectionModal({
                       key={emotion}
                       onPress={() => handleSelectReplacement(emotion)}
                       style={{
-                        backgroundColor: "rgba(255,255,255,0.12)",
-                        borderWidth: 1.5,
-                        borderColor: "rgba(255,255,255,0.22)",
+                        backgroundColor: "rgba(255,255,255,0.08)",
+                        borderWidth: 1,
+                        borderColor: hexToRgba(Colors.primary, 0.15),
                         borderRadius: 24,
                         paddingHorizontal: 16,
                         paddingVertical: 10,
@@ -581,7 +577,7 @@ export default function EmotionCorrectionModal({
                     value={reason}
                     onChangeText={setReason}
                     style={{
-                      backgroundColor: "rgba(255,255,255,0.10)",
+                      backgroundColor: "rgba(255,255,255,0.06)",
                       borderRadius: 14,
                       padding: 14,
                       fontFamily: "Inter_400Regular",
@@ -589,8 +585,8 @@ export default function EmotionCorrectionModal({
                       color: "#FFFFFF",
                       minHeight: 90,
                       textAlignVertical: "top",
-                      borderWidth: 1.5,
-                      borderColor: "rgba(255,255,255,0.18)",
+                      borderWidth: 1,
+                      borderColor: hexToRgba(Colors.primary, 0.15),
                     }}
                   />
                 </Animated.View>
@@ -659,9 +655,9 @@ export default function EmotionCorrectionModal({
             left: 0,
             right: 0,
             overflow: "hidden",
-            backgroundColor: "rgba(255,255,255,0.08)",
-            borderTopWidth: 1.5,
-            borderTopColor: "rgba(255,255,255,0.14)",
+            backgroundColor: "rgba(255,255,255,0.06)",
+            borderTopWidth: 1,
+            borderTopColor: hexToRgba(Colors.primary, 0.15),
             paddingHorizontal: 20,
             paddingTop: 16,
             paddingBottom: insets.bottom + 16,
@@ -677,12 +673,12 @@ export default function EmotionCorrectionModal({
                 onPress={handleReject}
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.10)",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
-                  borderWidth: 1.5,
-                  borderColor: "rgba(255, 255, 255, 0.20)",
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>
@@ -694,12 +690,12 @@ export default function EmotionCorrectionModal({
                 onPress={handleSliderAdjustment}
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.10)",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
-                  borderWidth: 1.5,
-                  borderColor: "rgba(255, 255, 255, 0.20)",
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>
@@ -711,12 +707,12 @@ export default function EmotionCorrectionModal({
                 onPress={handleConfirm}
                 style={{
                   flex: 1,
-                  backgroundColor: hexToRgba(Colors.primary, 0.25),
+                  backgroundColor: hexToRgba(Colors.primary, 0.20),
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
-                  borderWidth: 1.5,
-                  borderColor: hexToRgba(Colors.primary, 0.55),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.40),
                 }}
               >
                 <Text style={{ fontFamily: "Inter_700Bold", fontSize: 13, color: "#FFFFFF" }}>
@@ -731,12 +727,12 @@ export default function EmotionCorrectionModal({
             <Pressable
               onPress={() => setStep("initial")}
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.10)",
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
                 borderRadius: 16,
                 paddingVertical: 16,
                 alignItems: "center",
-                borderWidth: 1.5,
-                borderColor: "rgba(255, 255, 255, 0.20)",
+                borderWidth: 1,
+                borderColor: hexToRgba(Colors.primary, 0.15),
               }}
             >
               <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#FFFFFF" }}>
@@ -773,12 +769,12 @@ export default function EmotionCorrectionModal({
                 }}
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.10)",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
                   borderRadius: 16,
                   paddingVertical: 16,
                   alignItems: "center",
-                  borderWidth: 1.5,
-                  borderColor: "rgba(255, 255, 255, 0.20)",
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.15),
                 }}
               >
                 <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#FFFFFF" }}>
@@ -789,9 +785,9 @@ export default function EmotionCorrectionModal({
                 onPress={handleSubmitWithReason}
                 style={{
                   flex: 2,
-                  backgroundColor: hexToRgba(Colors.primary, 0.25),
-                  borderWidth: 1.5,
-                  borderColor: hexToRgba(Colors.primary, 0.55),
+                  backgroundColor: hexToRgba(Colors.primary, 0.20),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.40),
                   borderRadius: 16,
                   paddingVertical: 16,
                   alignItems: "center",
@@ -907,12 +903,12 @@ function ReasonChip({
         paddingVertical: 9,
         borderRadius: 20,
         backgroundColor: active
-          ? hexToRgba(primaryColor, 0.30)
-          : "rgba(255,255,255,0.10)",
-        borderWidth: 1.5,
+          ? hexToRgba(primaryColor, 0.20)
+          : "rgba(255,255,255,0.06)",
+        borderWidth: 1,
         borderColor: active
-          ? hexToRgba(primaryColor, 0.55)
-          : "rgba(255,255,255,0.18)",
+          ? hexToRgba(primaryColor, 0.40)
+          : hexToRgba(primaryColor, 0.15),
       }}
     >
       {icon}
