@@ -7,6 +7,11 @@
  * - 7-day free trial on annual plan
  * - Feature flag support for A/B testing
  * - Analytics events for full funnel visibility
+ *
+ * Conversion features:
+ * - Monthly plan hidden on main screen; surfaces as exit-offer modal on back
+ * - Plutchik Model trust cue (research-backed, native to app)
+ * - Day 5 trial reminder notification (2 days before expiry)
  */
 
 import React, { useState, useEffect } from "react";
