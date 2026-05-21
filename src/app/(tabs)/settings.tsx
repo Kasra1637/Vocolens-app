@@ -3,7 +3,7 @@
  * Customizable settings menu for theme, notifications, dark mode, PIN, time, and sign out
  */
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Modal,
   Alert,
   Platform,
+  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -94,6 +95,14 @@ export default function SettingsScreen() {
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [isExporting, setIsExporting] = useState(false);
+  const pinInputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (pinModalVisible) {
+      const t = setTimeout(() => pinInputRef.current?.focus(), 350);
+      return () => clearTimeout(t);
+    }
+  }, [pinModalVisible, pinStep]);
   // Onboarding Store (for theme and notification time)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const setSelectedTheme = useOnboardingStore((s) => s.setSelectedTheme);
@@ -1261,274 +1270,134 @@ export default function SettingsScreen() {
         animationType="fade"
         onRequestClose={() => setPinModalVisible(false)}
       >
-        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
           <View
-            className="rounded-3xl p-6 w-full max-w-md"
             style={{
-              backgroundColor: Colors.surfaceHighlight,
-              ...Shadows.large,
+              backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[2],
+              borderRadius: 24,
+              padding: 24,
+              width: "100%",
+              maxWidth: 400,
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
+              overflow: "hidden",
             }}
           >
-            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
-            {/* Header with centered title */}
-            <View
-              style={{
-                position: "relative",
-                alignItems: "center",
-                marginBottom: 16,
+            {/* Hidden native number keyboard input */}
+            <TextInput
+              ref={pinInputRef}
+              value={pinStep === "current" ? currentPin : newPin}
+              onChangeText={(text) => {
+                const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
+                handlePinInput(cleaned);
+                if (cleaned.length === 4) {
+                  setTimeout(() => handlePinChange(), 120);
+                }
               }}
-            >
-              <Text
-                className="text-2xl font-bold text-center"
-                style={{
-                  fontFamily: "Inter_700Bold",
-                  color: Colors.textPrimary,
-                }}
-              >
-                Change PIN
-              </Text>
-              <Pressable
-                onPress={() => setPinModalVisible(false)}
-                className="w-8 h-8 rounded-full items-center justify-center"
-                style={{
-                  backgroundColor: isDarkMode
-                    ? "rgba(139, 92, 246, 0.15)"
-                    : "#F3F4F6",
-                  position: "absolute",
-                  right: 0,
-                  top: 0,
-                }}
-              >
-                <X size={18} color={Colors.textPrimary} />
-              </Pressable>
-            </View>
+              keyboardType="number-pad"
+              maxLength={4}
+              caretHidden
+              style={{ position: "absolute", opacity: 0, width: 1, height: 1 }}
+            />
 
-            {/* Step indicator */}
-            <View className="flex-row justify-center items-center gap-2 mb-4">
-              <View
-                className="w-8 h-2 rounded-full"
-                style={{ backgroundColor: Colors.primary }}
-              />
-              <View
-                className="w-8 h-2 rounded-full"
-                style={{
-                  backgroundColor:
-                    pinStep === "new"
-                      ? Colors.primary
-                      : isDarkMode
-                        ? "rgba(255,255,255,0.2)"
-                        : "rgba(0,0,0,0.15)",
-                }}
-              />
-            </View>
+            {/* Header */}
+            <Pressable
+              style={{ position: "absolute", top: 20, right: 20, zIndex: 10, width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }}
+              onPress={() => setPinModalVisible(false)}
+            >
+              <X size={20} color="#FFFFFF" strokeWidth={2.5} />
+            </Pressable>
 
             <Text
-              className="text-center text-base mb-6"
-              style={{ color: Colors.textSecondary }}
+              style={{
+                fontFamily: "Inter_700Bold",
+                fontSize: 22,
+                color: "#FFFFFF",
+                textAlign: "center",
+                marginBottom: 6,
+                marginTop: 4,
+              }}
             >
-              {pinStep === "current"
-                ? "Confirm your old PIN"
-                : "Enter your new PIN"}
+              Change PIN
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 14,
+                color: "rgba(255,255,255,0.70)",
+                textAlign: "center",
+                marginBottom: 24,
+              }}
+            >
+              {pinStep === "current" ? "Enter your current PIN" : "Enter your new PIN"}
             </Text>
 
-            {/* PIN Input Display */}
-            <View className="flex-row justify-center mb-6 gap-3">
-              {[0, 1, 2, 3].map((index) => {
-                const currentValue =
-                  pinStep === "current" ? currentPin : newPin;
-                const isFilled = index < currentValue.length;
-                return (
-                  <View
-                    key={index}
-                    className="w-14 h-14 rounded-3xl items-center justify-center"
-                    style={{
-                      backgroundColor: isFilled
-                        ? Colors.primary
-                        : isDarkMode
-                          ? "rgba(139, 92, 246, 0.15)"
-                          : "#F3F4F6",
-                      borderWidth: 2,
-                      borderColor: isFilled ? Colors.primary : "transparent",
-                    }}
-                  >
-                    {isFilled && (
-                      <View
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: "#FFFFFF" }}
-                      />
-                    )}
-                  </View>
-                );
-              })}
+            {/* Step indicator */}
+            <View style={{ flexDirection: "row", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+              <View style={{ width: 32, height: 6, borderRadius: 3, backgroundColor: Colors.primary }} />
+              <View style={{ width: 32, height: 6, borderRadius: 3, backgroundColor: pinStep === "new" ? Colors.primary : "rgba(255,255,255,0.2)" }} />
             </View>
 
-            {/* Number Pad */}
-            <View className="mb-4">
-              <View className="flex-row justify-center gap-3 mb-3">
-                {[1, 2, 3].map((num) => (
-                  <Pressable
-                    key={num}
-                    onPress={() => {
-                      const currentValue =
-                        pinStep === "current" ? currentPin : newPin;
-                      if (currentValue.length < 4) {
-                        tapHaptic();
-                        handlePinInput(currentValue + num.toString());
-                      }
-                    }}
-                    className="w-16 h-16 rounded-3xl items-center justify-center"
-                    style={{
-                      backgroundColor: isDarkMode
-                        ? "rgba(139, 92, 246, 0.15)"
-                        : "#F3F4F6",
-                    }}
-                  >
-                    <Text
-                      className="text-2xl font-bold"
+            {/* PIN dots */}
+            <Pressable
+              style={{ alignItems: "center", marginBottom: 20 }}
+              onPress={() => pinInputRef.current?.focus()}
+            >
+              <View style={{ flexDirection: "row", gap: 20, justifyContent: "center", marginBottom: 16 }}>
+                {[0, 1, 2, 3].map((i) => {
+                  const val = pinStep === "current" ? currentPin : newPin;
+                  const isFilled = i < val.length;
+                  return (
+                    <View
+                      key={i}
                       style={{
-                        color: Colors.textPrimary,
-                        fontFamily: "Inter_700Bold",
+                        width: 18,
+                        height: 18,
+                        borderRadius: 9,
+                        borderWidth: 2,
+                        borderColor: "#FFFFFF",
+                        backgroundColor: isFilled ? "#FFFFFF" : "transparent",
                       }}
-                    >
-                      {num}
-                    </Text>
-                  </Pressable>
-                ))}
+                    />
+                  );
+                })}
               </View>
-              <View className="flex-row justify-center gap-3 mb-3">
-                {[4, 5, 6].map((num) => (
-                  <Pressable
-                    key={num}
-                    onPress={() => {
-                      const currentValue =
-                        pinStep === "current" ? currentPin : newPin;
-                      if (currentValue.length < 4) {
-                        tapHaptic();
-                        handlePinInput(currentValue + num.toString());
-                      }
-                    }}
-                    className="w-16 h-16 rounded-3xl items-center justify-center"
-                    style={{
-                      backgroundColor: isDarkMode
-                        ? "rgba(139, 92, 246, 0.15)"
-                        : "#F3F4F6",
-                    }}
-                  >
-                    <Text
-                      className="text-2xl font-bold"
-                      style={{
-                        color: Colors.textPrimary,
-                        fontFamily: "Inter_700Bold",
-                      }}
-                    >
-                      {num}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View className="flex-row justify-center gap-3 mb-3">
-                {[7, 8, 9].map((num) => (
-                  <Pressable
-                    key={num}
-                    onPress={() => {
-                      const currentValue =
-                        pinStep === "current" ? currentPin : newPin;
-                      if (currentValue.length < 4) {
-                        tapHaptic();
-                        handlePinInput(currentValue + num.toString());
-                      }
-                    }}
-                    className="w-16 h-16 rounded-3xl items-center justify-center"
-                    style={{
-                      backgroundColor: isDarkMode
-                        ? "rgba(139, 92, 246, 0.15)"
-                        : "#F3F4F6",
-                    }}
-                  >
-                    <Text
-                      className="text-2xl font-bold"
-                      style={{
-                        color: Colors.textPrimary,
-                        fontFamily: "Inter_700Bold",
-                      }}
-                    >
-                      {num}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View className="flex-row justify-center gap-3">
-                <View className="w-16 h-16" />
-                <Pressable
-                  onPress={() => {
-                    const currentValue =
-                      pinStep === "current" ? currentPin : newPin;
-                    if (currentValue.length < 4) {
-                      tapHaptic();
-                      handlePinInput(currentValue + "0");
-                    }
-                  }}
-                  className="w-16 h-16 rounded-3xl items-center justify-center"
-                  style={{
-                    backgroundColor: isDarkMode
-                      ? "rgba(139, 92, 246, 0.15)"
-                      : "#F3F4F6",
-                  }}
-                >
-                  <Text
-                    className="text-2xl font-bold"
-                    style={{
-                      color: Colors.textPrimary,
-                      fontFamily: "Inter_700Bold",
-                    }}
-                  >
-                    0
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    tapHaptic();
-                    const currentValue =
-                      pinStep === "current" ? currentPin : newPin;
-                    handlePinInput(currentValue.slice(0, -1));
-                  }}
-                  className="w-16 h-16 rounded-3xl items-center justify-center"
-                  style={{
-                    backgroundColor: isDarkMode
-                      ? "rgba(139, 92, 246, 0.15)"
-                      : "#F3F4F6",
-                  }}
-                >
-                  <X size={24} color={Colors.textPrimary} />
-                </Pressable>
-              </View>
-            </View>
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.55)",
+                  textAlign: "center",
+                }}
+              >
+                Tap here to open keyboard
+              </Text>
+            </Pressable>
 
+            {/* Confirm button */}
             <Pressable
               onPress={handlePinChange}
               disabled={
                 (pinStep === "current" && currentPin.length !== 4) ||
                 (pinStep === "new" && newPin.length !== 4)
               }
-              className="rounded-3xl overflow-hidden"
               style={{
                 opacity:
                   (pinStep === "current" && currentPin.length !== 4) ||
                   (pinStep === "new" && newPin.length !== 4)
-                    ? 0.5
+                    ? 0.45
                     : 1,
+                borderRadius: 20,
+                overflow: "hidden",
               }}
             >
               <LinearGradient
                 colors={Gradients.primary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={{ padding: 16, alignItems: "center" }}
+                style={{ padding: 16, alignItems: "center", borderRadius: 20 }}
               >
-                <Text
-                  className="text-white text-lg font-bold"
-                  style={{ fontFamily: "Inter_700Bold" }}
-                >
+                <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 16 }}>
                   {pinStep === "new" ? "Change PIN" : "Continue"}
                 </Text>
               </LinearGradient>
@@ -1626,10 +1495,10 @@ export default function SettingsScreen() {
         animationType="fade"
         onRequestClose={cancelReset}
       >
-        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
           <View
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[2],
               borderRadius: 24,
               padding: 24,
               width: "100%",
