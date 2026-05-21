@@ -96,12 +96,10 @@ export function WelcomeScreen() {
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 32,
-                  fontWeight: "700",
+                  fontSize: 22,
                   textAlign: "center",
-                  opacity: 0.98,
-                  letterSpacing: 0.3,
-                  lineHeight: 42,
+                  opacity: 0.92,
+                  letterSpacing: 0.2,
                 }}
               >
                 Welcome to Vocolens

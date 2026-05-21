@@ -163,44 +163,25 @@ export function MoodInsightScreen() {
               />
             </View>
 
-            {/* Personalized greeting */}
+            {/* Personalized greeting headline */}
             <Animated.View
-              entering={FadeIn.delay(60).duration(900).easing(SOFT)}
-              style={{ alignItems: "center", marginBottom: 4 }}
+              entering={FadeIn.delay(80).duration(900).easing(SOFT)}
+              style={{ alignItems: "center", marginBottom: 12 }}
             >
               <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.70)",
-                  fontSize: 14,
-                  letterSpacing: 0.3,
-                  textTransform: "uppercase",
-                }}
-              >
-                {userName
-                  ? `${getGreetingPrefix()}, ${userName} ✦`
-                  : `${getGreetingPrefix()} ✦`}
-              </Text>
-            </Animated.View>
-
-            {/* Insight Title */}
-            <Animated.View
-              entering={FadeIn.delay(100).duration(900).easing(SOFT)}
-              className="items-center mb-3"
-            >
-              <Text
-                className="text-center"
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
                   fontSize: 22,
+                  textAlign: "center",
                   opacity: 0.92,
                   letterSpacing: 0.2,
+                  lineHeight: 30,
                 }}
               >
                 {userName
-                  ? `Your voice matters, ${userName}.`
-                  : "We hear you"}
+                  ? `${getGreetingPrefix()}, ${userName} 👋`
+                  : `${getGreetingPrefix()} 👋`}
               </Text>
               <Text
                 style={{
@@ -208,7 +189,7 @@ export function MoodInsightScreen() {
                   color: "rgba(255,255,255,0.62)",
                   fontSize: 13,
                   textAlign: "center",
-                  marginTop: 6,
+                  marginTop: 5,
                   lineHeight: 20,
                   letterSpacing: 0.1,
                   maxWidth: 260,
