@@ -586,24 +586,18 @@ function InsightsContent({
             if (sorted.length === 0) return null;
             return (
               <View
-                className="rounded-2xl overflow-hidden mb-6"
+                className="rounded-3xl overflow-hidden mb-6"
                 style={{
                   backgroundColor: "rgba(255, 255, 255, 0.12)",
                   borderWidth: 2,
                   borderColor: "rgba(255, 255, 255, 0.20)",
+                  padding: 20,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 8,
                 }}
               >
-                <View
-                  style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderWidth: 2,
-                    borderColor: "rgba(255, 255, 255, 0.20)",
-                    borderRadius: BorderRadius.xxlarge,
-                    padding: 20,
-                    overflow: "hidden",
-                    ...Shadows.medium,
-                  }}
-                >
                   <View
                     style={{
                       flexDirection: "row",
@@ -672,7 +666,6 @@ function InsightsContent({
                       </View>
                     );
                   })}
-                </View>
               </View>
             );
           })()}
@@ -860,11 +853,14 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
       <View
         style={{
           backgroundColor: "rgba(255, 255, 255, 0.12)",
-          borderWidth: 1,
-          borderColor: hexToRgba(Colors.primary, 0.15),
+          borderWidth: 2,
+          borderColor: "rgba(255, 255, 255, 0.20)",
           borderRadius: BorderRadius.xxlarge,
           overflow: "hidden",
-          ...Shadows.medium,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
         }}
       >
         <View className="p-5">

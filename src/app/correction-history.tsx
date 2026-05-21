@@ -140,15 +140,19 @@ export default function CorrectionHistoryScreen() {
             <View
               style={{
                 flex: 1,
-                backgroundColor: hexToRgba(Colors.primary, 0.1),
-                borderRadius: 20,
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderRadius: 24,
                 padding: 16,
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
                 overflow: "hidden",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 8,
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <CheckCircle2 size={20} color="#22C55E" strokeWidth={2} />
               <Text
                 style={{
@@ -176,15 +180,19 @@ export default function CorrectionHistoryScreen() {
             <View
               style={{
                 flex: 1,
-                backgroundColor: hexToRgba(Colors.primary, 0.1),
-                borderRadius: 20,
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderRadius: 24,
                 padding: 16,
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
                 overflow: "hidden",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 8,
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
+              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <TrendingUp size={20} color={Colors.primary} strokeWidth={2} />
               <Text
                 style={{
