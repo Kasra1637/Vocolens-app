@@ -9,15 +9,14 @@ export const LANGUAGES: {
   native: string;
   flag: string;
 }[] = [
-  // ── Top 5 most popular (by global speaker count) ──
+  // ── Top 4 featured (shown before scroll) ──
   { code: "en", name: "English", native: "English", flag: "🇺🇸" },
   { code: "es", name: "Spanish", native: "Español", flag: "🇪🇸" },
-  { code: "zh-CN", name: "Chinese (Simplified)", native: "普通话", flag: "🇨🇳" },
-  { code: "hi", name: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
   { code: "fr", name: "French", native: "Français", flag: "🇫🇷" },
-  // ── All other supported languages (alphabetical) ──
-  { code: "zh-TW", name: "Chinese (Traditional)", native: "繁體中文", flag: "🇹🇼" },
   { code: "da", name: "Danish", native: "Dansk", flag: "🇩🇰" },
+  // ── All other supported languages (alphabetical) ──
+  { code: "zh-CN", name: "Chinese (Simplified)", native: "普通话", flag: "🇨🇳" },
+  { code: "zh-TW", name: "Chinese (Traditional)", native: "繁體中文", flag: "🇹🇼" },
   { code: "nl", name: "Dutch", native: "Nederlands", flag: "🇳🇱" },
   {
     code: "en-AU",
@@ -42,6 +41,7 @@ export const LANGUAGES: {
   { code: "nl-BE", name: "Flemish", native: "Vlaams", flag: "🇧🇪" },
   { code: "de", name: "German", native: "Deutsch", flag: "🇩🇪" },
   { code: "el", name: "Greek", native: "Ελληνικά", flag: "🇬🇷" },
+  { code: "hi", name: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
   { code: "id", name: "Indonesian", native: "Bahasa Indonesia", flag: "🇮🇩" },
   { code: "it", name: "Italian", native: "Italiano", flag: "🇮🇹" },
   { code: "ja", name: "Japanese", native: "日本語", flag: "🇯🇵" },

@@ -201,7 +201,7 @@ export function ReminderScreen() {
                   letterSpacing: 0.2,
                 }}
               >
-                {"We'll send you a reminder\nbefore your free trial ends."}
+                {"Your free trial ends soon.\nWe'll remind you first."}
               </Text>
             </Animated.View>
 

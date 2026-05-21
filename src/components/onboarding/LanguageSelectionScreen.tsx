@@ -161,7 +161,15 @@ export function LanguageSelectionScreen() {
           </View>
         </Animated.View>
 
-        {/* Language list — constrained to ~6 visible rows before scroll */}
+        {/* Continue button — positioned above the list for easy access */}
+        <Animated.View
+          entering={FadeIn.delay(200).duration(500).easing(SOFT)}
+          style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 6 }}
+        >
+          <OnboardingCTAButton onPress={handleContinue} label="Continue" />
+        </Animated.View>
+
+        {/* Language list — constrained to ~4 visible rows before scroll */}
         <Animated.View
           entering={FadeIn.delay(220).duration(500).easing(SOFT)}
           style={{ flex: 1 }}
@@ -278,13 +286,6 @@ export function LanguageSelectionScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* Continue button */}
-        <Animated.View
-          entering={FadeIn.delay(200).duration(500).easing(SOFT)}
-          style={{ paddingHorizontal: 24, paddingBottom: 48, paddingTop: 16 }}
-        >
-          <OnboardingCTAButton onPress={handleContinue} label="Continue" />
-        </Animated.View>
       </LinearGradient>
 
       {/* Progress bar + back button overlay */}
