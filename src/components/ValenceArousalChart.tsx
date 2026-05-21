@@ -239,7 +239,6 @@ export default function ValenceArousalChart({
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text style={{ fontSize: 16 }}>🗺️</Text>
             <Text
               style={{
                 fontFamily: "Inter_600SemiBold",
@@ -256,7 +255,7 @@ export default function ValenceArousalChart({
             style={{
               flexDirection: "row",
               backgroundColor: "rgba(255,255,255,0.07)",
-              borderRadius: 10,
+              borderRadius: 12,
               padding: 3,
             }}
           >
@@ -266,7 +265,7 @@ export default function ValenceArousalChart({
                 <Pressable
                   key={opt.id}
                   onPress={() => handleRangePress(opt.id)}
-                  style={{ borderRadius: 8, overflow: "hidden" }}
+                  style={{ borderRadius: 9, overflow: "hidden" }}
                 >
                   {isActive && (
                     <LinearGradient
@@ -276,11 +275,11 @@ export default function ValenceArousalChart({
                       style={{
                         position: "absolute",
                         inset: 0,
-                        borderRadius: 8,
+                        borderRadius: 9,
                       }}
                     />
                   )}
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 5 }}>
+                  <View style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
                     <Text
                       style={{
                         fontFamily: isActive

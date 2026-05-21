@@ -4,9 +4,7 @@ import {
   Text,
   Pressable,
   ActivityIndicator,
-  Platform,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -26,7 +24,6 @@ import {
 } from "lucide-react-native";
 import { useWeeklyReflection } from "@/lib/hooks";
 import { BorderRadius } from "@/lib/theme";
-import { GlassLayers, hexToRgba } from "@/lib/glass";
 
 interface WeeklyReflectionCardProps {
   primaryColor: string;
@@ -80,30 +77,11 @@ export function WeeklyReflectionCard({
           style={{
             borderRadius: BorderRadius.xxlarge,
             overflow: "hidden",
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
-            borderWidth: 1,
-            borderColor: "rgba(255, 255, 255, 0.2)",
-            shadowColor: dominantColor,
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.15,
-            shadowRadius: 16,
-            elevation: Platform.OS === "android" ? 0 : 6,
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
           }}
         >
-          <GlassLayers primaryColor={dominantColor} borderRadius={BorderRadius.xxlarge} />
-          {/* Subtle gradient overlay */}
-          <LinearGradient
-            colors={[`${dominantColor}18`, "rgba(255,255,255,0.0)"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-            }}
-          />
           <View style={{ padding: 20 }}>
             {/* Header Row */}
             <View className="flex-row items-center justify-between mb-4">
