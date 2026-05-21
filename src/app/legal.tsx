@@ -98,7 +98,11 @@ export default function LegalScreen() {
       <View className="px-5 mb-4">
         <View
           className="flex-row p-1 rounded-2xl"
-          style={{ backgroundColor: hexToRgba(Colors.primary, 0.12) }}
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
+          }}
         >
           {(
             [
@@ -116,18 +120,22 @@ export default function LegalScreen() {
               style={{
                 backgroundColor:
                   activeTab === key
-                    ? hexToRgba(Colors.primary, 0.2)
+                    ? "rgba(255, 255, 255, 0.18)"
                     : "transparent",
               }}
             >
-              <Icon size={14} color="#FFFFFF" strokeWidth={2} />
+              <Icon
+                size={14}
+                color={activeTab === key ? "#FFFFFF" : "rgba(255,255,255,0.55)"}
+                strokeWidth={2}
+              />
               <Text
                 style={{
                   fontFamily:
                     activeTab === key
                       ? "Inter_600SemiBold"
                       : "Inter_400Regular",
-                  color: "#FFFFFF",
+                  color: activeTab === key ? "#FFFFFF" : "rgba(255,255,255,0.55)",
                   fontSize: 13,
                   marginLeft: 6,
                 }}
@@ -177,13 +185,13 @@ function Section({
   primaryColor: string;
 }) {
   return (
-    <Animated.View entering={FadeInDown.duration(400)} className="mb-6">
+    <Animated.View entering={FadeInDown.duration(400)} className="mb-4">
       <View
         className="rounded-3xl p-5"
         style={{
-          backgroundColor: hexToRgba(primaryColor, 0.1),
-          borderWidth: 1,
-          borderColor: hexToRgba(primaryColor, 0.18),
+          backgroundColor: "rgba(255, 255, 255, 0.12)",
+          borderWidth: 2,
+          borderColor: "rgba(255, 255, 255, 0.20)",
           overflow: "hidden",
         }}
       >
@@ -322,9 +330,9 @@ function PrivacyPolicy({
         <View
           className="rounded-3xl p-5"
           style={{
-            backgroundColor: hexToRgba(primaryColor, 0.07),
-            borderWidth: 1,
-            borderColor: hexToRgba(primaryColor, 0.12),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
             overflow: "hidden",
           }}
         >
@@ -609,9 +617,9 @@ function TermsOfService({
         <View
           className="rounded-3xl p-5"
           style={{
-            backgroundColor: hexToRgba(primaryColor, 0.07),
-            borderWidth: 1,
-            borderColor: hexToRgba(primaryColor, 0.12),
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 2,
+            borderColor: "rgba(255, 255, 255, 0.20)",
             overflow: "hidden",
           }}
         >
