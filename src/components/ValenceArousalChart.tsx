@@ -28,6 +28,9 @@ import Svg, {
   Text as SvgText,
   G,
   Path,
+  Defs,
+  LinearGradient as SvgLinearGradient,
+  Stop,
 } from "react-native-svg";
 import Animated, {
   FadeIn,
@@ -45,6 +48,7 @@ import {
   EMOTION_EMOJIS,
   EmotionType,
 } from "@/lib/types";
+import { useEmotionCorrectionStore, CorrectionRecord } from "@/lib/state/emotion-correction-store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,6 +65,15 @@ interface ChartPoint {
   title: string;
   date: string;
   isUserCorrected: boolean;
+  entryId: string;
+}
+
+/** Ghost point representing the AI's original prediction before user correction */
+interface GhostPoint {
+  aiX: number; // SVG pixel x for AI's original valence
+  aiY: number; // SVG pixel y for AI's original arousal
+  userX: number; // SVG pixel x for user-corrected valence
+  userY: number; // SVG pixel y for user-corrected arousal
   entryId: string;
 }
 
@@ -151,6 +164,11 @@ export default function ValenceArousalChart({
 
   const days = range === "7D" ? 7 : range === "14D" ? 14 : 30;
 
+  // Access correction store for AI vs User comparison
+  const corrections = useEmotionCorrectionStore((s) => s.corrections);
+  const getConfirmationRate = useEmotionCorrectionStore((s) => s.getConfirmationRate);
+  const getCorrectionPatterns = useEmotionCorrectionStore((s) => s.getCorrectionPatterns);
+
   const points: ChartPoint[] = useMemo(() => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
@@ -205,6 +223,112 @@ export default function ValenceArousalChart({
       unpleasantCalm,
     };
   }, [points]);
+
+  // ─── Ghost Points: AI original positions for corrected entries ─────────────
+  const ghostPoints: GhostPoint[] = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+
+    // Build a map of entryId → correction record (only true corrections where AI ≠ user)
+    const correctionMap = new Map<string, CorrectionRecord>();
+    corrections.forEach((c) => {
+      const cDate = new Date(c.timestamp);
+      if (cDate >= cutoff) {
+        // Only include if there's an actual difference (not confirmations)
+        const hasDiff =
+          c.aiEmotion !== c.userEmotion ||
+          Math.abs(c.aiValence - c.userValence) > 3 ||
+          Math.abs(c.aiArousal - c.userArousal) > 3;
+        if (hasDiff) {
+          correctionMap.set(c.entryId, c);
+        }
+      }
+    });
+
+    return points
+      .filter((p) => correctionMap.has(p.entryId))
+      .map((p) => {
+        const c = correctionMap.get(p.entryId)!;
+        // AI original position → SVG coords
+        const aiX = ((c.aiValence + 100) / 200) * CHART_H;
+        const aiY = CHART_H - (c.aiArousal / 100) * CHART_H;
+        return {
+          aiX,
+          aiY,
+          userX: p.x,
+          userY: p.y,
+          entryId: p.entryId,
+        };
+      });
+  }, [points, corrections, days, CHART_H]);
+
+  // ─── AI Accuracy Stats for the current time range ──────────────────────────
+  const aiAccuracyStats = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+
+    const rangeCorrections = corrections.filter(
+      (c) => new Date(c.timestamp) >= cutoff
+    );
+
+    if (rangeCorrections.length === 0) return null;
+
+    const confirmations = rangeCorrections.filter(
+      (c) =>
+        c.aiEmotion === c.userEmotion &&
+        Math.abs(c.aiValence - c.userValence) <= 3 &&
+        Math.abs(c.aiArousal - c.userArousal) <= 3
+    );
+
+    const actualCorrections = rangeCorrections.filter(
+      (c) =>
+        c.aiEmotion !== c.userEmotion ||
+        Math.abs(c.aiValence - c.userValence) > 3 ||
+        Math.abs(c.aiArousal - c.userArousal) > 3
+    );
+
+    const confirmationRate = rangeCorrections.length > 0
+      ? confirmations.length / rangeCorrections.length
+      : 1;
+
+    // Average drift for actual corrections only
+    let avgValenceDrift = 0;
+    let avgArousalDrift = 0;
+    if (actualCorrections.length > 0) {
+      avgValenceDrift = Math.round(
+        actualCorrections.reduce((sum, c) => sum + (c.userValence - c.aiValence), 0) /
+          actualCorrections.length
+      );
+      avgArousalDrift = Math.round(
+        actualCorrections.reduce((sum, c) => sum + (c.userArousal - c.aiArousal), 0) /
+          actualCorrections.length
+      );
+    }
+
+    // Top pattern in this time range
+    const patternMap = new Map<string, number>();
+    actualCorrections.forEach((c) => {
+      const key = `${c.aiEmotion}→${c.userEmotion}`;
+      patternMap.set(key, (patternMap.get(key) || 0) + 1);
+    });
+    let topPattern: { from: string; to: string; count: number } | null = null;
+    patternMap.forEach((count, key) => {
+      if (!topPattern || count > topPattern.count) {
+        const [from, to] = key.split("→");
+        topPattern = { from, to, count };
+      }
+    });
+
+    return {
+      totalFeedback: rangeCorrections.length,
+      confirmations: confirmations.length,
+      corrections: actualCorrections.length,
+      confirmationRate,
+      avgValenceDrift,
+      avgArousalDrift,
+      topPattern,
+    };
+  }, [corrections, days]);
 
   const dominantQuadrant = useMemo(() => {
     if (points.length === 0) return null;
@@ -315,6 +439,7 @@ export default function ValenceArousalChart({
             <ChartSvg
               chartSize={CHART_H}
               points={points}
+              ghostPoints={ghostPoints}
               selectedPoint={selectedPoint}
               onPointPress={(p) => {
                 tapHaptic();
@@ -502,6 +627,11 @@ export default function ValenceArousalChart({
               </Text>
             </Animated.View>
           )}
+
+          {/* AI vs You — Accuracy Summary */}
+          {aiAccuracyStats && aiAccuracyStats.totalFeedback >= 1 && (
+            <AIAccuracySummary stats={aiAccuracyStats} ghostCount={ghostPoints.length} />
+          )}
         </Animated.View>
       )}
     </View>
@@ -513,12 +643,14 @@ export default function ValenceArousalChart({
 function ChartSvg({
   chartSize,
   points,
+  ghostPoints,
   selectedPoint,
   onPointPress,
   primaryColor,
 }: {
   chartSize: number;
   points: ChartPoint[];
+  ghostPoints: GhostPoint[];
   selectedPoint: ChartPoint | null;
   onPointPress: (p: ChartPoint) => void;
   primaryColor: string;
@@ -587,6 +719,43 @@ function ChartSvg({
 
       {/* Centre crosshair dot */}
       <Circle cx={half} cy={half} r={3} fill="rgba(255,255,255,0.2)" />
+
+      {/* Ghost points: AI original positions with drift lines */}
+      {ghostPoints.map((gp, i) => (
+        <G key={`ghost-${gp.entryId}-${i}`}>
+          {/* Drift line from AI position to user-corrected position */}
+          <Line
+            x1={gp.aiX}
+            y1={gp.aiY}
+            x2={gp.userX}
+            y2={gp.userY}
+            stroke="rgba(255,255,255,0.30)"
+            strokeWidth={1.5}
+            strokeDasharray="3,3"
+          />
+          {/* AI ghost dot (hollow, dashed outline) */}
+          <Circle
+            cx={gp.aiX}
+            cy={gp.aiY}
+            r={8}
+            fill="rgba(255,255,255,0.06)"
+            stroke="rgba(255,255,255,0.35)"
+            strokeWidth={1.5}
+            strokeDasharray="3,2"
+          />
+          {/* Tiny "AI" label next to ghost */}
+          <SvgText
+            x={gp.aiX}
+            y={gp.aiY + 3}
+            fontSize={7}
+            fill="rgba(255,255,255,0.5)"
+            textAnchor="middle"
+            fontFamily="Inter_600SemiBold"
+          >
+            AI
+          </SvgText>
+        </G>
+      ))}
 
       {/* Data points */}
       {points.map((p, i) => {
@@ -825,6 +994,249 @@ function VABadge({
         {unit}
       </Text>
     </View>
+  );
+}
+
+// ─── AI Accuracy Summary ──────────────────────────────────────────────────────
+
+interface AIAccuracyStatsData {
+  totalFeedback: number;
+  confirmations: number;
+  corrections: number;
+  confirmationRate: number;
+  avgValenceDrift: number;
+  avgArousalDrift: number;
+  topPattern: { from: string; to: string; count: number } | null;
+}
+
+function AIAccuracySummary({
+  stats,
+  ghostCount,
+}: {
+  stats: AIAccuracyStatsData;
+  ghostCount: number;
+}) {
+  const pct = Math.round(stats.confirmationRate * 100);
+
+  // Drift description
+  const getDriftDescription = () => {
+    const parts: string[] = [];
+    if (Math.abs(stats.avgValenceDrift) > 3) {
+      parts.push(
+        stats.avgValenceDrift > 0
+          ? `more pleasant than AI thought (+${stats.avgValenceDrift})`
+          : `less pleasant than AI thought (${stats.avgValenceDrift})`
+      );
+    }
+    if (Math.abs(stats.avgArousalDrift) > 3) {
+      parts.push(
+        stats.avgArousalDrift > 0
+          ? `more activated (+${stats.avgArousalDrift})`
+          : `calmer (${stats.avgArousalDrift})`
+      );
+    }
+    if (parts.length === 0) return null;
+    return `On average, you feel ${parts.join(" and ")}`;
+  };
+
+  const driftDesc = getDriftDescription();
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(200).duration(400)}
+      style={{
+        marginHorizontal: 20,
+        marginBottom: 20,
+        padding: 16,
+        borderRadius: 16,
+        backgroundColor: "rgba(255, 255, 255, 0.12)",
+        borderWidth: 2,
+        borderColor: "rgba(255, 255, 255, 0.20)",
+      }}
+    >
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 12,
+        }}
+      >
+        <Text style={{ fontSize: 14 }}>🤖</Text>
+        <Text
+          style={{
+            fontFamily: "Inter_600SemiBold",
+            fontSize: 14,
+            color: "#FFFFFF",
+          }}
+        >
+          AI vs You
+        </Text>
+        {ghostCount > 0 && (
+          <View
+            style={{
+              marginLeft: "auto",
+              paddingHorizontal: 7,
+              paddingVertical: 2,
+              borderRadius: 8,
+              backgroundColor: "rgba(255,255,255,0.12)",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.20)",
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Inter_500Medium",
+                fontSize: 10,
+                color: "rgba(255,255,255,0.7)",
+              }}
+            >
+              {ghostCount} drift{ghostCount !== 1 ? "s" : ""} shown
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Confirmation Rate Bar */}
+      <View style={{ marginBottom: 12 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginBottom: 6,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter_500Medium",
+              fontSize: 12,
+              color: "rgba(255,255,255,0.7)",
+            }}
+          >
+            AI matched your feeling
+          </Text>
+          <Text
+            style={{
+              fontFamily: "Inter_700Bold",
+              fontSize: 12,
+              color: "#FFFFFF",
+            }}
+          >
+            {pct}%
+          </Text>
+        </View>
+        <View
+          style={{
+            height: 6,
+            borderRadius: 3,
+            backgroundColor: "rgba(255,255,255,0.1)",
+            overflow: "hidden",
+          }}
+        >
+          <View
+            style={{
+              width: `${pct}%`,
+              height: "100%",
+              backgroundColor: "#FFFFFF",
+              opacity: 0.85,
+              borderRadius: 3,
+            }}
+          />
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginTop: 4,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter_400Regular",
+              fontSize: 10,
+              color: "rgba(255,255,255,0.4)",
+            }}
+          >
+            {stats.confirmations} confirmed
+          </Text>
+          <Text
+            style={{
+              fontFamily: "Inter_400Regular",
+              fontSize: 10,
+              color: "rgba(255,255,255,0.4)",
+            }}
+          >
+            {stats.corrections} adjusted
+          </Text>
+        </View>
+      </View>
+
+      {/* Drift description */}
+      {driftDesc && (
+        <View
+          style={{
+            backgroundColor: "rgba(255,255,255,0.07)",
+            borderRadius: 10,
+            padding: 10,
+            marginBottom: stats.topPattern ? 10 : 0,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter_400Regular",
+              fontSize: 12,
+              color: "rgba(255,255,255,0.8)",
+              lineHeight: 18,
+            }}
+          >
+            {driftDesc}
+          </Text>
+        </View>
+      )}
+
+      {/* Top pattern callout */}
+      {stats.topPattern && stats.topPattern.count >= 2 && (
+        <View
+          style={{
+            backgroundColor: "rgba(255,255,255,0.07)",
+            borderRadius: 10,
+            padding: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Inter_500Medium",
+              fontSize: 11,
+              color: "rgba(255,255,255,0.5)",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              marginBottom: 4,
+            }}
+          >
+            Recurring pattern
+          </Text>
+          <Text
+            style={{
+              fontFamily: "Inter_400Regular",
+              fontSize: 12,
+              color: "rgba(255,255,255,0.85)",
+              lineHeight: 18,
+            }}
+          >
+            AI says{" "}
+            <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", textTransform: "capitalize" }}>
+              {stats.topPattern.from}
+            </Text>
+            {" → "}you feel{" "}
+            <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", textTransform: "capitalize" }}>
+              {stats.topPattern.to}
+            </Text>
+            {" "}({stats.topPattern.count}×)
+          </Text>
+        </View>
+      )}
+    </Animated.View>
   );
 }
 
