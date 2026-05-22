@@ -15,7 +15,9 @@ import {
   TextInput,
   Dimensions,
   ActivityIndicator,
+  PanResponder,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 import Animated, {
   FadeInUp,
   FadeIn,
@@ -39,7 +41,7 @@ import { transcribeAudioFile } from "@/lib/deepgram-transcription-service";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeColors, getThemeGradients } from "@/lib/theme";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { hexToRgba } from "@/lib/glass";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const ALL_EMOTIONS: EmotionType[] = [
@@ -217,8 +219,8 @@ export default function EmotionCorrectionModal({
   // ── Glassmorphic card style — matches Insights screen cards exactly ─────────
   const glassCard = {
     backgroundColor: "rgba(255, 255, 255, 0.12)",
-    borderWidth: 1,
-    borderColor: hexToRgba(Colors.primary, 0.15),
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.20)",
     borderRadius: 20,
     overflow: "hidden" as const,
   };
@@ -250,7 +252,7 @@ export default function EmotionCorrectionModal({
             paddingTop: insets.top + 16,
             paddingBottom: 14,
             borderBottomWidth: 1,
-            borderBottomColor: hexToRgba(Colors.primary, 0.12),
+            borderBottomColor: "rgba(255, 255, 255, 0.15)",
           }}
         >
           <Pressable
@@ -259,7 +261,9 @@ export default function EmotionCorrectionModal({
               width: 36,
               height: 36,
               borderRadius: 18,
-              backgroundColor: hexToRgba(Colors.primary, 0.15),
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              borderWidth: 1.5,
+              borderColor: "rgba(255, 255, 255, 0.20)",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -308,7 +312,6 @@ export default function EmotionCorrectionModal({
                 AI detected
               </Text>
               <View style={{ ...glassCard, marginBottom: 24 }}>
-                <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                 <View style={{ padding: 18 }}>
                   <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
                     <Text style={{ fontSize: 40, marginRight: 14 }}>{aiDef.emoji}</Text>
@@ -386,9 +389,9 @@ export default function EmotionCorrectionModal({
                       key={emotion}
                       onPress={() => handleSelectReplacement(emotion)}
                       style={{
-                        backgroundColor: "rgba(255,255,255,0.08)",
-                        borderWidth: 1,
-                        borderColor: hexToRgba(Colors.primary, 0.15),
+                        backgroundColor: "rgba(255,255,255,0.12)",
+                        borderWidth: 2,
+                        borderColor: "rgba(255, 255, 255, 0.20)",
                         borderRadius: 24,
                         paddingHorizontal: 16,
                         paddingVertical: 10,
@@ -444,7 +447,6 @@ export default function EmotionCorrectionModal({
                 Drag the sliders to refine your emotional state
               </Text>
               <View style={{ ...glassCard, marginBottom: 20 }}>
-                <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                 <View style={{ padding: 18 }}>
                   {/* Valence slider */}
                   <View style={{ marginBottom: 20 }}>
@@ -504,7 +506,6 @@ export default function EmotionCorrectionModal({
                     You selected
                   </Text>
                   <View style={{ ...glassCard }}>
-                    <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                     <View
                       style={{
                         padding: 16,
@@ -586,7 +587,7 @@ export default function EmotionCorrectionModal({
                       minHeight: 90,
                       textAlignVertical: "top",
                       borderWidth: 1,
-                      borderColor: hexToRgba(Colors.primary, 0.15),
+                      borderColor: "rgba(255, 255, 255, 0.20)",
                     }}
                   />
                 </Animated.View>
@@ -602,7 +603,6 @@ export default function EmotionCorrectionModal({
                     padding: 20,
                   }}
                 >
-                  <GlassLayers primaryColor={Colors.primary} borderRadius={20} />
                   {isRecordingVoice ? (
                     <Pressable onPress={stopVoiceRecording} style={{ alignItems: "center" }}>
                       <ActivityIndicator size="small" color="#FFFFFF" />
@@ -647,25 +647,22 @@ export default function EmotionCorrectionModal({
         </ScrollView>
 
 
-        {/* ── Bottom action bar (glassmorphic) ── */}
+        {/* ── Bottom action bar ── */}
         <View
           style={{
             position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
-            overflow: "hidden",
-            backgroundColor: "rgba(255,255,255,0.06)",
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderTopWidth: 1,
-            borderTopColor: hexToRgba(Colors.primary, 0.15),
+            borderTopColor: "rgba(255, 255, 255, 0.20)",
             paddingHorizontal: 20,
             paddingTop: 16,
             paddingBottom: insets.bottom + 16,
           }}
         >
-          <GlassLayers primaryColor={Colors.primary} borderRadius={0} blur blurIntensity={80} />
 
-          {/* Step: initial — three buttons */}
           {step === "initial" && (
             <View style={{ flexDirection: "row", gap: 10 }}>
               {/* Not quite right */}
@@ -673,12 +670,12 @@ export default function EmotionCorrectionModal({
                 onPress={handleReject}
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.15),
+                  borderWidth: 2,
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 }}
               >
                 <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>
@@ -690,29 +687,29 @@ export default function EmotionCorrectionModal({
                 onPress={handleSliderAdjustment}
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.15),
+                  borderWidth: 2,
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 }}
               >
                 <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>
                   Adjust
                 </Text>
               </Pressable>
-              {/* Yes, that's me — elevated glass with theme border */}
+              {/* Yes, that's me — slightly elevated */}
               <Pressable
                 onPress={handleConfirm}
                 style={{
                   flex: 1,
-                  backgroundColor: hexToRgba(Colors.primary, 0.20),
+                  backgroundColor: "rgba(255, 255, 255, 0.22)",
                   borderRadius: 16,
                   paddingVertical: 15,
                   alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.40),
+                  borderWidth: 2,
+                  borderColor: "rgba(255, 255, 255, 0.40)",
                 }}
               >
                 <Text style={{ fontFamily: "Inter_700Bold", fontSize: 13, color: "#FFFFFF" }}>
@@ -727,12 +724,12 @@ export default function EmotionCorrectionModal({
             <Pressable
               onPress={() => setStep("initial")}
               style={{
-                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
                 borderRadius: 16,
                 paddingVertical: 16,
                 alignItems: "center",
-                borderWidth: 1,
-                borderColor: hexToRgba(Colors.primary, 0.15),
+                borderWidth: 2,
+                borderColor: "rgba(255, 255, 255, 0.20)",
               }}
             >
               <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#FFFFFF" }}>
@@ -769,12 +766,12 @@ export default function EmotionCorrectionModal({
                 }}
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
                   borderRadius: 16,
                   paddingVertical: 16,
                   alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.15),
+                  borderWidth: 2,
+                  borderColor: "rgba(255, 255, 255, 0.20)",
                 }}
               >
                 <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#FFFFFF" }}>
@@ -785,9 +782,9 @@ export default function EmotionCorrectionModal({
                 onPress={handleSubmitWithReason}
                 style={{
                   flex: 2,
-                  backgroundColor: hexToRgba(Colors.primary, 0.20),
-                  borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.40),
+                  backgroundColor: "rgba(255, 255, 255, 0.22)",
+                  borderWidth: 2,
+                  borderColor: "rgba(255, 255, 255, 0.40)",
                   borderRadius: 16,
                   paddingVertical: 16,
                   alignItems: "center",
@@ -807,7 +804,7 @@ export default function EmotionCorrectionModal({
 }
 
 
-// ── GlassSlider — white track, white thumb ────────────────────────────────
+// ── GlassSlider — PanResponder drag with haptic feedback ─────────────────
 
 function GlassSlider({
   value,
@@ -820,21 +817,66 @@ function GlassSlider({
   max: number;
   onChange: (v: number) => void;
 }) {
-  const [localVal, setLocalVal] = useState(value);
-  const trackWidth = SCREEN_W - 96; // padding 20 each side + card padding 18 each side
-  const normalized = (localVal - min) / (max - min);
-  const thumbPos = normalized * trackWidth;
+  const trackWidth = SCREEN_W - 96; // 20px page padding × 2 + 18px card padding × 2 = 76, leave margin
+  const clamp = (v: number) => Math.max(min, Math.min(max, v));
+  const toPixel = (v: number) => ((v - min) / (max - min)) * trackWidth;
+  const toValue = (px: number) => Math.round(min + (px / trackWidth) * (max - min));
+
+  const currentVal = useRef(value);
+  const lastHapticVal = useRef(value);
+  const [displayVal, setDisplayVal] = useState(value);
+
+  // Keep in sync if parent changes the value externally (e.g. reset)
+  const thumbX = useRef(toPixel(value));
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        // Allow tap-to-set as well
+        const x = evt.nativeEvent.locationX;
+        const clamped = clamp(toValue(x));
+        thumbX.current = toPixel(clamped);
+        currentVal.current = clamped;
+        lastHapticVal.current = clamped;
+        setDisplayVal(clamped);
+        onChange(clamped);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        const newX = clamp(thumbX.current + gestureState.dx, 0, trackWidth);
+        // dx is accumulating from grant position; recalc from raw locationX isn't available here,
+        // so we track from the stored thumbX at grant time + cumulative dx
+        const rawX = clamp(toPixel(currentVal.current) + gestureState.dx, 0, trackWidth);
+        const newVal = clamp(toValue(rawX));
+        setDisplayVal(newVal);
+        onChange(newVal);
+        // Fire haptic every 5 units of change for satisfying drag feedback
+        if (Math.abs(newVal - lastHapticVal.current) >= 5) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          lastHapticVal.current = newVal;
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const rawX = clamp(toPixel(currentVal.current) + gestureState.dx, 0, trackWidth);
+        const finalVal = clamp(toValue(rawX));
+        thumbX.current = toPixel(finalVal);
+        currentVal.current = finalVal;
+        setDisplayVal(finalVal);
+        onChange(finalVal);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      },
+    })
+  ).current;
+
+  const normalized = (displayVal - min) / (max - min);
+  const thumbLeft = Math.max(0, normalized * trackWidth - 11);
 
   return (
-    <Pressable
-      onPress={(e) => {
-        const x = e.nativeEvent.locationX;
-        const v = Math.round(min + (x / trackWidth) * (max - min));
-        const clamped = Math.max(min, Math.min(max, v));
-        setLocalVal(clamped);
-        onChange(clamped);
-      }}
-      style={{ height: 36, justifyContent: "center" }}
+    <View
+      {...panResponder.panHandlers}
+      style={{ height: 40, justifyContent: "center" }}
     >
       {/* Track background */}
       <View
@@ -860,21 +902,21 @@ function GlassSlider({
       <View
         style={{
           position: "absolute",
-          left: Math.max(0, thumbPos - 11),
-          width: 22,
-          height: 22,
-          borderRadius: 11,
+          left: thumbLeft,
+          width: 26,
+          height: 26,
+          borderRadius: 13,
           backgroundColor: "#FFFFFF",
           borderWidth: 3,
-          borderColor: "rgba(255,255,255,0.6)",
+          borderColor: "rgba(255,255,255,0.5)",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.18,
+          shadowOpacity: 0.25,
           shadowRadius: 4,
-          elevation: 4,
+          elevation: 5,
         }}
       />
-    </Pressable>
+    </View>
   );
 }
 
