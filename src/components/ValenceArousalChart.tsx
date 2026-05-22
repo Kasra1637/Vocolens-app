@@ -230,85 +230,76 @@ export default function ValenceArousalChart({
     >
       {/* Header */}
       <View style={{ padding: 20, paddingBottom: 0 }}>
-        <View
+        <Text
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
+            fontFamily: "Inter_600SemiBold",
+            fontSize: 17,
+            color: "#FFFFFF",
             marginBottom: 4,
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text
-              style={{
-                fontFamily: "Inter_600SemiBold",
-                fontSize: 17,
-                color: "#FFFFFF",
-              }}
-            >
-              Emotional Landscape
-            </Text>
-          </View>
-
-          {/* Range Selector */}
-          <View
-            style={{
-              flexDirection: "row",
-              backgroundColor: "rgba(255,255,255,0.07)",
-              borderRadius: 12,
-              padding: 3,
-            }}
-          >
-            {RANGE_OPTIONS.map((opt) => {
-              const isActive = range === opt.id;
-              return (
-                <Pressable
-                  key={opt.id}
-                  onPress={() => handleRangePress(opt.id)}
-                  style={{ borderRadius: 9, overflow: "hidden" }}
-                >
-                  {isActive && (
-                    <LinearGradient
-                      colors={[primaryColor, `${primaryColor}BB`]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        borderRadius: 9,
-                      }}
-                    />
-                  )}
-                  <View style={{ paddingHorizontal: 12, paddingVertical: 6 }}>
-                    <Text
-                      style={{
-                        fontFamily: isActive
-                          ? "Inter_600SemiBold"
-                          : "Inter_400Regular",
-                        fontSize: 12,
-                        color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.45)",
-                      }}
-                    >
-                      {opt.label}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+          Emotional Landscape
+        </Text>
 
         <Text
           style={{
             fontFamily: "Inter_400Regular",
             fontSize: 12,
             color: "rgba(255,255,255,0.45)",
-            marginBottom: 16,
+            marginBottom: 14,
           }}
         >
           Where your emotions fall on the calm/activated × pleasant/unpleasant
           grid
         </Text>
+
+        {/* Range Selector — placed under the subtitle */}
+        <View
+          style={{
+            flexDirection: "row",
+            backgroundColor: "rgba(255,255,255,0.07)",
+            borderRadius: 12,
+            padding: 3,
+            marginBottom: 16,
+          }}
+        >
+          {RANGE_OPTIONS.map((opt) => {
+            const isActive = range === opt.id;
+            return (
+              <Pressable
+                key={opt.id}
+                onPress={() => handleRangePress(opt.id)}
+                style={{ flex: 1, borderRadius: 9, overflow: "hidden" }}
+              >
+                {isActive && (
+                  <LinearGradient
+                    colors={[primaryColor, `${primaryColor}BB`]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: 9,
+                    }}
+                  />
+                )}
+                <View style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: "center" }}>
+                  <Text
+                    style={{
+                      fontFamily: isActive
+                        ? "Inter_600SemiBold"
+                        : "Inter_400Regular",
+                      fontSize: 13,
+                      color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.45)",
+                    }}
+                  >
+                    {opt.label}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       {/* Chart Body */}
@@ -399,16 +390,16 @@ export default function ValenceArousalChart({
                       paddingHorizontal: 7,
                       paddingVertical: 3,
                       borderRadius: 8,
-                      backgroundColor: `${primaryColor}30`,
+                      backgroundColor: "rgba(255,255,255,0.15)",
                       borderWidth: 1,
-                      borderColor: `${primaryColor}60`,
+                      borderColor: "rgba(255,255,255,0.30)",
                     }}
                   >
                     <Text
                       style={{
                         fontFamily: "Inter_600SemiBold",
                         fontSize: 9,
-                        color: primaryColor,
+                        color: "#FFFFFF",
                         textTransform: "uppercase",
                         letterSpacing: 0.5,
                       }}
@@ -439,7 +430,6 @@ export default function ValenceArousalChart({
                   }
                   unit=""
                   isText
-                  color={selectedPoint.color}
                 />
               </View>
             </Animated.View>
@@ -486,7 +476,7 @@ export default function ValenceArousalChart({
                     paddingHorizontal: 8,
                     paddingVertical: 2,
                     borderRadius: 8,
-                    backgroundColor: `${dominantQuadrant.color}25`,
+                    backgroundColor: "rgba(255,255,255,0.15)",
                   }}
                 >
                   <Text

@@ -5,7 +5,7 @@
  * the AI's emotion analysis. Full glassmorphic design matching the app theme.
  */
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -699,7 +699,7 @@ export default function EmotionCorrectionModal({
 }
 
 
-// ── GlassSlider — PanResponder drag with haptic feedback ─────────────────
+// ── GlassSlider — smooth PanResponder drag with haptic feedback ───────────────
 
 function GlassSlider({
   value,
@@ -712,52 +712,56 @@ function GlassSlider({
   max: number;
   onChange: (v: number) => void;
 }) {
-  const trackWidth = SCREEN_W - 96; // 20px page padding × 2 + 18px card padding × 2 = 76, leave margin
-  const clamp = (v: number) => Math.max(min, Math.min(max, v));
+  const trackWidth = SCREEN_W - 96; // 20px page padding × 2 + 18px card padding × 2
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   const toPixel = (v: number) => ((v - min) / (max - min)) * trackWidth;
-  const toValue = (px: number) => Math.round(min + (px / trackWidth) * (max - min));
+  const toValue = (px: number) => Math.round(min + (clamp(px, 0, trackWidth) / trackWidth) * (max - min));
 
-  const currentVal = useRef(value);
+  // Track the pixel position of the thumb; initialise from the prop value
+  const thumbPx = useRef(toPixel(value));
   const lastHapticVal = useRef(value);
   const [displayVal, setDisplayVal] = useState(value);
 
-  // Keep in sync if parent changes the value externally (e.g. reset)
-  const thumbX = useRef(toPixel(value));
+  // Sync thumb position if parent resets value externally
+  useEffect(() => {
+    thumbPx.current = toPixel(value);
+    setDisplayVal(value);
+  }, []); // intentionally run once on mount only
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      // Prevent parent scroll from stealing the gesture
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
       onPanResponderGrant: (evt) => {
-        // Allow tap-to-set as well
-        const x = evt.nativeEvent.locationX;
-        const clamped = clamp(toValue(x));
-        thumbX.current = toPixel(clamped);
-        currentVal.current = clamped;
-        lastHapticVal.current = clamped;
-        setDisplayVal(clamped);
-        onChange(clamped);
+        // Tap-to-seek: position the thumb directly under the finger
+        const tapX = clamp(evt.nativeEvent.locationX, 0, trackWidth);
+        thumbPx.current = tapX;
+        const newVal = toValue(tapX);
+        lastHapticVal.current = newVal;
+        setDisplayVal(newVal);
+        onChange(newVal);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       },
       onPanResponderMove: (_, gestureState) => {
-        const newX = clamp(thumbX.current + gestureState.dx, 0, trackWidth);
-        // dx is accumulating from grant position; recalc from raw locationX isn't available here,
-        // so we track from the stored thumbX at grant time + cumulative dx
-        const rawX = clamp(toPixel(currentVal.current) + gestureState.dx, 0, trackWidth);
-        const newVal = clamp(toValue(rawX));
+        // Add cumulative dx to the pixel position captured at grant time
+        const rawPx = clamp(thumbPx.current + gestureState.dx, 0, trackWidth);
+        const newVal = toValue(rawPx);
         setDisplayVal(newVal);
         onChange(newVal);
-        // Fire haptic every 5 units of change for satisfying drag feedback
+        // Haptic tick every 5 units for satisfying drag feedback
         if (Math.abs(newVal - lastHapticVal.current) >= 5) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           lastHapticVal.current = newVal;
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        const rawX = clamp(toPixel(currentVal.current) + gestureState.dx, 0, trackWidth);
-        const finalVal = clamp(toValue(rawX));
-        thumbX.current = toPixel(finalVal);
-        currentVal.current = finalVal;
+        // Commit the final position so next drag continues from here
+        const finalPx = clamp(thumbPx.current + gestureState.dx, 0, trackWidth);
+        thumbPx.current = finalPx;
+        const finalVal = toValue(finalPx);
         setDisplayVal(finalVal);
         onChange(finalVal);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -765,20 +769,20 @@ function GlassSlider({
     })
   ).current;
 
-  const normalized = (displayVal - min) / (max - min);
-  const thumbLeft = Math.max(0, normalized * trackWidth - 11);
+  const normalized = clamp((displayVal - min) / (max - min), 0, 1);
+  const thumbLeft = normalized * trackWidth - 13; // centre the 26px thumb
 
   return (
     <View
       {...panResponder.panHandlers}
-      style={{ height: 40, justifyContent: "center" }}
+      style={{ height: 44, justifyContent: "center", paddingHorizontal: 0 }}
     >
       {/* Track background */}
       <View
         style={{
-          height: 6,
+          height: 8,
           backgroundColor: "rgba(255,255,255,0.15)",
-          borderRadius: 3,
+          borderRadius: 4,
           overflow: "hidden",
         }}
       >
@@ -789,7 +793,7 @@ function GlassSlider({
             height: "100%",
             backgroundColor: "#FFFFFF",
             opacity: 0.85,
-            borderRadius: 3,
+            borderRadius: 4,
           }}
         />
       </View>
@@ -798,17 +802,17 @@ function GlassSlider({
         style={{
           position: "absolute",
           left: thumbLeft,
-          width: 26,
-          height: 26,
-          borderRadius: 13,
+          width: 28,
+          height: 28,
+          borderRadius: 14,
           backgroundColor: "#FFFFFF",
           borderWidth: 3,
-          borderColor: "rgba(255,255,255,0.5)",
+          borderColor: "rgba(255,255,255,0.6)",
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.30,
+          shadowRadius: 6,
+          elevation: 6,
         }}
       />
     </View>

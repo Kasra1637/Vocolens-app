@@ -14,28 +14,35 @@ import Animated, { FadeInUp } from "react-native-reanimated";
 import { RankedEmotion, BlendedEmotionType, EmotionType } from "@/lib/types";
 import { GlassLayers, hexToRgba } from "@/lib/glass";
 
-// ── Emotion palette ───────────────────────────────────────────────────────────
+// ── White-only palette (all badges/text white per design spec) ────────────────
 
+const WHITE_BADGE = {
+  bg: "rgba(255, 255, 255, 0.12)",
+  border: "rgba(255, 255, 255, 0.25)",
+  text: "#FFFFFF",
+};
+
+// Keep type-safe lookup shapes but all values are white
 const EMOTION_COLORS: Record<EmotionType, { bg: string; border: string; text: string }> = {
-  happiness:    { bg: "rgba(255, 217, 61, 0.18)",  border: "rgba(255, 217, 61, 0.55)",  text: "#FFD93D" },
-  trust:        { bg: "rgba(77, 182, 172, 0.18)",  border: "rgba(77, 182, 172, 0.55)",  text: "#4DB6AC" },
-  fear:         { bg: "rgba(149, 117, 205, 0.18)", border: "rgba(149, 117, 205, 0.55)", text: "#9575CD" },
-  surprise:     { bg: "rgba(255, 138, 101, 0.18)", border: "rgba(255, 138, 101, 0.55)", text: "#FF8A65" },
-  sadness:      { bg: "rgba(107, 141, 214, 0.18)", border: "rgba(107, 141, 214, 0.55)", text: "#6B8DD6" },
-  disgust:      { bg: "rgba(124, 179, 66, 0.18)",  border: "rgba(124, 179, 66, 0.55)",  text: "#7CB342" },
-  anger:        { bg: "rgba(255, 107, 107, 0.18)", border: "rgba(255, 107, 107, 0.55)", text: "#FF6B6B" },
-  anticipation: { bg: "rgba(255, 183, 77, 0.18)",  border: "rgba(255, 183, 77, 0.55)",  text: "#FFB74D" },
+  happiness:    WHITE_BADGE,
+  trust:        WHITE_BADGE,
+  fear:         WHITE_BADGE,
+  surprise:     WHITE_BADGE,
+  sadness:      WHITE_BADGE,
+  disgust:      WHITE_BADGE,
+  anger:        WHITE_BADGE,
+  anticipation: WHITE_BADGE,
 };
 
 const BLEND_COLORS: Record<BlendedEmotionType, { bg: string; border: string; text: string }> = {
-  Love:            { bg: "rgba(255, 107, 170, 0.18)", border: "rgba(255, 107, 170, 0.5)", text: "#FF6BAA" },
-  Optimism:        { bg: "rgba(255, 236, 100, 0.18)", border: "rgba(255, 236, 100, 0.5)", text: "#FFD700" },
-  Submission:      { bg: "rgba(149, 117, 205, 0.18)", border: "rgba(149, 117, 205, 0.5)", text: "#9575CD" },
-  Awe:             { bg: "rgba(100, 200, 220, 0.18)", border: "rgba(100, 200, 220, 0.5)", text: "#64C8DC" },
-  Disapproval:     { bg: "rgba(150, 150, 180, 0.18)", border: "rgba(150, 150, 180, 0.5)", text: "#9696B4" },
-  Remorse:         { bg: "rgba(107, 141, 214, 0.18)", border: "rgba(107, 141, 214, 0.5)", text: "#6B8DD6" },
-  Contempt:        { bg: "rgba(120, 160, 80, 0.18)",  border: "rgba(120, 160, 80, 0.5)",  text: "#78A050" },
-  Aggressiveness:  { bg: "rgba(255, 120, 80, 0.18)",  border: "rgba(255, 120, 80, 0.5)",  text: "#FF7850" },
+  Love:           WHITE_BADGE,
+  Optimism:       WHITE_BADGE,
+  Submission:     WHITE_BADGE,
+  Awe:            WHITE_BADGE,
+  Disapproval:    WHITE_BADGE,
+  Remorse:        WHITE_BADGE,
+  Contempt:       WHITE_BADGE,
+  Aggressiveness: WHITE_BADGE,
 };
 
 const RANK_LABELS: Record<1 | 2 | 3, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
@@ -56,11 +63,11 @@ function RankedEmotionRow({ item }: { item: RankedEmotion }) {
       {/* Label + bar */}
       <View style={styles.rankedMid}>
         <View style={styles.rankedLabelRow}>
-          <Text style={[styles.intensityLabel, { color: colors.text }]}>{item.intensityLabel}</Text>
+          <Text style={[styles.intensityLabel, { color: "#FFFFFF" }]}>{item.intensityLabel}</Text>
           <Text style={styles.rankedScore}>{item.score}</Text>
         </View>
         <View style={styles.barTrack}>
-          <View style={[styles.barFill, { width: barWidth, backgroundColor: colors.text }]} />
+          <View style={[styles.barFill, { width: barWidth, backgroundColor: "rgba(255,255,255,0.85)" }]} />
         </View>
       </View>
     </View>
@@ -148,9 +155,9 @@ export default function EmotionBreakdownCard({
               <Badge
                 key={flag}
                 label={flag}
-                bg="rgba(255,255,255,0.08)"
-                border="rgba(255,255,255,0.22)"
-                textColor="rgba(255,255,255,0.75)"
+                bg="rgba(255,255,255,0.12)"
+                border="rgba(255,255,255,0.25)"
+                textColor="#FFFFFF"
               />
             ))}
           </View>
