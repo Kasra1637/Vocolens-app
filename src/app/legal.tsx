@@ -525,7 +525,7 @@ function PrivacyPolicy({
 
       <Section primaryColor={primaryColor} title="In-App Purchases">
         <Body>
-          {`${APP_NAME} offers a premium subscription. Subscription purchases are handled by Apple App Store or Google Play.\n\nWe use RevenueCat to manage subscription status. RevenueCat may receive your device's anonymous app store identifier to verify purchase status. No personal information beyond purchase status is shared. See revenuecat.com/privacy.`}
+          {`${APP_NAME} offers a premium subscription. Subscription purchases are handled by Apple App Store or Google Play.\n\nWe use Adapty to manage subscription status. Adapty may receive your device's anonymous app store identifier to verify purchase status. No personal information beyond purchase status is shared. See adapty.io/privacy.`}
         </Body>
       </Section>
 
@@ -747,7 +747,7 @@ function TermsOfService({
           OpenAI GPT-4o — AI emotional analysis from both audio speech
           characteristics and transcript text (openai.com)
         </Bullet>
-        <Bullet>RevenueCat — Subscription management (revenuecat.com)</Bullet>
+        <Bullet>Adapty — Subscription management (adapty.io)</Bullet>
         <Bullet>
           Apple App Store / Google Play — App distribution and payments
         </Bullet>

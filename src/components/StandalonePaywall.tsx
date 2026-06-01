@@ -49,19 +49,20 @@ import {
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import {
-  getOfferings,
-  purchasePackage,
-  restorePurchases,
-  isRevenueCatEnabled,
-} from "@/lib/revenuecatClient";
-import type { PurchasesPackage } from "@/lib/revenuecatClient";
+  getPaywall,
+  makePurchase,
+  restoreAdaptyPurchases,
+  isAdaptyEnabled,
+  hasEntitlement,
+} from "@/lib/adaptyClient";
+import type { AdaptyPaywallProduct } from "@/lib/adaptyClient";
 import { NotificationService } from "@/lib/services/notification-service";
 
 // ── Pricing constants ─────────────────────────────────────────────────────────
 const MONTHLY_PRICE = "$9.99";
-const YEARLY_PRICE = "$79.99";
+const YEARLY_PRICE = "$69";
 const YEARLY_FULL = "$119.88";
-const YEARLY_SAVING = "33%";
+const YEARLY_SAVING = "42%";
 
 // ── Benefits list ─────────────────────────────────────────────────────────────
 const BENEFITS: { icon: LucideIcon; title: string; description: string }[] = [
@@ -344,27 +345,27 @@ export function StandalonePaywall() {
   const themeColors = THEME_COLORS[selectedTheme];
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
 
-  const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
-  const [yearlyPackage, setYearlyPackage] = useState<PurchasesPackage | null>(null);
+  const [monthlyProduct, setMonthlyProduct] = useState<AdaptyPaywallProduct | null>(null);
+  const [yearlyProduct, setYearlyProduct] = useState<AdaptyPaywallProduct | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isPurchasingMonthly, setIsPurchasingMonthly] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
   useEffect(() => {
-    if (!isRevenueCatEnabled()) return;
-    getOfferings().then((result) => {
-      if (!result.ok || !result.data.current) return;
-      const pkgs = result.data.current.availablePackages;
-      setMonthlyPackage(pkgs.find((p) => p.identifier === "$rc_monthly") ?? null);
-      setYearlyPackage(pkgs.find((p) => p.identifier === "$rc_annual") ?? null);
+    if (!isAdaptyEnabled()) return;
+    getPaywall("main_paywall").then((result) => {
+      if (!result.ok) return;
+      const { products } = result.data;
+      setYearlyProduct(products.find((p) => p.vendorProductId === "yearly_journal") ?? null);
+      setMonthlyProduct(products.find((p) => p.vendorProductId === "monthly_journal") ?? null);
     });
   }, []);
 
-  const grantYearly = (expirationDate?: string | null) => {
+  const grantYearly = () => {
     successHaptic();
     setSubscription(true, "yearly");
-    NotificationService.scheduleTrialEndReminder(expirationDate ?? null);
+    NotificationService.scheduleTrialEndReminder(null);
   };
 
   const grantMonthly = () => {
@@ -382,44 +383,48 @@ export function StandalonePaywall() {
 
   const handleContinue = async () => {
     tapHaptic();
-    if (!isRevenueCatEnabled()) {
-      grantYearly(null);
+    if (!isAdaptyEnabled()) {
+      grantYearly();
       return;
     }
-    if (!yearlyPackage) {
-      grantYearly(null);
+    if (!yearlyProduct) {
+      grantYearly();
       return;
     }
     setIsPurchasing(true);
-    const result = await purchasePackage(yearlyPackage);
+    const result = await makePurchase(yearlyProduct);
     setIsPurchasing(false);
     if (result.ok) {
-      grantYearly(result.data.entitlements.active?.["premium"]?.expirationDate);
+      if (hasEntitlement(result.data, "pro_journal")) {
+        grantYearly();
+      }
     } else if (result.reason === "sdk_error") {
       const userCancelled = (result.error as any)?.userCancelled === true;
       if (userCancelled) {
         errorHaptic();
       } else {
-        grantYearly(null);
+        grantYearly();
       }
     }
   };
 
   const handleMonthlyAccept = async () => {
     tapHaptic();
-    if (!isRevenueCatEnabled()) {
+    if (!isAdaptyEnabled()) {
       grantMonthly();
       return;
     }
-    if (!monthlyPackage) {
+    if (!monthlyProduct) {
       grantMonthly();
       return;
     }
     setIsPurchasingMonthly(true);
-    const result = await purchasePackage(monthlyPackage);
+    const result = await makePurchase(monthlyProduct);
     setIsPurchasingMonthly(false);
     if (result.ok) {
-      grantMonthly();
+      if (hasEntitlement(result.data, "pro_journal")) {
+        grantMonthly();
+      }
     } else if (result.reason === "sdk_error") {
       const userCancelled = (result.error as any)?.userCancelled === true;
       if (!userCancelled) {
@@ -430,13 +435,12 @@ export function StandalonePaywall() {
   };
 
   const handleRestore = async () => {
-    if (!isRevenueCatEnabled()) return;
+    if (!isAdaptyEnabled()) return;
     setIsRestoring(true);
-    const result = await restorePurchases();
+    const result = await restoreAdaptyPurchases();
     setIsRestoring(false);
     if (result.ok) {
-      const isActive = Boolean(result.data.entitlements.active?.["premium"]);
-      if (isActive) {
+      if (hasEntitlement(result.data, "pro_journal")) {
         successHaptic();
         setSubscription(true);
         if (notificationPreferences?.time && notificationPreferences.days.length > 0) {

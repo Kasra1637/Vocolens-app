@@ -18,7 +18,7 @@ import useSubscriptionStore from '@/lib/state/subscription-store';
 import { OnboardingFlow } from './onboarding';
 import { BiometricLockScreen } from './BiometricLockScreen';
 import { StandalonePaywall } from './StandalonePaywall';
-import { getCustomerInfo, isRevenueCatEnabled } from '@/lib/revenuecatClient';
+import { activateAdapty, getProfile, isAdaptyEnabled, hasEntitlement } from '@/lib/adaptyClient';
 import { NotificationService } from '@/lib/services/notification-service';
 
 interface AuthGateProps {
@@ -41,7 +41,7 @@ export function AuthGate({ children }: AuthGateProps) {
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
   const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
 
-  // Tracks whether we've finished verifying against RevenueCat
+  // Tracks whether we've finished verifying against Adapty
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
 
   useEffect(() => {
@@ -54,19 +54,20 @@ export function AuthGate({ children }: AuthGateProps) {
       return;
     }
 
-    // Verify subscription against RevenueCat on every app start
+    // Verify subscription against Adapty on every app start
     let confirmedActive = hasSubscription; // fall back to persisted value
-    if (isRevenueCatEnabled()) {
-      const result = await getCustomerInfo();
+    if (isAdaptyEnabled()) {
+      await activateAdapty();
+      const result = await getProfile();
       if (result.ok) {
-        confirmedActive = Boolean(result.data.entitlements.active?.['premium']);
+        confirmedActive = hasEntitlement(result.data, 'pro_journal');
         if (confirmedActive) {
           setSubscription(true);
         } else {
           clearSubscription();
         }
       }
-      // If RevenueCat call failed (network issue), fall back to persisted value
+      // If Adapty call failed (network issue), fall back to persisted value
     }
 
     setSubscriptionVerified(true);
@@ -84,7 +85,7 @@ export function AuthGate({ children }: AuthGateProps) {
     }
   };
 
-  if (isLoading || (hasCompletedOnboarding && !subscriptionVerified && isRevenueCatEnabled())) {
+  if (isLoading || (hasCompletedOnboarding && !subscriptionVerified && isAdaptyEnabled())) {
     return (
       <View className="flex-1 items-center justify-center bg-purple-50">
         <ActivityIndicator size="large" color="#9333ea" />

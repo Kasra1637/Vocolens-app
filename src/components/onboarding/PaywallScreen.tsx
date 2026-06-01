@@ -37,12 +37,13 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import {
-  getOfferings,
-  purchasePackage,
-  restorePurchases,
-  isRevenueCatEnabled,
-} from "@/lib/revenuecatClient";
-import type { PurchasesPackage } from "@/lib/revenuecatClient";
+  getPaywall,
+  makePurchase,
+  restoreAdaptyPurchases,
+  isAdaptyEnabled,
+  hasEntitlement,
+} from "@/lib/adaptyClient";
+import type { AdaptyPaywallProduct } from "@/lib/adaptyClient";
 import { NotificationService } from "@/lib/services/notification-service";
 
 // ── Feature Flags ─────────────────────────────────────────────────────────────
@@ -62,9 +63,9 @@ function trackEvent(event: string, properties?: Record<string, any>) {
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
 const MONTHLY_PRICE = "$9.99";
-const YEARLY_PRICE = "$79.99";
-const YEARLY_MONTHLY_EQUIVALENT = "$6.67";
-const YEARLY_SAVINGS = "33%";
+const YEARLY_PRICE = "$69";
+const YEARLY_MONTHLY_EQUIVALENT = "$5.75";
+const YEARLY_SAVINGS = "42%";
 const TRIAL_DAYS = 7;
 
 type PlanType = "yearly" | "monthly";
@@ -207,8 +208,8 @@ export function PaywallScreen() {
   const playClickSound = useClickSound();
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
 
-  const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
-  const [yearlyPackage, setYearlyPackage] = useState<PurchasesPackage | null>(null);
+  const [monthlyProduct, setMonthlyProduct] = useState<AdaptyPaywallProduct | null>(null);
+  const [yearlyProduct, setYearlyProduct] = useState<AdaptyPaywallProduct | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isPurchasingMonthly, setIsPurchasingMonthly] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -222,12 +223,12 @@ export function PaywallScreen() {
       trial_enabled: FEATURE_FLAGS.trial_on_annual,
     });
 
-    if (!isRevenueCatEnabled()) return;
-    getOfferings().then((result) => {
-      if (!result.ok || !result.data.current) return;
-      const pkgs = result.data.current.availablePackages;
-      setMonthlyPackage(pkgs.find((p) => p.identifier === "$rc_monthly") ?? null);
-      setYearlyPackage(pkgs.find((p) => p.identifier === "$rc_annual") ?? null);
+    if (!isAdaptyEnabled()) return;
+    getPaywall("main_paywall").then((result) => {
+      if (!result.ok) return;
+      const { products } = result.data;
+      setYearlyProduct(products.find((p) => p.vendorProductId === "yearly_journal") ?? null);
+      setMonthlyProduct(products.find((p) => p.vendorProductId === "monthly_journal") ?? null);
     });
   }, []);
 
@@ -251,23 +252,24 @@ export function PaywallScreen() {
     tapHaptic();
     trackEvent("cta_tapped", { plan: "yearly" });
 
-    if (!isRevenueCatEnabled()) {
+    if (!isAdaptyEnabled()) {
       grantAccess("yearly");
       return;
     }
 
-    if (!yearlyPackage) {
+    if (!yearlyProduct) {
       grantAccess("yearly");
       return;
     }
 
     setIsPurchasing(true);
-    const result = await purchasePackage(yearlyPackage);
+    const result = await makePurchase(yearlyProduct);
     setIsPurchasing(false);
 
     if (result.ok) {
-      const expDate = result.data.entitlements.active?.["premium"]?.expirationDate;
-      grantAccess("yearly", expDate);
+      if (hasEntitlement(result.data, "pro_journal")) {
+        grantAccess("yearly");
+      }
     } else if (result.reason === "sdk_error") {
       const userCancelled = (result.error as any)?.userCancelled === true;
       if (userCancelled) {
@@ -283,22 +285,24 @@ export function PaywallScreen() {
     playClickSound();
     trackEvent("cta_tapped", { plan: "monthly" });
 
-    if (!isRevenueCatEnabled()) {
+    if (!isAdaptyEnabled()) {
       grantAccess("monthly");
       return;
     }
 
-    if (!monthlyPackage) {
+    if (!monthlyProduct) {
       grantAccess("monthly");
       return;
     }
 
     setIsPurchasingMonthly(true);
-    const result = await purchasePackage(monthlyPackage);
+    const result = await makePurchase(monthlyProduct);
     setIsPurchasingMonthly(false);
 
     if (result.ok) {
-      grantAccess("monthly");
+      if (hasEntitlement(result.data, "pro_journal")) {
+        grantAccess("monthly");
+      }
     } else if (result.reason === "sdk_error") {
       const userCancelled = (result.error as any)?.userCancelled === true;
       if (!userCancelled) {
@@ -308,14 +312,14 @@ export function PaywallScreen() {
     }
   };
 
-  const grantAccess = (plan: PlanType, expirationDate?: string | null) => {
+  const grantAccess = (plan: PlanType) => {
     successHaptic();
     setSubscription(true, plan);
     if (plan === "yearly" && FEATURE_FLAGS.trial_on_annual) {
       // Schedule Day 5 reminder (2 days before trial end)
-      NotificationService.scheduleTrialDay5Reminder(expirationDate ?? null);
-      // Schedule end-of-trial reminder (existing)
-      NotificationService.scheduleTrialEndReminder(expirationDate ?? null);
+      NotificationService.scheduleTrialDay5Reminder(null);
+      // Schedule end-of-trial reminder
+      NotificationService.scheduleTrialEndReminder(null);
     }
     setShowExitModal(false);
     nextStep();
@@ -323,15 +327,14 @@ export function PaywallScreen() {
 
   // ── Restore ───────────────────────────────────────────────────────────────
   const handleRestore = async () => {
-    if (!isRevenueCatEnabled()) return;
+    if (!isAdaptyEnabled()) return;
     playClickSound();
     trackEvent("restore_tapped");
     setIsRestoring(true);
-    const result = await restorePurchases();
+    const result = await restoreAdaptyPurchases();
     setIsRestoring(false);
     if (result.ok) {
-      const isActive = Boolean(result.data.entitlements.active?.["premium"]);
-      if (isActive) {
+      if (hasEntitlement(result.data, "pro_journal")) {
         successHaptic();
         setSubscription(true);
         nextStep();

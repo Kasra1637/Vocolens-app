@@ -3,7 +3,7 @@
  *
  * Tracks whether the user has an active subscription.
  * Persisted to AsyncStorage so the app can gate access on subsequent launches.
- * Always re-verified against RevenueCat on app start.
+ * Always re-verified against Adapty on app start.
  */
 
 import { create } from 'zustand';
