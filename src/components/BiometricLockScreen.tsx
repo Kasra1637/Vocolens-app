@@ -74,6 +74,7 @@ type LockView =
 export function BiometricLockScreen() {
   const setUnlocked                  = useBiometricStore((s) => s.setUnlocked);
   const disableBiometric             = useBiometricStore((s) => s.disableBiometric);
+  const isBiometricEnabled           = useBiometricStore((s) => s.isBiometricEnabled);
   const needsPinReAuth               = useBiometricStore((s) => s.needsPinReAuth);
   const markBiometricInvalidated     = useBiometricStore((s) => s.markBiometricInvalidated);
   const clearBiometricInvalidation   = useBiometricStore((s) => s.clearBiometricInvalidation);
@@ -111,6 +112,25 @@ export function BiometricLockScreen() {
   // ─── Mount: resolve initial view ──────────────────────────────────────────
   useEffect(() => {
     (async () => {
+      // ── PIN-only users (no biometric ever set up) ──────────────────────────
+      // If biometric was never enabled, skip the hardware check entirely and
+      // go straight to PIN entry.  This is the path for devices where the user
+      // either has no biometric hardware or chose PIN-only during onboarding.
+      if (!isBiometricEnabled) {
+        const pinExists = await isPinSet();
+        if (pinExists) {
+          setPinContext({
+            title: 'Enter your PIN',
+            subtitle: 'Use your 4-digit PIN to unlock Vocolens.',
+          });
+          setView('pin_fallback');
+        } else {
+          // No biometric, no PIN — failsafe: let user through
+          setUnlocked(true);
+        }
+        return;
+      }
+
       const caps = await checkBiometricCapabilities();
       setBiometricName(getBiometricTypeName(caps.supportedTypes));
 
@@ -125,7 +145,6 @@ export function BiometricLockScreen() {
           });
           setView('pin_fallback');
         } else {
-          // Edge-case: invalidated and no PIN — re-setup PIN
           setPinContext({
             title: 'Set a new PIN',
             subtitle:
@@ -136,7 +155,7 @@ export function BiometricLockScreen() {
         return;
       }
 
-      // Normal start — check biometric availability
+      // Normal biometric start
       if (!caps.isAvailable) {
         const pinExists = await isPinSet();
         if (pinExists) {
@@ -223,19 +242,25 @@ export function BiometricLockScreen() {
     setAuthError('Authentication failed. Tap to try again.');
   }, [authenticating, hasSeenFirstUnlockCelebration, markBiometricInvalidated, setUnlocked]);
 
-  // ─── After PIN success during invalidation flow ───────────────────────────
+  // ─── After PIN success during invalidation flow OR PIN-only unlock ───────
   const handlePinFallbackSuccess = useCallback(async () => {
+    // PIN-only user (biometric was never enabled) — just unlock the session
+    if (!isBiometricEnabled) {
+      setUnlocked(true);
+      return;
+    }
+
+    // Biometric-invalidation recovery path:
     // 1. Clear the persistent invalidation flag
     clearBiometricInvalidation();
 
-    // 2. Try to re-enrol the new biometric state silently
+    // 2. Try to re-enrol the new biometric state
     setView('reregistering');
     const result = await authenticateWithBiometrics(
       'Scan your fingerprint to restore biometric unlock',
     );
 
     if (result.success) {
-      // Re-registration succeeded — re-enable biometric (marks isUnlocked too)
       enableBiometric();
       successHaptic();
       if (!hasSeenFirstUnlockCelebration) {
@@ -244,10 +269,11 @@ export function BiometricLockScreen() {
         setUnlocked(true);
       }
     } else {
-      // User cancelled or hardware issue — just unlock, biometric still enabled
+      // User cancelled or hardware issue — unlock anyway; biometric still enabled
       setUnlocked(true);
     }
   }, [
+    isBiometricEnabled,
     clearBiometricInvalidation,
     enableBiometric,
     hasSeenFirstUnlockCelebration,

@@ -3,10 +3,16 @@
  *
  * Wraps the app and handles onboarding + subscription gating.
  * Flow:
- *  1. Onboarding not done → show OnboardingFlow (paywall is step 16)
+ *  1. Onboarding not done → show OnboardingFlow (paywall is step 20)
  *  2. Onboarding done, no active subscription → show StandalonePaywall
- *  3. Biometric lock enabled but not unlocked this session → lock screen
+ *  3. Any lock is enabled (biometric OR PIN-only) but session not yet
+ *     unlocked → show BiometricLockScreen (which handles both paths)
  *  4. All good → show app, then re-schedule notifications in background
+ *
+ * Lock-screen trigger:
+ *   • isBiometricEnabled — user set up fingerprint/Face ID lock
+ *   • isPinEnabled        — user set up a PIN-only lock (no biometric hardware)
+ *   Either flag being true means the lock screen must be shown on every launch.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -35,6 +41,7 @@ export function AuthGate({ children }: AuthGateProps) {
   const notificationPreferences = useOnboardingStore((s) => s.notificationPreferences);
 
   const isBiometricEnabled = useBiometricStore((s) => s.isBiometricEnabled);
+  const isPinEnabled = useBiometricStore((s) => s.isPinEnabled);
   const isUnlocked = useBiometricStore((s) => s.isUnlocked);
 
   const hasSubscription = useSubscriptionStore((s) => s.hasSubscription);
@@ -103,8 +110,8 @@ export function AuthGate({ children }: AuthGateProps) {
     return <StandalonePaywall />;
   }
 
-  // Step 3 — biometric lock enabled but not unlocked this session → lock screen
-  if (isBiometricEnabled && !isUnlocked) {
+  // Step 3 — any lock enabled (biometric OR PIN-only) but not yet unlocked this session
+  if ((isBiometricEnabled || isPinEnabled) && !isUnlocked) {
     return <BiometricLockScreen />;
   }
 

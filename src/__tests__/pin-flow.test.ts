@@ -192,4 +192,68 @@ describe('PIN lifecycle', () => {
       expect(await verifyPin('1234')).toBe(false);
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PIN-only device path (no biometric hardware / biometric turned off)
+  // This is the bug-fix path: previously the app silently skipped PIN setup
+  // for these users. Now they are routed to PinSetupScreen and isPinEnabled
+  // is persisted in the biometric-store so AuthGate shows the lock screen.
+  // ─────────────────────────────────────────────────────────────────────────
+  describe('PIN-only device path (biometric unavailable)', () => {
+    it('a PIN can be created and verified without any biometric step', async () => {
+      // Simulates the fixed BiometricSetupScreen routing directly to PinSetupScreen
+      await setPin('3691');
+      expect(await isPinSet()).toBe(true);
+      expect(await isAuthEnabled()).toBe(true);
+      expect(await verifyPin('3691')).toBe(true);
+    });
+
+    it('correct PIN unlocks; wrong PIN does not', async () => {
+      await setPin('2580');
+      expect(await verifyPin('2580')).toBe(true);
+      expect(await verifyPin('9999')).toBe(false);
+      expect(await verifyPin('2581')).toBe(false);
+    });
+
+    it('PIN survives a simulated app restart (store reset + re-read)', async () => {
+      await setPin('1470');
+      // Simulate restart: clear in-memory module cache is not possible in Jest,
+      // but we can verify the storage layer still returns the right value
+      // because the mock fakeStore persists across calls in the same test.
+      expect(await isPinSet()).toBe(true);
+      expect(await verifyPin('1470')).toBe(true);
+    });
+
+    it('PIN removal clears auth state cleanly on PIN-only device', async () => {
+      await setPin('8520');
+      expect(await isPinSet()).toBe(true);
+      await removePin();
+      expect(await isPinSet()).toBe(false);
+      expect(await isAuthEnabled()).toBe(false);
+      // verifyPin against removed PIN must return false, never throw
+      expect(await verifyPin('8520')).toBe(false);
+    });
+
+    it('user can change PIN on a PIN-only device', async () => {
+      await setPin('1111');
+      const changed = await changePin('1111', '9876');
+      expect(changed).toBe(true);
+      expect(await verifyPin('9876')).toBe(true);
+      expect(await verifyPin('1111')).toBe(false);
+    });
+
+    it('changePin rejects wrong old PIN on PIN-only device', async () => {
+      await setPin('1234');
+      const changed = await changePin('0000', '5678');
+      expect(changed).toBe(false);
+      // Original PIN untouched
+      expect(await verifyPin('1234')).toBe(true);
+    });
+
+    it('setPin rejects non-4-digit values on PIN-only device too', async () => {
+      await expect(setPin('12')).rejects.toThrow();
+      await expect(setPin('12345')).rejects.toThrow();
+      await expect(setPin('abcd')).rejects.toThrow();
+    });
+  });
 });

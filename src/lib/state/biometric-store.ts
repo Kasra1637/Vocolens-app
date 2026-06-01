@@ -1,17 +1,24 @@
 /**
  * Biometric Store
  *
- * Persists whether the user has enabled biometric (fingerprint / Face ID) app lock.
- * `isUnlocked` is ephemeral — it resets to false on every app launch, so the user
- * must authenticate with their biometric each time they reopen the app.
+ * Persists whether the user has enabled biometric (fingerprint / Face ID) app lock
+ * AND/OR a PIN-only lock (for devices without biometric hardware).
+ *
+ * Lock-screen gating logic (used by AuthGate):
+ *   • isBiometricEnabled — user enrolled biometrics; show fingerprint prompt on launch.
+ *   • isPinEnabled        — user set a PIN (may be the sole method OR the biometric backup).
+ *                           AuthGate shows the lock screen whenever EITHER flag is true
+ *                           and the session is not yet unlocked.
+ *
+ * `isUnlocked` is ephemeral — it resets to false on every app launch so the user
+ * must authenticate each time they reopen the app.
  *
  * `hasSeenFirstUnlockCelebration` is persisted so the joyful first-unlock animation
  * plays exactly once, ever.
  *
  * `needsPinReAuth` is persisted. Set to true when the OS reports that the enrolled
- * biometrics have changed (e.g. the user added/removed a fingerprint).  The app
- * will then require a successful PIN entry before re-registering the new biometric
- * state, keeping the trust chain intact.
+ * biometrics have changed (e.g. the user added/removed a fingerprint). The app will
+ * require a successful PIN entry before re-registering the new biometric state.
  */
 
 import { create } from 'zustand';
@@ -21,6 +28,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface BiometricState {
   /** Whether the user has turned on biometric app lock (persisted). */
   isBiometricEnabled: boolean;
+  /**
+   * Whether the user has set a PIN (persisted).
+   * True for both "PIN-only" devices and "biometric + PIN backup" devices.
+   * AuthGate uses this to show the lock screen even when isBiometricEnabled is false.
+   */
+  isPinEnabled: boolean;
   /** Whether the current session has been unlocked (ephemeral — NOT persisted). */
   isUnlocked: boolean;
   /** Whether the one-time first-unlock celebration has already played (persisted). */
@@ -34,6 +47,10 @@ interface BiometricState {
 
   enableBiometric: () => void;
   disableBiometric: () => void;
+  /** Called when the user successfully sets a PIN (with or without biometric). */
+  enablePin: () => void;
+  /** Called when the PIN is removed (e.g. account deletion). */
+  disablePin: () => void;
   setUnlocked: (unlocked: boolean) => void;
   markFirstUnlockCelebrationSeen: () => void;
   /** Called when the OS signals that enrolled biometrics have changed. */
@@ -49,6 +66,7 @@ const useBiometricStore = create<BiometricState>()(
   persist(
     (set) => ({
       isBiometricEnabled: false,
+      isPinEnabled: false,
       isUnlocked: false,
       hasSeenFirstUnlockCelebration: false,
       needsPinReAuth: false,
@@ -61,6 +79,8 @@ const useBiometricStore = create<BiometricState>()(
           hasSeenFirstUnlockCelebration: false,
           needsPinReAuth: false,
         }),
+      enablePin: () => set({ isPinEnabled: true }),
+      disablePin: () => set({ isPinEnabled: false }),
       setUnlocked: (unlocked) => set({ isUnlocked: unlocked }),
       markFirstUnlockCelebrationSeen: () =>
         set({ hasSeenFirstUnlockCelebration: true }),
@@ -72,10 +92,10 @@ const useBiometricStore = create<BiometricState>()(
     {
       name: 'biometric-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      // Persist the enabled flag, first-celebration flag, and invalidation flag.
-      // isUnlocked always resets to false on launch.
+      // isUnlocked always resets to false on launch — everything else is persisted.
       partialize: (state) => ({
         isBiometricEnabled: state.isBiometricEnabled,
+        isPinEnabled: state.isPinEnabled,
         hasSeenFirstUnlockCelebration: state.hasSeenFirstUnlockCelebration,
         needsPinReAuth: state.needsPinReAuth,
       }),
