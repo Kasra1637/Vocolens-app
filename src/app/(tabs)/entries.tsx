@@ -71,13 +71,25 @@ import {
 import { AudioPlayer } from "@/components/AudioPlayer";
 
 // Display types for UI (capitalized versions)
-type DisplayEmotion = "Happiness" | "Sadness" | "Anger" | "Disgust";
+type DisplayEmotion =
+  | "Happiness"
+  | "Sadness"
+  | "Anger"
+  | "Disgust"
+  | "Fear"
+  | "Surprise"
+  | "Trust"
+  | "Anticipation";
 
 const EMOTION_FILTERS: DisplayEmotion[] = [
   "Happiness",
   "Sadness",
   "Anger",
   "Disgust",
+  "Fear",
+  "Surprise",
+  "Trust",
+  "Anticipation",
 ];
 
 const SORT_OPTIONS = ["Newest First", "Oldest First"] as const;
@@ -549,7 +561,7 @@ export default function EntriesScreen() {
                   className="w-16 h-16 rounded-full items-center justify-center mb-4"
                   style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
                 >
-                  <Trash2 size={32} color="#EF4444" strokeWidth={2} />
+                  <Trash2 size={32} color="#FFFFFF" strokeWidth={2} />
                 </View>
                 <Text
                   className="text-2xl font-bold mb-2 text-center"
@@ -605,7 +617,7 @@ export default function EntriesScreen() {
                     className="text-base font-bold"
                     style={{
                       fontFamily: "Inter_700Bold",
-                      color: Colors.primary,
+                      color: "#FFFFFF",
                     }}
                   >
                     Cancel
@@ -637,7 +649,6 @@ function EntryCard({
   primaryColor,
   isDarkMode = false,
 }: EntryCardProps) {
-  const [transcriptExpanded, setTranscriptExpanded] = useState(false);
 
   // Dynamic title: use entry.title if meaningful, else generate from transcript
   const displayTitle = useMemo(() => {
@@ -833,7 +844,7 @@ function EntryCard({
             </View>
           )}
 
-          {/* Transcript Preview — Collapsible */}
+          {/* Transcript Preview */}
           <View className="mb-3">
             <Text
               style={{
@@ -842,29 +853,11 @@ function EntryCard({
                 lineHeight: 22,
               }}
               className="text-sm"
-              numberOfLines={transcriptExpanded ? undefined : 2}
             >
-              {entry.transcript}
+              {entry.transcript && entry.transcript.length > 60
+                ? entry.transcript.slice(0, 60).trimEnd() + "..."
+                : entry.transcript}
             </Text>
-            {entry.transcript && entry.transcript.length > 100 && (
-              <Pressable
-                onPress={() => {
-                  tapHaptic();
-                  setTranscriptExpanded(!transcriptExpanded);
-                }}
-                className="mt-1"
-              >
-                <Text
-                  style={{
-                    fontFamily: "Inter_500Medium",
-                    color: primaryColor,
-                    fontSize: 13,
-                  }}
-                >
-                  {transcriptExpanded ? "Show less" : "Read more"}
-                </Text>
-              </Pressable>
-            )}
           </View>
 
           {/* Topics */}
