@@ -25,7 +25,7 @@ const PAIN_POINTS = [
   {
     icon: Brain,
     headline: "Feelings are hard to name",
-    body: "Emotions are there, but the words aren't.",
+    body: "You feel it, but can't say it — just speak and Vocolens finds the words for you.",
   },
   {
     icon: Meh,
@@ -122,7 +122,7 @@ export function NDValueScreen1() {
                   lineHeight: 23,
                 }}
               >
-                Whether it's ADHD, OCD, autism, or Tourette's — your mind works differently, and that's never the problem.
+                As a neurodivergent person, your mind works differently — and that's never a problem.
               </Text>
             </Animated.View>
 
