@@ -231,7 +231,7 @@ export function SetPinScreen() {
         end={{ x: 0, y: 1 }}
         style={{ flex: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={16} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView style={{ flex: 1 }}>
           {/* Tapping anywhere re-focuses the keyboard */}

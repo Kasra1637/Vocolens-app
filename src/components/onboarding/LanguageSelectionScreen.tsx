@@ -285,7 +285,7 @@ export function LanguageSelectionScreen() {
         style={{ position: "absolute", top: 0, left: 0, right: 0 }}
         pointerEvents="box-none"
       >
-        <ProgressBar currentStep={currentStep} totalSteps={14} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
         <SafeAreaView pointerEvents="box-none">
           <BackButton onPress={handleBack} show={currentStep > 0} />
         </SafeAreaView>

@@ -2,7 +2,7 @@
  * Onboarding Screen: Mood Follow-Up Screen
  *
  * Dynamically adjusts the question and answer options based on the user's selected mood.
- * Icon circles removed — text-only cards.
+ * Trigger-style icons on every option card (matching InsightsTriggerCard design).
  */
 
 import React, { useState } from "react";
@@ -13,6 +13,20 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
+import {
+  Trophy,
+  HandHeart,
+  Target,
+  ListTodo,
+  Clock,
+  TrendingUp,
+  Wind,
+  Brain,
+  PlayCircle,
+  Sunset,
+  Leaf,
+  Lightbulb,
+} from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   MoodType,
@@ -24,9 +38,12 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
+type IconComponent = React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
+
 interface FollowUpOption {
   id: MoodFollowUpType;
   label: string;
+  icon: IconComponent;
 }
 
 interface MoodFollowUpConfig {
@@ -38,33 +55,33 @@ const MOOD_FOLLOWUP_MAP: Record<MoodType, MoodFollowUpConfig> = {
   happy: {
     question: "What's inspiring you most today?",
     options: [
-      { id: "small-win", label: "Small Win" },
-      { id: "supportive-friend", label: "Supportive Friend" },
-      { id: "clear-goal", label: "Clear Goal" },
+      { id: "small-win",        label: "Small Win",         icon: Trophy      },
+      { id: "supportive-friend",label: "Supportive Friend", icon: HandHeart   },
+      { id: "clear-goal",       label: "Clear Goal",        icon: Target      },
     ],
   },
   stressed: {
     question: "What's adding pressure to your day?",
     options: [
-      { id: "too-many-tasks", label: "Too Many Tasks" },
-      { id: "tight-deadline", label: "Tight Deadline" },
-      { id: "high-expectations", label: "High Expectations" },
+      { id: "too-many-tasks",      label: "Too Many Tasks",      icon: ListTodo    },
+      { id: "tight-deadline",      label: "Tight Deadline",      icon: Clock       },
+      { id: "high-expectations",   label: "High Expectations",   icon: TrendingUp  },
     ],
   },
   anxious: {
     question: "What's keeping you from feeling calm right now?",
     options: [
-      { id: "get-distracted", label: "Get Distracted" },
-      { id: "feel-overwhelmed", label: "Feel Overwhelmed" },
-      { id: "dont-start", label: "Don't Start" },
+      { id: "get-distracted",   label: "Get Distracted",   icon: Wind        },
+      { id: "feel-overwhelmed", label: "Feel Overwhelmed", icon: Brain       },
+      { id: "dont-start",       label: "Don't Start",      icon: PlayCircle  },
     ],
   },
   calm: {
     question: "What's bringing you peace today?",
     options: [
-      { id: "quiet-moment", label: "Quiet Moment" },
-      { id: "fresh-air", label: "Fresh Air" },
-      { id: "positive-thought", label: "Positive Thought" },
+      { id: "quiet-moment",    label: "Quiet Moment",    icon: Sunset      },
+      { id: "fresh-air",       label: "Fresh Air",       icon: Leaf        },
+      { id: "positive-thought",label: "Positive Thought",icon: Lightbulb   },
     ],
   },
 };
@@ -119,7 +136,7 @@ export function MoodFollowUpScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={13} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />
@@ -165,6 +182,7 @@ export function MoodFollowUpScreen() {
               <View className="gap-2">
                 {config.options.map((option, index) => {
                   const isSelected = selectedOption === option.id;
+                  const Icon = option.icon;
                   return (
                     <Animated.View
                       key={option.id}
@@ -187,9 +205,17 @@ export function MoodFollowUpScreen() {
                           shadowRadius: 8,
                         }}
                       >
-                        <View
-                          style={{ paddingHorizontal: 16, paddingVertical: 16 }}
-                        >
+                        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
+                          <View
+                            style={{
+                              width: 40, height: 40, borderRadius: 12,
+                              backgroundColor: "rgba(255,255,255,0.15)",
+                              alignItems: "center", justifyContent: "center",
+                              marginRight: 14,
+                            }}
+                          >
+                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                          </View>
                           <Text
                             style={{
                               fontFamily: "Inter_600SemiBold",

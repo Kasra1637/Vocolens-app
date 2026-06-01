@@ -13,6 +13,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 // Gentle easing — content appears smoothly, optimized for neurodivergent users.
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
+import { Smile, Zap, AlertTriangle, Flower2 } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   MoodType,
@@ -27,17 +28,14 @@ interface MoodOption {
   id: MoodType;
   label: string;
   description: string;
+  icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
 }
 
 const MOOD_OPTIONS: MoodOption[] = [
-  { id: "happy", label: "Happy", description: "Feeling joyful and positive" },
-  {
-    id: "stressed",
-    label: "Stressed",
-    description: "Feeling overwhelmed or pressured",
-  },
-  { id: "anxious", label: "Anxious", description: "Feeling worried or uneasy" },
-  { id: "calm", label: "Calm", description: "Feeling peaceful and relaxed" },
+  { id: "happy",    label: "Happy",   description: "Feeling joyful and positive",         icon: Smile         },
+  { id: "stressed", label: "Stressed",description: "Feeling overwhelmed or pressured",    icon: Zap           },
+  { id: "anxious",  label: "Anxious", description: "Feeling worried or uneasy",           icon: AlertTriangle },
+  { id: "calm",     label: "Calm",    description: "Feeling peaceful and relaxed",        icon: Flower2       },
 ];
 
 export function MoodSelectionScreen() {
@@ -79,7 +77,7 @@ export function MoodSelectionScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={13} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />
@@ -125,6 +123,7 @@ export function MoodSelectionScreen() {
               <View className="gap-2">
                 {MOOD_OPTIONS.map((mood, index) => {
                   const isSelected = selectedMood === mood.id;
+                  const Icon = mood.icon;
                   return (
                     <Animated.View
                       key={mood.id}
@@ -147,9 +146,17 @@ export function MoodSelectionScreen() {
                           shadowRadius: 8,
                         }}
                       >
-                        <View
-                          style={{ paddingHorizontal: 16, paddingVertical: 16 }}
-                        >
+                        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
+                          <View
+                            style={{
+                              width: 40, height: 40, borderRadius: 12,
+                              backgroundColor: "rgba(255,255,255,0.15)",
+                              alignItems: "center", justifyContent: "center",
+                              marginRight: 14,
+                            }}
+                          >
+                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                          </View>
                           <Text
                             style={{
                               fontFamily: "Inter_600SemiBold",

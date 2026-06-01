@@ -2,7 +2,7 @@
  * Onboarding Screen 7: Journaling Frequency Screen
  *
  * "How often do you journal per week?"
- * Replaces the previous reflection feelings screen.
+ * Trigger-style icons matching InsightsTriggerCard design.
  */
 
 import React, { useState } from "react";
@@ -13,6 +13,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
+import { Sparkles, BarChart2, Flame } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   JournalingFrequencyType,
@@ -23,15 +24,18 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
+type IconComponent = React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
+
 interface FrequencyOption {
   id: JournalingFrequencyType;
   label: string;
+  icon: IconComponent;
 }
 
 const FREQUENCY_OPTIONS: FrequencyOption[] = [
-  { id: "once-twice", label: "1–2 times a week" },
-  { id: "three-five", label: "3–5 times a week" },
-  { id: "daily", label: "Every day" },
+  { id: "once-twice", label: "1–2 times a week",   icon: Sparkles  },
+  { id: "three-five", label: "3–5 times a week",   icon: BarChart2 },
+  { id: "daily",      label: "Every day",           icon: Flame     },
 ];
 
 export function ReflectionFeelingsScreen() {
@@ -76,7 +80,7 @@ export function ReflectionFeelingsScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={13} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />
@@ -122,6 +126,7 @@ export function ReflectionFeelingsScreen() {
               <View className="gap-2">
                 {FREQUENCY_OPTIONS.map((option, index) => {
                   const isSelected = selectedFrequency === option.id;
+                  const Icon = option.icon;
 
                   return (
                     <Animated.View
@@ -145,9 +150,17 @@ export function ReflectionFeelingsScreen() {
                           shadowRadius: 8,
                         }}
                       >
-                        <View
-                          style={{ paddingHorizontal: 16, paddingVertical: 16 }}
-                        >
+                        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
+                          <View
+                            style={{
+                              width: 40, height: 40, borderRadius: 12,
+                              backgroundColor: "rgba(255,255,255,0.15)",
+                              alignItems: "center", justifyContent: "center",
+                              marginRight: 14,
+                            }}
+                          >
+                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                          </View>
                           <Text
                             style={{
                               fontFamily: "Inter_600SemiBold",

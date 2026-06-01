@@ -1,7 +1,7 @@
 /**
  * Onboarding Screen: Goal Selection Screen
  *
- * Goal selection interface — icon circles removed, text-only cards.
+ * Goal selection with trigger-style icons matching InsightsTriggerCard design.
  */
 
 import React, { useState } from "react";
@@ -12,6 +12,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
+import { Heart, Target, Eye, GitBranch } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   GoalType,
@@ -22,10 +23,13 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
+type IconComponent = React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
+
 interface GoalOption {
   id: GoalType;
   label: string;
   description: string;
+  icon: IconComponent;
 }
 
 const GOAL_OPTIONS: GoalOption[] = [
@@ -33,21 +37,25 @@ const GOAL_OPTIONS: GoalOption[] = [
     id: "emotional-processing",
     label: "Emotional Processing",
     description: "Process and understand emotions",
+    icon: Heart,
   },
   {
     id: "goal-setting",
     label: "Goal Setting",
     description: "Track and achieve your goals",
+    icon: Target,
   },
   {
     id: "self-reflection",
     label: "Self-Reflection",
     description: "Gain deeper self-awareness",
+    icon: Eye,
   },
   {
     id: "decision-making",
     label: "Decision Making",
     description: "Make clearer decisions",
+    icon: GitBranch,
   },
 ];
 
@@ -90,7 +98,7 @@ export function GoalSelectionScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={13} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />
@@ -136,6 +144,7 @@ export function GoalSelectionScreen() {
               <View className="gap-2">
                 {GOAL_OPTIONS.map((goal, index) => {
                   const isSelected = selectedGoal === goal.id;
+                  const Icon = goal.icon;
                   return (
                     <Animated.View
                       key={goal.id}
@@ -158,9 +167,17 @@ export function GoalSelectionScreen() {
                           shadowRadius: 8,
                         }}
                       >
-                        <View
-                          style={{ paddingHorizontal: 16, paddingVertical: 16 }}
-                        >
+                        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
+                          <View
+                            style={{
+                              width: 40, height: 40, borderRadius: 12,
+                              backgroundColor: "rgba(255,255,255,0.15)",
+                              alignItems: "center", justifyContent: "center",
+                              marginRight: 14,
+                            }}
+                          >
+                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                          </View>
                           <Text
                             style={{
                               fontFamily: "Inter_600SemiBold",

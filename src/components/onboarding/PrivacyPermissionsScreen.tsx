@@ -210,7 +210,7 @@ export function PrivacyPermissionsScreen() {
         style={{ flex: 1 }}
       >
         {/* Progress Bar at Top */}
-        <ProgressBar currentStep={currentStep} totalSteps={14} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />

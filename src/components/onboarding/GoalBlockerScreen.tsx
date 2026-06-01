@@ -2,7 +2,7 @@
  * Onboarding Screen: Goal Blocker Screen
  *
  * Dynamically adjusts the question based on the user's selected goal.
- * Icon circles removed — text-only cards.
+ * Trigger-style icons matching InsightsTriggerCard design.
  */
 
 import React, { useState } from "react";
@@ -13,6 +13,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
+import { Clock, ShieldAlert, RefreshCw } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   GoalBlockerType,
@@ -24,10 +25,13 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
+type IconComponent = React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
+
 interface BlockerOption {
   id: GoalBlockerType;
   label: string;
   description: string;
+  icon: IconComponent;
 }
 
 const BLOCKER_OPTIONS: BlockerOption[] = [
@@ -35,16 +39,19 @@ const BLOCKER_OPTIONS: BlockerOption[] = [
     id: "lack-of-time",
     label: "Lack of Time",
     description: "Too busy to dedicate the space",
+    icon: Clock,
   },
   {
     id: "self-doubt",
     label: "Self-Doubt",
     description: "Questioning if it will really help",
+    icon: ShieldAlert,
   },
   {
     id: "lack-of-consistency",
     label: "Lack of Consistency",
     description: "Difficulty sticking with a routine",
+    icon: RefreshCw,
   },
 ];
 
@@ -109,7 +116,7 @@ export function GoalBlockerScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={13} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />
@@ -155,6 +162,7 @@ export function GoalBlockerScreen() {
               <View className="gap-2">
                 {BLOCKER_OPTIONS.map((option, index) => {
                   const isSelected = selectedBlocker === option.id;
+                  const Icon = option.icon;
                   return (
                     <Animated.View
                       key={option.id}
@@ -177,9 +185,17 @@ export function GoalBlockerScreen() {
                           shadowRadius: 8,
                         }}
                       >
-                        <View
-                          style={{ paddingHorizontal: 16, paddingVertical: 16 }}
-                        >
+                        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
+                          <View
+                            style={{
+                              width: 40, height: 40, borderRadius: 12,
+                              backgroundColor: "rgba(255,255,255,0.15)",
+                              alignItems: "center", justifyContent: "center",
+                              marginRight: 14,
+                            }}
+                          >
+                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                          </View>
                           <Text
                             style={{
                               fontFamily: "Inter_600SemiBold",

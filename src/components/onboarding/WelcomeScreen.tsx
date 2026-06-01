@@ -74,7 +74,7 @@ export function WelcomeScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={13} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView style={{ flex: 1 }}>
           <BackButton onPress={handleBack} show={false} />

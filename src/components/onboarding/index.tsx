@@ -1,13 +1,41 @@
 /**
  * Onboarding Flow Component
  *
- * Main container that manages the 20-screen onboarding flow.
+ * Main container that manages the 23-screen onboarding flow.
+ *
+ * Step map:
+ *  0  WelcomeScreen
+ *  1  NDValueScreen1  ← "The Hidden Struggle"
+ *  2  NDValueScreen2  ← "Speak. Your AI does the rest."
+ *  3  NDValueScreen3  ← "What clarity looks like"
+ *  4  ThemeSelectionScreen
+ *  5  PersonalizePermissionScreen
+ *  6  NameCollectionScreen
+ *  7  MoodSelectionScreen
+ *  8  MoodFollowUpScreen
+ *  9  MoodInsightScreen
+ *  10 GoalSelectionScreen
+ *  11 GoalBlockerScreen
+ *  12 GoalInsightScreen
+ *  13 ReflectionFeelingsScreen
+ *  14 JournalingFrequencyInsightScreen
+ *  15 NotificationPreferencesScreen
+ *  16 LanguageSelectionScreen
+ *  17 PrivacyPermissionsScreen
+ *  18 AccountPreparationScreen
+ *  19 FreeTrialPreviewScreen
+ *  20 ReminderScreen
+ *  21 PaywallScreen
+ *  22 SetPinScreen
  */
 
 import React from 'react';
 import { View } from 'react-native';
 import useOnboardingStore from '@/lib/state/onboarding-store';
 import { WelcomeScreen } from './WelcomeScreen';
+import { NDValueScreen1 } from './NDValueScreen1';
+import { NDValueScreen2 } from './NDValueScreen2';
+import { NDValueScreen3 } from './NDValueScreen3';
 import { ThemeSelectionScreen } from './ThemeSelectionScreen';
 import { PersonalizePermissionScreen } from './PersonalizePermissionScreen';
 import { NameCollectionScreen } from './NameCollectionScreen';
@@ -33,48 +61,30 @@ export function OnboardingFlow() {
 
   const renderScreen = () => {
     switch (currentStep) {
-      case 0:
-        return <WelcomeScreen />;
-      case 1:
-        return <ThemeSelectionScreen />;
-      case 2:
-        return <PersonalizePermissionScreen />;
-      case 3:
-        return <NameCollectionScreen />;
-      case 4:
-        return <MoodSelectionScreen />;
-      case 5:
-        return <MoodFollowUpScreen />;
-      case 6:
-        return <MoodInsightScreen />;
-      case 7:
-        return <GoalSelectionScreen />;
-      case 8:
-        return <GoalBlockerScreen />;
-      case 9:
-        return <GoalInsightScreen />;
-      case 10:
-        return <ReflectionFeelingsScreen />;
-      case 11:
-        return <JournalingFrequencyInsightScreen />;
-      case 12:
-        return <NotificationPreferencesScreen />;
-      case 13:
-        return <LanguageSelectionScreen />;
-      case 14:
-        return <PrivacyPermissionsScreen />;
-      case 15:
-        return <AccountPreparationScreen />;
-      case 16:
-        return <FreeTrialPreviewScreen />;
-      case 17:
-        return <ReminderScreen />;
-      case 18:
-        return <PaywallScreen />;
-      case 19:
-        return <SetPinScreen />;
-      default:
-        return <WelcomeScreen />;
+      case 0:  return <WelcomeScreen />;
+      case 1:  return <NDValueScreen1 />;
+      case 2:  return <NDValueScreen2 />;
+      case 3:  return <NDValueScreen3 />;
+      case 4:  return <ThemeSelectionScreen />;
+      case 5:  return <PersonalizePermissionScreen />;
+      case 6:  return <NameCollectionScreen />;
+      case 7:  return <MoodSelectionScreen />;
+      case 8:  return <MoodFollowUpScreen />;
+      case 9:  return <MoodInsightScreen />;
+      case 10: return <GoalSelectionScreen />;
+      case 11: return <GoalBlockerScreen />;
+      case 12: return <GoalInsightScreen />;
+      case 13: return <ReflectionFeelingsScreen />;
+      case 14: return <JournalingFrequencyInsightScreen />;
+      case 15: return <NotificationPreferencesScreen />;
+      case 16: return <LanguageSelectionScreen />;
+      case 17: return <PrivacyPermissionsScreen />;
+      case 18: return <AccountPreparationScreen />;
+      case 19: return <FreeTrialPreviewScreen />;
+      case 20: return <ReminderScreen />;
+      case 21: return <PaywallScreen />;
+      case 22: return <SetPinScreen />;
+      default: return <WelcomeScreen />;
     }
   };
 
@@ -86,6 +96,9 @@ export function OnboardingFlow() {
 }
 
 export { WelcomeScreen } from './WelcomeScreen';
+export { NDValueScreen1 } from './NDValueScreen1';
+export { NDValueScreen2 } from './NDValueScreen2';
+export { NDValueScreen3 } from './NDValueScreen3';
 export { ThemeSelectionScreen } from './ThemeSelectionScreen';
 export { PersonalizePermissionScreen } from './PersonalizePermissionScreen';
 export { NameCollectionScreen } from './NameCollectionScreen';
