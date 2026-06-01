@@ -1717,11 +1717,10 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
       className="mb-6"
       style={{
         backgroundColor: "rgba(255, 255, 255, 0.12)",
-        borderWidth: 1,
-        borderColor: hexToRgba(Colors.primary, 0.15),
-        borderRadius: BorderRadius.xxlarge,
+        borderWidth: 2,
+        borderColor: "rgba(255, 255, 255, 0.20)",
+        borderRadius: 24,
         overflow: "hidden",
-        ...Shadows.medium,
       }}
     >
       <View className="p-5">
@@ -1845,11 +1844,10 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
       className="mb-6"
       style={{
         backgroundColor: "rgba(255, 255, 255, 0.12)",
-        borderWidth: 1,
-        borderColor: hexToRgba(Colors.primary, 0.15),
-        borderRadius: BorderRadius.xxlarge,
+        borderWidth: 2,
+        borderColor: "rgba(255, 255, 255, 0.20)",
+        borderRadius: 24,
         overflow: "hidden",
-        ...Shadows.medium,
       }}
     >
       <View className="p-5">
