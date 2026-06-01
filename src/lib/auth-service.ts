@@ -11,19 +11,57 @@ const PIN_KEY = 'user_pin_code';
 const AUTH_ENABLED_KEY = 'auth_enabled';
 
 /**
- * Lazy-load expo-local-authentication to avoid a hard crash in environments
- * where the native module isn't present (e.g. Expo Go without a dev build).
- * Mirrors the lazy-require pattern used for expo-av elsewhere in the app.
+ * Whether the ExpoLocalAuthentication NATIVE module is actually present in the
+ * running binary. In Expo Go (or a dev build created before the dependency was
+ * added) the native side is missing, and simply `require()`-ing
+ * `expo-local-authentication` triggers expo-modules-core to throw AND log
+ * "Cannot find native module 'ExpoLocalAuthentication'".
+ *
+ * To avoid that entirely we first probe with `requireOptionalNativeModule`,
+ * the non-throwing, non-logging variant. We only `require` the JS package when
+ * the native module genuinely exists.
  */
-function getLocalAuth(): typeof import('expo-local-authentication') | null {
+let _localAuthModule:
+  | typeof import('expo-local-authentication')
+  | null
+  | undefined;
+
+function isNativeAuthAvailable(): boolean {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require('expo-local-authentication');
-  } catch (e) {
-    console.warn(
-      '[auth-service] expo-local-authentication not available:',
-      (e as Error)?.message,
-    );
+    const core = require('expo-modules-core');
+    // requireOptionalNativeModule returns null instead of throwing/logging
+    // when the native module is not linked into the binary.
+    if (typeof core?.requireOptionalNativeModule === 'function') {
+      return core.requireOptionalNativeModule('ExpoLocalAuthentication') != null;
+    }
+    // Older cores: fall back to the proxy table (also non-throwing).
+    return Boolean(core?.NativeModulesProxy?.ExpoLocalAuthentication);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Lazy-load expo-local-authentication ONLY when its native module is present,
+ * so environments without it (Expo Go / stale dev build) degrade silently with
+ * no error logs. Result is cached after the first probe.
+ */
+function getLocalAuth(): typeof import('expo-local-authentication') | null {
+  if (_localAuthModule !== undefined) return _localAuthModule;
+
+  if (!isNativeAuthAvailable()) {
+    _localAuthModule = null;
+    return null;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    _localAuthModule = require('expo-local-authentication');
+    return _localAuthModule;
+  } catch {
+    // Defensive: should not happen once the probe passed.
+    _localAuthModule = null;
     return null;
   }
 }
