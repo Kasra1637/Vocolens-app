@@ -29,8 +29,15 @@ import Animated, {
   Easing,
   cancelAnimation,
   FadeOut,
+  FadeIn,
   interpolateColor,
 } from "react-native-reanimated";
+
+// Welcome-screen entrance animation — gentle fade-in with SOFT easing
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
+const ENTER_1 = FadeIn.duration(900).delay(100).easing(SOFT);
+const ENTER_2 = FadeIn.duration(900).delay(250).easing(SOFT);
+const ENTER_3 = FadeIn.duration(800).delay(400).easing(SOFT);
 import { MicButton } from "@/components/MicButton";
 import {
   heavyHaptic,
@@ -587,7 +594,7 @@ export default function SpeakScreen() {
         }}
       >
         {/* Header */}
-        <View className="items-center">
+        <Animated.View entering={ENTER_1} className="items-center">
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
@@ -617,7 +624,7 @@ export default function SpeakScreen() {
               </Text>
             </Pressable>
           ) : null}
-        </View>
+        </Animated.View>
 
         {/* Permission Denied Warning */}
         {permissionMessage && permissionMessage.trim().length > 0 ? (
@@ -801,7 +808,7 @@ export default function SpeakScreen() {
         !hasTranscript &&
         !permissionMessage &&
         !errorMessage ? (
-          <View className="w-full" style={{ marginTop: 4 }}>
+          <Animated.View entering={ENTER_2} className="w-full" style={{ marginTop: 4 }}>
             <View
               className="rounded-3xl overflow-hidden"
               style={{
@@ -924,7 +931,7 @@ export default function SpeakScreen() {
                 ) : null}
               </View>
             </View>
-          </View>
+          </Animated.View>
         ) : null}
 
         {/* Recording Status Display with Live Transcription */}
@@ -1112,7 +1119,7 @@ export default function SpeakScreen() {
 
         {/* Microphone Button */}
         {/* ── Recording Controls / Mic Button ── */}
-        <View className="items-center" style={{ marginBottom: 48 }}>
+        <Animated.View entering={ENTER_3} className="items-center" style={{ marginBottom: 48 }}>
           {isActiveSession ? (
             /* Recording or Paused — two-button layout */
             <View className="items-center">
@@ -1245,7 +1252,7 @@ export default function SpeakScreen() {
               </Text>
             </>
           )}
-        </View>
+        </Animated.View>
       </View>
 
       {/* Emotion Reflection Screen */}

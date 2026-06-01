@@ -46,12 +46,22 @@ import {
 import Animated, {
   FadeOut,
   FadeInUp,
+  FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withDelay,
   withTiming,
+  Easing,
 } from "react-native-reanimated";
+
+// Welcome-screen entrance animation — gentle fade-in with SOFT easing
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
+const ENTER_1 = FadeIn.duration(900).delay(100).easing(SOFT);
+const ENTER_2 = FadeIn.duration(900).delay(250).easing(SOFT);
+const ENTER_3 = FadeIn.duration(900).delay(400).easing(SOFT);
+const ENTER_4 = FadeIn.duration(900).delay(550).easing(SOFT);
+const ENTER_5 = FadeIn.duration(900).delay(700).easing(SOFT);
 import { selectHaptic, tapHaptic, selectionHaptic } from "@/lib/haptics";
 import {
   BorderRadius,
@@ -472,7 +482,7 @@ function InsightsContent({
       >
         {/* Demo Data Button - Remove in production */}
         {entries.length === 0 && (
-          <View className="mb-4">
+          <Animated.View entering={ENTER_1} className="mb-4">
             <Pressable
               onPress={handlePopulateDummyData}
               style={{
@@ -510,23 +520,23 @@ function InsightsContent({
                 Populate with sample journal entries to preview features
               </Text>
             </Pressable>
-          </View>
+          </Animated.View>
         )}
 
         {/* Welcome Section */}
-        <View>
+        <Animated.View entering={ENTER_1}>
           <WelcomeSection user={user} totalEntries={stats.totalEntries} />
-        </View>
+        </Animated.View>
 
         {/* Weekly Reflection Summary */}
         {entries.length >= 1 && (
-          <View>
+          <Animated.View entering={ENTER_2}>
             <WeeklyReflectionCard primaryColor={Colors.primary} />
-          </View>
+          </Animated.View>
         )}
 
         {/* Journal Streak Calendar */}
-        <View>
+        <Animated.View entering={ENTER_2}>
           <View className="mb-6">
             <StreakCalendar
               entries={entries}
@@ -534,15 +544,16 @@ function InsightsContent({
               currentStreak={stats.currentStreak}
             />
           </View>
-        </View>
+        </Animated.View>
 
         {/* Mood Story Timeline */}
-        <View>
+        <Animated.View entering={ENTER_3}>
           <MoodStoryTimeline entries={entries} primaryColor={Colors.primary} />
-        </View>
+        </Animated.View>
 
         {/* Valence-Arousal Emotional Landscape */}
-        <View
+        <Animated.View
+          entering={ENTER_3}
           className="overflow-hidden mb-6"
           style={{
             backgroundColor: "rgba(255, 255, 255, 0.12)",
@@ -555,7 +566,7 @@ function InsightsContent({
             entries={entries}
             primaryColor={Colors.primary}
           />
-        </View>
+        </Animated.View>
 
         {/* Where You Feel Things — Body Frequency Card */}
         {entries.length >= 3 &&
@@ -585,7 +596,8 @@ function InsightsContent({
               .slice(0, 6);
             if (sorted.length === 0) return null;
             return (
-              <View
+              <Animated.View
+                entering={ENTER_3}
                 className="rounded-3xl overflow-hidden mb-6"
                 style={{
                   backgroundColor: "rgba(255, 255, 255, 0.12)",
@@ -666,7 +678,7 @@ function InsightsContent({
                       </View>
                     );
                   })}
-              </View>
+              </Animated.View>
             );
           })()}
 
@@ -674,13 +686,13 @@ function InsightsContent({
         {entries.length >= 5 &&
           priorityInsights &&
           priorityInsights.length > 0 && (
-            <View>
+            <Animated.View entering={ENTER_4}>
               <DeepInsightsSection insights={priorityInsights} />
-            </View>
+            </Animated.View>
           )}
 
         {/* Trigger Detection Section */}
-        <View>
+        <Animated.View entering={ENTER_4}>
           <View
             className="mb-6"
             style={{
@@ -716,19 +728,19 @@ function InsightsContent({
               )}
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Emotional Themes */}
         {topThemes.length > 0 && (
-          <View>
+          <Animated.View entering={ENTER_5}>
             <EmotionalThemes themes={topThemes} />
-          </View>
+          </Animated.View>
         )}
 
         {/* Time of Day Patterns */}
-        <View>
+        <Animated.View entering={ENTER_5}>
           <TimeOfDayPatterns patterns={timeOfDayPatterns} />
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );

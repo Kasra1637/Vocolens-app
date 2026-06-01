@@ -37,7 +37,15 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  Easing,
 } from "react-native-reanimated";
+
+// Welcome-screen entrance animation — gentle fade-in with SOFT easing
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
+const ENTER_1 = FadeIn.duration(900).delay(100).easing(SOFT);
+const ENTER_2 = FadeIn.duration(900).delay(250).easing(SOFT);
+const ENTER_3 = FadeIn.duration(900).delay(400).easing(SOFT);
+const ENTER_4 = FadeIn.duration(900).delay(550).easing(SOFT);
 import {
   tapHaptic,
   selectHaptic,
@@ -227,7 +235,7 @@ export default function EntriesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View className="mb-6">
+        <Animated.View entering={ENTER_1} className="mb-6">
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
@@ -267,10 +275,10 @@ export default function EntriesScreen() {
               Total Entries
             </Text>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Filter & Search Section */}
-        <View>
+        <Animated.View entering={ENTER_2}>
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
@@ -466,9 +474,10 @@ export default function EntriesScreen() {
               )}
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Entry Cards */}
+        <Animated.View entering={ENTER_3}>
         {filteredEntries.map((entry, index) => (
           <View key={entry.id}>
             <EntryCard
@@ -504,6 +513,7 @@ export default function EntriesScreen() {
             </Text>
           </View>
         )}
+        </Animated.View>
       </ScrollView>
 
       {/* Delete Confirmation Modal */}

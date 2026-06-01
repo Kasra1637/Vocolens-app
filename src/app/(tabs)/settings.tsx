@@ -40,6 +40,16 @@ import {
   Globe,
 } from "lucide-react-native";
 import Animated from "react-native-reanimated";
+import { FadeIn, Easing } from "react-native-reanimated";
+
+// Welcome-screen entrance animation — gentle fade-in with SOFT easing
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
+const ENTER_1 = FadeIn.duration(900).delay(100).easing(SOFT);
+const ENTER_2 = FadeIn.duration(900).delay(250).easing(SOFT);
+const ENTER_3 = FadeIn.duration(900).delay(400).easing(SOFT);
+const ENTER_4 = FadeIn.duration(900).delay(550).easing(SOFT);
+const ENTER_5 = FadeIn.duration(900).delay(700).easing(SOFT);
+const ENTER_6 = FadeIn.duration(800).delay(850).easing(SOFT);
 import {
   selectHaptic,
   tapHaptic,
@@ -369,7 +379,7 @@ export default function SettingsScreen() {
       >
         <SafeAreaView className="flex-1">
           {/* Header */}
-          <View className="px-6 pt-4 pb-6">
+          <Animated.View entering={ENTER_1} className="px-6 pt-4 pb-6">
             <View>
               <Text
                 className="text-white font-bold mb-2 text-center"
@@ -384,7 +394,7 @@ export default function SettingsScreen() {
                 Customize your experience
               </Text>
             </View>
-          </View>
+          </Animated.View>
 
           {/* Settings Content */}
           <ScrollView
@@ -393,7 +403,7 @@ export default function SettingsScreen() {
             contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
           >
             {/* Usage Limit Card */}
-            <View className="mb-6">
+            <Animated.View entering={ENTER_2} className="mb-6">
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
@@ -504,10 +514,10 @@ export default function SettingsScreen() {
                   </Text>
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Theme Customization */}
-            <View className="mb-6">
+            <Animated.View entering={ENTER_3} className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -654,10 +664,10 @@ export default function SettingsScreen() {
                   </View>
                 ))}
               </View>
-            </View>
+            </Animated.View>
 
             {/* Notifications */}
-            <View className="mb-6">
+            <Animated.View entering={ENTER_4} className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -716,10 +726,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Time Format */}
-            <View className="mb-6">
+            <Animated.View entering={ENTER_4} className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -780,10 +790,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Emotion Reflection */}
-            <View className="mb-6">
+            <Animated.View entering={ENTER_5} className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -935,10 +945,10 @@ export default function SettingsScreen() {
                   </View>
                 </Pressable>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Transcription Language */}
-            <View className="mb-6">
+            <Animated.View entering={ENTER_5} className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -1008,10 +1018,10 @@ export default function SettingsScreen() {
                   />
                 </View>
               </Pressable>
-            </View>
+            </Animated.View>
 
             {/* Privacy & Security */}
-            <View className="mb-6">
+            <Animated.View entering={ENTER_6} className="mb-6">
               <View className="flex-row items-center mb-3">
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -1264,7 +1274,7 @@ export default function SettingsScreen() {
                   </Pressable>
                 </View>
               </View>
-            </View>
+            </Animated.View>
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>
