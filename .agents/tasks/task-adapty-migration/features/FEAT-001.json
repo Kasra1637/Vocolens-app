@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "chore",
   "description": "Install Adapty packages, remove RevenueCat packages, and update app.json with Adapty Expo plugins.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Run: cd /projects/sandbox/Vocolens-app && npx expo install react-native-adapty adaptyui-react-native --fix",
     "Remove RevenueCat packages: npm uninstall react-native-purchases react-native-purchases-ui --legacy-peer-deps",
@@ -21,5 +21,5 @@
     "Run: cd /projects/sandbox/Vocolens-app && cat app.json | grep adapty to confirm plugins"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "The package 'adaptyui-react-native' does not exist on npm. The Adapty UI module was deprecated and merged into react-native-adapty since v3.3.1+. Only react-native-adapty (v3.15.6) is needed - it includes both SDK and UI functionality. Only one plugin entry ('react-native-adapty') is needed in app.json since it bundles both. Pre-existing TypeScript errors exist in the project (23 errors) unrelated to this change. The .gitignore has multiple .env.* patterns that block .env.example; used git add -f to force-add it."
 }
