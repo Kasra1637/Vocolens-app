@@ -619,32 +619,22 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
             <View
               style={{
                 position: "relative",
-                width: 64,
-                height: 64,
+                width: 40,
+                height: 40,
               }}
             >
               <View
                 style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 32,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
+                  backgroundColor: "rgba(255, 255, 255, 0.15)",
                 }}
               >
-                <View
-                  style={{
-                    position: "absolute",
-                    width: 64,
-                    height: 64,
-                    borderRadius: 32,
-                    backgroundColor: hexToRgba(Colors.primary, 0.2),
-                  }}
-                />
-                <View style={{ zIndex: 1 }}>
-                  <Icon size={32} color="#FFFFFF" strokeWidth={2} />
-                </View>
+                <Icon size={22} color="#FFFFFF" strokeWidth={2} />
               </View>
 
               {/* Lock/Unlock Indicator */}
@@ -653,16 +643,14 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                   position: "absolute",
                   bottom: -2,
                   right: -2,
-                  width: 24,
-                  height: 24,
-                  borderRadius: 12,
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
                   backgroundColor: "#FFFFFF",
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: 2,
-                  borderColor: isDarkMode
-                    ? hexToRgba(Colors.primary, 0.2)
-                    : "#FFFFFF",
+                  borderColor: "#FFFFFF",
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: 0.2,
@@ -729,7 +717,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 style={{
                   height: 6,
                   borderRadius: 3,
-                  backgroundColor: hexToRgba(Colors.primary, 0.15),
+                  backgroundColor: "rgba(255, 255, 255, 0.12)",
                   overflow: "hidden",
                 }}
               >

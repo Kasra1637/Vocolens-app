@@ -151,7 +151,8 @@ export default function ValenceArousalChart({
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
-    if (w > 0) setChartWidth(w);
+    // Subtract horizontal padding (20 each side) so the SVG fits exactly
+    if (w > 0) setChartWidth(Math.max(w - 40, 100));
   }, []);
 
   const handleRangePress = (id: TimeRange) => {
@@ -433,7 +434,7 @@ export default function ValenceArousalChart({
         <Animated.View key={range} entering={FadeIn.duration(300)}>
           {/* SVG Chart */}
           <View
-            style={{ paddingHorizontal: 20, paddingBottom: 8 }}
+            style={{ paddingHorizontal: 20, paddingBottom: 8, alignItems: "center" }}
             onLayout={onLayout}
           >
             <ChartSvg

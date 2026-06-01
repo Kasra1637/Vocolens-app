@@ -881,11 +881,11 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
             <View style={{ marginRight: 12 }}>
               <AnimatedStreakFlame
                 streak={user.streak}
-                size={26}
-                badgeSize={48}
-                badgeRadius={BorderRadius.large}
-                badgeColor={hexToRgba(Colors.primary, 0.15)}
-                glowColor={hexToRgba(Colors.primary, 0.6)}
+                size={22}
+                badgeSize={40}
+                badgeRadius={12}
+                badgeColor="rgba(255, 255, 255, 0.15)"
+                glowColor="rgba(255, 255, 255, 0.5)"
               />
             </View>
             <View>
@@ -2046,11 +2046,10 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
       className="mb-6"
       style={{
         backgroundColor: "rgba(255, 255, 255, 0.12)",
-        borderWidth: 1,
-        borderColor: hexToRgba(Colors.primary, 0.15),
+        borderWidth: 2,
+        borderColor: "rgba(255, 255, 255, 0.20)",
         borderRadius: BorderRadius.xxlarge,
         overflow: "hidden",
-        ...Shadows.medium,
       }}
     >
       <View className="p-5">
