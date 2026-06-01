@@ -579,10 +579,6 @@ export default function SettingsScreen() {
                     : isNearLimit
                       ? "rgba(255, 200, 80, 0.4)"
                       : "rgba(255, 255, 255, 0.20)",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
                 }}
               >
                 <View className="p-5">
@@ -688,10 +684,6 @@ export default function SettingsScreen() {
                   backgroundColor: surfaceBg,
                   borderWidth: 2,
                   borderColor: borderColor,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
                   overflow: "hidden",
                 }}
               >
@@ -850,10 +842,6 @@ export default function SettingsScreen() {
                   backgroundColor: surfaceBg,
                   borderWidth: 2,
                   borderColor: borderColor,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
                   overflow: "hidden",
                 }}
               >
@@ -916,10 +904,6 @@ export default function SettingsScreen() {
                   backgroundColor: surfaceBg,
                   borderWidth: 2,
                   borderColor: borderColor,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
                 }}
               >
                 {/* Section header */}
@@ -1092,10 +1076,6 @@ export default function SettingsScreen() {
                   borderWidth: 2,
                   borderColor: borderColor,
                   borderRadius: 24,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
                   overflow: "hidden",
                 }}
               >
@@ -1153,10 +1133,6 @@ export default function SettingsScreen() {
                   backgroundColor: surfaceBg,
                   borderWidth: 2,
                   borderColor: borderColor,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
                 }}
               >
                 {/* Section header */}
