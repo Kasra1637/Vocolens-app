@@ -122,7 +122,7 @@ export function NDValueScreen1() {
                   lineHeight: 23,
                 }}
               >
-                You're not broken. Your brain just works differently — and that deserves real support, not judgment.
+                Being neurodivergent means you feel deeply — and that's a genuine strength.
               </Text>
             </Animated.View>
 
