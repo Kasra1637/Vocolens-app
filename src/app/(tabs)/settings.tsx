@@ -3,7 +3,7 @@
  * Customizable settings menu for theme, notifications, dark mode, PIN, time, and sign out
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   Modal,
   Alert,
   Platform,
-  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,8 +24,6 @@ import {
 import {
   Palette,
   Bell,
-  Lock,
-  Clock,
   LogOut,
   Check,
   X,
@@ -62,7 +59,6 @@ import useOnboardingStore, {
   THEME_COLORS,
 } from "@/lib/state/onboarding-store";
 import useSettingsStore, {
-  TimeFormat,
   EmotionReflectionMode,
 } from "@/lib/state/settings-store";
 import {
@@ -72,7 +68,6 @@ import {
 } from "@/lib/theme";
 import { ThemedSwitch } from "@/components/ThemedSwitch";
 import { NotificationService } from "@/lib/services/notification-service";
-import { changePin, verifyPin } from "@/lib/auth-service";
 import { BrandedAlert } from "@/components/BrandedAlert";
 import {
   useUsageMinutes,
@@ -92,11 +87,7 @@ import { hexToRgba, GlassLayers } from "@/lib/glass";
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
-  const [pinModalVisible, setPinModalVisible] = useState(false);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
-  const [currentPin, setCurrentPin] = useState("");
-  const [newPin, setNewPin] = useState("");
-  const [pinStep, setPinStep] = useState<"current" | "new">("current");
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
   const [alertTitle, setAlertTitle] = useState("");
@@ -104,14 +95,6 @@ export default function SettingsScreen() {
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [isExporting, setIsExporting] = useState(false);
-  const pinInputRef = useRef<TextInput>(null);
-
-  useEffect(() => {
-    if (pinModalVisible) {
-      const t = setTimeout(() => pinInputRef.current?.focus(), 350);
-      return () => clearTimeout(t);
-    }
-  }, [pinModalVisible, pinStep]);
   // Onboarding Store (for theme and notification time)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const setSelectedTheme = useOnboardingStore((s) => s.setSelectedTheme);
@@ -127,8 +110,6 @@ export default function SettingsScreen() {
   );
   const dailyReminderTime = useSettingsStore((s) => s.dailyReminderTime);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
-  const timeFormat = useSettingsStore((s) => s.timeFormat);
-  const setTimeFormat = useSettingsStore((s) => s.setTimeFormat);
   const emotionReflectionMode = useSettingsStore(
     (s) => s.emotionReflectionMode,
   );
@@ -212,66 +193,6 @@ export default function SettingsScreen() {
       // User wants to disable notifications
       await NotificationService.cancelAllNotifications();
       setNotificationsEnabled(false);
-    }
-  };
-
-  const handleTimeFormatToggle = (value: boolean) => {
-    selectHaptic();
-    setTimeFormat(value ? "24h" : "12h");
-  };
-
-  const handleOpenPinChange = () => {
-    tapHaptic();
-    setPinModalVisible(true);
-    setPinStep("current");
-    setCurrentPin("");
-    setNewPin("");
-  };
-
-  const handlePinChange = async () => {
-    confirmHaptic();
-
-    if (pinStep === "current") {
-      // Verify current PIN
-      const isValid = await verifyPin(currentPin);
-      if (!isValid) {
-        showAlert(
-          "error",
-          "Incorrect PIN",
-          "Current PIN is incorrect. Please try again.",
-        );
-        setCurrentPin("");
-        return;
-      }
-      setPinStep("new");
-    } else if (pinStep === "new") {
-      // Change PIN directly
-      const success = await changePin(currentPin, newPin);
-      if (success) {
-        showAlert(
-          "success",
-          "PIN Changed",
-          "Your PIN has been changed successfully.",
-        );
-        setPinModalVisible(false);
-        setCurrentPin("");
-        setNewPin("");
-        setPinStep("current");
-      } else {
-        showAlert(
-          "error",
-          "Change Failed",
-          "Failed to change PIN. Please try again.",
-        );
-      }
-    }
-  };
-
-  const handlePinInput = (value: string) => {
-    if (pinStep === "current") {
-      setCurrentPin(value);
-    } else {
-      setNewPin(value);
     }
   };
 
@@ -728,70 +649,6 @@ export default function SettingsScreen() {
               </View>
             </Animated.View>
 
-            {/* Time Format */}
-            <Animated.View entering={ENTER_4} className="mb-6">
-              <View className="flex-row items-center mb-3">
-                <View
-                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: hexToRgba(Colors.primary, 0.2) }}
-                >
-                  <Clock size={20} color="#FFFFFF" />
-                </View>
-                <Text
-                  className="text-xl font-bold"
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Time Format
-                </Text>
-              </View>
-
-              <View
-                className="rounded-3xl p-5"
-                style={{
-                  backgroundColor: surfaceBg,
-                  borderWidth: 2,
-                  borderColor: borderColor,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 8,
-                }}
-              >
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1 mr-4">
-                    <Text
-                      className="text-base font-semibold mb-1"
-                      style={{
-                        fontFamily: "Inter_600SemiBold",
-                        color: "#FFFFFF",
-                      }}
-                    >
-                      24-Hour Format
-                    </Text>
-                    <Text
-                      style={{
-                        color: "rgba(255, 255, 255, 0.8)",
-                        fontSize: 15,
-                      }}
-                    >
-                      {timeFormat === "24h"
-                        ? "Using 24-hour format (14:00)"
-                        : "Using 12-hour format (2:00 PM)"}
-                    </Text>
-                  </View>
-                  <ThemedSwitch
-                    value={timeFormat === "24h"}
-                    onValueChange={handleTimeFormatToggle}
-                    trackColor={Colors.primary}
-                    thumbColor="#FFFFFF"
-                  />
-                </View>
-              </View>
-            </Animated.View>
-
             {/* Emotion Reflection */}
             <Animated.View entering={ENTER_5} className="mb-6">
               <View className="flex-row items-center mb-3">
@@ -1052,99 +909,6 @@ export default function SettingsScreen() {
                   shadowRadius: 8,
                 }}
               >
-                <Pressable
-                  onPress={handleOpenPinChange}
-                  className="p-5 active:opacity-70"
-                  style={{
-                    borderBottomWidth: 1,
-                    borderBottomColor: hexToRgba(Colors.primary, 0.1),
-                  }}
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <Text
-                        className="text-base font-semibold mb-1"
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "#FFFFFF",
-                        }}
-                      >
-                        Change PIN
-                      </Text>
-                      <Text
-                        style={{
-                          color: "rgba(255, 255, 255, 0.8)",
-                          fontSize: 15,
-                        }}
-                      >
-                        Update your security PIN
-                      </Text>
-                    </View>
-                    <View
-                      className="w-8 h-8 rounded-full items-center justify-center"
-                      style={{
-                        backgroundColor: hexToRgba(Colors.primary, 0.2),
-                      }}
-                    >
-                      <Lock size={16} color="#FFFFFF" />
-                    </View>
-                  </View>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => {
-                    tapHaptic();
-                    router.push("/legal");
-                  }}
-                  className="active:opacity-70"
-                  style={{
-                    margin: 12,
-                    marginTop: 0,
-                    borderRadius: 20,
-                    overflow: "hidden",
-                  }}
-                >
-                  <View
-                    style={{
-                      paddingVertical: 16,
-                      paddingHorizontal: 18,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      backgroundColor: hexToRgba(Colors.primary, 0.12),
-                      borderWidth: 2,
-                      borderColor: hexToRgba(Colors.primary, 0.25),
-                      borderRadius: 20,
-                    }}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "#FFFFFF",
-                          fontSize: 15,
-                          marginBottom: 2,
-                        }}
-                      >
-                        Privacy Policy & Terms
-                      </Text>
-                      <Text
-                        style={{
-                          color: "rgba(255, 255, 255, 0.7)",
-                          fontSize: 13,
-                        }}
-                      >
-                        How your data is used & protected
-                      </Text>
-                    </View>
-                    <ChevronRight
-                      size={20}
-                      color="rgba(255, 255, 255, 0.6)"
-                      strokeWidth={2}
-                    />
-                  </View>
-                </Pressable>
-
                 {/* Export & Reset Data */}
                 <View className="p-5">
                   {/* Export Data */}
@@ -1278,149 +1042,6 @@ export default function SettingsScreen() {
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>
-
-      {/* PIN Change Modal */}
-      <Modal
-        visible={pinModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setPinModalVisible(false)}
-      >
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
-          <View
-            style={{
-              backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[2],
-              borderRadius: 24,
-              padding: 24,
-              width: "100%",
-              maxWidth: 400,
-              borderWidth: 2,
-              borderColor: "rgba(255, 255, 255, 0.20)",
-              overflow: "hidden",
-            }}
-          >
-            {/* Hidden native number keyboard input */}
-            <TextInput
-              ref={pinInputRef}
-              value={pinStep === "current" ? currentPin : newPin}
-              onChangeText={(text) => {
-                const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
-                handlePinInput(cleaned);
-                if (cleaned.length === 4) {
-                  setTimeout(() => handlePinChange(), 120);
-                }
-              }}
-              keyboardType="number-pad"
-              maxLength={4}
-              caretHidden
-              style={{ position: "absolute", opacity: 0, width: 1, height: 1 }}
-            />
-
-            {/* Header */}
-            <Pressable
-              style={{ position: "absolute", top: 20, right: 20, zIndex: 10, width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }}
-              onPress={() => setPinModalVisible(false)}
-            >
-              <X size={20} color="#FFFFFF" strokeWidth={2.5} />
-            </Pressable>
-
-            <Text
-              style={{
-                fontFamily: "Inter_700Bold",
-                fontSize: 22,
-                color: "#FFFFFF",
-                textAlign: "center",
-                marginBottom: 6,
-                marginTop: 4,
-              }}
-            >
-              Change PIN
-            </Text>
-            <Text
-              style={{
-                fontFamily: "Inter_400Regular",
-                fontSize: 14,
-                color: "rgba(255,255,255,0.70)",
-                textAlign: "center",
-                marginBottom: 24,
-              }}
-            >
-              {pinStep === "current" ? "Enter your current PIN" : "Enter your new PIN"}
-            </Text>
-
-            {/* Step indicator */}
-            <View style={{ flexDirection: "row", justifyContent: "center", gap: 8, marginBottom: 28 }}>
-              <View style={{ width: 32, height: 6, borderRadius: 3, backgroundColor: Colors.primary }} />
-              <View style={{ width: 32, height: 6, borderRadius: 3, backgroundColor: pinStep === "new" ? Colors.primary : "rgba(255,255,255,0.2)" }} />
-            </View>
-
-            {/* PIN dots */}
-            <Pressable
-              style={{ alignItems: "center", marginBottom: 20 }}
-              onPress={() => pinInputRef.current?.focus()}
-            >
-              <View style={{ flexDirection: "row", gap: 20, justifyContent: "center", marginBottom: 16 }}>
-                {[0, 1, 2, 3].map((i) => {
-                  const val = pinStep === "current" ? currentPin : newPin;
-                  const isFilled = i < val.length;
-                  return (
-                    <View
-                      key={i}
-                      style={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: 9,
-                        borderWidth: 2,
-                        borderColor: "#FFFFFF",
-                        backgroundColor: isFilled ? "#FFFFFF" : "transparent",
-                      }}
-                    />
-                  );
-                })}
-              </View>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.55)",
-                  textAlign: "center",
-                }}
-              >
-                Tap here to open keyboard
-              </Text>
-            </Pressable>
-
-            {/* Confirm button */}
-            <Pressable
-              onPress={handlePinChange}
-              disabled={
-                (pinStep === "current" && currentPin.length !== 4) ||
-                (pinStep === "new" && newPin.length !== 4)
-              }
-              style={{
-                opacity:
-                  (pinStep === "current" && currentPin.length !== 4) ||
-                  (pinStep === "new" && newPin.length !== 4)
-                    ? 0.45
-                    : 1,
-                borderRadius: 20,
-                overflow: "hidden",
-              }}
-            >
-              <LinearGradient
-                colors={Gradients.primary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{ padding: 16, alignItems: "center", borderRadius: 20 }}
-              >
-                <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 16 }}>
-                  {pinStep === "new" ? "Change PIN" : "Continue"}
-                </Text>
-              </LinearGradient>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
 
       {/* Sign Out Confirmation Modal */}
       <Modal

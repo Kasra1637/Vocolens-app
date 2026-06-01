@@ -118,7 +118,7 @@ export default function EntryDetailScreen() {
 
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
-  const timeFormat = useSettingsStore((s) => s.timeFormat);
+  // Time is always displayed in the device's local 12-hour format.
   const Colors = getThemeColors(selectedTheme, isDarkMode);
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
@@ -243,10 +243,7 @@ export default function EntryDetailScreen() {
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    if (timeFormat === "24h") {
-      return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-    }
-    return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", hour12: true });
   };
 
 

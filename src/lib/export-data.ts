@@ -98,7 +98,6 @@ export async function exportAllDataAsCsv(): Promise<void> {
       ['Notifications Enabled', String(settings.notificationsEnabled)],
       ['Daily Reminder Time', settings.dailyReminderTime],
       ['Dark Mode', String(settings.isDarkMode)],
-      ['Time Format', settings.timeFormat],
       ['Emotion Reflection Mode', settings.emotionReflectionMode],
       ['Theme', onboarding.selectedTheme],
       ['Transcription Language', onboarding.selectedTranscriptionLanguage],
