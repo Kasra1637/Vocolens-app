@@ -19,8 +19,6 @@ import {
   PanResponder,
   StyleSheet,
   Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from "react-native";
 
 const SCREEN_W = Dimensions.get("window").width;
@@ -133,33 +131,39 @@ export default function EmotionCorrectionModal({
 }: Props) {
   const insets = useSafeAreaInsets();
 
-  // ── Pager ─────────────────────────────────────────────────────────────────
-  // Steps are laid out horizontally; swipe or button navigates between pages.
+  // ── Step navigation ─────────────────────────────────────────────────────
   const STEPS = ["initial", "replace", "explain"] as const;
   type Step = typeof STEPS[number];
   const [step, setStep] = useState<Step>("initial");
-  const pagerRef = useRef<ScrollView>(null);
-  const isScrollingProgrammatically = useRef(false);
 
   const scrollToStep = useCallback((s: Step) => {
-    const idx = STEPS.indexOf(s);
-    isScrollingProgrammatically.current = true;
-    pagerRef.current?.scrollTo({ x: idx * SCREEN_W, animated: true });
     setStep(s);
   }, []);
 
-  const handlePageScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (isScrollingProgrammatically.current) {
-        isScrollingProgrammatically.current = false;
-        return;
-      }
-      const page = Math.round(e.nativeEvent.contentOffset.x / SCREEN_W);
-      const newStep = STEPS[page];
-      if (newStep && newStep !== step) setStep(newStep);
-    },
-    [step],
-  );
+  // Horizontal swipe PanResponder — dx > 60 = next, dx < -60 = prev
+  const swipePan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_evt, gs) =>
+        Math.abs(gs.dx) > 12 && Math.abs(gs.dx) > Math.abs(gs.dy),
+      onPanResponderRelease: (_evt, gs) => {
+        if (gs.dx < -60) {
+          // swipe left → advance
+          setStep((prev) => {
+            if (prev === "initial") return "replace";
+            if (prev === "replace") return "explain";
+            return prev;
+          });
+        } else if (gs.dx > 60) {
+          // swipe right → go back
+          setStep((prev) => {
+            if (prev === "explain") return "replace";
+            if (prev === "replace") return "initial";
+            return prev;
+          });
+        }
+      },
+    })
+  ).current;
 
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(null);
   const [valence, setValence] = useState(aiValence);
@@ -327,22 +331,17 @@ export default function EmotionCorrectionModal({
           ))}
         </View>
 
-        {/* ── Horizontal pager ── */}
-        <ScrollView
-          ref={pagerRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
-          onMomentumScrollEnd={handlePageScroll}
-          keyboardShouldPersistTaps="handled"
-          style={{ flex: 1 }}
-        >
+        {/* ── Step content (swipeable via PanResponder) ── */}
+        <View style={{ flex: 1 }} {...swipePan.panHandlers}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 180 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
 
           {/* ─── PAGE 0: Does this feel right? ─── */}
-          <View style={{ width: SCREEN_W }}>
-            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 180 }}
-              showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {step === "initial" && (
               <View style={{ ...glassCard, marginBottom: 20 }}>
                 <View style={{ padding: 18 }}>
                   <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 16 }}>
@@ -390,14 +389,10 @@ export default function EmotionCorrectionModal({
                   </View>
                 </View>
               </View>
-            </ScrollView>
-          </View>
-
+          )}
 
           {/* ─── PAGE 1: What fits better? ─── */}
-          <View style={{ width: SCREEN_W }}>
-            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 180 }}
-              showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {step === "replace" && (
               <View style={{ flexDirection: "row", alignItems: "center",
                   backgroundColor: "rgba(255, 255, 255, 0.08)",
                   borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)",
@@ -430,14 +425,10 @@ export default function EmotionCorrectionModal({
                   );
                 })}
               </View>
-            </ScrollView>
-          </View>
-
+          )}
 
           {/* ─── PAGE 2: Anything to add? ─── */}
-          <View style={{ width: SCREEN_W }}>
-            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 180 }}
-              showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {step === "explain" && (
               {selectedEmotion && (
                 <View style={{ ...glassCard, marginBottom: 20 }}>
                   <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
@@ -498,10 +489,10 @@ export default function EmotionCorrectionModal({
                   minHeight: 90, textAlignVertical: "top",
                   borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)" }}
               />
-            </ScrollView>
-          </View>
+          )}
 
-        </ScrollView>
+          </ScrollView>
+        </View>
 
 
         {/* ── Bottom action bar ── */}
