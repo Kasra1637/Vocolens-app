@@ -125,11 +125,11 @@ export function GoalBlockerScreen() {
             {/* Character at Top */}
             <View
               className="items-center justify-center"
-              style={{ height: 120 }}
+              style={{ height: 80 }}
             >
               <EmotionalCompanion
-                state="listening"
-                size={120}
+                state="processing"
+                size={80}
                 themeColor={themeColors.primary}
               />
             </View>

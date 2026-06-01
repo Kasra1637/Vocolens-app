@@ -185,8 +185,8 @@ export function ReminderScreen() {
             >
               <View style={{ marginBottom: 16 }}>
                 <EmotionalCompanion
-                  state="success"
-                  size={110}
+                  state="processing"
+                  size={80}
                   themeColor={themeColors.primary}
                 />
               </View>

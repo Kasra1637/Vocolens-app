@@ -111,11 +111,11 @@ export function PrivacyPermissionsScreen() {
             {/* Character at Top */}
             <View
               className="items-center justify-center"
-              style={{ height: 120 }}
+              style={{ height: 80 }}
             >
               <EmotionalCompanion
-                state="idle"
-                size={120}
+                state="processing"
+                size={80}
                 themeColor={themeColors.primary}
               />
             </View>

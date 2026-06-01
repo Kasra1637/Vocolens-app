@@ -98,10 +98,10 @@ export function JournalingTopicsScreen() {
 
           <View className="flex-1 px-6 py-3">
             {/* Character at Top */}
-            <View className="items-center justify-center" style={{ height: 120 }}>
+            <View className="items-center justify-center" style={{ height: 80 }}>
               <EmotionalCompanion
-                state="idle"
-                size={120}
+                state="processing"
+                size={80}
                 themeColor={themeColors.primary}
               />
             </View>

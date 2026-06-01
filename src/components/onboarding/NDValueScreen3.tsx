@@ -98,8 +98,8 @@ export function NDValueScreen3() {
               style={{ alignItems: "center", marginBottom: 4 }}
             >
               <EmotionalCompanion
-                state="success"
-                size={100}
+                state="processing"
+                size={80}
                 themeColor={themeColors.primary}
               />
             </Animated.View>

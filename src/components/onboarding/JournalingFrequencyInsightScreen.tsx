@@ -106,11 +106,11 @@ export function JournalingFrequencyInsightScreen() {
             {/* Character */}
             <View
               className="items-center justify-center"
-              style={{ height: 110 }}
+              style={{ height: 80 }}
             >
               <EmotionalCompanion
-                state="success"
-                size={110}
+                state="processing"
+                size={80}
                 themeColor={themeColors.primary}
               />
             </View>

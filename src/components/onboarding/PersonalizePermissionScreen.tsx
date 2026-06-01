@@ -62,14 +62,14 @@ export function PersonalizePermissionScreen() {
             {/* Character — same container dimensions as MoodSelectionScreen */}
             <View
               style={{
-                height: 120,
+                height: 80,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
               <EmotionalCompanion
-                state="idle"
-                size={120}
+                state="processing"
+                size={80}
                 themeColor={themeColors.primary}
               />
             </View>

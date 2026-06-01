@@ -168,8 +168,8 @@ export function BiometricSetupScreen() {
               style={{ alignItems: "center", gap: 16 }}
             >
               <EmotionalCompanion
-                state={phase === "success" ? "success" : "idle"}
-                size={120}
+                state={phase === "success" ? "success" : "processing"}
+                size={80}
                 themeColor={
                   selectedTheme === "darkMode" ? "#9370DB" : themeColors.primary
                 }
