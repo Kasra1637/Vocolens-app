@@ -18,14 +18,18 @@ import {
   LayoutChangeEvent,
   PanResponder,
   StyleSheet,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
+
+const SCREEN_W = Dimensions.get("window").width;
 import * as Haptics from "expo-haptics";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import {
   Check,
   X,
   ChevronLeft,
-  Brain,
   Tag,
   Sliders,
   MessageSquare,
@@ -128,7 +132,35 @@ export default function EmotionCorrectionModal({
   onSubmit,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const [step, setStep] = useState<"initial" | "replace" | "explain">("initial");
+
+  // ── Pager ─────────────────────────────────────────────────────────────────
+  // Steps are laid out horizontally; swipe or button navigates between pages.
+  const STEPS = ["initial", "replace", "explain"] as const;
+  type Step = typeof STEPS[number];
+  const [step, setStep] = useState<Step>("initial");
+  const pagerRef = useRef<ScrollView>(null);
+  const isScrollingProgrammatically = useRef(false);
+
+  const scrollToStep = useCallback((s: Step) => {
+    const idx = STEPS.indexOf(s);
+    isScrollingProgrammatically.current = true;
+    pagerRef.current?.scrollTo({ x: idx * SCREEN_W, animated: true });
+    setStep(s);
+  }, []);
+
+  const handlePageScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isScrollingProgrammatically.current) {
+        isScrollingProgrammatically.current = false;
+        return;
+      }
+      const page = Math.round(e.nativeEvent.contentOffset.x / SCREEN_W);
+      const newStep = STEPS[page];
+      if (newStep && newStep !== step) setStep(newStep);
+    },
+    [step],
+  );
+
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(null);
   const [valence, setValence] = useState(aiValence);
   const [arousal, setArousal] = useState(aiArousal);
@@ -155,14 +187,14 @@ export default function EmotionCorrectionModal({
   const handleReject = useCallback(() => {
     tapHaptic();
     setCorrectionType("label");
-    setStep("replace");
-  }, []);
+    scrollToStep("replace");
+  }, [scrollToStep]);
 
   const handleSelectReplacement = useCallback((emotion: EmotionType) => {
     tapHaptic();
     setSelectedEmotion(emotion);
-    setStep("explain");
-  }, []);
+    scrollToStep("explain");
+  }, [scrollToStep]);
 
   const handleSaveSliders = useCallback(() => {
     tapHaptic();
@@ -233,48 +265,30 @@ export default function EmotionCorrectionModal({
         />
 
         {/* ── Header ── */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingTop: insets.top + 16,
-            paddingBottom: 14,
-            borderBottomWidth: 1,
+        <View style={{
+            flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+            paddingHorizontal: 20, paddingTop: insets.top + 16,
+            paddingBottom: 14, borderBottomWidth: 1,
             borderBottomColor: "rgba(255, 255, 255, 0.12)",
           }}
         >
-          {/* Back / Close button */}
           {step !== "initial" ? (
             <Pressable
-              onPress={() => setStep(step === "explain" ? "replace" : "initial")}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 12,
+              onPress={() => scrollToStep(step === "explain" ? "replace" : "initial")}
+              style={{ width: 36, height: 36, borderRadius: 12,
                 backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+                borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)",
+                alignItems: "center", justifyContent: "center" }}
             >
               <ChevronLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
             </Pressable>
           ) : (
             <Pressable
               onPress={onDismiss}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 12,
+              style={{ width: 36, height: 36, borderRadius: 12,
                 backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderWidth: 2,
-                borderColor: "rgba(255, 255, 255, 0.20)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+                borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)",
+                alignItems: "center", justifyContent: "center" }}
             >
               <X size={20} color="#FFFFFF" strokeWidth={2.5} />
             </Pressable>
@@ -297,160 +311,99 @@ export default function EmotionCorrectionModal({
                 : "Anything to add?"}
           </Text>
 
-          {/* Right spacer */}
           <View style={{ width: 36 }} />
         </View>
 
-
-        {/* ── Step progress dots ── */}
+        {/* ── Tappable step-progress dots ── */}
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 6, paddingTop: 14 }}>
-          {(["initial", "replace", "explain"] as const).map((s) => (
-            <View
-              key={s}
-              style={{
-                width: step === s ? 18 : 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: step === s
-                  ? "#FFFFFF"
-                  : "rgba(255, 255, 255, 0.25)",
-              }}
-            />
+          {STEPS.map((s) => (
+            <Pressable key={s} onPress={() => scrollToStep(s)} hitSlop={8}>
+              <View style={{
+                  width: step === s ? 18 : 6, height: 6, borderRadius: 3,
+                  backgroundColor: step === s ? "#FFFFFF" : "rgba(255, 255, 255, 0.25)",
+                }}
+              />
+            </Pressable>
           ))}
         </View>
 
+        {/* ── Horizontal pager ── */}
         <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 120 }}
-          showsVerticalScrollIndicator={false}
+          ref={pagerRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={handlePageScroll}
           keyboardShouldPersistTaps="handled"
+          style={{ flex: 1 }}
         >
 
-          {/* ═══════════════════════════════════════════════════════════════
-              STEP: initial — AI result card + adjustment sliders
-          ═══════════════════════════════════════════════════════════════ */}
-          {step === "initial" && (
-            <Animated.View entering={FadeIn.duration(300)}>
-
-              {/* AI emotion card */}
+          {/* ─── PAGE 0: Does this feel right? ─── */}
+          <View style={{ width: SCREEN_W }}>
+            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 180 }}
+              showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <View style={{ ...glassCard, marginBottom: 20 }}>
                 <View style={{ padding: 18 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-                    <View
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 12,
+                  <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 16 }}>
+                    <View style={{ width: 48, height: 48, borderRadius: 12,
                         backgroundColor: "rgba(255, 255, 255, 0.15)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: 14,
-                      }}
-                    >
+                        alignItems: "center", justifyContent: "center",
+                        marginRight: 14, flexShrink: 0 }}>
                       <Text style={{ fontSize: 26 }}>{aiDef.emoji}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontFamily: "Fraunces_700Bold",
-                          fontSize: 20,
-                          color: "#FFFFFF",
-                          textTransform: "capitalize",
-                        }}
-                        numberOfLines={1}
-                      >
+                      <Text style={{ fontFamily: "Fraunces_700Bold", fontSize: 20,
+                          color: "#FFFFFF", textTransform: "capitalize" }}>
                         {aiEmotion}
                       </Text>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_400Regular",
-                          fontSize: 13,
-                          color: "rgba(255,255,255,0.70)",
-                          marginTop: 2,
-                        }}
-                        numberOfLines={2}
-                      >
+                      <Text style={{ fontFamily: "Inter_400Regular", fontSize: 13,
+                          color: "rgba(255,255,255,0.70)", marginTop: 2, lineHeight: 19 }}>
                         {aiDef.plainLanguage}
                       </Text>
                     </View>
                   </View>
-
-                  {/* Valence + Arousal read-only bars */}
                   <MiniBar label="Valence" value={aiValence} signed />
                   <MiniBar label="Arousal" value={aiArousal} />
                 </View>
               </View>
-
-
-              {/* Slider adjustment card */}
               <View style={{ ...glassCard, marginBottom: 4 }}>
                 <View style={{ padding: 18 }}>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 13,
-                      color: "rgba(255,255,255,0.70)",
-                      marginBottom: 16,
-                      textTransform: "uppercase",
-                      letterSpacing: 0.6,
-                    }}
-                  >
+                  <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13,
+                      color: "rgba(255,255,255,0.70)", marginBottom: 16,
+                      textTransform: "uppercase", letterSpacing: 0.6 }}>
                     Fine-tune if needed
                   </Text>
-
-                  {/* Valence slider */}
                   <View style={{ marginBottom: 20 }}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                      <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: "#FFFFFF" }}>
-                        Unpleasant ↔ Pleasant
-                      </Text>
-                      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>
-                        {valence > 0 ? `+${valence}` : `${valence}`}
-                      </Text>
+                      <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: "#FFFFFF" }}>Unpleasant ↔ Pleasant</Text>
+                      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>{valence > 0 ? `+${valence}` : `${valence}`}</Text>
                     </View>
                     <GlassSlider value={valence} min={-100} max={100} onChange={setValence} />
                   </View>
-
-                  {/* Arousal slider */}
                   <View>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                      <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: "#FFFFFF" }}>
-                        Calm ↔ Activated
-                      </Text>
-                      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>
-                        {arousal}%
-                      </Text>
+                      <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: "#FFFFFF" }}>Calm ↔ Activated</Text>
+                      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>{arousal}%</Text>
                     </View>
                     <GlassSlider value={arousal} min={0} max={100} onChange={setArousal} />
                   </View>
                 </View>
               </View>
+            </ScrollView>
+          </View>
 
-            </Animated.View>
-          )}
 
-
-          {/* ═══════════════════════════════════════════════════════════════
-              STEP: replace — emotion picker grid
-          ═══════════════════════════════════════════════════════════════ */}
-          {step === "replace" && (
-            <Animated.View entering={FadeInDown.duration(300)}>
-
-              {/* Current AI emotion chip — for reference */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
+          {/* ─── PAGE 1: What fits better? ─── */}
+          <View style={{ width: SCREEN_W }}>
+            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 180 }}
+              showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <View style={{ flexDirection: "row", alignItems: "center",
                   backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.15)",
+                  borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)",
                   borderRadius: BorderRadius.large,
-                  paddingHorizontal: 14,
-                  paddingVertical: 10,
-                  marginBottom: 20,
-                  alignSelf: "flex-start",
-                }}
-              >
+                  paddingHorizontal: 14, paddingVertical: 10,
+                  marginBottom: 20, alignSelf: "flex-start" }}>
                 <Text style={{ fontSize: 16, marginRight: 8 }}>{aiDef.emoji}</Text>
                 <Text style={{ fontFamily: "Inter_400Regular", fontSize: 13, color: "rgba(255,255,255,0.65)" }}>
                   AI detected:{" "}
@@ -459,307 +412,153 @@ export default function EmotionCorrectionModal({
                   </Text>
                 </Text>
               </View>
-
-              {/* Emotion grid */}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 4 }}>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
                 {ALL_EMOTIONS.map((emotion) => {
                   const def = getEmotionDefinition(emotion);
                   const isAI = emotion === aiEmotion;
                   return (
-                    <Pressable
-                      key={emotion}
-                      onPress={() => handleSelectReplacement(emotion)}
-                      style={{
-                        backgroundColor: isAI
-                          ? "rgba(255,255,255,0.08)"
-                          : "rgba(255, 255, 255, 0.12)",
-                        borderWidth: 2,
-                        borderColor: isAI
-                          ? "rgba(255, 255, 255, 0.12)"
-                          : "rgba(255, 255, 255, 0.20)",
-                        borderRadius: BorderRadius.round,
-                        paddingHorizontal: 16,
-                        paddingVertical: 10,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        opacity: isAI ? 0.5 : 1,
-                      }}
-                    >
+                    <Pressable key={emotion} onPress={() => handleSelectReplacement(emotion)}
+                      style={{ backgroundColor: isAI ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.12)",
+                        borderWidth: 2, borderColor: isAI ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.20)",
+                        borderRadius: BorderRadius.round, paddingHorizontal: 16, paddingVertical: 10,
+                        flexDirection: "row", alignItems: "center", opacity: isAI ? 0.5 : 1 }}>
                       <Text style={{ fontSize: 18, marginRight: 7 }}>{def.emoji}</Text>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          fontSize: 14,
-                          color: "#FFFFFF",
-                          textTransform: "capitalize",
-                        }}
-                      >
+                      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#FFFFFF", textTransform: "capitalize" }}>
                         {emotion}
                       </Text>
                     </Pressable>
                   );
                 })}
               </View>
+            </ScrollView>
+          </View>
 
-            </Animated.View>
-          )}
 
-
-          {/* ═══════════════════════════════════════════════════════════════
-              STEP: explain — optional reason + correction type
-          ═══════════════════════════════════════════════════════════════ */}
-          {step === "explain" && (
-            <Animated.View entering={FadeInDown.duration(300)}>
-
-              {/* Selected emotion confirmation */}
+          {/* ─── PAGE 2: Anything to add? ─── */}
+          <View style={{ width: SCREEN_W }}>
+            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 180 }}
+              showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               {selectedEmotion && (
                 <View style={{ ...glassCard, marginBottom: 20 }}>
                   <View style={{ padding: 16, flexDirection: "row", alignItems: "center" }}>
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 12,
+                    <View style={{ width: 44, height: 44, borderRadius: 12,
                         backgroundColor: "rgba(255, 255, 255, 0.15)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: 14,
-                      }}
-                    >
-                      <Text style={{ fontSize: 22 }}>
-                        {getEmotionDefinition(selectedEmotion).emoji}
-                      </Text>
+                        alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                      <Text style={{ fontSize: 22 }}>{getEmotionDefinition(selectedEmotion).emoji}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: "rgba(255,255,255,0.60)", marginBottom: 2 }}>
+                      <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12,
+                          color: "rgba(255,255,255,0.60)", marginBottom: 2 }}>
                         You selected
                       </Text>
-                      <Text
-                        style={{
-                          fontFamily: "Fraunces_700Bold",
-                          fontSize: 18,
-                          color: "#FFFFFF",
-                          textTransform: "capitalize",
-                        }}
-                      >
+                      <Text style={{ fontFamily: "Fraunces_700Bold", fontSize: 18,
+                          color: "#FFFFFF", textTransform: "capitalize" }}>
                         {selectedEmotion}
                       </Text>
                     </View>
                   </View>
                 </View>
               )}
-
-              {/* Correction type chips */}
-              <Text
-                style={{
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 12,
-                  color: "rgba(255,255,255,0.60)",
-                  marginBottom: 10,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
+              <Text style={{ fontFamily: "Inter_500Medium", fontSize: 12,
+                  color: "rgba(255,255,255,0.60)", marginBottom: 10,
+                  textTransform: "uppercase", letterSpacing: 0.5 }}>
                 What kind of change?
               </Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-                <ReasonChip
-                  label="Wrong label"
+                <ReasonChip label="Wrong label"
                   icon={<Tag size={13} color="#FFFFFF" strokeWidth={2} />}
                   active={correctionType === "label"}
                   onPress={() => { tapHaptic(); setCorrectionType("label"); }}
-                  primaryColor={Colors.primary}
-                />
-                <ReasonChip
-                  label="Wrong intensity"
+                  primaryColor={Colors.primary} />
+                <ReasonChip label="Wrong intensity"
                   icon={<Sliders size={13} color="#FFFFFF" strokeWidth={2} />}
                   active={correctionType === "intensity"}
                   onPress={() => { tapHaptic(); setCorrectionType("intensity"); }}
-                  primaryColor={Colors.primary}
-                />
-                <ReasonChip
-                  label="Context"
+                  primaryColor={Colors.primary} />
+                <ReasonChip label="Context"
                   icon={<MessageSquare size={13} color="#FFFFFF" strokeWidth={2} />}
                   active={correctionType === "context"}
                   onPress={() => { tapHaptic(); setCorrectionType("context"); }}
-                  primaryColor={Colors.primary}
-                />
+                  primaryColor={Colors.primary} />
               </View>
-
-              {/* Quick note toggle */}
-              <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
-                <ReasonChip
-                  label="Add a note"
-                  icon={<Brain size={14} color="#FFFFFF" strokeWidth={2} />}
-                  active={correctionMode === "text"}
-                  onPress={() => { tapHaptic(); setCorrectionMode(correctionMode === "text" ? "slider" : "text"); }}
-                  primaryColor={Colors.primary}
-                />
-              </View>
-
-              {correctionMode === "text" && (
-                <Animated.View entering={FadeIn.delay(80)} style={{ marginBottom: 16 }}>
-                  <TextInput
-                    multiline
-                    placeholder="What made you feel this way? (optional)"
-                    placeholderTextColor="rgba(255,255,255,0.40)"
-                    value={reason}
-                    onChangeText={setReason}
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.08)",
-                      borderRadius: BorderRadius.large,
-                      padding: 14,
-                      fontFamily: "Inter_400Regular",
-                      fontSize: 15,
-                      color: "#FFFFFF",
-                      minHeight: 90,
-                      textAlignVertical: "top",
-                      borderWidth: 2,
-                      borderColor: "rgba(255, 255, 255, 0.20)",
-                    }}
-                  />
-                </Animated.View>
-              )}
-
-            </Animated.View>
-          )}
+              <Text style={{ fontFamily: "Inter_500Medium", fontSize: 12,
+                  color: "rgba(255,255,255,0.60)", marginBottom: 10,
+                  textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Note (optional)
+              </Text>
+              <TextInput
+                multiline
+                placeholder="What made you feel this way?"
+                placeholderTextColor="rgba(255,255,255,0.40)"
+                value={reason}
+                onChangeText={setReason}
+                style={{ backgroundColor: "rgba(255,255,255,0.08)",
+                  borderRadius: BorderRadius.large, padding: 14,
+                  fontFamily: "Inter_400Regular", fontSize: 15, color: "#FFFFFF",
+                  minHeight: 90, textAlignVertical: "top",
+                  borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)" }}
+              />
+            </ScrollView>
+          </View>
 
         </ScrollView>
 
 
         {/* ── Bottom action bar ── */}
-        <View
-          style={{
-            backgroundColor: "rgba(255, 255, 255, 0.08)",
-            borderTopWidth: 1,
-            borderTopColor: "rgba(255, 255, 255, 0.12)",
-            paddingHorizontal: 20,
-            paddingTop: 16,
-            paddingBottom: insets.bottom + 16,
-          }}
-        >
+        <View style={{ backgroundColor: "rgba(255, 255, 255, 0.08)",
+            borderTopWidth: 1, borderTopColor: "rgba(255, 255, 255, 0.12)",
+            paddingHorizontal: 20, paddingTop: 16, paddingBottom: insets.bottom + 16 }}>
 
-          {/* ── initial: Adjust sliders | Not quite (label) | Confirm ── */}
           {step === "initial" && (
             <View style={{ gap: 10 }}>
-              {/* Primary confirm button */}
-              <Pressable
-                onPress={handleConfirm}
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.22)",
-                  borderRadius: BorderRadius.large,
-                  paddingVertical: 16,
-                  alignItems: "center",
-                  borderWidth: 2,
-                  borderColor: "rgba(255, 255, 255, 0.40)",
-                }}
-              >
-                <Text style={{ fontFamily: "Inter_700Bold", fontSize: 15, color: "#FFFFFF" }}>
-                  Yes, that's right
-                </Text>
+              <Pressable onPress={handleConfirm}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.22)", borderRadius: BorderRadius.large,
+                  paddingVertical: 16, alignItems: "center", borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.40)" }}>
+                <Text style={{ fontFamily: "Inter_700Bold", fontSize: 15, color: "#FFFFFF" }}>Yes, that's right</Text>
               </Pressable>
-
-              {/* Secondary row */}
               <View style={{ flexDirection: "row", gap: 10 }}>
-                <Pressable
-                  onPress={handleSaveSliders}
-                  style={{
-                    flex: 1,
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderRadius: BorderRadius.large,
-                    paddingVertical: 14,
-                    alignItems: "center",
-                    borderWidth: 2,
-                    borderColor: "rgba(255, 255, 255, 0.20)",
-                  }}
-                >
-                  <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#FFFFFF" }}>
-                    Save adjusted
-                  </Text>
+                <Pressable onPress={handleSaveSliders}
+                  style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.12)", borderRadius: BorderRadius.large,
+                    paddingVertical: 14, alignItems: "center", borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)" }}>
+                  <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#FFFFFF" }}>Save adjusted</Text>
                 </Pressable>
-                <Pressable
-                  onPress={handleReject}
-                  style={{
-                    flex: 1,
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderRadius: BorderRadius.large,
-                    paddingVertical: 14,
-                    alignItems: "center",
-                    borderWidth: 2,
-                    borderColor: "rgba(255, 255, 255, 0.20)",
-                  }}
-                >
-                  <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#FFFFFF" }}>
-                    Change label
-                  </Text>
+                <Pressable onPress={handleReject}
+                  style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.12)", borderRadius: BorderRadius.large,
+                    paddingVertical: 14, alignItems: "center", borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)" }}>
+                  <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: "#FFFFFF" }}>Change label</Text>
                 </Pressable>
               </View>
             </View>
           )}
 
-          {/* ── replace: no action bar needed — tapping a chip advances ── */}
-          {/* (empty — selection happens inline via the grid) */}
+          {step === "replace" && <View style={{ height: 4 }} />}
 
-          {/* ── explain: Skip | Save correction ── */}
           {step === "explain" && (
             <View style={{ flexDirection: "row", gap: 12 }}>
               <Pressable
                 onPress={() => {
-                  recordCorrection({
-                    entryId,
-                    timestamp: new Date().toISOString(),
-                    aiEmotion,
-                    userEmotion: selectedEmotion ?? aiEmotion,
-                    aiValence,
-                    userValence: valence,
-                    aiArousal,
-                    userArousal: arousal,
-                    reason: undefined,
-                    correctionMode,
-                    correctionType,
-                  });
-                  onSubmit({
-                    userConfirmedAI: false,
+                  recordCorrection({ entryId, timestamp: new Date().toISOString(),
+                    aiEmotion, userEmotion: selectedEmotion ?? aiEmotion,
+                    aiValence, userValence: valence, aiArousal, userArousal: arousal,
+                    reason: undefined, correctionMode, correctionType });
+                  onSubmit({ userConfirmedAI: false,
                     userEditedEmotion: selectedEmotion ?? aiEmotion,
-                    userEditedValence: valence,
-                    userEditedArousal: arousal,
+                    userEditedValence: valence, userEditedArousal: arousal,
                     userCorrectionMode: correctionMode,
-                    correctionTimestamp: new Date().toISOString(),
-                  });
+                    correctionTimestamp: new Date().toISOString() });
                 }}
-                style={{
-                  flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderRadius: BorderRadius.large,
-                  paddingVertical: 16,
-                  alignItems: "center",
-                  borderWidth: 2,
-                  borderColor: "rgba(255, 255, 255, 0.20)",
-                }}
-              >
-                <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#FFFFFF" }}>
-                  Skip
-                </Text>
+                style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.12)", borderRadius: BorderRadius.large,
+                  paddingVertical: 16, alignItems: "center", borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)" }}>
+                <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 15, color: "#FFFFFF" }}>Skip</Text>
               </Pressable>
-              <Pressable
-                onPress={handleSubmitWithReason}
-                style={{
-                  flex: 2,
-                  backgroundColor: "rgba(255, 255, 255, 0.22)",
-                  borderWidth: 2,
-                  borderColor: "rgba(255, 255, 255, 0.40)",
-                  borderRadius: BorderRadius.large,
-                  paddingVertical: 16,
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontFamily: "Inter_700Bold", fontSize: 15, color: "#FFFFFF" }}>
-                  Save correction
-                </Text>
+              <Pressable onPress={handleSubmitWithReason}
+                style={{ flex: 2, backgroundColor: "rgba(255, 255, 255, 0.22)", borderWidth: 2,
+                  borderColor: "rgba(255, 255, 255, 0.40)", borderRadius: BorderRadius.large,
+                  paddingVertical: 16, alignItems: "center" }}>
+                <Text style={{ fontFamily: "Inter_700Bold", fontSize: 15, color: "#FFFFFF" }}>Save correction</Text>
               </Pressable>
             </View>
           )}
-
         </View>
       </View>
     </Modal>
