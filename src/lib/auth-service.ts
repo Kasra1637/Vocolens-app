@@ -2,7 +2,16 @@
  * Authentication Service
  *
  * Handles biometric (fingerprint) and PIN authentication for app access.
- * Fingerprint is the primary unlock method.
+ * Fingerprint is the primary unlock method, PIN is the mandatory fallback.
+ *
+ * Biometric invalidation handling
+ * --------------------------------
+ * When the user adds or removes a fingerprint after enabling biometric lock,
+ * the OS invalidates the previously bound authentication token.  The next
+ * `authenticateAsync()` call returns one of the error codes listed in
+ * BIOMETRIC_INVALIDATION_CODES.  `authenticateWithBiometrics()` surfaces this
+ * via `result.invalidated = true` so callers can route to the PIN fallback,
+ * re-authenticate, and then re-register the new biometric state.
  */
 
 import { secureGetItem, secureSetItem, secureRemoveItem } from './secure-storage';
@@ -10,17 +19,46 @@ import { secureGetItem, secureSetItem, secureRemoveItem } from './secure-storage
 const PIN_KEY = 'user_pin_code';
 const AUTH_ENABLED_KEY = 'auth_enabled';
 
+// ─── Biometric invalidation error codes ──────────────────────────────────────
 /**
- * Whether the ExpoLocalAuthentication NATIVE module is actually present in the
- * running binary. In Expo Go (or a dev build created before the dependency was
- * added) the native side is missing, and simply `require()`-ing
- * `expo-local-authentication` triggers expo-modules-core to throw AND log
- * "Cannot find native module 'ExpoLocalAuthentication'".
+ * Error strings returned by expo-local-authentication / the native OS when
+ * the previously enrolled biometric has changed and the system has revoked the
+ * credential.  We treat any of these as "biometric invalidated" so the app can
+ * prompt for PIN instead of silently failing.
  *
- * To avoid that entirely we first probe with `requireOptionalNativeModule`,
- * the non-throwing, non-logging variant. We only `require` the JS package when
- * the native module genuinely exists.
+ * iOS:   LAError.biometryChanged  → "biometryChanged" / "passcode_not_set" / "unknown"
+ * Android: BIOMETRIC_ERROR_NO_BIOMETRICS after previous enrolment is removed
+ *           → "no_enrollments" / "not_enrolled"
  */
+const BIOMETRIC_INVALIDATION_CODES = new Set([
+  'biometryChanged',
+  'biometry_changed',
+  'biometric_changed',
+  'passcode_changed',
+  'invalidated',
+  'no_enrollments',
+  'not_enrolled',
+  'lockout_permanent',
+]);
+
+/**
+ * Whether an expo-local-authentication error string represents a biometric
+ * invalidation event (user enrolled or removed a fingerprint / face).
+ */
+export function isBiometricInvalidationError(errorCode: string | undefined): boolean {
+  if (!errorCode) return false;
+  const lower = errorCode.toLowerCase();
+  // Direct match
+  if (BIOMETRIC_INVALIDATION_CODES.has(errorCode)) return true;
+  // Substring match for vendor-specific variants (e.g. "ERROR_BIOMETRIC_CHANGED")
+  for (const code of BIOMETRIC_INVALIDATION_CODES) {
+    if (lower.includes(code.toLowerCase())) return true;
+  }
+  return false;
+}
+
+// ─── Native module lazy-load ──────────────────────────────────────────────────
+
 let _localAuthModule:
   | typeof import('expo-local-authentication')
   | null
@@ -30,23 +68,15 @@ function isNativeAuthAvailable(): boolean {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const core = require('expo-modules-core');
-    // requireOptionalNativeModule returns null instead of throwing/logging
-    // when the native module is not linked into the binary.
     if (typeof core?.requireOptionalNativeModule === 'function') {
       return core.requireOptionalNativeModule('ExpoLocalAuthentication') != null;
     }
-    // Older cores: fall back to the proxy table (also non-throwing).
     return Boolean(core?.NativeModulesProxy?.ExpoLocalAuthentication);
   } catch {
     return false;
   }
 }
 
-/**
- * Lazy-load expo-local-authentication ONLY when its native module is present,
- * so environments without it (Expo Go / stale dev build) degrade silently with
- * no error logs. Result is cached after the first probe.
- */
 function getLocalAuth(): typeof import('expo-local-authentication') | null {
   if (_localAuthModule !== undefined) return _localAuthModule;
 
@@ -60,11 +90,12 @@ function getLocalAuth(): typeof import('expo-local-authentication') | null {
     _localAuthModule = require('expo-local-authentication');
     return _localAuthModule;
   } catch {
-    // Defensive: should not happen once the probe passed.
     _localAuthModule = null;
     return null;
   }
 }
+
+// ─── Biometric capabilities ───────────────────────────────────────────────────
 
 export interface BiometricCapabilities {
   isAvailable: boolean;
@@ -73,19 +104,10 @@ export interface BiometricCapabilities {
   supportedTypes: string[];
 }
 
-/**
- * Check device biometric capabilities (fingerprint primary; Face ID / iris fallback).
- * Returns a safe "unavailable" result if the native module or hardware is missing.
- */
 export async function checkBiometricCapabilities(): Promise<BiometricCapabilities> {
   const LocalAuth = getLocalAuth();
   if (!LocalAuth) {
-    return {
-      isAvailable: false,
-      hasHardware: false,
-      isEnrolled: false,
-      supportedTypes: [],
-    };
+    return { isAvailable: false, hasHardware: false, isEnrolled: false, supportedTypes: [] };
   }
 
   try {
@@ -95,154 +117,118 @@ export async function checkBiometricCapabilities(): Promise<BiometricCapabilitie
 
     const typeNames = rawTypes.map((t) => {
       switch (t) {
-        case LocalAuth.AuthenticationType.FINGERPRINT:
-          return 'fingerprint';
-        case LocalAuth.AuthenticationType.FACIAL_RECOGNITION:
-          return 'face';
-        case LocalAuth.AuthenticationType.IRIS:
-          return 'iris';
-        default:
-          return 'biometric';
+        case LocalAuth.AuthenticationType.FINGERPRINT:         return 'fingerprint';
+        case LocalAuth.AuthenticationType.FACIAL_RECOGNITION:  return 'face';
+        case LocalAuth.AuthenticationType.IRIS:                return 'iris';
+        default:                                               return 'biometric';
       }
     });
 
-    return {
-      isAvailable: hasHardware && isEnrolled,
-      hasHardware,
-      isEnrolled,
-      supportedTypes: typeNames,
-    };
+    return { isAvailable: hasHardware && isEnrolled, hasHardware, isEnrolled, supportedTypes: typeNames };
   } catch (e) {
-    console.warn(
-      '[auth-service] checkBiometricCapabilities error:',
-      (e as Error)?.message,
-    );
-    return {
-      isAvailable: false,
-      hasHardware: false,
-      isEnrolled: false,
-      supportedTypes: [],
-    };
+    console.warn('[auth-service] checkBiometricCapabilities error:', (e as Error)?.message);
+    return { isAvailable: false, hasHardware: false, isEnrolled: false, supportedTypes: [] };
   }
 }
 
-/**
- * Get a friendly, platform-appropriate name for the available biometric type.
- * Fingerprint is the app's primary biometric method, so it's preferred in labeling.
- */
 export function getBiometricTypeName(types: string[]): string {
   if (types.includes('fingerprint')) return 'Fingerprint';
-  if (types.includes('face')) return 'Face ID';
-  if (types.includes('iris')) return 'Iris';
+  if (types.includes('face'))        return 'Face ID';
+  if (types.includes('iris'))        return 'Iris';
   return 'Fingerprint';
 }
 
-/**
- * Result of a biometric authentication attempt.
- *  - success: the user authenticated successfully.
- *  - cancelled: the user dismissed the prompt (not an error — let them retry).
- *  - available: false means the device can't do biometrics at all, so the
- *    caller should offer a graceful fallback rather than blocking the user.
- */
+// ─── Biometric authentication ─────────────────────────────────────────────────
+
 export interface BiometricAuthResult {
   success: boolean;
   cancelled: boolean;
   available: boolean;
+  /**
+   * True when the OS reports that enrolled biometrics have changed and the
+   * previously bound credential is no longer valid. The caller should prompt
+   * the user for their PIN and then re-register biometrics.
+   */
+  invalidated: boolean;
   error?: string;
 }
 
-/**
- * Prompt the user to authenticate with their fingerprint.
- * Always resolves (never throws) with a structured result so callers can
- * react appropriately and never trap the user.
- */
 export async function authenticateWithBiometrics(
   promptMessage = 'Unlock Vocolens with your fingerprint',
 ): Promise<BiometricAuthResult> {
   const LocalAuth = getLocalAuth();
   if (!LocalAuth) {
-    return { success: false, cancelled: false, available: false, error: 'module_unavailable' };
+    return { success: false, cancelled: false, available: false, invalidated: false, error: 'module_unavailable' };
   }
 
   try {
-    // Guard against calling authenticateAsync when the device can't satisfy it,
-    // which is the most common source of native errors / crashes.
     const hasHardware = await LocalAuth.hasHardwareAsync();
     const isEnrolled = await LocalAuth.isEnrolledAsync();
     if (!hasHardware || !isEnrolled) {
+      // If hardware is present but no longer enrolled, that's an invalidation event.
+      const invalidated = hasHardware && !isEnrolled;
       return {
         success: false,
         cancelled: false,
         available: false,
+        invalidated,
         error: !hasHardware ? 'no_hardware' : 'not_enrolled',
       };
     }
 
     const result = await LocalAuth.authenticateAsync({
       promptMessage,
-      cancelLabel: 'Cancel',
-      // Allow the device PIN/passcode as a fallback so users are never locked out.
-      disableDeviceFallback: false,
-      fallbackLabel: 'Use device passcode',
+      cancelLabel: 'Use PIN instead',
+      disableDeviceFallback: true,   // We manage PIN fallback ourselves
     });
 
     if (result.success) {
-      return { success: true, cancelled: false, available: true };
+      return { success: true, cancelled: false, available: true, invalidated: false };
     }
 
-    // expo-local-authentication returns an `error` string on failure/cancel.
     const errCode = (result as { error?: string }).error ?? 'unknown';
     const cancelled =
       errCode === 'user_cancel' ||
-      errCode === 'app_cancel' ||
-      errCode === 'system_cancel' ||
-      errCode === 'user_fallback';
+      errCode === 'app_cancel'  ||
+      errCode === 'system_cancel';
+    const invalidated = isBiometricInvalidationError(errCode);
 
     return {
       success: false,
       cancelled,
       available: true,
+      invalidated,
       error: errCode,
     };
   } catch (e) {
-    console.warn(
-      '[auth-service] authenticateWithBiometrics error:',
-      (e as Error)?.message,
-    );
-    // Treat an unexpected native error as "unavailable" so callers fall back
-    // gracefully instead of trapping the user.
+    const msg = (e as Error)?.message ?? 'native_error';
+    const invalidated = isBiometricInvalidationError(msg);
+    console.warn('[auth-service] authenticateWithBiometrics error:', msg);
     return {
       success: false,
       cancelled: false,
-      available: false,
-      error: (e as Error)?.message ?? 'native_error',
+      available: !invalidated,
+      invalidated,
+      error: msg,
     };
   }
 }
 
-/**
- * Check if PIN is set
- */
+// ─── PIN management ────────────────────────────────────────────────────────────
+
 export async function isPinSet(): Promise<boolean> {
   const pin = await secureGetItem(PIN_KEY);
   return pin !== null;
 }
 
-/**
- * Set user PIN (4 digits)
- */
 export async function setPin(pin: string): Promise<void> {
   if (!/^\d{4}$/.test(pin)) {
     throw new Error('PIN must be exactly 4 digits');
   }
-
   await secureSetItem(PIN_KEY, pin);
   await secureSetItem(AUTH_ENABLED_KEY, 'true');
 }
 
-/**
- * Verify PIN code
- */
 export async function verifyPin(pin: string): Promise<boolean> {
   try {
     const storedPin = await secureGetItem(PIN_KEY);
@@ -253,59 +239,48 @@ export async function verifyPin(pin: string): Promise<boolean> {
   }
 }
 
-/**
- * Change PIN code
- */
 export async function changePin(oldPin: string, newPin: string): Promise<boolean> {
   const isValid = await verifyPin(oldPin);
-  if (!isValid) {
-    return false;
-  }
-
+  if (!isValid) return false;
   await setPin(newPin);
   return true;
 }
 
-/**
- * Remove PIN (for account deletion)
- */
 export async function removePin(): Promise<void> {
   await secureRemoveItem(PIN_KEY);
   await secureRemoveItem(AUTH_ENABLED_KEY);
 }
 
-/**
- * Check if authentication is enabled
- */
 export async function isAuthEnabled(): Promise<boolean> {
   const enabled = await secureGetItem(AUTH_ENABLED_KEY);
   return enabled === 'true';
 }
 
-/**
- * Full authentication flow (biometric fallback to PIN)
- */
-export async function authenticate(): Promise<{ success: boolean; method: 'biometric' | 'pin' | null }> {
-  try {
-    // Check if auth is enabled
-    const authEnabled = await isAuthEnabled();
-    if (!authEnabled) {
-      return { success: true, method: null };
-    }
+// ─── Composite auth flow ───────────────────────────────────────────────────────
 
-    // Try biometric first
+export async function authenticate(): Promise<{
+  success: boolean;
+  method: 'biometric' | 'pin' | null;
+  invalidated?: boolean;
+}> {
+  try {
+    const authEnabled = await isAuthEnabled();
+    if (!authEnabled) return { success: true, method: null };
+
     const capabilities = await checkBiometricCapabilities();
     if (capabilities.isAvailable) {
       const biometricResult = await authenticateWithBiometrics();
       if (biometricResult.success) {
         return { success: true, method: 'biometric' };
       }
+      if (biometricResult.invalidated) {
+        return { success: false, method: 'pin', invalidated: true };
+      }
     }
 
-    // If biometric fails or not available, PIN will be required
-    return { success: false, method: 'pin' };
+    return { success: false, method: 'pin', invalidated: false };
   } catch (error) {
     console.error('Authentication error:', error);
-    return { success: false, method: 'pin' };
+    return { success: false, method: 'pin', invalidated: false };
   }
 }
