@@ -11,7 +11,7 @@ import { View, Text, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-import { Brain, Zap, MessageCircleQuestion, Layers } from "lucide-react-native";
+import { Brain, Frown, Meh, Angry } from "lucide-react-native";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
@@ -28,17 +28,17 @@ const PAIN_POINTS = [
     body: "You know something's off — but naming it is exhausting.",
   },
   {
-    icon: Layers,
+    icon: Meh,
     headline: "Overwhelm sneaks up",
     body: "Small things pile up unnoticed. Then suddenly, it's too much.",
   },
   {
-    icon: MessageCircleQuestion,
+    icon: Frown,
     headline: "Words don't come easy",
-    body: "\"I'm fine\" is simpler than explaining. So it stays unsaid.",
+    body: "\"I'm fine\" is simpler than explaining the details to people. So it stays unsaid.",
   },
   {
-    icon: Zap,
+    icon: Angry,
     headline: "Triggers blindside you",
     body: "The same situations flip your mood — again and again.",
   },
@@ -122,7 +122,7 @@ export function NDValueScreen1() {
                   lineHeight: 23,
                 }}
               >
-                Emotional awareness isn't a flaw — it's a skill the world never taught you.
+                You're not broken. Your brain just works differently — and that deserves real support, not judgment.
               </Text>
             </Animated.View>
 
