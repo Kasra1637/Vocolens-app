@@ -13,7 +13,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Sparkles, BarChart2, Flame } from "lucide-react-native";
+import { Smile, Laugh, Flame } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   JournalingFrequencyType,
@@ -33,9 +33,9 @@ interface FrequencyOption {
 }
 
 const FREQUENCY_OPTIONS: FrequencyOption[] = [
-  { id: "once-twice", label: "1–2 times a week",   icon: Sparkles  },
-  { id: "three-five", label: "3–5 times a week",   icon: BarChart2 },
-  { id: "daily",      label: "Every day",           icon: Flame     },
+  { id: "once-twice", label: "1–2 times a week",   icon: Smile },
+  { id: "three-five", label: "3–5 times a week",   icon: Laugh },
+  { id: "daily",      label: "Every day",           icon: Flame },
 ];
 
 export function ReflectionFeelingsScreen() {

@@ -11,7 +11,7 @@ import { View, Text, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-import { Mic, Sparkles, TrendingUp } from "lucide-react-native";
+import { Mic, Smile, TrendingUp } from "lucide-react-native";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
@@ -30,7 +30,7 @@ const HOW_IT_WORKS = [
     body: "No typing, no prompts. Hit record and say whatever's on your mind.",
   },
   {
-    icon: Sparkles,
+    icon: Smile,
     step: "02",
     headline: "AI reads your emotions",
     body: "The science-backed Plutchik model maps 8 core emotions from your words.",

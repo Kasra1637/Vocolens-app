@@ -12,7 +12,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Heart, Target, Eye, GitBranch } from "lucide-react-native";
+import { Smile, Target, Eye, GitBranch } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   GoalType,
@@ -37,7 +37,7 @@ const GOAL_OPTIONS: GoalOption[] = [
     id: "emotional-processing",
     label: "Emotional Processing",
     description: "Process and understand emotions",
-    icon: Heart,
+    icon: Smile,
   },
   {
     id: "goal-setting",

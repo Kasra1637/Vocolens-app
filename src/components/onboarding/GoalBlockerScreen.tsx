@@ -13,7 +13,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Clock, ShieldAlert, RefreshCw } from "lucide-react-native";
+import { Clock, Frown, RefreshCw } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   GoalBlockerType,
@@ -45,7 +45,7 @@ const BLOCKER_OPTIONS: BlockerOption[] = [
     id: "self-doubt",
     label: "Self-Doubt",
     description: "Questioning if it will really help",
-    icon: ShieldAlert,
+    icon: Frown,
   },
   {
     id: "lack-of-consistency",

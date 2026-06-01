@@ -15,17 +15,17 @@ const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
 import {
   Trophy,
-  HandHeart,
+  Smile,
   Target,
   ListTodo,
   Clock,
   TrendingUp,
   Wind,
-  Brain,
-  PlayCircle,
+  Frown,
+  Meh,
   Sunset,
   Leaf,
-  Lightbulb,
+  Laugh,
 } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
@@ -55,33 +55,33 @@ const MOOD_FOLLOWUP_MAP: Record<MoodType, MoodFollowUpConfig> = {
   happy: {
     question: "What's inspiring you most today?",
     options: [
-      { id: "small-win",        label: "Small Win",         icon: Trophy      },
-      { id: "supportive-friend",label: "Supportive Friend", icon: HandHeart   },
-      { id: "clear-goal",       label: "Clear Goal",        icon: Target      },
+      { id: "small-win",        label: "Small Win",         icon: Trophy  },
+      { id: "supportive-friend",label: "Supportive Friend", icon: Smile   },
+      { id: "clear-goal",       label: "Clear Goal",        icon: Target  },
     ],
   },
   stressed: {
     question: "What's adding pressure to your day?",
     options: [
-      { id: "too-many-tasks",      label: "Too Many Tasks",      icon: ListTodo    },
-      { id: "tight-deadline",      label: "Tight Deadline",      icon: Clock       },
-      { id: "high-expectations",   label: "High Expectations",   icon: TrendingUp  },
+      { id: "too-many-tasks",      label: "Too Many Tasks",      icon: ListTodo   },
+      { id: "tight-deadline",      label: "Tight Deadline",      icon: Clock      },
+      { id: "high-expectations",   label: "High Expectations",   icon: TrendingUp },
     ],
   },
   anxious: {
     question: "What's keeping you from feeling calm right now?",
     options: [
-      { id: "get-distracted",   label: "Get Distracted",   icon: Wind        },
-      { id: "feel-overwhelmed", label: "Feel Overwhelmed", icon: Brain       },
-      { id: "dont-start",       label: "Don't Start",      icon: PlayCircle  },
+      { id: "get-distracted",   label: "Get Distracted",   icon: Wind  },
+      { id: "feel-overwhelmed", label: "Feel Overwhelmed", icon: Frown },
+      { id: "dont-start",       label: "Don't Start",      icon: Meh   },
     ],
   },
   calm: {
     question: "What's bringing you peace today?",
     options: [
-      { id: "quiet-moment",    label: "Quiet Moment",    icon: Sunset      },
-      { id: "fresh-air",       label: "Fresh Air",       icon: Leaf        },
-      { id: "positive-thought",label: "Positive Thought",icon: Lightbulb   },
+      { id: "quiet-moment",    label: "Quiet Moment",    icon: Sunset },
+      { id: "fresh-air",       label: "Fresh Air",       icon: Leaf   },
+      { id: "positive-thought",label: "Positive Thought",icon: Laugh  },
     ],
   },
 };
