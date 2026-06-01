@@ -1,8 +1,8 @@
 /**
  * Biometric Setup Screen (Onboarding final step)
  *
- * Offers the user to protect their journal with Face ID / Fingerprint.
- *  - "Enable" → prompts the OS biometric, on success enables the lock and finishes onboarding.
+ * Offers the user to protect their journal with their Fingerprint.
+ *  - "Enable" → prompts the OS fingerprint scanner, on success enables the lock and finishes onboarding.
  *  - "Maybe later" / unsupported hardware → finishes onboarding without a lock.
  *
  * Replaces the old 4-digit SetPinScreen.
@@ -53,7 +53,7 @@ export function BiometricSetupScreen() {
   const playClickSound = useClickSound();
 
   const [phase, setPhase] = useState<Phase>("intro");
-  const [biometricName, setBiometricName] = useState("Face ID / Fingerprint");
+  const [biometricName, setBiometricName] = useState("Fingerprint");
   const [available, setAvailable] = useState(true);
   const [busy, setBusy] = useState(false);
 

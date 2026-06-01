@@ -1,8 +1,8 @@
 /**
  * Authentication Service
  *
- * Handles biometric and PIN authentication for app access.
- * Combines face/fingerprint recognition with a 4-digit PIN code.
+ * Handles biometric (fingerprint) and PIN authentication for app access.
+ * Fingerprint is the primary unlock method.
  */
 
 import { secureGetItem, secureSetItem, secureRemoveItem } from './secure-storage';
@@ -36,7 +36,7 @@ export interface BiometricCapabilities {
 }
 
 /**
- * Check device biometric capabilities (fingerprint / Face ID / iris).
+ * Check device biometric capabilities (fingerprint primary; Face ID / iris fallback).
  * Returns a safe "unavailable" result if the native module or hardware is missing.
  */
 export async function checkBiometricCapabilities(): Promise<BiometricCapabilities> {
@@ -90,20 +90,21 @@ export async function checkBiometricCapabilities(): Promise<BiometricCapabilitie
 
 /**
  * Get a friendly, platform-appropriate name for the available biometric type.
+ * Fingerprint is the app's primary biometric method, so it's preferred in labeling.
  */
 export function getBiometricTypeName(types: string[]): string {
-  if (types.includes('face')) return 'Face ID';
   if (types.includes('fingerprint')) return 'Fingerprint';
+  if (types.includes('face')) return 'Face ID';
   if (types.includes('iris')) return 'Iris';
-  return 'Biometric';
+  return 'Fingerprint';
 }
 
 /**
- * Prompt the user to authenticate with their fingerprint / Face ID.
+ * Prompt the user to authenticate with their fingerprint.
  * Returns true only on a successful biometric match.
  */
 export async function authenticateWithBiometrics(
-  promptMessage = 'Unlock Vocolens',
+  promptMessage = 'Unlock Vocolens with your fingerprint',
 ): Promise<boolean> {
   const LocalAuth = getLocalAuth();
   if (!LocalAuth) return false;

@@ -2,7 +2,7 @@
  * Biometric Lock Screen
  *
  * Shown every time the app is opened when biometric app-lock is enabled.
- * Auto-prompts for fingerprint / Face ID on mount. On success → setUnlocked(true),
+ * Auto-prompts for the user's fingerprint on mount. On success → setUnlocked(true),
  * and AuthGate re-renders to reveal the app. Offers a manual retry button.
  *
  * Replaces the old PIN-based EnterPinScreen.
@@ -41,7 +41,7 @@ export function BiometricLockScreen() {
 
   const [error, setError] = useState("");
   const [authenticating, setAuthenticating] = useState(false);
-  const [biometricName, setBiometricName] = useState("Biometric");
+  const [biometricName, setBiometricName] = useState("Fingerprint");
   const [hardwareMissing, setHardwareMissing] = useState(false);
 
   // Gentle pulse on the fingerprint badge
