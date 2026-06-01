@@ -12,6 +12,7 @@ import {
   Modal,
   Alert,
   Platform,
+  Linking,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -35,6 +36,9 @@ import {
   Trash2,
   Download,
   Globe,
+  Crown,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react-native";
 import Animated from "react-native-reanimated";
 import { FadeIn, Easing } from "react-native-reanimated";
@@ -81,6 +85,12 @@ import usePinStore from "@/lib/state/pin-store";
 import useBiometricStore from "@/lib/state/biometric-store";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
+import {
+  activateAdapty,
+  restoreAdaptyPurchases,
+  isAdaptyEnabled,
+  hasEntitlement,
+} from "@/lib/adaptyClient";
 import { removePin } from "@/lib/auth-service";
 import { exportAllDataAsCsv } from "@/lib/export-data";
 import { getLanguageByCode } from "@/lib/languages";
@@ -96,6 +106,8 @@ export default function SettingsScreen() {
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [isExporting, setIsExporting] = useState(false);
+  const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
+  const [isRestoringInSettings, setIsRestoringInSettings] = useState(false);
   // Onboarding Store (for theme and notification time)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const setSelectedTheme = useOnboardingStore((s) => s.setSelectedTheme);
@@ -103,6 +115,12 @@ export default function SettingsScreen() {
   const notificationPreferences = useOnboardingStore(
     (s) => s.notificationPreferences,
   );
+
+  // Subscription Store
+  const hasSubscription = useSubscriptionStore((s) => s.hasSubscription);
+  const planType = useSubscriptionStore((s) => s.planType);
+  const setSubscription = useSubscriptionStore((s) => s.setSubscription);
+  const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
 
   // Settings Store
   const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
@@ -215,6 +233,55 @@ export default function SettingsScreen() {
     setSignOutModalVisible(false);
   };
 
+  // ── Subscription management handlers ──────────────────────────────────────
+  const handleManageSubscription = () => {
+    tapHaptic();
+    setSubscriptionModalVisible(true);
+  };
+
+  const handleCancelSubscription = () => {
+    tapHaptic();
+    // Deep-link to Google Play subscription management page.
+    // On iOS this would open the App Store subscriptions settings instead.
+    const url = Platform.select({
+      android: "https://play.google.com/store/account/subscriptions?sku=com.vocolens.app&package=com.vocolens.app",
+      ios: "https://apps.apple.com/account/subscriptions",
+      default: "https://play.google.com/store/account/subscriptions",
+    });
+    Linking.openURL(url!).catch(() =>
+      Alert.alert(
+        "Could not open store",
+        "Please open the Google Play Store manually, go to Subscriptions, and cancel Vocolens from there.",
+      ),
+    );
+  };
+
+  const handleRestoreInSettings = async () => {
+    if (!isAdaptyEnabled()) {
+      Alert.alert("Not available", "Payment system is not available in this build.");
+      return;
+    }
+    tapHaptic();
+    setIsRestoringInSettings(true);
+    const result = await restoreAdaptyPurchases();
+    setIsRestoringInSettings(false);
+    if (result.ok) {
+      if (hasEntitlement(result.data, "pro_journal")) {
+        successHaptic();
+        // Preserve existing planType if Adapty doesn't return it directly
+        setSubscription(true, planType ?? undefined);
+        showAlert("success", "Subscription Restored", "Your subscription has been restored successfully.");
+        setSubscriptionModalVisible(false);
+      } else {
+        errorHaptic();
+        Alert.alert("No Active Subscription", "We couldn't find an active subscription linked to this account.");
+      }
+    } else {
+      errorHaptic();
+      Alert.alert("Restore Failed", "Something went wrong. Please try again.");
+    }
+  };
+
   const handleExportData = async () => {
     tapHaptic();
     setIsExporting(true);
@@ -325,6 +392,175 @@ export default function SettingsScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
           >
+            {/* ── Subscription ── */}
+            <Animated.View entering={ENTER_2} className="mb-6">
+              <Pressable
+                onPress={handleManageSubscription}
+                className="active:opacity-75"
+                style={{
+                  backgroundColor: surfaceBg,
+                  borderWidth: 2,
+                  borderColor: hasSubscription
+                    ? "rgba(255,255,255,0.30)"
+                    : "rgba(255,100,100,0.40)",
+                  borderRadius: 24,
+                  overflow: "hidden",
+                }}
+              >
+                {/* Header */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 20,
+                    paddingTop: 20,
+                    paddingBottom: 16,
+                    borderBottomWidth: 1,
+                    borderBottomColor: hexToRgba(Colors.primary, 0.12),
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: hexToRgba(Colors.primary, 0.2),
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginRight: 12,
+                    }}
+                  >
+                    <Crown size={20} color="#FFFFFF" strokeWidth={2} />
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#FFFFFF",
+                      fontSize: 20,
+                      flex: 1,
+                    }}
+                  >
+                    Subscription
+                  </Text>
+                  <ChevronRight size={20} color="rgba(255,255,255,0.5)" strokeWidth={2} />
+                </View>
+
+                {/* Status row */}
+                <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
+                  {hasSubscription ? (
+                    <View>
+                      {/* Active badge + plan */}
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginBottom: 6,
+                        }}
+                      >
+                        <View
+                          style={{
+                            backgroundColor: "rgba(74,222,128,0.20)",
+                            borderRadius: 8,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            marginRight: 10,
+                            borderWidth: 1,
+                            borderColor: "rgba(74,222,128,0.35)",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: "Inter_700Bold",
+                              color: "#4ADE80",
+                              fontSize: 11,
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            ACTIVE
+                          </Text>
+                        </View>
+                        <Text
+                          style={{
+                            fontFamily: "Inter_600SemiBold",
+                            color: "#FFFFFF",
+                            fontSize: 15,
+                          }}
+                        >
+                          {planType === "yearly"
+                            ? "Yearly Pro · $69 / year"
+                            : planType === "monthly"
+                              ? "Monthly Pro · $9.99 / month"
+                              : "Pro Plan"}
+                        </Text>
+                      </View>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_400Regular",
+                          color: "rgba(255,255,255,0.55)",
+                          fontSize: 13,
+                          lineHeight: 18,
+                        }}
+                      >
+                        Tap to manage or cancel your subscription.
+                      </Text>
+                    </View>
+                  ) : (
+                    <View>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginBottom: 6,
+                        }}
+                      >
+                        <View
+                          style={{
+                            backgroundColor: "rgba(239,68,68,0.18)",
+                            borderRadius: 8,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            marginRight: 10,
+                            borderWidth: 1,
+                            borderColor: "rgba(239,68,68,0.35)",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: "Inter_700Bold",
+                              color: "#F87171",
+                              fontSize: 11,
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            INACTIVE
+                          </Text>
+                        </View>
+                        <Text
+                          style={{
+                            fontFamily: "Inter_600SemiBold",
+                            color: "rgba(255,255,255,0.70)",
+                            fontSize: 15,
+                          }}
+                        >
+                          No active plan
+                        </Text>
+                      </View>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_400Regular",
+                          color: "rgba(255,255,255,0.55)",
+                          fontSize: 13,
+                          lineHeight: 18,
+                        }}
+                      >
+                        Tap to restore a previous purchase or subscribe.
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </Pressable>
+            </Animated.View>
+
             {/* Usage Limit Card */}
             <Animated.View entering={ENTER_2} className="mb-6">
               <View
@@ -1247,6 +1483,250 @@ export default function SettingsScreen() {
               </Pressable>
             </View>
           </View>
+        </View>
+      </Modal>
+
+      {/* ── Subscription Management Modal ── */}
+      <Modal
+        visible={subscriptionModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSubscriptionModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.65)" }}>
+          <LinearGradient
+            colors={THEME_COLORS[selectedTheme].backgroundGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={{
+              borderTopLeftRadius: 32,
+              borderTopRightRadius: 32,
+              paddingHorizontal: 24,
+              paddingTop: 24,
+              paddingBottom: 40,
+              borderTopWidth: 1,
+              borderTopColor: "rgba(255,255,255,0.15)",
+            }}
+          >
+            {/* Drag handle */}
+            <View style={{ alignItems: "center", marginBottom: 20 }}>
+              <View
+                style={{
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: "rgba(255,255,255,0.25)",
+                }}
+              />
+            </View>
+
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 19,
+                    backgroundColor: hexToRgba(Colors.primary, 0.25),
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Crown size={18} color="#FFFFFF" strokeWidth={2} />
+                </View>
+                <Text
+                  style={{
+                    fontFamily: "Fraunces_700Bold",
+                    color: "#FFFFFF",
+                    fontSize: 22,
+                  }}
+                >
+                  Manage Subscription
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setSubscriptionModalVisible(false)}
+                hitSlop={12}
+              >
+                <X size={22} color="rgba(255,255,255,0.55)" strokeWidth={2} />
+              </Pressable>
+            </View>
+
+            {/* Current plan pill */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "rgba(255,255,255,0.10)",
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.18)",
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                marginBottom: 24,
+                gap: 10,
+              }}
+            >
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: hasSubscription ? "#4ADE80" : "#F87171",
+                }}
+              />
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.75)",
+                  fontSize: 14,
+                  flex: 1,
+                }}
+              >
+                {hasSubscription
+                  ? planType === "yearly"
+                    ? "Yearly Pro · $69 / year  ·  7-day free trial"
+                    : planType === "monthly"
+                      ? "Monthly Pro · $9.99 / month"
+                      : "Pro Plan — active"
+                  : "No active subscription"}
+              </Text>
+            </View>
+
+            {/* Action rows */}
+            <View
+              style={{
+                backgroundColor: "rgba(255,255,255,0.08)",
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.14)",
+                overflow: "hidden",
+                marginBottom: 16,
+              }}
+            >
+              {/* Restore purchases */}
+              <Pressable
+                onPress={handleRestoreInSettings}
+                disabled={isRestoringInSettings}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 18,
+                  paddingVertical: 17,
+                  borderBottomWidth: 1,
+                  borderBottomColor: "rgba(255,255,255,0.10)",
+                  opacity: pressed || isRestoringInSettings ? 0.6 : 1,
+                })}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: hexToRgba(Colors.primary, 0.20),
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 14,
+                  }}
+                >
+                  <RefreshCw size={17} color="#FFFFFF" strokeWidth={2} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#FFFFFF",
+                      fontSize: 15,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {isRestoringInSettings ? "Restoring…" : "Restore Purchases"}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.55)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Reactivate a subscription linked to this account
+                  </Text>
+                </View>
+                <ChevronRight size={18} color="rgba(255,255,255,0.35)" strokeWidth={2} />
+              </Pressable>
+
+              {/* Cancel subscription — opens store */}
+              <Pressable
+                onPress={handleCancelSubscription}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 18,
+                  paddingVertical: 17,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: "rgba(239,68,68,0.18)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 14,
+                  }}
+                >
+                  <ExternalLink size={17} color="#F87171" strokeWidth={2} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#F87171",
+                      fontSize: 15,
+                      marginBottom: 2,
+                    }}
+                  >
+                    Cancel Subscription
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.55)",
+                      fontSize: 12,
+                    }}
+                  >
+                    Opens Google Play · cancel from your subscriptions list
+                  </Text>
+                </View>
+                <ChevronRight size={18} color="rgba(255,255,255,0.35)" strokeWidth={2} />
+              </Pressable>
+            </View>
+
+            {/* Fine-print note */}
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                color: "rgba(255,255,255,0.35)",
+                fontSize: 11,
+                textAlign: "center",
+                lineHeight: 16,
+              }}
+            >
+              Subscriptions are managed through the{" "}
+              {Platform.OS === "ios" ? "App Store" : "Google Play Store"}.{"\n"}
+              Cancelling stops future renewals — access continues until the current period ends.
+            </Text>
+          </LinearGradient>
         </View>
       </Modal>
 
