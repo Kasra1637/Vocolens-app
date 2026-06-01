@@ -25,22 +25,22 @@ const PAIN_POINTS = [
   {
     icon: Brain,
     headline: "Feelings are hard to name",
-    body: "Many ADHD & autistic minds experience alexithymia — emotions are there, but words for them aren't.",
+    body: "Emotions are there, but the words aren't.",
   },
   {
     icon: Meh,
     headline: "Overwhelm sneaks up",
-    body: "With ADHD, small things pile up unnoticed — until suddenly it's all too much.",
+    body: "Small things pile up unnoticed — until suddenly it's too much.",
   },
   {
     icon: Frown,
     headline: "The same thought loops",
-    body: "OCD-style rumination replays a worry on repeat, and you can't tell if it matters.",
+    body: "A worry replays on repeat and you can't tell if it matters.",
   },
   {
     icon: Angry,
     headline: "Masking is exhausting",
-    body: "Holding it together all day — tics, focus, feelings — leaves nothing left to process them.",
+    body: "Holding it together all day leaves nothing left to process.",
   },
 ];
 
@@ -83,7 +83,7 @@ export function NDValueScreen1() {
             >
               <EmotionalCompanion
                 state="processing"
-                size={100}
+                size={80}
                 themeColor={themeColors.primary}
               />
             </Animated.View>
