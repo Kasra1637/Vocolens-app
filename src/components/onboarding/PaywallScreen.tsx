@@ -693,6 +693,28 @@ export function PaywallScreen() {
                   {isRestoring ? "Restoring..." : "Restore purchases"}
                 </Text>
               </Pressable>
+
+              {/* Dev testing escape hatch */}
+              <Pressable
+                onPress={() => {
+                  tapHaptic();
+                  trackEvent("escape_payment_tapped");
+                  setSubscription(true, "yearly");
+                  nextStep();
+                }}
+                style={{ marginTop: 10 }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255,255,255,0.25)",
+                    fontSize: 12,
+                    textDecorationLine: "underline",
+                  }}
+                >
+                  Escape payment
+                </Text>
+              </Pressable>
             </Animated.View>
           </View>
         </SafeAreaView>
