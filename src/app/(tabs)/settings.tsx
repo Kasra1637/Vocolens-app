@@ -78,6 +78,7 @@ import useUserStatsStore from "@/lib/state/user-stats-store";
 import useJournalStore from "@/lib/state/journal-store";
 import useBadgesStore from "@/lib/state/badges-store";
 import usePinStore from "@/lib/state/pin-store";
+import useBiometricStore from "@/lib/state/biometric-store";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { removePin } from "@/lib/auth-service";
@@ -252,6 +253,7 @@ export default function SettingsScreen() {
     useUserStatsStore.getState().resetStats();
     useSettingsStore.getState().resetSettings();
     usePinStore.getState().clearPin();
+    useBiometricStore.getState().disableBiometric();
     useEmotionCorrectionStore.getState().clearCorrections();
     useSubscriptionStore.getState().clearSubscription();
 

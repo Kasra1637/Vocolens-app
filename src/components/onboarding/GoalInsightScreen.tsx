@@ -49,12 +49,13 @@ const BLOCKER_LABELS: Record<GoalBlockerType, string> = {
 
 const GOAL_INSIGHT_MESSAGES: Record<GoalType, string> = {
   "emotional-processing":
-    "Voice journaling is perfect for processing emotions and finding clarity.",
-  "goal-setting": "Daily reflection keeps your goals front and center.",
+    "In a few weeks, you'll name feelings that used to just feel like static.",
+  "goal-setting":
+    "You'll see which days move you forward — and what quietly holds you back.",
   "self-reflection":
-    "Understanding yourself is the foundation of personal growth.",
+    "Patterns you've never noticed will start to show up clearly.",
   "decision-making":
-    "Talking through decisions brings hidden insights to light.",
+    "Talking it out will surface the answer you already had inside.",
 };
 
 export function GoalInsightScreen() {
@@ -237,9 +238,10 @@ export function GoalInsightScreen() {
                       fontFamily: "Inter_400Regular",
                       color: "rgba(255, 255, 255, 0.65)",
                       fontSize: 12,
+                      lineHeight: 18,
                     }}
                   >
-                    Your journey begins now
+                    {insightMessage || "Your journey begins now"}
                   </Text>
                 </View>
               </View>

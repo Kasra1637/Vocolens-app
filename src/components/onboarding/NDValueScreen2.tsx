@@ -11,7 +11,7 @@ import { View, Text, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-import { Mic, Smile, TrendingUp } from "lucide-react-native";
+import { Mic, Smile, TrendingUp, FlaskConical } from "lucide-react-native";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
@@ -26,20 +26,20 @@ const HOW_IT_WORKS = [
   {
     icon: Mic,
     step: "01",
-    headline: "Just speak",
-    body: "No typing, no prompts. Hit record and say whatever's on your mind.",
+    headline: "Just speak — no working memory tax",
+    body: "Talking is faster than your thoughts. No blank page, no executive-function hurdle.",
   },
   {
     icon: Smile,
     step: "02",
-    headline: "AI reads your emotions",
-    body: "The science-backed Plutchik model maps 8 core emotions from your words.",
+    headline: "AI puts words to the feeling",
+    body: "When emotions are hard to name, the science-backed Plutchik model names them for you.",
   },
   {
     icon: TrendingUp,
     step: "03",
-    headline: "Patterns become clear",
-    body: "Spot your triggers over time — all stored privately on your device.",
+    headline: "Your triggers become visible",
+    body: "See the patterns behind the overwhelm — privately, on your device, at your pace.",
   },
 ];
 
@@ -205,6 +205,31 @@ export function NDValueScreen2() {
                 );
               })}
             </View>
+
+            {/* Trust cue — establish credibility early */}
+            <Animated.View
+              entering={FadeIn.duration(700).delay(540).easing(SOFT)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                marginBottom: 20,
+                opacity: 0.7,
+              }}
+            >
+              <FlaskConical size={13} color="#FFFFFF" strokeWidth={2} />
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.75)",
+                  fontSize: 12,
+                  textAlign: "center",
+                }}
+              >
+                Built on the scientifically validated Plutchik emotion model
+              </Text>
+            </Animated.View>
 
             {/* CTA */}
             <Animated.View

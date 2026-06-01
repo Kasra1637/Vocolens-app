@@ -410,7 +410,7 @@ export function PaywallScreen() {
                   maxWidth: "85%",
                 }}
               >
-                Unlimited voice entries, AI insights, and emotional clarity — starting today.
+                Built for ADHD, OCD, autistic & Tourette's minds — speak freely, and let clarity find you.
               </Text>
             </Animated.View>
 
@@ -431,10 +431,10 @@ export function PaywallScreen() {
                 }}
               >
                 {[
-                  { emoji: "🧠", text: "Understand what you're really feeling — not just surface emotions" },
-                  { emoji: "🌊", text: "Reduce stress & anxiety with guided voice reflection" },
-                  { emoji: "📈", text: "Track your emotional growth over weeks and months" },
-                  { emoji: "🔍", text: "Spot your emotional triggers — topics that consistently affect your mood" },
+                  { emoji: "🗣️", text: "Put words to feelings you couldn't name before — no blank page, just talk" },
+                  { emoji: "🌊", text: "Catch overwhelm before it builds, instead of after it hits" },
+                  { emoji: "🔁", text: "See the looping thoughts and triggers for what they really are" },
+                  { emoji: "📈", text: "Watch your patterns become clearer, week after week — privately, on your device" },
                 ].map((item, idx) => (
                   <View
                     key={idx}

@@ -72,10 +72,10 @@ const FOLLOWUP_LABELS: Record<MoodFollowUpType, string> = {
 };
 
 const MOOD_INSIGHT_MESSAGES: Record<MoodType, string> = {
-  happy: "Your positivity is a powerful foundation for growth.",
-  stressed: "Acknowledging pressure is the first step to managing it.",
-  anxious: "Understanding your triggers helps you find calm.",
-  calm: "Your peace of mind is a valuable asset to nurture.",
+  happy: "We'll help you notice what lifts you — so you can return to it on purpose.",
+  stressed: "Soon you'll spot the pressure building early — and head it off sooner.",
+  anxious: "You'll start to see your triggers coming, instead of being blindsided.",
+  calm: "We'll help you protect this calm and recognise what creates it.",
 };
 
 export function MoodInsightScreen() {
@@ -195,7 +195,7 @@ export function MoodInsightScreen() {
                   maxWidth: "85%",
                 }}
               >
-                You just took the first step toward deeper self-awareness.
+                You just took the first step toward catching what you feel — before it catches you.
               </Text>
             </Animated.View>
 
@@ -283,7 +283,7 @@ export function MoodInsightScreen() {
                       fontSize: 12,
                     }}
                   >
-                    Self-awareness unlocked
+                    {insightMessage || "Self-awareness unlocked"}
                   </Text>
                 </View>
               </View>

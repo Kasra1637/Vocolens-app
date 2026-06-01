@@ -25,7 +25,7 @@
  *  18 FreeTrialPreviewScreen
  *  19 ReminderScreen
  *  20 PaywallScreen
- *  21 SetPinScreen
+ *  21 BiometricSetupScreen
  */
 
 import React from 'react';
@@ -52,7 +52,7 @@ import { AccountPreparationScreen } from './AccountPreparationScreen';
 import { FreeTrialPreviewScreen } from './FreeTrialPreviewScreen';
 import { ReminderScreen } from './ReminderScreen';
 import { PaywallScreen } from './PaywallScreen';
-import { SetPinScreen } from './SetPinScreen';
+import { BiometricSetupScreen } from './BiometricSetupScreen';
 
 export function OnboardingFlow() {
   const currentStep = useOnboardingStore((s) => s.currentStep);
@@ -80,7 +80,7 @@ export function OnboardingFlow() {
       case 18: return <FreeTrialPreviewScreen />;
       case 19: return <ReminderScreen />;
       case 20: return <PaywallScreen />;
-      case 21: return <SetPinScreen />;
+      case 21: return <BiometricSetupScreen />;
       default: return <WelcomeScreen />;
     }
   };
@@ -113,5 +113,5 @@ export { AccountPreparationScreen } from './AccountPreparationScreen';
 export { FreeTrialPreviewScreen } from './FreeTrialPreviewScreen';
 export { ReminderScreen } from './ReminderScreen';
 export { PaywallScreen } from './PaywallScreen';
-export { SetPinScreen } from './SetPinScreen';
+export { BiometricSetupScreen } from './BiometricSetupScreen';
 export { BackButton } from './BackButton';

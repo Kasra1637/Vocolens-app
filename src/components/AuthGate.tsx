@@ -5,7 +5,7 @@
  * Flow:
  *  1. Onboarding not done → show OnboardingFlow (paywall is step 16)
  *  2. Onboarding done, no active subscription → show StandalonePaywall
- *  3. PIN set but not verified this session → lock screen
+ *  3. Biometric lock enabled but not unlocked this session → lock screen
  *  4. All good → show app, then re-schedule notifications in background
  */
 
@@ -13,10 +13,10 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '@/lib/state/auth-store';
 import useOnboardingStore from '@/lib/state/onboarding-store';
-import usePinStore from '@/lib/state/pin-store';
+import useBiometricStore from '@/lib/state/biometric-store';
 import useSubscriptionStore from '@/lib/state/subscription-store';
 import { OnboardingFlow } from './onboarding';
-import { EnterPinScreen } from './EnterPinScreen';
+import { BiometricLockScreen } from './BiometricLockScreen';
 import { StandalonePaywall } from './StandalonePaywall';
 import { getCustomerInfo, isRevenueCatEnabled } from '@/lib/revenuecatClient';
 import { NotificationService } from '@/lib/services/notification-service';
@@ -34,8 +34,8 @@ export function AuthGate({ children }: AuthGateProps) {
   const hasCompletedOnboarding = useOnboardingStore((s) => s.hasCompletedOnboarding);
   const notificationPreferences = useOnboardingStore((s) => s.notificationPreferences);
 
-  const isPinSet = usePinStore((s) => s.isPinSet);
-  const isPinVerified = usePinStore((s) => s.isPinVerified);
+  const isBiometricEnabled = useBiometricStore((s) => s.isBiometricEnabled);
+  const isUnlocked = useBiometricStore((s) => s.isUnlocked);
 
   const hasSubscription = useSubscriptionStore((s) => s.hasSubscription);
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
@@ -102,9 +102,9 @@ export function AuthGate({ children }: AuthGateProps) {
     return <StandalonePaywall />;
   }
 
-  // Step 3 — PIN set but not verified this session → lock screen
-  if (isPinSet && !isPinVerified) {
-    return <EnterPinScreen />;
+  // Step 3 — biometric lock enabled but not unlocked this session → lock screen
+  if (isBiometricEnabled && !isUnlocked) {
+    return <BiometricLockScreen />;
   }
 
   return <>{children}</>;

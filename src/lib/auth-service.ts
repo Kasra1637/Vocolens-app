@@ -10,8 +10,23 @@ import { secureGetItem, secureSetItem, secureRemoveItem } from './secure-storage
 const PIN_KEY = 'user_pin_code';
 const AUTH_ENABLED_KEY = 'auth_enabled';
 
-// Biometric support will be added when expo-local-authentication is installed
-// For now, we'll use PIN-only authentication
+/**
+ * Lazy-load expo-local-authentication to avoid a hard crash in environments
+ * where the native module isn't present (e.g. Expo Go without a dev build).
+ * Mirrors the lazy-require pattern used for expo-av elsewhere in the app.
+ */
+function getLocalAuth(): typeof import('expo-local-authentication') | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('expo-local-authentication');
+  } catch (e) {
+    console.warn(
+      '[auth-service] expo-local-authentication not available:',
+      (e as Error)?.message,
+    );
+    return null;
+  }
+}
 
 export interface BiometricCapabilities {
   isAvailable: boolean;
@@ -21,33 +36,92 @@ export interface BiometricCapabilities {
 }
 
 /**
- * Check device biometric capabilities
- * Note: Requires expo-local-authentication package
+ * Check device biometric capabilities (fingerprint / Face ID / iris).
+ * Returns a safe "unavailable" result if the native module or hardware is missing.
  */
 export async function checkBiometricCapabilities(): Promise<BiometricCapabilities> {
-  // Placeholder - biometric support requires expo-local-authentication
-  return {
-    isAvailable: false,
-    hasHardware: false,
-    isEnrolled: false,
-    supportedTypes: [],
-  };
+  const LocalAuth = getLocalAuth();
+  if (!LocalAuth) {
+    return {
+      isAvailable: false,
+      hasHardware: false,
+      isEnrolled: false,
+      supportedTypes: [],
+    };
+  }
+
+  try {
+    const hasHardware = await LocalAuth.hasHardwareAsync();
+    const isEnrolled = await LocalAuth.isEnrolledAsync();
+    const rawTypes = await LocalAuth.supportedAuthenticationTypesAsync();
+
+    const typeNames = rawTypes.map((t) => {
+      switch (t) {
+        case LocalAuth.AuthenticationType.FINGERPRINT:
+          return 'fingerprint';
+        case LocalAuth.AuthenticationType.FACIAL_RECOGNITION:
+          return 'face';
+        case LocalAuth.AuthenticationType.IRIS:
+          return 'iris';
+        default:
+          return 'biometric';
+      }
+    });
+
+    return {
+      isAvailable: hasHardware && isEnrolled,
+      hasHardware,
+      isEnrolled,
+      supportedTypes: typeNames,
+    };
+  } catch (e) {
+    console.warn(
+      '[auth-service] checkBiometricCapabilities error:',
+      (e as Error)?.message,
+    );
+    return {
+      isAvailable: false,
+      hasHardware: false,
+      isEnrolled: false,
+      supportedTypes: [],
+    };
+  }
 }
 
 /**
- * Get friendly name for biometric type
+ * Get a friendly, platform-appropriate name for the available biometric type.
  */
-export function getBiometricTypeName(_types: string[]): string {
+export function getBiometricTypeName(types: string[]): string {
+  if (types.includes('face')) return 'Face ID';
+  if (types.includes('fingerprint')) return 'Fingerprint';
+  if (types.includes('iris')) return 'Iris';
   return 'Biometric';
 }
 
 /**
- * Authenticate with biometrics
- * Note: Requires expo-local-authentication package
+ * Prompt the user to authenticate with their fingerprint / Face ID.
+ * Returns true only on a successful biometric match.
  */
-export async function authenticateWithBiometrics(): Promise<boolean> {
-  // Placeholder - will be implemented when expo-local-authentication is added
-  return false;
+export async function authenticateWithBiometrics(
+  promptMessage = 'Unlock Vocolens',
+): Promise<boolean> {
+  const LocalAuth = getLocalAuth();
+  if (!LocalAuth) return false;
+
+  try {
+    const result = await LocalAuth.authenticateAsync({
+      promptMessage,
+      cancelLabel: 'Cancel',
+      disableDeviceFallback: false,
+    });
+    return result.success === true;
+  } catch (e) {
+    console.warn(
+      '[auth-service] authenticateWithBiometrics error:',
+      (e as Error)?.message,
+    );
+    return false;
+  }
 }
 
 /**

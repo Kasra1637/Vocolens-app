@@ -33,6 +33,12 @@
           }
         }
       ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Vocolens to use Face ID to unlock your private journal."
+        }
+      ],
       "expo-updates"
     ],
     "extra": {

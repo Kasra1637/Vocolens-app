@@ -24,23 +24,23 @@ const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 const PAIN_POINTS = [
   {
     icon: Brain,
-    headline: "Emotions feel like static",
-    body: "You know something's off — but naming it is exhausting.",
+    headline: "Feelings are hard to name",
+    body: "Many ADHD & autistic minds experience alexithymia — emotions are there, but words for them aren't.",
   },
   {
     icon: Meh,
     headline: "Overwhelm sneaks up",
-    body: "Small things pile up unnoticed. Then suddenly, it's too much.",
+    body: "With ADHD, small things pile up unnoticed — until suddenly it's all too much.",
   },
   {
     icon: Frown,
-    headline: "Words don't come easy",
-    body: "\"I'm fine\" is simpler than explaining the details to people. So it stays unsaid.",
+    headline: "The same thought loops",
+    body: "OCD-style rumination replays a worry on repeat, and you can't tell if it matters.",
   },
   {
     icon: Angry,
-    headline: "Triggers blindside you",
-    body: "The same situations flip your mood — again and again.",
+    headline: "Masking is exhausting",
+    body: "Holding it together all day — tics, focus, feelings — leaves nothing left to process them.",
   },
 ];
 
@@ -122,7 +122,7 @@ export function NDValueScreen1() {
                   lineHeight: 23,
                 }}
               >
-                Being neurodivergent means you feel deeply — and that's a genuine strength.
+                Whether it's ADHD, OCD, autism, or Tourette's — your mind works differently, and that's never the problem.
               </Text>
             </Animated.View>
 
