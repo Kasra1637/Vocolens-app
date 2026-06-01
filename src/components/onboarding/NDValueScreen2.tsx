@@ -112,7 +112,7 @@ export function NDValueScreen2() {
                   lineHeight: 38,
                 }}
               >
-                Speak. Your AI does the rest.
+                Speak, we listen
               </Text>
             </Animated.View>
 
@@ -130,7 +130,7 @@ export function NDValueScreen2() {
                   lineHeight: 23,
                 }}
               >
-                No writing. No forms. No pressure. Vocolens turns a 60-second voice note into emotional clarity.
+                Share what's on your mind, and your AI turns it into real emotional clarity.
               </Text>
             </Animated.View>
 
