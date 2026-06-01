@@ -39,7 +39,8 @@
           "faceIDPermission": "Allow Vocolens to use biometrics to unlock your private journal."
         }
       ],
-      "expo-updates"
+      "expo-updates",
+      "react-native-adapty"
     ],
     "extra": {
       "router": {},

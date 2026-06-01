@@ -1,0 +1,7 @@
+{
+  "task_id": "task-adapty-migration",
+  "task_description": "Remove RevenueCat SDK and wiring from the Paywall screen and implement Adapty subscriptions using the existing custom paywall screen. Install react-native-adapty and adaptyui-react-native, configure Expo plugins, create an Adapty client wrapper, rewrite PaywallScreen and StandalonePaywall to use Adapty placement 'main_paywall', update AuthGate to check 'pro_journal' entitlement, and clean up all RevenueCat references.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

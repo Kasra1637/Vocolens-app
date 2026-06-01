@@ -1,0 +1,28 @@
+{
+  "project_type": "Expo React Native app (SDK 55) with Expo Router, NativeWind/Tailwind, Zustand state management",
+  "language": "TypeScript/TSX",
+  "build_system": "Expo CLI + EAS Build. Uses npx expo start for development. package.json scripts include typecheck (tsc --noEmit) and lint (expo lint). Uses --legacy-peer-deps for installs.",
+  "test_framework": "jest-expo with @testing-library/react-native (configured but minimal tests)",
+  "build_command": "cd /projects/sandbox/Vocolens-app && npx tsc --noEmit",
+  "test_command": "cd /projects/sandbox/Vocolens-app && npx tsc --noEmit",
+  "verification_instructions": "1. Run tsc --noEmit to verify TypeScript compiles without errors. 2. Verify no dangling imports to revenuecatClient. 3. Confirm app.json has Adapty plugins configured. 4. Confirm package.json has react-native-adapty and adaptyui-react-native, and does NOT have react-native-purchases or react-native-purchases-ui.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "cd /projects/sandbox/Vocolens-app && npm install --legacy-peer-deps",
+  "environment_constraints": "OPEN_INTERNET network mode. Node 22 available. No physical device for runtime testing - validation is limited to TypeScript compilation and structural correctness.",
+  "contribution_requirements": "No CONTRIBUTING.md found. Follow existing code style: TypeScript strict mode, NativeWind className for styling, Zustand for state, expo-linear-gradient for gradients, react-native-reanimated for animations.",
+  "key_patterns": "RevenueCat integration follows a wrapper pattern in src/lib/revenuecatClient.ts that lazily loads native modules and provides a guardRevenueCatUsage helper returning Result types. Subscription state is managed in Zustand store (src/lib/state/subscription-store.ts) with AsyncStorage persistence. AuthGate (src/components/AuthGate.tsx) verifies subscription on app start. PaywallScreen is step 20 in the onboarding flow. StandalonePaywall is shown post-onboarding for lapsed subscriptions. The app uses Inter and Fraunces fonts, lucide-react-native icons, SafeAreaView, and a gradient-heavy premium UI.",
+  "relevant_files": [
+    "src/lib/revenuecatClient.ts",
+    "src/components/onboarding/PaywallScreen.tsx",
+    "src/components/StandalonePaywall.tsx",
+    "src/components/AuthGate.tsx",
+    "src/lib/state/subscription-store.ts",
+    "src/app/_layout.tsx",
+    "src/app/(tabs)/settings.tsx",
+    "src/app/legal.tsx",
+    "app.json",
+    "package.json",
+    "eas.json"
+  ],
+  "directory_structure": "src/app/ - Expo Router screens and layouts; src/components/ - shared components; src/components/onboarding/ - 22-screen onboarding flow; src/lib/ - utilities, hooks, services, state stores; src/lib/state/ - Zustand stores; src/lib/services/ - notification, etc."
+}

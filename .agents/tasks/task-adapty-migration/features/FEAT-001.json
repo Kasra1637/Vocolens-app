@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-001",
+  "type": "chore",
+  "description": "Install Adapty packages, remove RevenueCat packages, and update app.json with Adapty Expo plugins.",
+  "status": "in_progress",
+  "steps": [
+    "Run: cd /projects/sandbox/Vocolens-app && npx expo install react-native-adapty adaptyui-react-native --fix",
+    "Remove RevenueCat packages: npm uninstall react-native-purchases react-native-purchases-ui --legacy-peer-deps",
+    "In app.json, add 'react-native-adapty' and 'adaptyui-react-native' to the plugins array (as simple string entries after 'expo-updates')",
+    "In package.json, verify that react-native-purchases and react-native-purchases-ui are gone from dependencies",
+    "Create a .env.example file at project root with content: EXPO_PUBLIC_ADAPTY_KEY=your_public_sdk_key"
+  ],
+  "acceptance_criteria": [
+    "package.json contains react-native-adapty and adaptyui-react-native in dependencies",
+    "package.json does NOT contain react-native-purchases or react-native-purchases-ui",
+    "app.json plugins array includes 'react-native-adapty' and 'adaptyui-react-native'",
+    ".env.example exists with EXPO_PUBLIC_ADAPTY_KEY placeholder"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/Vocolens-app && cat package.json | grep -E 'adapty|react-native-purchases' to confirm correct packages",
+    "Run: cd /projects/sandbox/Vocolens-app && cat app.json | grep adapty to confirm plugins"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
