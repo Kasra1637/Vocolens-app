@@ -73,9 +73,9 @@ export function BiometricLockScreen() {
     if (authenticating) return;
     setAuthenticating(true);
     setError("");
-    const ok = await authenticateWithBiometrics("Unlock Vocolens");
+    const result = await authenticateWithBiometrics("Unlock Vocolens");
     setAuthenticating(false);
-    if (ok) {
+    if (result.success) {
       successHaptic();
       if (!hasSeenFirstUnlockCelebration) {
         // First successful unlock ever → play the joyful one-time celebration,
@@ -84,10 +84,25 @@ export function BiometricLockScreen() {
       } else {
         setUnlocked(true); // AuthGate reveals the app immediately on subsequent unlocks
       }
-    } else {
-      errorHaptic();
-      setError("Authentication failed. Tap to try again.");
+      return;
     }
+
+    // User cancelled the prompt → quietly let them retry.
+    if (result.cancelled) {
+      setError("Tap to try again.");
+      return;
+    }
+
+    // Biometrics unavailable on this device (no hardware / not enrolled / error).
+    // Don't lock the user out of their own journal — let them through.
+    if (!result.available) {
+      setHardwareMissing(true);
+      setUnlocked(true);
+      return;
+    }
+
+    errorHaptic();
+    setError("Authentication failed. Tap to try again.");
   }, [authenticating, setUnlocked, hasSeenFirstUnlockCelebration]);
 
   const handleCelebrationDone = useCallback(() => {

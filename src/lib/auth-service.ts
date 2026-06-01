@@ -100,28 +100,85 @@ export function getBiometricTypeName(types: string[]): string {
 }
 
 /**
+ * Result of a biometric authentication attempt.
+ *  - success: the user authenticated successfully.
+ *  - cancelled: the user dismissed the prompt (not an error — let them retry).
+ *  - available: false means the device can't do biometrics at all, so the
+ *    caller should offer a graceful fallback rather than blocking the user.
+ */
+export interface BiometricAuthResult {
+  success: boolean;
+  cancelled: boolean;
+  available: boolean;
+  error?: string;
+}
+
+/**
  * Prompt the user to authenticate with their fingerprint.
- * Returns true only on a successful biometric match.
+ * Always resolves (never throws) with a structured result so callers can
+ * react appropriately and never trap the user.
  */
 export async function authenticateWithBiometrics(
   promptMessage = 'Unlock Vocolens with your fingerprint',
-): Promise<boolean> {
+): Promise<BiometricAuthResult> {
   const LocalAuth = getLocalAuth();
-  if (!LocalAuth) return false;
+  if (!LocalAuth) {
+    return { success: false, cancelled: false, available: false, error: 'module_unavailable' };
+  }
 
   try {
+    // Guard against calling authenticateAsync when the device can't satisfy it,
+    // which is the most common source of native errors / crashes.
+    const hasHardware = await LocalAuth.hasHardwareAsync();
+    const isEnrolled = await LocalAuth.isEnrolledAsync();
+    if (!hasHardware || !isEnrolled) {
+      return {
+        success: false,
+        cancelled: false,
+        available: false,
+        error: !hasHardware ? 'no_hardware' : 'not_enrolled',
+      };
+    }
+
     const result = await LocalAuth.authenticateAsync({
       promptMessage,
       cancelLabel: 'Cancel',
+      // Allow the device PIN/passcode as a fallback so users are never locked out.
       disableDeviceFallback: false,
+      fallbackLabel: 'Use device passcode',
     });
-    return result.success === true;
+
+    if (result.success) {
+      return { success: true, cancelled: false, available: true };
+    }
+
+    // expo-local-authentication returns an `error` string on failure/cancel.
+    const errCode = (result as { error?: string }).error ?? 'unknown';
+    const cancelled =
+      errCode === 'user_cancel' ||
+      errCode === 'app_cancel' ||
+      errCode === 'system_cancel' ||
+      errCode === 'user_fallback';
+
+    return {
+      success: false,
+      cancelled,
+      available: true,
+      error: errCode,
+    };
   } catch (e) {
     console.warn(
       '[auth-service] authenticateWithBiometrics error:',
       (e as Error)?.message,
     );
-    return false;
+    // Treat an unexpected native error as "unavailable" so callers fall back
+    // gracefully instead of trapping the user.
+    return {
+      success: false,
+      cancelled: false,
+      available: false,
+      error: (e as Error)?.message ?? 'native_error',
+    };
   }
 }
 
@@ -201,8 +258,8 @@ export async function authenticate(): Promise<{ success: boolean; method: 'biome
     // Try biometric first
     const capabilities = await checkBiometricCapabilities();
     if (capabilities.isAvailable) {
-      const biometricSuccess = await authenticateWithBiometrics();
-      if (biometricSuccess) {
+      const biometricResult = await authenticateWithBiometrics();
+      if (biometricResult.success) {
         return { success: true, method: 'biometric' };
       }
     }

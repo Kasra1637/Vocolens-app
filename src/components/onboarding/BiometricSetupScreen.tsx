@@ -56,6 +56,7 @@ export function BiometricSetupScreen() {
   const [biometricName, setBiometricName] = useState("Fingerprint");
   const [available, setAvailable] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   const successScale = useSharedValue(0);
   const successStyle = useAnimatedStyle(() => ({
@@ -88,19 +89,36 @@ export function BiometricSetupScreen() {
     }
 
     setBusy(true);
-    const ok = await authenticateWithBiometrics(
+    const result = await authenticateWithBiometrics(
       "Confirm to enable app lock",
     );
     setBusy(false);
 
-    if (ok) {
+    if (result.success) {
       enableBiometric();
       successHaptic();
       setPhase("success");
       successScale.value = withSpring(1, { damping: 12, stiffness: 200 });
       finishOnboarding();
+      return;
+    }
+
+    // User actively cancelled → let them try again, no error noise.
+    if (result.cancelled) {
+      tapHaptic();
+      return;
+    }
+
+    // Biometrics turned out to be unavailable/errored on this device.
+    // Don't trap the user — surface a gentle note and let them continue without a lock.
+    errorHaptic();
+    if (!result.available) {
+      setAvailable(false);
+      setHasCompletedOnboarding(true);
     } else {
-      errorHaptic();
+      setAuthError(
+        "Couldn't verify your fingerprint. Try again, or tap \"Maybe later\".",
+      );
     }
   }, [busy, available, enableBiometric, finishOnboarding, setHasCompletedOnboarding]);
 
@@ -271,6 +289,19 @@ export function BiometricSetupScreen() {
                 entering={FadeIn.delay(160).duration(500).easing(SOFT)}
                 style={{ width: "100%", gap: 12 }}
               >
+                {authError ? (
+                  <Text
+                    style={{
+                      fontFamily: "Inter_500Medium",
+                      fontSize: 13,
+                      color: "rgba(255,180,180,0.95)",
+                      textAlign: "center",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {authError}
+                  </Text>
+                ) : null}
                 <OnboardingCTAButton
                   label={
                     busy
