@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Address review findings: fix SDK activation during onboarding, remove fail-open on purchase errors, use localizedPrice with fallback, and fix logShowPaywall timing.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In adaptyClient.ts: remove logShowPaywall from getPaywall helper, export a new logPaywallImpression(paywall) function.",
     "In PaywallScreen.tsx: call activateAdapty() before getPaywall in useEffect; remove grantAccess('yearly') from the else branch of annual purchase error handling (replace with errorHaptic + Alert); use yearlyProduct?.localizedPrice with fallback to YEARLY_PRICE constant; call logPaywallImpression after products are stored in state.",
@@ -21,5 +21,5 @@
     "Run: cd /projects/sandbox/Vocolens-app && npx tsc --noEmit"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 4 review issues addressed. The Adapty SDK uses product.price?.localizedString (not product.localizedPrice) for formatted price strings. The activateAdapty function is idempotent (checks activated flag) so calling it in each paywall useEffect is safe even if AuthGate also calls it later. Pre-existing TypeScript errors (15 total) are all in unrelated files. No new errors introduced."
 }
