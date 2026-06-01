@@ -57,6 +57,7 @@ Threshold: both opposites ≥ 35 → flag as ambivalence.
 Return ONLY a valid JSON object — no markdown, no explanation, no preamble:
 
 {
+  "title": "Calm before the storm",
   "emotions": ["emotion1", "emotion2"],
   "primaryEmotion": "emotion",
   "emotionIntensity": 75,
@@ -83,6 +84,7 @@ Return ONLY a valid JSON object — no markdown, no explanation, no preamble:
 }
 
 OUTPUT FIELD RULES:
+- title: 3–4 word evocative title capturing the emotional core of the entry (e.g. "Quiet morning clarity", "Tension at work eases"). Title Case. No quotes in the value.
 - emotionScores: all 8 emotions scored 0–100, based on textual evidence only
 - emotions: only emotions with score ≥ 30, max 4
 - primaryEmotion: highest scoring emotion

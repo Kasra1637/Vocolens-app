@@ -650,26 +650,22 @@ function EntryCard({
   isDarkMode = false,
 }: EntryCardProps) {
 
-  // Dynamic title: use entry.title if meaningful, else generate from transcript
+  // Display the AI-generated title stored on the entry.
+  // For legacy entries that still have the generic "Journal Entry" placeholder,
+  // fall back to the first 50 chars of the transcript so they still look meaningful.
   const displayTitle = useMemo(() => {
-    const title = entry.title;
-    // If title looks auto-generated/generic (e.g., "Journal Entry", "Untitled", empty, or just a date)
-    if (
-      !title ||
-      title.trim().length === 0 ||
-      /^(journal entry|untitled|entry|new entry)/i.test(title.trim())
-    ) {
-      // Generate from first meaningful sentence of transcript
-      const transcript = entry.transcript || "";
-      const firstSentence = transcript.split(/[.!?\n]/)[0]?.trim() || "";
-      if (firstSentence.length > 0) {
-        return firstSentence.length > 50
-          ? firstSentence.slice(0, 50).trim() + "..."
-          : firstSentence;
-      }
-      return "Journal Entry";
+    const title = entry.title?.trim();
+    if (title && !/^(journal entry|untitled|entry|new entry)$/i.test(title)) {
+      return title;
     }
-    return title;
+    // Legacy fallback: derive a title from the transcript
+    const firstSentence = (entry.transcript || "").split(/[.!?\n]/)[0]?.trim() ?? "";
+    if (firstSentence.length > 0) {
+      return firstSentence.length > 50
+        ? firstSentence.slice(0, 50).trimEnd() + "..."
+        : firstSentence;
+    }
+    return "Journal Entry";
   }, [entry.title, entry.transcript]);
 
   const formatDate = (dateString: string) => {

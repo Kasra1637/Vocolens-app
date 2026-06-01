@@ -43,6 +43,7 @@ export async function analyzeTranscript(
   audioBase64?: string,
   personalizationContext?: string,
 ): Promise<{
+  title?: string;
   emotions: EmotionType[];
   primaryEmotion: EmotionType;
   emotionIntensity: number;
@@ -76,6 +77,7 @@ export async function analyzeTranscript(
       personalizationContext,
     );
     return {
+      title: result.title,
       emotions: result.emotions,
       primaryEmotion: result.primaryEmotion,
       emotionIntensity: result.emotionIntensity,
@@ -493,6 +495,7 @@ export async function transcribeAndAnalyze(
 ): Promise<{
   transcript: string;
   analysis: {
+    title?: string;
     emotions: EmotionType[];
     primaryEmotion: EmotionType;
     emotionIntensity: number;
@@ -600,6 +603,7 @@ export async function createJournalEntry(
 
   let transcript: string;
   let analysis: {
+    title?: string;
     emotions: EmotionType[];
     primaryEmotion: EmotionType;
     emotionIntensity: number;
@@ -702,7 +706,9 @@ export async function createJournalEntry(
 
   // Create the entry
   const entry = journalStore.addEntry({
-    title: "Journal Entry",
+    title: (analysis.title && analysis.title.trim().length > 0)
+      ? analysis.title.trim()
+      : "Journal Entry",
     transcript,
     audioUri,
     duration,

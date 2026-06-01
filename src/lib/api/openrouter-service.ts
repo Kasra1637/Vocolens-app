@@ -67,6 +67,7 @@ export function detectAmbivalence(scores: EmotionScores): string[] {
 // ── Result types ──────────────────────────────────────────────────────────────
 
 export interface OpenRouterAnalysisResult {
+  title: string;
   emotions: EmotionType[];
   primaryEmotion: EmotionType;
   emotionIntensity: number;
@@ -96,6 +97,7 @@ function buildSystemPrompt(personalizationContext?: string): string {
 Analyse the journal transcript text and return ONLY a valid JSON object — no markdown, no explanation.${personalization}
 
 {
+  "title": "Quiet Morning Clarity",
   "emotions": ["emotion1", "emotion2"],
   "primaryEmotion": "emotion",
   "emotionIntensity": 75,
@@ -134,6 +136,7 @@ Rules:
 - ambivalenceFlags: opposite pairs both ≥ 35 → "e1↔e2"
   Pairs: happiness↔sadness, anger↔fear, trust↔disgust, anticipation↔surprise
 - valence: −100 to +100 | arousal: 0–100 | distressLevel: low|moderate|high
+- title: 3–4 word evocative title in Title Case capturing the emotional core (e.g. "Tension at Work Eases", "Quiet Morning Clarity")
 - reflection: warm, second-person ("you"), suitable for TTS
 - Plutchik tiers: 0-35=low(Serenity/Acceptance/...), 36-69=mid, 70-100=high(Ecstasy/Admiration/...)
 - Only valid base emotions: happiness, sadness, anger, disgust, fear, surprise, trust, anticipation`;
@@ -202,6 +205,9 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
       : detectAmbivalence(emotionScores);
 
   return {
+    title: (typeof result.title === 'string' && result.title.trim().length > 0)
+      ? result.title.trim().slice(0, 60)
+      : 'Journal Entry',
     emotions,
     primaryEmotion,
     emotionIntensity: Math.max(0, Math.min(100, Number(result.emotionIntensity) || 50)),
@@ -310,6 +316,7 @@ export async function analyzeWithOpenRouter(
 
   // Backend may return without ai* fields if it's an older deploy — compute client-side
   const d = json.data;
+  if (!d.title) d.title = 'Journal Entry';
   if (!d.aiTopThreeEmotions) d.aiTopThreeEmotions = computeTopThreeEmotions(d.emotionScores);
   if (!d.aiBlendedEmotions)  d.aiBlendedEmotions  = computeBlendedEmotions(d.emotionScores);
   if (!d.aiAmbivalenceFlags) d.aiAmbivalenceFlags  = detectAmbivalence(d.emotionScores);

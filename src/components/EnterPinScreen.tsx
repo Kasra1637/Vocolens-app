@@ -62,10 +62,7 @@ function PinDots({
 }
 
 // ── Numpad ────────────────────────────────────────────────────────────────────
-// Two equal rows: [1 2 3 4 5] and [6 7 8 9 0], delete sits beside the dots
-const ROW1 = ["1", "2", "3", "4", "5"] as const;
-const ROW2 = ["6", "7", "8", "9", "0"] as const;
-
+// Standard phone layout: [1 2 3] / [4 5 6] / [7 8 9] / [empty 0 ⌫]
 function NumKey({
   label,
   onPress,
@@ -90,17 +87,42 @@ function NumKey({
 function Numpad({ onKey }: { onKey: (k: string) => void }) {
   return (
     <View style={styles.numpadContainer}>
-      {/* Row 1: 1 – 5 */}
+      {/* Row 1: 1 2 3 */}
       <View style={styles.numpadRow}>
-        {ROW1.map((k) => (
+        {(["1", "2", "3"] as const).map((k) => (
           <NumKey key={k} label={k} onPress={() => onKey(k)} />
         ))}
       </View>
-      {/* Row 2: 6 – 0 */}
+      {/* Row 2: 4 5 6 */}
       <View style={styles.numpadRow}>
-        {ROW2.map((k) => (
+        {(["4", "5", "6"] as const).map((k) => (
           <NumKey key={k} label={k} onPress={() => onKey(k)} />
         ))}
+      </View>
+      {/* Row 3: 7 8 9 */}
+      <View style={styles.numpadRow}>
+        {(["7", "8", "9"] as const).map((k) => (
+          <NumKey key={k} label={k} onPress={() => onKey(k)} />
+        ))}
+      </View>
+      {/* Row 4: [empty] 0 [backspace] */}
+      <View style={styles.numpadRow}>
+        {/* Spacer */}
+        <View style={styles.numpadKey} pointerEvents="none">
+          <Text />
+        </View>
+        <NumKey label="0" onPress={() => onKey("0")} />
+        {/* Backspace key */}
+        <Pressable
+          onPress={() => onKey("del")}
+          android_ripple={{ color: "rgba(255,255,255,0.2)", borderless: true }}
+          style={({ pressed }) => [
+            styles.numpadKey,
+            pressed && styles.numpadKeyPressed,
+          ]}
+        >
+          <Delete size={26} color="rgba(255,255,255,0.85)" strokeWidth={1.8} />
+        </Pressable>
       </View>
     </View>
   );
@@ -206,25 +228,13 @@ export function EnterPinScreen() {
               </View>
             </Animated.View>
 
-            {/* Middle: dots + delete + error */}
+            {/* Middle: dots + error */}
             <Animated.View
               entering={FadeInDown.delay(100).duration(500)}
               style={{ alignItems: "center", gap: 14, width: "100%" }}
             >
-              {/* Dots row with inline delete button */}
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                <PinDots filled={digits.length} shake={shake} />
-                <Pressable
-                  onPress={() => handleKey("del")}
-                  android_ripple={{ color: "rgba(255,255,255,0.2)", borderless: true }}
-                  style={({ pressed }) => ({
-                    padding: 8,
-                    opacity: pressed ? 0.5 : 1,
-                  })}
-                >
-                  <Delete size={22} color="rgba(255,255,255,0.7)" strokeWidth={1.8} />
-                </Pressable>
-              </View>
+              {/* Dots row */}
+              <PinDots filled={digits.length} shake={shake} />
               {error ? (
                 <Animated.Text entering={FadeIn.duration(200)} style={styles.errorText}>
                   {error}
@@ -304,11 +314,11 @@ const styles = StyleSheet.create({
   numpadRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 12,
   },
   numpadKey: {
     flex: 1,
-    height: 72,
+    height: 68,
     borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.10)",
     borderWidth: 1,
@@ -321,7 +331,7 @@ const styles = StyleSheet.create({
   },
   numpadKeyText: {
     color: "#FFFFFF",
-    fontSize: 32,
+    fontSize: 28,
     fontFamily: "Inter_400Regular",
     letterSpacing: 0.5,
   },

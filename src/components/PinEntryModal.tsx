@@ -140,79 +140,125 @@ export function PinEntryModal({ visible, onSuccess, onDismiss }: PinEntryModalPr
               </Text>
             )}
 
-            {/* Number Pad */}
-            <View className="gap-3">
-              {/* Row 1 */}
-              <View className="flex-row gap-3">
+            {/* Number Pad — standard phone layout */}
+            <View style={{ gap: 10 }}>
+              {/* Row 1: 1 2 3 */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
                 {[1, 2, 3].map((num) => (
                   <Pressable
                     key={num}
                     onPress={() => handleNumberPress(num)}
                     disabled={isVerifying}
-                    className="flex-1 h-16 rounded-2xl active:opacity-70 items-center justify-center"
-                    style={{ backgroundColor: `${themeColors.primary}15` }}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      height: 64,
+                      borderRadius: 16,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: pressed
+                        ? `${themeColors.primary}30`
+                        : `${themeColors.primary}15`,
+                    })}
                   >
-                    <Text className="text-2xl font-bold" style={{ color: isDarkMode ? '#E8E0F5' : '#3B2463' }}>
+                    <Text style={{ fontSize: 26, fontFamily: 'Inter_700Bold', color: isDarkMode ? '#E8E0F5' : '#3B2463' }}>
                       {num}
                     </Text>
                   </Pressable>
                 ))}
               </View>
 
-              {/* Row 2 */}
-              <View className="flex-row gap-3">
+              {/* Row 2: 4 5 6 */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
                 {[4, 5, 6].map((num) => (
                   <Pressable
                     key={num}
                     onPress={() => handleNumberPress(num)}
                     disabled={isVerifying}
-                    className="flex-1 h-16 rounded-2xl active:opacity-70 items-center justify-center"
-                    style={{ backgroundColor: `${themeColors.primary}15` }}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      height: 64,
+                      borderRadius: 16,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: pressed
+                        ? `${themeColors.primary}30`
+                        : `${themeColors.primary}15`,
+                    })}
                   >
-                    <Text className="text-2xl font-bold" style={{ color: isDarkMode ? '#E8E0F5' : '#3B2463' }}>
+                    <Text style={{ fontSize: 26, fontFamily: 'Inter_700Bold', color: isDarkMode ? '#E8E0F5' : '#3B2463' }}>
                       {num}
                     </Text>
                   </Pressable>
                 ))}
               </View>
 
-              {/* Row 3 */}
-              <View className="flex-row gap-3">
+              {/* Row 3: 7 8 9 */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
                 {[7, 8, 9].map((num) => (
                   <Pressable
                     key={num}
                     onPress={() => handleNumberPress(num)}
                     disabled={isVerifying}
-                    className="flex-1 h-16 rounded-2xl active:opacity-70 items-center justify-center"
-                    style={{ backgroundColor: `${themeColors.primary}15` }}
+                    style={({ pressed }) => ({
+                      flex: 1,
+                      height: 64,
+                      borderRadius: 16,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: pressed
+                        ? `${themeColors.primary}30`
+                        : `${themeColors.primary}15`,
+                    })}
                   >
-                    <Text className="text-2xl font-bold" style={{ color: isDarkMode ? '#E8E0F5' : '#3B2463' }}>
+                    <Text style={{ fontSize: 26, fontFamily: 'Inter_700Bold', color: isDarkMode ? '#E8E0F5' : '#3B2463' }}>
                       {num}
                     </Text>
                   </Pressable>
                 ))}
               </View>
 
-              {/* Row 4 */}
-              <View className="flex-row gap-3">
-                <View className="flex-1" />
+              {/* Row 4: [spacer] 0 [backspace] */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {/* Empty spacer — transparent, non-interactive */}
+                <View style={{ flex: 1, height: 64 }} />
+
+                {/* 0 */}
                 <Pressable
                   onPress={() => handleNumberPress(0)}
                   disabled={isVerifying}
-                  className="flex-1 h-16 rounded-2xl active:opacity-70 items-center justify-center"
-                  style={{ backgroundColor: `${themeColors.primary}15` }}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    height: 64,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: pressed
+                      ? `${themeColors.primary}30`
+                      : `${themeColors.primary}15`,
+                  })}
                 >
-                  <Text className="text-2xl font-bold" style={{ color: isDarkMode ? '#E8E0F5' : '#3B2463' }}>
+                  <Text style={{ fontSize: 26, fontFamily: 'Inter_700Bold', color: isDarkMode ? '#E8E0F5' : '#3B2463' }}>
                     0
                   </Text>
                 </Pressable>
+
+                {/* Backspace */}
                 <Pressable
                   onPress={handleDelete}
                   disabled={isVerifying || pin.length === 0}
-                  className="flex-1 h-16 rounded-2xl active:opacity-70 items-center justify-center"
-                  style={{ backgroundColor: `${themeColors.primary}15` }}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    height: 64,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: pressed
+                      ? `${themeColors.primary}30`
+                      : `${themeColors.primary}15`,
+                    opacity: pin.length === 0 ? 0.35 : 1,
+                  })}
                 >
-                  <Delete size={24} color={isDarkMode ? '#8B5CF6' : themeColors.primary} />
+                  <Delete size={24} color={themeColors.primary} strokeWidth={2} />
                 </Pressable>
               </View>
             </View>
