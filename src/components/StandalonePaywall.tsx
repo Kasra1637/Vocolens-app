@@ -49,7 +49,9 @@ import {
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import {
+  activateAdapty,
   getPaywall,
+  logPaywallImpression,
   makePurchase,
   restoreAdaptyPurchases,
   isAdaptyEnabled,
@@ -254,12 +256,14 @@ function MonthlyExitModal({
   onAccept,
   onDecline,
   isPurchasing,
+  monthlyPrice,
 }: {
   visible: boolean;
   themeColors: (typeof THEME_COLORS)[keyof typeof THEME_COLORS];
   onAccept: () => void;
   onDecline: () => void;
   isPurchasing: boolean;
+  monthlyPrice: string;
 }) {
   return (
     <Modal visible={visible} transparent animationType="slide" statusBarTranslucent>
@@ -296,7 +300,7 @@ function MonthlyExitModal({
               </Text>
               <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
                 <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 22 }}>
-                  {MONTHLY_PRICE}
+                  {monthlyPrice}
                 </Text>
                 <Text style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Inter_400Regular", fontSize: 12 }}>
                   / month
@@ -354,12 +358,15 @@ export function StandalonePaywall() {
 
   useEffect(() => {
     if (!isAdaptyEnabled()) return;
-    getPaywall("main_paywall").then((result) => {
+    (async () => {
+      await activateAdapty();
+      const result = await getPaywall("main_paywall");
       if (!result.ok) return;
-      const { products } = result.data;
+      const { paywall, products } = result.data;
       setYearlyProduct(products.find((p) => p.vendorProductId === "yearly_journal") ?? null);
       setMonthlyProduct(products.find((p) => p.vendorProductId === "monthly_journal") ?? null);
-    });
+      await logPaywallImpression(paywall);
+    })();
   }, []);
 
   const grantYearly = () => {
@@ -403,7 +410,8 @@ export function StandalonePaywall() {
       if (userCancelled) {
         errorHaptic();
       } else {
-        grantYearly();
+        errorHaptic();
+        Alert.alert("Payment Error", "Something went wrong processing your payment. Please try again.");
       }
     }
   };
@@ -591,7 +599,7 @@ export function StandalonePaywall() {
                 <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
                   <View>
                     <Text style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Inter_700Bold", fontSize: 12, marginBottom: 3 }}>Annual</Text>
-                    <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 28 }}>{YEARLY_PRICE}</Text>
+                    <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 28 }}>{yearlyProduct?.price?.localizedString ?? YEARLY_PRICE}</Text>
                   </View>
                   <View style={{ alignItems: "flex-end", paddingBottom: 4 }}>
                     <Text style={{ color: "rgba(255,255,255,0.45)", fontFamily: "Inter_400Regular", fontSize: 12, textDecorationLine: "line-through" }}>
@@ -633,7 +641,7 @@ export function StandalonePaywall() {
 
             {/* No payment due now */}
             <Text style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Inter_400Regular", fontSize: 12, textAlign: "center", marginTop: 6 }}>
-              No payment due now · {YEARLY_PRICE}/yr after trial · Cancel anytime
+              No payment due now · {yearlyProduct?.price?.localizedString ?? YEARLY_PRICE}/yr after trial · Cancel anytime
             </Text>
 
             {/* Restore */}
@@ -653,6 +661,7 @@ export function StandalonePaywall() {
         onAccept={handleMonthlyAccept}
         onDecline={() => setShowExitModal(false)}
         isPurchasing={isPurchasingMonthly}
+        monthlyPrice={monthlyProduct?.price?.localizedString ?? MONTHLY_PRICE}
       />
     </View>
   );

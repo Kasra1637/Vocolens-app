@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Address review findings: fix SDK activation during onboarding, remove fail-open on purchase errors, use localizedPrice with fallback, and fix logShowPaywall timing.",
+  "status": "in_progress",
+  "steps": [
+    "In adaptyClient.ts: remove logShowPaywall from getPaywall helper, export a new logPaywallImpression(paywall) function.",
+    "In PaywallScreen.tsx: call activateAdapty() before getPaywall in useEffect; remove grantAccess('yearly') from the else branch of annual purchase error handling (replace with errorHaptic + Alert); use yearlyProduct?.localizedPrice with fallback to YEARLY_PRICE constant; call logPaywallImpression after products are stored in state.",
+    "In StandalonePaywall.tsx: call activateAdapty() before getPaywall in useEffect; remove grantAccess('yearly') from the else branch of annual purchase error handling (replace with errorHaptic + Alert); use yearlyProduct?.localizedPrice with fallback to YEARLY_PRICE constant; call logPaywallImpression after products are stored in state."
+  ],
+  "acceptance_criteria": [
+    "activateAdapty() is called inside both PaywallScreen and StandalonePaywall useEffects before getPaywall",
+    "No grantAccess call exists in any purchase error branch (only user-facing alerts)",
+    "Pricing display uses product.localizedPrice when available, falling back to hardcoded constants",
+    "logShowPaywall is not called inside getPaywall helper",
+    "A new logPaywallImpression function is exported from adaptyClient.ts",
+    "logPaywallImpression is called from each paywall component after products are stored in state",
+    "TypeScript compilation passes"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/Vocolens-app && npx tsc --noEmit"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}

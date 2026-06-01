@@ -37,7 +37,9 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import {
+  activateAdapty,
   getPaywall,
+  logPaywallImpression,
   makePurchase,
   restoreAdaptyPurchases,
   isAdaptyEnabled,
@@ -77,12 +79,14 @@ function MonthlyExitModal({
   onAccept,
   onDecline,
   isPurchasing,
+  monthlyPrice,
 }: {
   visible: boolean;
   themeColors: (typeof THEME_COLORS)[keyof typeof THEME_COLORS];
   onAccept: () => void;
   onDecline: () => void;
   isPurchasing: boolean;
+  monthlyPrice: string;
 }) {
   return (
     <Modal visible={visible} transparent animationType="slide" statusBarTranslucent>
@@ -131,7 +135,7 @@ function MonthlyExitModal({
               </Text>
               <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5 }}>
                 <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 24 }}>
-                  {MONTHLY_PRICE}
+                  {monthlyPrice}
                 </Text>
                 <Text style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Inter_400Regular", fontSize: 12 }}>
                   /month
@@ -224,12 +228,15 @@ export function PaywallScreen() {
     });
 
     if (!isAdaptyEnabled()) return;
-    getPaywall("main_paywall").then((result) => {
+    (async () => {
+      await activateAdapty();
+      const result = await getPaywall("main_paywall");
       if (!result.ok) return;
-      const { products } = result.data;
+      const { paywall, products } = result.data;
       setYearlyProduct(products.find((p) => p.vendorProductId === "yearly_journal") ?? null);
       setMonthlyProduct(products.find((p) => p.vendorProductId === "monthly_journal") ?? null);
-    });
+      await logPaywallImpression(paywall);
+    })();
   }, []);
 
   // ── BackHandler: intercept Android hardware back + iOS swipe-to-dismiss ──
@@ -275,7 +282,8 @@ export function PaywallScreen() {
       if (userCancelled) {
         errorHaptic();
       } else {
-        grantAccess("yearly");
+        errorHaptic();
+        Alert.alert("Payment Error", "Something went wrong. Please try again.");
       }
     }
   };
@@ -554,7 +562,7 @@ export function PaywallScreen() {
                       fontSize: 32,
                     }}
                   >
-                    {YEARLY_PRICE}
+                    {yearlyProduct?.price?.localizedString ?? YEARLY_PRICE}
                   </Text>
                   <Text
                     style={{
@@ -644,7 +652,7 @@ export function PaywallScreen() {
                   lineHeight: 18,
                 }}
               >
-                No charge for {TRIAL_DAYS} days · Then {YEARLY_PRICE}/yr · Cancel anytime
+                No charge for {TRIAL_DAYS} days · Then {yearlyProduct?.price?.localizedString ?? YEARLY_PRICE}/yr · Cancel anytime
               </Text>
 
               {/* Trust cue — research-backed, app-native */}
@@ -697,6 +705,7 @@ export function PaywallScreen() {
         onAccept={handleMonthlyAccept}
         onDecline={handleExitDecline}
         isPurchasing={isPurchasingMonthly}
+        monthlyPrice={monthlyProduct?.price?.localizedString ?? MONTHLY_PRICE}
       />
     </View>
   );

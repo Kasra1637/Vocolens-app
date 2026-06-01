@@ -109,10 +109,19 @@ export const getPaywall = (
     const paywall: AdaptyPaywall = await adaptyInstance.getPaywall(placementId);
     const products: AdaptyPaywallProduct[] =
       await adaptyInstance.getPaywallProducts(paywall);
-    // Log paywall impression for A/B testing analytics
-    await adaptyInstance.logShowPaywall(paywall);
     return { paywall, products };
   });
+};
+
+export const logPaywallImpression = async (
+  paywall: AdaptyPaywall,
+): Promise<void> => {
+  if (!isEnabled || !adaptyInstance) return;
+  try {
+    await adaptyInstance.logShowPaywall(paywall);
+  } catch (error) {
+    console.log(`${LOG_PREFIX} logShowPaywall failed:`, error);
+  }
 };
 
 export const getProfile = (): Promise<AdaptyResult<AdaptyProfile>> => {
