@@ -56,6 +56,8 @@ import {
   tapHaptic,
   confirmHaptic,
   warningHaptic,
+  successHaptic,
+  errorHaptic,
 } from "@/lib/haptics";
 import { router } from "expo-router";
 import useOnboardingStore, {
