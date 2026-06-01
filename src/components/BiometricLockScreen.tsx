@@ -32,10 +32,17 @@ import {
   getBiometricTypeName,
 } from "@/lib/auth-service";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
+import { BiometricUnlockCelebration } from "@/components/BiometricUnlockCelebration";
 
 export function BiometricLockScreen() {
   const setUnlocked = useBiometricStore((s) => s.setUnlocked);
   const disableBiometric = useBiometricStore((s) => s.disableBiometric);
+  const hasSeenFirstUnlockCelebration = useBiometricStore(
+    (s) => s.hasSeenFirstUnlockCelebration,
+  );
+  const markFirstUnlockCelebrationSeen = useBiometricStore(
+    (s) => s.markFirstUnlockCelebrationSeen,
+  );
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors = THEME_COLORS[selectedTheme];
 
@@ -43,6 +50,8 @@ export function BiometricLockScreen() {
   const [authenticating, setAuthenticating] = useState(false);
   const [biometricName, setBiometricName] = useState("Fingerprint");
   const [hardwareMissing, setHardwareMissing] = useState(false);
+  // When true, the one-time celebration overlay is showing before we reveal the app.
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Gentle pulse on the fingerprint badge
   const pulse = useSharedValue(1);
@@ -68,12 +77,23 @@ export function BiometricLockScreen() {
     setAuthenticating(false);
     if (ok) {
       successHaptic();
-      setUnlocked(true); // AuthGate reveals the app
+      if (!hasSeenFirstUnlockCelebration) {
+        // First successful unlock ever → play the joyful one-time celebration,
+        // then reveal the dashboard when it finishes.
+        setShowCelebration(true);
+      } else {
+        setUnlocked(true); // AuthGate reveals the app immediately on subsequent unlocks
+      }
     } else {
       errorHaptic();
       setError("Authentication failed. Tap to try again.");
     }
-  }, [authenticating, setUnlocked]);
+  }, [authenticating, setUnlocked, hasSeenFirstUnlockCelebration]);
+
+  const handleCelebrationDone = useCallback(() => {
+    markFirstUnlockCelebrationSeen();
+    setUnlocked(true); // reveal the dashboard
+  }, [markFirstUnlockCelebrationSeen, setUnlocked]);
 
   // Auto-prompt on mount; detect missing hardware as a safe fallback
   useEffect(() => {
@@ -176,6 +196,11 @@ export function BiometricLockScreen() {
           </View>
         </SafeAreaView>
       </LinearGradient>
+
+      {/* One-time celebratory overlay on first successful unlock */}
+      {showCelebration && (
+        <BiometricUnlockCelebration onDone={handleCelebrationDone} />
+      )}
     </View>
   );
 }

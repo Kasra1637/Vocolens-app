@@ -1,9 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { View, Text, Pressable, Modal } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withSequence,
+  withTiming,
+  withDelay,
+  Easing,
   FadeIn,
   FadeInDown,
   FadeOutDown,
@@ -296,6 +300,34 @@ export function StreakCalendar({
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<SelectedDayInfo | null>(null);
 
+  // ── Streak pill celebratory animation ──
+  // Pops the pill with a glow whenever the streak increases.
+  const pillScale = useSharedValue(1);
+  const pillGlow = useSharedValue(0);
+  const prevStreak = useSharedValue(currentStreak);
+
+  useEffect(() => {
+    const prev = prevStreak.value;
+    if (currentStreak > prev && currentStreak > 0) {
+      pillScale.value = withSequence(
+        withSpring(1.22, { damping: 7, stiffness: 220 }),
+        withSpring(1, { damping: 11, stiffness: 200 }),
+      );
+      pillGlow.value = withSequence(
+        withTiming(1, { duration: 160 }),
+        withDelay(120, withTiming(0, { duration: 720, easing: Easing.out(Easing.ease) })),
+      );
+    }
+    prevStreak.value = currentStreak;
+  }, [currentStreak]);
+
+  const pillAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pillScale.value }],
+  }));
+  const pillGlowStyle = useAnimatedStyle(() => ({
+    opacity: pillGlow.value,
+  }));
+
   // Build entry count map
   const entryMap = useMemo<Record<string, number>>(() => {
     const map: Record<string, number> = {};
@@ -390,19 +422,39 @@ export function StreakCalendar({
             Journal Calendar
           </Text>
         </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 4,
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 20,
-            backgroundColor: "rgba(255,255,255,0.12)",
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.25)",
-          }}
+        <Animated.View
+          style={[
+            pillAnimStyle,
+            {
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              paddingHorizontal: 10,
+              paddingVertical: 4,
+              borderRadius: 20,
+              backgroundColor: "rgba(255,255,255,0.12)",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.25)",
+            },
+          ]}
         >
+          {/* Celebratory glow ring */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              pillGlowStyle,
+              {
+                position: "absolute",
+                top: -3,
+                left: -3,
+                right: -3,
+                bottom: -3,
+                borderRadius: 22,
+                borderWidth: 2,
+                borderColor: "rgba(255,255,255,0.85)",
+              },
+            ]}
+          />
           <Flame size={13} color="#FFFFFF" strokeWidth={2.5} />
           <Text
             style={{
@@ -413,7 +465,7 @@ export function StreakCalendar({
           >
             {currentStreak}
           </Text>
-        </View>
+        </Animated.View>
       </View>
 
       {/* ── Month Navigation ── */}

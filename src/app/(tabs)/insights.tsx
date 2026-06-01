@@ -12,7 +12,6 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import {
-  Flame,
   Award,
   TrendingUp,
   Sun,
@@ -100,6 +99,7 @@ import { WeeklyReflectionCard } from "@/components/WeeklyReflectionCard";
 import { StreakCalendar } from "@/components/StreakCalendar";
 import { MoodStoryTimeline } from "@/components/MoodStoryTimeline";
 import ValenceArousalChart from "@/components/ValenceArousalChart";
+import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
 
 // Core emotions with icons and emojis - 8 Plutchik emotions
 // Row 1: Happiness, Sadness, Anger, Anticipation
@@ -878,18 +878,15 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
         <View className="p-5">
           {/* Streak */}
           <View className="flex-row items-center mb-4">
-            <View
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: BorderRadius.large,
-                backgroundColor: hexToRgba(Colors.primary, 0.15),
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              <Flame size={26} color="#FFFFFF" strokeWidth={2} />
+            <View style={{ marginRight: 12 }}>
+              <AnimatedStreakFlame
+                streak={user.streak}
+                size={26}
+                badgeSize={48}
+                badgeRadius={BorderRadius.large}
+                badgeColor={hexToRgba(Colors.primary, 0.15)}
+                glowColor={hexToRgba(Colors.primary, 0.6)}
+              />
             </View>
             <View>
               <Text
