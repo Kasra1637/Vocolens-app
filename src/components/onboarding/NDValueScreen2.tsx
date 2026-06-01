@@ -130,7 +130,7 @@ export function NDValueScreen2() {
                   lineHeight: 23,
                 }}
               >
-                No writing. No pressure. No judgment. Vocolens turns a 60-second voice note into emotional clarity.
+                No writing. No pressure. No judgment. Just speak — and watch the clarity follow.
               </Text>
             </Animated.View>
 
