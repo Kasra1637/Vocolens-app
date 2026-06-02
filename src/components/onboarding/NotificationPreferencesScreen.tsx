@@ -22,7 +22,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
+import { tapHaptic, selectHaptic, confirmHaptic, selectionHaptic } from "@/lib/haptics";
 import { Clock, Bell, BellOff, X } from "lucide-react-native";
 // DateTimePicker removed — replaced by custom TimeWheelPicker below
 import useOnboardingStore, {
@@ -54,31 +54,42 @@ interface WheelColumnProps {
 }
 
 function WheelColumn({ items, selectedIndex, onSelect, primaryColor, width }: WheelColumnProps) {
-  const scrollRef = useRef<ScrollView>(null);
-  const isScrolling = useRef(false);
+  const scrollRef     = useRef<ScrollView>(null);
+  const lastHapticIdx = useRef(selectedIndex);
 
-  // Scroll to the selected item whenever it changes externally
+  // Scroll to selected item whenever it changes externally (e.g. initial mount)
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: selectedIndex * ITEM_H, animated: false });
   }, [selectedIndex]);
+
+  // Fire a selection haptic every time the scroll crosses into a new item slot
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const idx = Math.round(e.nativeEvent.contentOffset.y / ITEM_H);
+      const clamped = Math.max(0, Math.min(items.length - 1, idx));
+      if (clamped !== lastHapticIdx.current) {
+        lastHapticIdx.current = clamped;
+        selectionHaptic();
+      }
+    },
+    [items.length],
+  );
 
   const handleMomentumEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const idx = Math.round(e.nativeEvent.contentOffset.y / ITEM_H);
       const clamped = Math.max(0, Math.min(items.length - 1, idx));
       onSelect(clamped);
-      isScrolling.current = false;
     },
     [items.length, onSelect],
   );
 
-  const handleScrollBegin = useCallback(() => {
-    isScrolling.current = true;
-  }, []);
+  // FADE_H: how tall the gradient fade zones are at top and bottom
+  const FADE_H = ITEM_H * 1.5;
 
   return (
     <View style={{ width, height: WHEEL_H, overflow: "hidden" }}>
-      {/* Highlight band behind the centre row */}
+      {/* Selection highlight band behind the centre row */}
       <View
         pointerEvents="none"
         style={{
@@ -94,15 +105,16 @@ function WheelColumn({ items, selectedIndex, onSelect, primaryColor, width }: Wh
           zIndex: 1,
         }}
       />
+
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_H}
         decelerationRate="fast"
         contentContainerStyle={{ paddingTop: PAD, paddingBottom: PAD }}
-        onScrollBeginDrag={handleScrollBegin}
+        onScroll={handleScroll}
         onMomentumScrollEnd={handleMomentumEnd}
-        scrollEventThrottle={16}
+        scrollEventThrottle={ITEM_H / 2}   // fires roughly every half-item — enough for per-item haptics
         bounces={false}
       >
         {items.map((label, i) => {
@@ -124,8 +136,9 @@ function WheelColumn({ items, selectedIndex, onSelect, primaryColor, width }: Wh
               <Text
                 style={{
                   fontFamily: isSelected ? "Inter_700Bold" : "Inter_400Regular",
-                  fontSize: isSelected ? 28 : 20,
-                  color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.30)",
+                  fontSize: isSelected ? 28 : 22,
+                  color: "#FFFFFF",
+                  opacity: isSelected ? 1 : 0.35,
                   letterSpacing: isSelected ? 0.5 : 0,
                 }}
               >
@@ -135,18 +148,36 @@ function WheelColumn({ items, selectedIndex, onSelect, primaryColor, width }: Wh
           );
         })}
       </ScrollView>
-      {/* Top fade */}
-      <View
+
+      {/* Top fade — items dissolve into the background rather than hard-clip */}
+      <LinearGradient
         pointerEvents="none"
+        colors={["rgba(0,0,0,0.72)", "transparent"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
-          height: PAD,
+          height: FADE_H,
           zIndex: 2,
-          // gradient overlay simulated with opacity layer
-          backgroundColor: "transparent",
+        }}
+      />
+
+      {/* Bottom fade */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={["transparent", "rgba(0,0,0,0.72)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: FADE_H,
+          zIndex: 2,
         }}
       />
     </View>
@@ -224,8 +255,8 @@ function TimeWheelPicker({ value, onChange, primaryColor, onConfirm }: TimeWheel
       {/* Thin divider */}
       <View style={{ width: 12 }} />
 
-      {/* AM/PM column stacked above OK button */}
-      <View style={{ alignItems: "center", gap: 16 }}>
+      {/* AM/PM column + OK button stacked tightly below it */}
+      <View style={{ alignItems: "center" }}>
         <WheelColumn
           items={PERIODS}
           selectedIndex={period}
@@ -234,25 +265,26 @@ function TimeWheelPicker({ value, onChange, primaryColor, onConfirm }: TimeWheel
           width={64}
         />
 
-        {/* OK button — sits directly below the AM/PM wheel */}
+        {/* OK — pulled up tight so it sits just below the PM cell */}
         <Pressable
           onPress={onConfirm}
           accessibilityLabel="Confirm time"
           accessibilityRole="button"
           style={({ pressed }) => ({
             width: 64,
-            height: 44,
-            borderRadius: 22,
+            height: 40,
+            borderRadius: 20,
             alignItems: "center",
             justifyContent: "center",
+            marginTop: 6,
             backgroundColor: pressed
               ? primaryColor + "BB"
               : primaryColor,
             borderWidth: 2,
-            borderColor: "rgba(255,255,255,0.40)",
+            borderColor: "rgba(255,255,255,0.45)",
             shadowColor: primaryColor,
             shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.50,
+            shadowOpacity: 0.55,
             shadowRadius: 8,
             elevation: 6,
           })}
@@ -260,9 +292,9 @@ function TimeWheelPicker({ value, onChange, primaryColor, onConfirm }: TimeWheel
           <Text
             style={{
               fontFamily: "Inter_700Bold",
-              fontSize: 16,
+              fontSize: 15,
               color: "#FFFFFF",
-              letterSpacing: 0.5,
+              letterSpacing: 0.8,
             }}
           >
             OK
