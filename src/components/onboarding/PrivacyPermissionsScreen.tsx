@@ -11,14 +11,14 @@
  */
 
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { Eye, Database, Lock, Fingerprint } from "lucide-react-native";
+import { Mic, Smartphone, Lock, ShieldCheck } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -62,28 +62,28 @@ export function PrivacyPermissionsScreen() {
 
   const privacyFeatures = [
     {
-      icon: <Database size={22} color="#FFFFFF" />,
-      title: "Your data never leaves your device",
+      icon: <Smartphone size={22} color="#FFFFFF" />,
+      title: "Your entries live on your phone",
       description:
-        "Every journal entry, mood log, and badge lives exclusively on your phone. No cloud upload, no external servers, no exceptions.",
+        "Every voice note, mood, and insight stays on your device. Nothing is stored on our servers — ever.",
     },
     {
-      icon: <Fingerprint size={22} color="#FFFFFF" />,
-      title: "Biometric lock built in",
+      icon: <Mic size={22} color="#FFFFFF" />,
+      title: "AI listens, then forgets",
       description:
-        "Protect Vocolens with Face ID or your fingerprint. Biometric credentials are verified by your device's secure enclave — we never see them.",
+        "When you record, your words are sent to the AI for analysis, then discarded. We never store, read, or sell your transcripts.",
     },
     {
       icon: <Lock size={22} color="#FFFFFF" />,
-      title: "PIN as your safety net",
+      title: "Locked to you, and only you",
       description:
-        "You'll also set a 4-digit PIN during setup. It's stored in your device's hardware keystore and acts as a secure fallback whenever biometrics are unavailable.",
+        "Open Vocolens with Face ID, your fingerprint, or a 4-digit PIN. If your biometrics ever change, your PIN has you covered.",
     },
     {
-      icon: <Eye size={22} color="#FFFFFF" />,
-      title: "Zero tracking, zero analytics",
+      icon: <ShieldCheck size={22} color="#FFFFFF" />,
+      title: "No ads. No trackers. Full stop.",
       description:
-        "We ship no advertising or analytics SDKs. Usage stats are computed on-device and never transmitted anywhere.",
+        "We don't track how you use the app, profile you, or sell anything about you. What happens in Vocolens stays in Vocolens.",
     },
   ];
 
@@ -152,7 +152,7 @@ export function PrivacyPermissionsScreen() {
                   fontFamily: "Inter_400Regular",
                 }}
               >
-                Your journal is protected by biometrics, a PIN, and nothing else
+                What you share stays yours — here's exactly how
               </Text>
             </Animated.View>
 
