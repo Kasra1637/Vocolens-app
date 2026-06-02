@@ -2,24 +2,30 @@
  * BiometricLockScreen
  *
  * Flow (biometric path):
- *  1. Welcome screen renders immediately — companion character + warm greeting.
- *  2. After a short settling delay (400ms iOS / 600ms Android), biometric auth
- *     fires automatically in the background. User does not tap anything.
- *  3. Success → celebration → app.
- *  4. Cancelled / failed → PIN screen → celebration → app.
+ *  App opens → biometric fires immediately (no welcome screen, no delay)
+ *  → Success → celebration (which shows the warm greeting + companion)
+ *  → app opens.
+ *  → Cancelled / failed → PIN screen → celebration → app opens.
  *
  * Flow (PIN-only path):
- *  Biometric never set up → go straight to PIN entry.
+ *  Biometric never set up → PIN entry → celebration → app opens.
  *
  * Flow (invalidation path):
  *  Fingerprints changed → PIN verification → re-register biometric → app.
+ *
+ * The welcome screen ("Welcome back, [Name]. Your journal is ready for you.")
+ * has been removed entirely. The celebration already carries that greeting:
+ *   "Good to see you, [Name]. / Your journal is here. Ready when you are."
+ * Removing the welcome screen eliminates the collision where the welcome
+ * screen was visible underneath the celebration overlay on the PIN path,
+ * and removes the Knox-dialog window-of-opportunity on Android.
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, Platform, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { successHaptic, errorHaptic } from '@/lib/haptics';
 import useBiometricStore from '@/lib/state/biometric-store';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
@@ -35,14 +41,10 @@ import { PinEntryScreen } from '@/components/PinEntryScreen';
 
 // ─── View states ──────────────────────────────────────────────────────────────
 type LockView =
-  | 'welcome'        // companion + greeting shown while biometric fires silently
+  | 'loading'        // async capability check in progress (shown briefly on mount)
   | 'pin_fallback'   // biometric failed/cancelled/unavailable → enter PIN
   | 'pin_setup'      // no PIN exists after invalidation → create one
   | 'reregistering'; // re-enrolment prompt after PIN verified
-
-// Delay before triggering the OS biometric sheet — gives the welcome screen
-// time to fully render and settle so the OS prompt doesn't appear abruptly.
-const BIOMETRIC_DELAY_MS = Platform.OS === 'android' ? 600 : 400;
 
 export function BiometricLockScreen() {
   const setUnlocked                = useBiometricStore((s) => s.setUnlocked);
@@ -52,19 +54,16 @@ export function BiometricLockScreen() {
   const clearBiometricInvalidation = useBiometricStore((s) => s.clearBiometricInvalidation);
   const enableBiometric            = useBiometricStore((s) => s.enableBiometric);
 
-  const selectedTheme  = useOnboardingStore((s) => s.selectedTheme);
-  const userName       = useOnboardingStore((s) => s.userName);
-  const themeColors    = THEME_COLORS[selectedTheme];
-  const themeColor     = selectedTheme === 'darkMode' ? '#9370DB' : themeColors.primary;
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const themeColors   = THEME_COLORS[selectedTheme];
+  const themeColor    = selectedTheme === 'darkMode' ? '#9370DB' : themeColors.primary;
 
-  const [view,            setView]            = useState<LockView>('welcome');
+  const [view,            setView]            = useState<LockView>('loading');
   const [authenticating,  setAuthenticating]  = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [pinContext,      setPinContext]       = useState<{ title: string; subtitle: string } | null>(null);
 
-  const firstName = userName?.split(' ')[0] ?? null;
-
-  // ─── Silent biometric auth ────────────────────────────────────────────────
+  // ─── Biometric auth ───────────────────────────────────────────────────────
   const runBiometricAuth = useCallback(async () => {
     if (authenticating) return;
     setAuthenticating(true);
@@ -87,19 +86,18 @@ export function BiometricLockScreen() {
           title: 'Verify with PIN',
           subtitle: 'Your fingerprints have changed. Enter your PIN once to restore biometric unlock.',
         });
+        setView('pin_fallback');
       } else {
         setPinContext({
           title: 'Set a backup PIN',
           subtitle: 'Your fingerprints changed and you have no backup PIN. Please set one to continue.',
         });
         setView('pin_setup');
-        return;
       }
-      setView('pin_fallback');
       return;
     }
 
-    // Cancelled or any failure — fall silently to PIN
+    // Cancelled or any failure — fall silently to PIN, no error shown
     const pinExists = await isPinSet();
     if (pinExists) {
       setPinContext({
@@ -109,15 +107,14 @@ export function BiometricLockScreen() {
       setView('pin_fallback');
     } else {
       errorHaptic();
-      // No PIN set — failsafe unlock (shouldn't occur post-onboarding)
-      setUnlocked(true);
+      setUnlocked(true); // failsafe — no PIN set, shouldn't reach here post-onboarding
     }
   }, [authenticating, enableBiometric, markBiometricInvalidated, setUnlocked]);
 
-  // ─── Mount ────────────────────────────────────────────────────────────────
+  // ─── Mount: resolve path immediately, no settling delay ──────────────────
   useEffect(() => {
     (async () => {
-      // PIN-only users — skip biometric, go straight to PIN entry
+      // PIN-only users — no biometric set up, go straight to PIN
       if (!isBiometricEnabled) {
         const pinExists = await isPinSet();
         if (pinExists) {
@@ -133,14 +130,14 @@ export function BiometricLockScreen() {
       }
 
       const caps = await checkBiometricCapabilities();
-      getBiometricTypeName(caps.supportedTypes); // side-effect: name used for re-reg text
+      getBiometricTypeName(caps.supportedTypes);
 
-      // Already flagged as invalidated from a previous session
+      // Biometric invalidated from a previous session
       if (needsPinReAuth) {
         const pinExists = await isPinSet();
         setPinContext(pinExists
-          ? { title: 'Verify with PIN', subtitle: 'Your fingerprints have changed. Enter your PIN once to restore biometric unlock.' }
-          : { title: 'Set a new PIN',   subtitle: 'Your fingerprints changed and no backup PIN is set. Create a PIN to continue.' }
+          ? { title: 'Verify with PIN',  subtitle: 'Your fingerprints have changed. Enter your PIN once to restore biometric unlock.' }
+          : { title: 'Set a new PIN',    subtitle: 'Your fingerprints changed and no backup PIN is set. Create a PIN to continue.' }
         );
         setView(pinExists ? 'pin_fallback' : 'pin_setup');
         return;
@@ -161,23 +158,23 @@ export function BiometricLockScreen() {
         return;
       }
 
-      // ── Happy path ────────────────────────────────────────────────────────
-      // Welcome screen is already showing. Wait for it to settle, then fire
-      // the biometric prompt silently. The user sees the companion and greeting
-      // while the OS sheet appears — no buttons, no instructions needed.
-      setTimeout(runBiometricAuth, BIOMETRIC_DELAY_MS);
+      // Biometric available — fire immediately, no welcome screen, no delay.
+      // The celebration carries the warm greeting when auth succeeds.
+      runBiometricAuth();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── PIN success ──────────────────────────────────────────────────────────
   const handlePinFallbackSuccess = useCallback(async () => {
+    // PIN-only device path → celebration carries the greeting
     if (!isBiometricEnabled) {
       successHaptic();
       setShowCelebration(true);
       return;
     }
 
+    // Biometric invalidation recovery — re-register fingerprint
     clearBiometricInvalidation();
     setView('reregistering');
     const result = await authenticateWithBiometrics(
@@ -213,7 +210,7 @@ export function BiometricLockScreen() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#0F0E1A' }}>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         start={{ x: 0, y: 0 }}
@@ -222,41 +219,25 @@ export function BiometricLockScreen() {
       >
         <SafeAreaView style={{ flex: 1 }}>
 
-          {/* ── Welcome screen (biometric fires silently behind this) ── */}
-          {view === 'welcome' && (
+          {/* Loading — shown briefly during the async capability check */}
+          {view === 'loading' && (
             <View style={styles.content}>
-              {/* Top spacer */}
               <View />
-
-              {/* Companion + greeting */}
               <Animated.View
-                entering={FadeInDown.duration(500)}
-                style={{ alignItems: 'center', gap: 20 }}
+                entering={FadeIn.duration(400)}
+                style={{ alignItems: 'center' }}
               >
                 <EmotionalCompanion
                   state="idle"
-                  size={110}
+                  size={90}
                   themeColor={themeColor}
                 />
-                <Animated.View
-                  entering={FadeIn.delay(180).duration(600)}
-                  style={{ alignItems: 'center', gap: 8 }}
-                >
-                  <Text style={styles.greeting}>
-                    {firstName ? `Welcome back, ${firstName}.` : 'Welcome back.'}
-                  </Text>
-                  <Text style={styles.subtitle}>
-                    Your journal is ready for you.
-                  </Text>
-                </Animated.View>
               </Animated.View>
-
-              {/* Bottom spacer */}
               <View />
             </View>
           )}
 
-          {/* ── Re-registration in progress ── */}
+          {/* Re-registration in progress */}
           {view === 'reregistering' && (
             <View style={styles.content}>
               <View />
@@ -269,7 +250,7 @@ export function BiometricLockScreen() {
                   size={100}
                   themeColor={themeColor}
                 />
-                <Text style={styles.greeting}>Restoring biometric</Text>
+                <Text style={styles.heading}>Restoring biometric</Text>
                 <Text style={styles.subtitle}>
                   Scan your fingerprint once to re-register it with Vocolens.
                 </Text>
@@ -278,7 +259,7 @@ export function BiometricLockScreen() {
             </View>
           )}
 
-          {/* ── PIN fallback ── */}
+          {/* PIN fallback */}
           {view === 'pin_fallback' && pinContext && (
             <PinEntryScreen
               onSuccess={handlePinFallbackSuccess}
@@ -288,7 +269,7 @@ export function BiometricLockScreen() {
             />
           )}
 
-          {/* ── PIN setup (invalidation edge case) ── */}
+          {/* PIN setup — invalidation edge case */}
           {view === 'pin_setup' && pinContext && (
             <PinEntryScreen
               mode="setup"
@@ -301,7 +282,7 @@ export function BiometricLockScreen() {
         </SafeAreaView>
       </LinearGradient>
 
-      {/* Celebration overlay */}
+      {/* Celebration — renders over everything, carries the warm greeting */}
       {showCelebration && (
         <BiometricUnlockCelebration onDone={handleCelebrationDone} />
       )}
@@ -318,13 +299,13 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 60,
   },
-  greeting: {
+  heading: {
     fontFamily: 'Fraunces_700Bold',
-    fontSize: 28,
+    fontSize: 26,
     color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: 0.2,
-    lineHeight: 36,
+    lineHeight: 34,
     opacity: 0.92,
   },
   subtitle: {
