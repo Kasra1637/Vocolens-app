@@ -28,10 +28,10 @@ interface Option {
 }
 
 const OPTIONS: Option[] = [
-  { id: "deep-focus",      label: "When I'm deep in something I care about", icon: Headphones },
-  { id: "no-demands",      label: "When nobody needs anything from me",      icon: Leaf },
-  { id: "talking-aloud",   label: "When I'm talking through my thoughts out loud", icon: MessageCircle },
-  { id: "after-movement",  label: "When I've just moved my body",            icon: Waves },
+  { id: "deep-focus",      label: "Lost in what I love",  icon: Headphones },
+  { id: "no-demands",      label: "No one needs me",      icon: Leaf },
+  { id: "talking-aloud",   label: "Thinking out loud",    icon: MessageCircle },
+  { id: "after-movement",  label: "After I move",         icon: Waves },
 ];
 
 export function SelfAwarenessScreen() {

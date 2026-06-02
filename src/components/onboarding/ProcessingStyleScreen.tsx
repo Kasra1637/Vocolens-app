@@ -28,10 +28,10 @@ interface Option {
 }
 
 const OPTIONS: Option[] = [
-  { id: "talking-out",       label: "Talking it out — hearing my own voice helps",        icon: Mic },
-  { id: "seeing-written",    label: "Seeing it written down makes it click",              icon: FileText },
-  { id: "noticing-patterns", label: "Noticing patterns over time — the big picture",      icon: GitBranch },
-  { id: "right-question",    label: "Being asked the right question at the right time",   icon: HelpCircle },
+  { id: "talking-out",       label: "Saying it out loud",    icon: Mic },
+  { id: "seeing-written",    label: "Seeing it written",     icon: FileText },
+  { id: "noticing-patterns", label: "Spotting the pattern",  icon: GitBranch },
+  { id: "right-question",    label: "The right question",    icon: HelpCircle },
 ];
 
 export function ProcessingStyleScreen() {
