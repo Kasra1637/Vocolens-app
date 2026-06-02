@@ -235,7 +235,7 @@ export function BiometricLockScreen() {
 
     errorHaptic();
     setAuthError('Authentication failed. Tap to try again.');
-  }, [authenticating, hasSeenFirstUnlockCelebration, markBiometricInvalidated, setUnlocked]);
+  }, [authenticating, markBiometricInvalidated, setUnlocked]);
 
   // ─── After PIN success during invalidation flow OR PIN-only unlock ───────
   const handlePinFallbackSuccess = useCallback(async () => {

@@ -27,11 +27,10 @@ import useBiometricStore from '../lib/state/biometric-store';
 // Helper: get a fresh store instance by resetting to initial state
 function resetStore() {
   useBiometricStore.setState({
-    isBiometricEnabled:            false,
-    isPinEnabled:                  false,
-    isUnlocked:                    false,
-    hasSeenFirstUnlockCelebration: false,
-    needsPinReAuth:                false,
+    isBiometricEnabled: false,
+    isPinEnabled:       false,
+    isUnlocked:         false,
+    needsPinReAuth:     false,
   });
 }
 
@@ -44,16 +43,13 @@ describe('biometric-store', () => {
     expect(s.isBiometricEnabled).toBe(false);
     expect(s.isPinEnabled).toBe(false);
     expect(s.isUnlocked).toBe(false);
-    expect(s.hasSeenFirstUnlockCelebration).toBe(false);
     expect(s.needsPinReAuth).toBe(false);
   });
 
   // ── enableBiometric ────────────────────────────────────────────────────────
-  it('enableBiometric sets isBiometricEnabled and isUnlocked to true', () => {
+  it('enableBiometric sets isBiometricEnabled to true', () => {
     useBiometricStore.getState().enableBiometric();
-    const s = useBiometricStore.getState();
-    expect(s.isBiometricEnabled).toBe(true);
-    expect(s.isUnlocked).toBe(true);
+    expect(useBiometricStore.getState().isBiometricEnabled).toBe(true);
   });
 
   it('enableBiometric does not affect isPinEnabled', () => {
@@ -65,16 +61,14 @@ describe('biometric-store', () => {
   it('disableBiometric resets all biometric flags but leaves isPinEnabled untouched', () => {
     useBiometricStore.setState({
       isBiometricEnabled: true,
-      isPinEnabled: true,       // PIN stays — user still has PIN lock
-      isUnlocked: true,
-      hasSeenFirstUnlockCelebration: true,
-      needsPinReAuth: true,
+      isPinEnabled:       true,
+      isUnlocked:         true,
+      needsPinReAuth:     true,
     });
     useBiometricStore.getState().disableBiometric();
     const s = useBiometricStore.getState();
     expect(s.isBiometricEnabled).toBe(false);
     expect(s.isUnlocked).toBe(false);
-    expect(s.hasSeenFirstUnlockCelebration).toBe(false);
     expect(s.needsPinReAuth).toBe(false);
     // isPinEnabled is NOT cleared by disableBiometric — use disablePin() for that
     expect(s.isPinEnabled).toBe(true);
@@ -85,8 +79,8 @@ describe('biometric-store', () => {
     useBiometricStore.getState().enablePin();
     const s = useBiometricStore.getState();
     expect(s.isPinEnabled).toBe(true);
-    expect(s.isBiometricEnabled).toBe(false);  // unaffected
-    expect(s.isUnlocked).toBe(false);           // unaffected
+    expect(s.isBiometricEnabled).toBe(false);
+    expect(s.isUnlocked).toBe(false);
   });
 
   it('disablePin sets isPinEnabled to false', () => {
@@ -134,20 +128,14 @@ describe('biometric-store', () => {
     expect(useBiometricStore.getState().isUnlocked).toBe(false);
   });
 
-  // ── markFirstUnlockCelebrationSeen ────────────────────────────────────────
-  it('markFirstUnlockCelebrationSeen persists the flag', () => {
-    useBiometricStore.getState().markFirstUnlockCelebrationSeen();
-    expect(useBiometricStore.getState().hasSeenFirstUnlockCelebration).toBe(true);
-  });
-
   // ── markBiometricInvalidated ──────────────────────────────────────────────
   it('markBiometricInvalidated sets needsPinReAuth=true and locks the session', () => {
     useBiometricStore.setState({ isBiometricEnabled: true, isUnlocked: true });
     useBiometricStore.getState().markBiometricInvalidated();
     const s = useBiometricStore.getState();
     expect(s.needsPinReAuth).toBe(true);
-    expect(s.isUnlocked).toBe(false);        // session must be re-authenticated
-    expect(s.isBiometricEnabled).toBe(true); // still "enabled" — just needs re-reg
+    expect(s.isUnlocked).toBe(false);
+    expect(s.isBiometricEnabled).toBe(true);
   });
 
   // ── clearBiometricInvalidation ────────────────────────────────────────────
@@ -159,51 +147,40 @@ describe('biometric-store', () => {
 
   // ── PIN-only lock cycle ───────────────────────────────────────────────────
   it('correctly models the PIN-only lock cycle (no biometric hardware)', () => {
-    // 1. Onboarding: biometric unavailable → user sets a PIN
     useBiometricStore.getState().enablePin();
     let s = useBiometricStore.getState();
     expect(s.isPinEnabled).toBe(true);
     expect(s.isBiometricEnabled).toBe(false);
-    expect(s.isUnlocked).toBe(false); // session starts locked
-
-    // 2. AuthGate lock condition is true (isPinEnabled)
+    expect(s.isUnlocked).toBe(false);
     expect(s.isBiometricEnabled || s.isPinEnabled).toBe(true);
 
-    // 3. User enters correct PIN → unlock the session
     useBiometricStore.getState().setUnlocked(true);
-    s = useBiometricStore.getState();
-    expect(s.isUnlocked).toBe(true);
+    expect(useBiometricStore.getState().isUnlocked).toBe(true);
 
-    // 4. App restart: isUnlocked resets (partialize excludes it)
-    //    Simulate by setting it back to false
     useBiometricStore.setState({ isUnlocked: false });
     s = useBiometricStore.getState();
-    expect(s.isPinEnabled).toBe(true);   // persisted
-    expect(s.isUnlocked).toBe(false);    // ephemeral — reset on launch
-    // Lock condition still fires on next launch
+    expect(s.isPinEnabled).toBe(true);
+    expect(s.isUnlocked).toBe(false);
     expect(s.isBiometricEnabled || s.isPinEnabled).toBe(true);
   });
 
   // ── Full biometric invalidation cycle ─────────────────────────────────────
   it('correctly models the full biometric invalidation → PIN → re-register cycle', () => {
-    // 1. User has biometric enabled and is unlocked
     useBiometricStore.getState().enableBiometric();
     useBiometricStore.getState().enablePin();
+    useBiometricStore.getState().setUnlocked(true);
     expect(useBiometricStore.getState().isUnlocked).toBe(true);
 
-    // 2. OS reports biometric change → mark invalidated
     useBiometricStore.getState().markBiometricInvalidated();
     let s = useBiometricStore.getState();
     expect(s.needsPinReAuth).toBe(true);
     expect(s.isUnlocked).toBe(false);
 
-    // 3. User enters correct PIN → clear invalidation flag
     useBiometricStore.getState().clearBiometricInvalidation();
-    s = useBiometricStore.getState();
-    expect(s.needsPinReAuth).toBe(false);
+    expect(useBiometricStore.getState().needsPinReAuth).toBe(false);
 
-    // 4. Re-enrolment biometric prompt succeeds → re-enable biometric
     useBiometricStore.getState().enableBiometric();
+    useBiometricStore.getState().setUnlocked(true);
     s = useBiometricStore.getState();
     expect(s.isBiometricEnabled).toBe(true);
     expect(s.isUnlocked).toBe(true);

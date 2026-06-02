@@ -13,9 +13,6 @@
  * `isUnlocked` is ephemeral — it resets to false on every app launch so the user
  * must authenticate each time they reopen the app.
  *
- * `hasSeenFirstUnlockCelebration` is persisted so the joyful first-unlock animation
- * plays exactly once, ever.
- *
  * `needsPinReAuth` is persisted. Set to true when the OS reports that the enrolled
  * biometrics have changed (e.g. the user added/removed a fingerprint). The app will
  * require a successful PIN entry before re-registering the new biometric state.
@@ -36,8 +33,6 @@ interface BiometricState {
   isPinEnabled: boolean;
   /** Whether the current session has been unlocked (ephemeral — NOT persisted). */
   isUnlocked: boolean;
-  /** Whether the one-time first-unlock celebration has already played (persisted). */
-  hasSeenFirstUnlockCelebration: boolean;
   /**
    * True when the OS invalidated the previously enrolled biometric token (e.g. a
    * fingerprint was added or removed). The app must authenticate via PIN first,
@@ -52,7 +47,6 @@ interface BiometricState {
   /** Called when the PIN is removed (e.g. account deletion). */
   disablePin: () => void;
   setUnlocked: (unlocked: boolean) => void;
-  markFirstUnlockCelebrationSeen: () => void;
   /** Called when the OS signals that enrolled biometrics have changed. */
   markBiometricInvalidated: () => void;
   /**
@@ -68,7 +62,6 @@ const useBiometricStore = create<BiometricState>()(
       isBiometricEnabled: false,
       isPinEnabled: false,
       isUnlocked: false,
-      hasSeenFirstUnlockCelebration: false,
       needsPinReAuth: false,
 
       enableBiometric: () => set({ isBiometricEnabled: true }),
@@ -76,14 +69,11 @@ const useBiometricStore = create<BiometricState>()(
         set({
           isBiometricEnabled: false,
           isUnlocked: false,
-          hasSeenFirstUnlockCelebration: false,
           needsPinReAuth: false,
         }),
       enablePin: () => set({ isPinEnabled: true }),
       disablePin: () => set({ isPinEnabled: false }),
       setUnlocked: (unlocked) => set({ isUnlocked: unlocked }),
-      markFirstUnlockCelebrationSeen: () =>
-        set({ hasSeenFirstUnlockCelebration: true }),
       markBiometricInvalidated: () =>
         set({ needsPinReAuth: true, isUnlocked: false }),
       clearBiometricInvalidation: () =>
@@ -96,7 +86,6 @@ const useBiometricStore = create<BiometricState>()(
       partialize: (state) => ({
         isBiometricEnabled: state.isBiometricEnabled,
         isPinEnabled: state.isPinEnabled,
-        hasSeenFirstUnlockCelebration: state.hasSeenFirstUnlockCelebration,
         needsPinReAuth: state.needsPinReAuth,
       }),
     }
