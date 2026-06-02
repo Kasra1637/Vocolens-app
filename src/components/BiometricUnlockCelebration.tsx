@@ -1,262 +1,234 @@
 /**
- * Biometric Unlock Celebration
+ * BiometricUnlockCelebration
  *
- * A smooth, joyful one-time overlay shown the FIRST time a user successfully
- * unlocks the app with their fingerprint. Plays a gentle confetti burst, a
- * springy success badge, and a warm welcome message, then auto-dismisses to
- * the dashboard. After the first time it never shows again.
+ * Shown every time the user successfully unlocks the app (biometric or PIN).
  *
- * Design language: mirrors MilestoneCelebration (confetti + spring pop) but
- * lighter and quicker, and uses the app's EmotionalCompanion in its success state.
+ * Design language — voice journaling / emotional safety:
+ *   · Three sound-wave ripple rings expand outward (voice metaphor, matches
+ *     FirstLaunchCelebration) instead of party confetti — this is a daily
+ *     moment of returning to a safe space, not a party.
+ *   · EmotionalCompanion in 'success' state springs in — familiar, warm.
+ *   · Personal greeting uses the user's first name.
+ *   · Subline is grounding, not hype — "ready when you are."
+ *   · Theme-coloured throughout.
+ *   · Auto-dismisses at 2.8 s with a smooth exhale-style fade-out.
+ *   · Tap anywhere to skip.
  */
 
-import React, { useEffect } from "react";
-import { View, Text, Dimensions, StyleSheet } from "react-native";
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
   withDelay,
   withSequence,
+  withSpring,
   runOnJS,
   Easing,
   FadeIn,
-} from "react-native-reanimated";
-import { ShieldCheck } from "lucide-react-native";
-import { celebrationHaptic } from "@/lib/haptics";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
-import { EmotionalCompanion } from "@/components/EmotionalCompanion";
+} from 'react-native-reanimated';
+import { celebrationHaptic } from '@/lib/haptics';
+import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
+import { EmotionalCompanion } from '@/components/EmotionalCompanion';
 
-const { width: SW, height: SH } = Dimensions.get("window");
+const { width: SW } = Dimensions.get('window');
 
-const CONFETTI_COLORS = [
-  "#FF6B6B",
-  "#FFD93D",
-  "#6BCB77",
-  "#4D96FF",
-  "#A78BFA",
-  "#FF9FF3",
-  "#FFA94D",
-  "#63E6BE",
-];
-
-// Stable particle layout
-const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
-  id: i,
-  x: (i / 18) * SW + ((i % 3) - 1) * 16,
-  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-  delay: i * 45,
-  duration: 1700 + (i % 5) * 160,
-  driftX: ((i % 4) - 1.5) * 48,
-  rot: (i % 2 === 0 ? 1 : -1) * (200 + i * 14),
-  size: i % 3 === 0 ? 9 : 6,
-  shape: i % 4 === 0 ? "circle" : "rect",
-}));
-
-function Particle({ cfg }: { cfg: (typeof PARTICLES)[0] }) {
-  const y = useSharedValue(-20);
-  const x = useSharedValue(0);
-  const rot = useSharedValue(0);
+// ─── Sound-wave ripple ring ───────────────────────────────────────────────────
+function RippleRing({
+  color,
+  delay,
+  maxSize,
+}: {
+  color: string;
+  delay: number;
+  maxSize: number;
+}) {
+  const scale   = useSharedValue(0.15);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    opacity.value = withDelay(cfg.delay, withTiming(1, { duration: 80 }));
-    y.value = withDelay(
-      cfg.delay,
-      withTiming(SH * 0.62, { duration: cfg.duration, easing: Easing.out(Easing.quad) }),
-    );
-    x.value = withDelay(
-      cfg.delay,
-      withTiming(cfg.driftX, { duration: cfg.duration }),
-    );
-    rot.value = withDelay(
-      cfg.delay,
-      withTiming(cfg.rot, { duration: cfg.duration }),
+    scale.value = withDelay(
+      delay,
+      withTiming(1, { duration: 1100, easing: Easing.out(Easing.cubic) }),
     );
     opacity.value = withDelay(
-      cfg.delay,
+      delay,
       withSequence(
-        withTiming(0.95, { duration: 100 }),
-        withDelay(cfg.duration - 600, withTiming(0, { duration: 500 })),
+        withTiming(0.50, { duration: 280, easing: Easing.out(Easing.ease) }),
+        withTiming(0,    { duration: 820, easing: Easing.in(Easing.ease) }),
       ),
     );
   }, []);
 
   const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: y.value },
-      { translateX: x.value },
-      { rotate: `${rot.value}deg` },
-    ],
+    transform: [{ scale: scale.value }],
     opacity: opacity.value,
   }));
 
   return (
     <Animated.View
+      pointerEvents="none"
       style={[
         style,
         {
-          position: "absolute",
-          top: 0,
-          left: cfg.x,
-          width: cfg.size,
-          height: cfg.shape === "circle" ? cfg.size : cfg.size * 1.6,
-          borderRadius: cfg.shape === "circle" ? cfg.size / 2 : 2,
-          backgroundColor: cfg.color,
+          position: 'absolute',
+          width: maxSize,
+          height: maxSize,
+          borderRadius: maxSize / 2,
+          borderWidth: 1.5,
+          borderColor: color,
         },
       ]}
     />
   );
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
 interface Props {
-  /** Called when the celebration finishes (auto or otherwise). */
   onDone: () => void;
 }
 
 export function BiometricUnlockCelebration({ onDone }: Props) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const themeColors = THEME_COLORS[selectedTheme];
-  const themeColor =
-    selectedTheme === "darkMode" ? "#9370DB" : themeColors.primary;
+  const userName      = useOnboardingStore((s) => s.userName);
+  const themeColors   = THEME_COLORS[selectedTheme];
+  const themeColor    = selectedTheme === 'darkMode' ? '#9370DB' : themeColors.primary;
 
-  const badgeScale = useSharedValue(0);
-  const ringScale = useSharedValue(0.6);
-  const ringOpacity = useSharedValue(0.5);
+  const firstName = userName?.split(' ')[0] ?? null;
+
+  // Companion springs up from below
+  const companionY     = useSharedValue(50);
+  const companionScale = useSharedValue(0.65);
+
+  // Whole overlay fades out
   const overlayOpacity = useSharedValue(1);
 
   useEffect(() => {
     celebrationHaptic();
 
-    // Success badge springs in with a gentle overshoot
-    badgeScale.value = withDelay(
-      150,
-      withSequence(
-        withSpring(1.18, { damping: 7, stiffness: 220 }),
-        withSpring(1, { damping: 11, stiffness: 200 }),
-      ),
+    companionY.value = withDelay(
+      80,
+      withSpring(0, { damping: 14, stiffness: 170 }),
+    );
+    companionScale.value = withDelay(
+      80,
+      withSpring(1, { damping: 12, stiffness: 190 }),
     );
 
-    // Expanding celebratory ring
-    ringScale.value = withDelay(
-      150,
-      withTiming(1.5, { duration: 900, easing: Easing.out(Easing.ease) }),
-    );
-    ringOpacity.value = withDelay(
-      150,
-      withTiming(0, { duration: 900, easing: Easing.out(Easing.ease) }),
-    );
-
-    // Auto-dismiss after the moment lands
+    // Auto-dismiss after 2.8 s
     const t = setTimeout(() => {
       overlayOpacity.value = withTiming(
         0,
-        { duration: 380, easing: Easing.inOut(Easing.ease) },
+        { duration: 480, easing: Easing.inOut(Easing.ease) },
         (finished) => {
           if (finished) runOnJS(onDone)();
         },
       );
-    }, 2400);
+    }, 2800);
 
     return () => clearTimeout(t);
   }, []);
 
-  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
-  const badgeStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: badgeScale.value }],
+  const overlayStyle   = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
+  const companionStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: companionY.value },
+      { scale: companionScale.value },
+    ],
   }));
-  const ringStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: ringScale.value }],
-    opacity: ringOpacity.value,
-  }));
+
+  // Tap anywhere to skip
+  const dismiss = () => {
+    overlayOpacity.value = withTiming(
+      0,
+      { duration: 300, easing: Easing.inOut(Easing.ease) },
+      (finished) => { if (finished) runOnJS(onDone)(); },
+    );
+  };
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, overlayStyle]}>
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(8,4,18,0.88)" }]} />
+    <Animated.View style={[StyleSheet.absoluteFill, styles.root, overlayStyle]}>
+      {/* Scrim */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(6,3,16,0.90)' }]} />
 
-      {/* Confetti layer */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        {PARTICLES.map((p) => (
-          <Particle key={p.id} cfg={p} />
-        ))}
+      {/* Sound-wave ripple rings */}
+      <View style={styles.rippleLayer} pointerEvents="none">
+        <RippleRing color={themeColor} delay={160}  maxSize={SW * 0.50} />
+        <RippleRing color={themeColor} delay={420}  maxSize={SW * 0.75} />
+        <RippleRing color={themeColor} delay={680}  maxSize={SW * 1.02} />
       </View>
 
-      {/* Centered content */}
-      <View style={styles.center}>
-        {/* Companion in its joyful success state */}
-        <EmotionalCompanion state="success" size={120} themeColor={themeColor} />
-
-        {/* Success badge with expanding ring */}
-        <View style={{ alignItems: "center", justifyContent: "center", marginTop: 8 }}>
-          <Animated.View
-            style={[
-              ringStyle,
-              {
-                position: "absolute",
-                width: 96,
-                height: 96,
-                borderRadius: 48,
-                borderWidth: 2.5,
-                borderColor: themeColor,
-              },
-            ]}
+      {/* Centred content */}
+      <View style={styles.content}>
+        {/* Companion */}
+        <Animated.View style={companionStyle}>
+          <EmotionalCompanion
+            state="success"
+            size={124}
+            themeColor={themeColor}
           />
-          <Animated.View
-            style={[
-              badgeStyle,
-              {
-                width: 88,
-                height: 88,
-                borderRadius: 44,
-                backgroundColor: "rgba(255,255,255,0.16)",
-                borderWidth: 2,
-                borderColor: "rgba(255,255,255,0.6)",
-                alignItems: "center",
-                justifyContent: "center",
-              },
-            ]}
-          >
-            <ShieldCheck size={44} color="#FFFFFF" strokeWidth={2} />
-          </Animated.View>
-        </View>
+        </Animated.View>
 
-        {/* Welcome copy */}
+        {/* Copy */}
         <Animated.View
-          entering={FadeIn.delay(450).duration(600)}
-          style={{ alignItems: "center", marginTop: 28 }}
+          entering={FadeIn.delay(520).duration(640)}
+          style={styles.textBlock}
         >
-          <Text style={styles.title}>You're in!</Text>
-          <Text style={styles.subtitle}>
-            Your journal is unlocked and protected by your fingerprint.
+          <Text style={styles.headline}>
+            {firstName ? `Good to see you, ${firstName}.` : 'Good to see you.'}
+          </Text>
+          <Text style={styles.subline}>
+            Your journal is here.{'\n'}Ready when you are.
           </Text>
         </Animated.View>
       </View>
+
+      {/* Tap to skip */}
+      <Animated.View
+        style={StyleSheet.absoluteFill}
+        onTouchEnd={dismiss}
+      />
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: {
+  root: {
+    zIndex: 9999,
+    elevation: 9999,
+  },
+  rippleLayer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 32,
+    gap: 0,
   },
-  title: {
-    fontFamily: "Fraunces_700Bold",
+  textBlock: {
+    alignItems: 'center',
+    marginTop: 24,
+    gap: 10,
+  },
+  headline: {
+    fontFamily: 'Fraunces_700Bold',
     fontSize: 30,
-    color: "#FFFFFF",
-    textAlign: "center",
+    color: '#FFFFFF',
+    textAlign: 'center',
     letterSpacing: 0.2,
+    lineHeight: 38,
+    opacity: 0.94,
   },
-  subtitle: {
-    fontFamily: "Inter_400Regular",
+  subline: {
+    fontFamily: 'Inter_400Regular',
     fontSize: 15,
-    color: "rgba(255,255,255,0.78)",
-    textAlign: "center",
-    lineHeight: 22,
-    marginTop: 8,
-    maxWidth: 300,
+    color: 'rgba(255,255,255,0.68)',
+    textAlign: 'center',
+    lineHeight: 23,
   },
 });

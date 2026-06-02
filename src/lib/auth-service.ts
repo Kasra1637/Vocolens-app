@@ -15,6 +15,7 @@
  */
 
 import { secureGetItem, secureSetItem, secureRemoveItem } from './secure-storage';
+import { Platform } from 'react-native';
 
 const PIN_KEY = 'user_pin_code';
 const AUTH_ENABLED_KEY = 'auth_enabled';
@@ -178,9 +179,13 @@ export async function authenticateWithBiometrics(
 
     const result = await LocalAuth.authenticateAsync({
       promptMessage,
-      // No cancelLabel — removes the extra button text from the OS dialog,
-      // keeping the system sheet as minimal as possible.
-      disableDeviceFallback: true,   // We manage PIN fallback ourselves
+      // No cancelLabel — keeps the OS sheet as minimal as possible.
+      // disableDeviceFallback: on Android, passing true triggers Samsung Knox
+      // security dialogs ("Secured by Knox") before the fingerprint sheet.
+      // We omit it on Android so Knox doesn't intercept, and handle any
+      // device-fallback result ourselves by treating it as a cancellation.
+      // On iOS, disableDeviceFallback: true is correct (we manage PIN ourselves).
+      ...(Platform.OS === 'ios' ? { disableDeviceFallback: true } : {}),
       // Android: confirm immediately on scan — no extra "Confirm" tap needed.
       requireConfirmation: false,
     } as Parameters<typeof LocalAuth.authenticateAsync>[0]);
