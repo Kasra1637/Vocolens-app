@@ -1209,7 +1209,7 @@ export default function SettingsScreen() {
                           width: 40,
                           height: 40,
                           borderRadius: 12,
-                          backgroundColor: hexToRgba(Colors.primary, 0.18),
+                          backgroundColor: "rgba(255, 255, 255, 0.15)",
                           alignItems: 'center',
                           justifyContent: 'center',
                           marginRight: 14,
