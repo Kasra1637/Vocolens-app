@@ -26,7 +26,7 @@ import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
-import { EmotionalCompanion } from "@/components/EmotionalCompanion";
+
 
 // ── Animated Bell ─────────────────────────────────────────────────────────────
 function AnimatedBell({ primaryColor }: { primaryColor: string }) {
@@ -183,13 +183,6 @@ export function ReminderScreen() {
               entering={FadeIn.delay(50).duration(600).easing(SOFT)}
               style={{ alignItems: "center", marginTop: 4 }}
             >
-              <View style={{ marginBottom: 16 }}>
-                <EmotionalCompanion
-                  state="processing"
-                  size={80}
-                  themeColor={themeColors.primary}
-                />
-              </View>
               <Text
                 style={{
                   fontFamily: "Fraunces_700Bold",

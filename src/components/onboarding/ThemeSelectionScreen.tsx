@@ -38,6 +38,7 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
+import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const THEMES = Object.keys(THEME_COLORS) as ThemeColorType[];
@@ -177,12 +178,19 @@ export function ThemeSelectionScreen() {
           {/* Space for progress bar + back button */}
           <View style={{ height: 72 }} />
 
-          {/* Title */}
+          {/* Character + Title */}
           <Animated.View
             entering={FadeIn.delay(100).duration(900).easing(SOFT)}
             style={{ alignItems: "center", paddingBottom: 20 }}
             pointerEvents="none"
           >
+            <View style={{ marginBottom: 12 }}>
+              <EmotionalCompanion
+                state="processing"
+                size={80}
+                themeColor={activeData.primary}
+              />
+            </View>
             <Text
               style={{
                 fontFamily: "Fraunces_700Bold",
