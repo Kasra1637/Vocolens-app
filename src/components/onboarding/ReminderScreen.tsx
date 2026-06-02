@@ -177,8 +177,8 @@ export function ReminderScreen() {
         <SafeAreaView style={{ flex: 1 }}>
           <BackButton onPress={handleBack} show={currentStep > 0} />
 
-          <View style={{ flex: 1, paddingHorizontal: 24 }}>
-            {/* Character + Title */}
+          <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 12 }}>
+            {/* Title */}
             <Animated.View
               entering={FadeIn.delay(50).duration(600).easing(SOFT)}
               style={{ alignItems: "center", marginTop: 4 }}
