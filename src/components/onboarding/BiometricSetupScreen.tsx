@@ -33,12 +33,11 @@ import Animated, {
 } from 'react-native-reanimated';
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { Fingerprint, Lock, Eye, ShieldCheck } from 'lucide-react-native';
-import { successHaptic, tapHaptic, errorHaptic } from '@/lib/haptics';
+import { successHaptic, tapHaptic } from '@/lib/haptics';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
 import {
   checkBiometricCapabilities,
-  authenticateWithBiometrics,
   getBiometricTypeName,
 } from '@/lib/auth-service';
 import { ProgressBar } from '@/components/onboarding/ProgressBar';
@@ -73,12 +72,8 @@ export function BiometricSetupScreen() {
 
   const [phase,         setPhase]        = useState<Phase>('intro');
   const [biometricName, setBiometricName] = useState('Fingerprint');
-  // True = device has biometric hardware AND fingerprints enrolled
   const [biometricAvailable, setBiometricAvailable] = useState(true);
-  // Stays true until the capability check resolves so we don't flash the wrong UI
   const [checking,      setChecking]     = useState(true);
-  const [busy,          setBusy]         = useState(false);
-  const [authError,     setAuthError]    = useState('');
 
   useEffect(() => {
     (async () => {
@@ -94,43 +89,32 @@ export function BiometricSetupScreen() {
   }, [setHasCompletedOnboarding]);
 
   // ── Primary CTA ────────────────────────────────────────────────────────────
-  const handlePrimaryCTA = useCallback(async () => {
+  const handlePrimaryCTA = useCallback(() => {
     if (busy || checking) return;
     playClickSound();
     tapHaptic();
 
     if (!biometricAvailable) {
-      // ── PIN-only path ──────────────────────────────────────────────────────
-      // Device has no biometric; go straight to PIN setup.
+      // Device has no biometric — go straight to PIN setup.
       setPhase('pin_setup');
       return;
     }
 
-    // ── Biometric + PIN path ───────────────────────────────────────────────
-    setBusy(true);
-    const result = await authenticateWithBiometrics('Confirm to enable app lock');
-    setBusy(false);
-
-    if (result.success) {
-      enableBiometric();
-      successHaptic();
-      setPhase('pin_setup');
-      return;
-    }
-
-    if (result.cancelled) {
-      // User dismissed the OS prompt — stay on this screen so they can retry
-      return;
-    }
-
-    errorHaptic();
-    if (!result.available) {
-      // Hardware disappeared mid-flow (very rare) — treat as PIN-only
-      setBiometricAvailable(false);
-      setPhase('pin_setup');
-    } else {
-      setAuthError("Couldn't verify your fingerprint. Please try again.");
-    }
+    // ── Biometric + PIN path ────────────────────────────────────────────────
+    // Best practice: do NOT call authenticateWithBiometrics() here just to
+    // "confirm" the user's intent — that triggers an OS confirmation dialog
+    // mid-onboarding which feels jarring and is not how native apps (Apple Pay,
+    // banking apps) handle biometric enrolment.
+    //
+    // The correct pattern:
+    //   1. Record intent immediately → enableBiometric() sets isBiometricEnabled.
+    //   2. Require PIN creation as a mandatory backup (next step).
+    //   3. On the NEXT app open, BiometricLockScreen auto-prompts the real
+    //      biometric auth — this is where the native fingerprint/Face ID sheet
+    //      should appear, as an unlock prompt, not a setup confirmation.
+    enableBiometric();
+    successHaptic();
+    setPhase('pin_setup');
   }, [busy, checking, biometricAvailable, enableBiometric, playClickSound]);
 
   // ── Called by PinEntryScreen once PIN is saved ───────────────────────────
@@ -171,11 +155,9 @@ export function BiometricSetupScreen() {
 
   const ctaLabel = checking
     ? 'Checking…'
-    : busy
-      ? 'Waiting…'
-      : biometricAvailable
-        ? `Enable ${biometricName} + PIN`
-        : 'Set up a PIN';
+    : biometricAvailable
+      ? `Enable ${biometricName} + PIN`
+      : 'Set up a PIN';
 
   const privacyPoints = biometricAvailable ? BIOMETRIC_POINTS : PIN_ONLY_POINTS;
 
@@ -300,24 +282,10 @@ export function BiometricSetupScreen() {
               entering={FadeIn.delay(160).duration(500).easing(SOFT)}
               style={{ width: '100%', gap: 12, marginTop: 20 }}
             >
-              {authError ? (
-                <Text
-                  style={{
-                    fontFamily: 'Inter_500Medium',
-                    fontSize: 13,
-                    color: 'rgba(255,180,180,0.95)',
-                    textAlign: 'center',
-                    marginBottom: 4,
-                  }}
-                >
-                  {authError}
-                </Text>
-              ) : null}
-
               <OnboardingCTAButton
                 label={ctaLabel}
                 onPress={handlePrimaryCTA}
-                disabled={busy || checking}
+                disabled={checking}
               />
             </Animated.View>
           </View>

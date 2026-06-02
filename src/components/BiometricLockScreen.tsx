@@ -186,6 +186,7 @@ export function BiometricLockScreen() {
     setAuthenticating(false);
 
     if (result.success) {
+      enableBiometric();
       successHaptic();
       if (!hasSeenFirstUnlockCelebration) {
         setShowCelebration(true);

@@ -71,7 +71,7 @@ const useBiometricStore = create<BiometricState>()(
       hasSeenFirstUnlockCelebration: false,
       needsPinReAuth: false,
 
-      enableBiometric: () => set({ isBiometricEnabled: true, isUnlocked: true }),
+      enableBiometric: () => set({ isBiometricEnabled: true }),
       disableBiometric: () =>
         set({
           isBiometricEnabled: false,
