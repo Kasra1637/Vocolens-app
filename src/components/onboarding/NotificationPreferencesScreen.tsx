@@ -575,71 +575,116 @@ export function NotificationPreferencesScreen() {
       {showTimePicker && (
         <Modal
           transparent
-          animationType="fade"
+          animationType="slide"
           onRequestClose={handleCancelTime}
         >
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(0,0,0,0.55)",
+              backgroundColor: "rgba(0,0,0,0.60)",
               justifyContent: "flex-end",
             }}
           >
             <LinearGradient
-              colors={[themeColors.primary, themeColors.gradientEnd]}
+              colors={themeColors.backgroundGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
               style={{
-                borderTopLeftRadius: 28,
-                borderTopRightRadius: 28,
-                paddingTop: 20,
-                paddingBottom: 36,
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
+                paddingTop: 28,
+                paddingBottom: Platform.OS === "ios" ? 40 : 28,
                 paddingHorizontal: 24,
+                borderTopWidth: 1.5,
+                borderColor: "rgba(255,255,255,0.18)",
               }}
             >
-              <Text
+              {/* Handle bar */}
+              <View
                 style={{
-                  fontFamily: "Inter_700Bold",
-                  color: "#FFFFFF",
-                  fontSize: 18,
-                  textAlign: "center",
-                  marginBottom: 12,
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: "rgba(255,255,255,0.35)",
+                  alignSelf: "center",
+                  marginBottom: 20,
                 }}
-              >
-                Pick a time
-              </Text>
-
-              <DateTimePicker
-                value={tempTime}
-                mode="time"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                textColor="#FFFFFF"
-                themeVariant="dark"
-                onChange={(_, date) => {
-                  if (date) setTempTime(date);
-                  if (Platform.OS === "android") {
-                    setSelectedTime(date ?? tempTime);
-                    setShowTimePicker(false);
-                  }
-                }}
-                style={{ height: 160 }}
               />
 
+              {/* Heading */}
+              <Text
+                style={{
+                  fontFamily: "Fraunces_700Bold",
+                  color: "#FFFFFF",
+                  fontSize: 22,
+                  textAlign: "center",
+                  marginBottom: 4,
+                  opacity: 0.95,
+                }}
+              >
+                What time works for you?
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.65)",
+                  fontSize: 13,
+                  textAlign: "center",
+                  marginBottom: 20,
+                }}
+              >
+                We'll remind you to journal at this time
+              </Text>
+
+              {/* Native picker — spinner on iOS, clock on Android */}
+              <View
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                  borderRadius: 20,
+                  overflow: "hidden",
+                  marginBottom: 24,
+                }}
+              >
+                <DateTimePicker
+                  value={tempTime}
+                  mode="time"
+                  display={Platform.OS === "ios" ? "spinner" : "clock"}
+                  textColor="#FFFFFF"
+                  themeVariant="dark"
+                  onChange={(_, date) => {
+                    if (date) setTempTime(date);
+                    if (Platform.OS === "android") {
+                      setSelectedTime(date ?? tempTime);
+                      setShowTimePicker(false);
+                    }
+                  }}
+                  style={{
+                    height: Platform.OS === "ios" ? 180 : 100,
+                    width: "100%",
+                  }}
+                />
+              </View>
+
+              {/* iOS action buttons */}
               {Platform.OS === "ios" && (
-                <View className="flex-row gap-3 mt-4">
+                <View style={{ flexDirection: "row", gap: 12 }}>
                   <Pressable
                     onPress={handleCancelTime}
-                    style={{
+                    style={({ pressed }) => ({
                       flex: 1,
-                      borderRadius: 16,
-                      paddingVertical: 14,
+                      borderRadius: 18,
+                      paddingVertical: 15,
                       alignItems: "center",
-                      backgroundColor: "rgba(255,255,255,0.15)",
+                      backgroundColor: pressed
+                        ? "rgba(255,255,255,0.18)"
+                        : "rgba(255,255,255,0.10)",
                       borderWidth: 1.5,
-                      borderColor: "rgba(255,255,255,0.3)",
-                    }}
+                      borderColor: "rgba(255,255,255,0.25)",
+                    })}
                   >
                     <Text
                       style={{
-                        color: "#FFFFFF",
+                        color: "rgba(255,255,255,0.80)",
                         fontFamily: "Inter_600SemiBold",
                         fontSize: 16,
                       }}
@@ -647,17 +692,20 @@ export function NotificationPreferencesScreen() {
                       Cancel
                     </Text>
                   </Pressable>
+
                   <Pressable
                     onPress={handleConfirmTime}
-                    style={{
-                      flex: 1,
-                      borderRadius: 16,
-                      paddingVertical: 14,
+                    style={({ pressed }) => ({
+                      flex: 2,
+                      borderRadius: 18,
+                      paddingVertical: 15,
                       alignItems: "center",
-                      backgroundColor: "rgba(255,255,255,0.28)",
+                      backgroundColor: pressed
+                        ? themeColors.primary + "CC"
+                        : themeColors.primary,
                       borderWidth: 2,
-                      borderColor: "#FFFFFF",
-                    }}
+                      borderColor: "rgba(255,255,255,0.40)",
+                    })}
                   >
                     <Text
                       style={{
@@ -666,7 +714,7 @@ export function NotificationPreferencesScreen() {
                         fontSize: 16,
                       }}
                     >
-                      Confirm
+                      Set reminder
                     </Text>
                   </Pressable>
                 </View>

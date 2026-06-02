@@ -65,25 +65,25 @@ export function PrivacyPermissionsScreen() {
       icon: <Smartphone size={22} color="#FFFFFF" />,
       title: "Your entries live on your phone",
       description:
-        "Every voice note, mood, and insight stays on your device. Nothing is stored on our servers — ever.",
+        "Voice notes, moods, insights — all on your device, nowhere else. Close the app and your data stays right where you left it.",
     },
     {
       icon: <Mic size={22} color="#FFFFFF" />,
       title: "AI listens, then forgets",
       description:
-        "When you record, your words are used to generate your insight, then discarded. We never store, read, or sell your transcripts.",
+        "Your words reach the AI just long enough to craft your insight, then they're gone for good. We never store, read, or sell your transcripts.",
     },
     {
       icon: <Lock size={22} color="#FFFFFF" />,
       title: "Locked to you, and only you",
       description:
-        "Open Vocolens with Face ID, your fingerprint, or a 4-digit PIN. If your biometrics ever change, your PIN has you covered.",
+        "Face ID, fingerprint, or a 4-digit PIN — your choice. Set one up once and Vocolens stays yours, every single time you open it.",
     },
     {
       icon: <ShieldCheck size={22} color="#FFFFFF" />,
-      title: "No ads. No trackers. Full stop.",
+      title: "No ads, no trackers, ever",
       description:
-        "We don't track how you use the app, profile you, or sell anything about you. What happens in Vocolens stays in Vocolens.",
+        "We don't profile you, follow you around, or sell a single thing about you. Your journal is not a product.",
     },
   ];
 
