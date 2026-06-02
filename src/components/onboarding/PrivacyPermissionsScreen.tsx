@@ -11,11 +11,10 @@
  */
 
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { Easing } from "react-native-reanimated";
+import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import { Smartphone, Lock, ShieldCheck } from "lucide-react-native";
@@ -62,19 +61,19 @@ export function PrivacyPermissionsScreen() {
 
   const privacyFeatures = [
     {
-      icon: <Smartphone size={22} color="#FFFFFF" />,
+      icon: Smartphone,
       title: "Your activities stay here",
       description:
         "Everything stays here. Nothing leaves unless you choose to export it.",
     },
     {
-      icon: <Lock size={22} color="#FFFFFF" />,
+      icon: Lock,
       title: "Locked to you alone",
       description:
         "Face ID, fingerprint, or PIN. Set it up once and keep your journal private.",
     },
     {
-      icon: <ShieldCheck size={22} color="#FFFFFF" />,
+      icon: ShieldCheck,
       title: "Just you & your thoughts",
       description:
         "Your space, your words, your rules. Nobody else gets in.",
@@ -94,43 +93,49 @@ export function PrivacyPermissionsScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <View style={{ flex: 1 }}>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{ flex: 1 }}
       >
-        {/* Progress Bar at Top */}
         <ProgressBar currentStep={currentStep} totalSteps={23} />
 
-        <SafeAreaView className="flex-1">
+        <SafeAreaView style={{ flex: 1 }}>
           <BackButton onPress={handleBack} show={currentStep > 0} />
 
-          <View className="flex-1 px-6 py-3">
-            {/* Character at Top */}
-            <View
-              className="items-center justify-center"
-              style={{ height: 80 }}
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingTop: 8,
+              paddingBottom: 32,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Character */}
+            <Animated.View
+              entering={FadeIn.duration(600).delay(80).easing(SOFT)}
+              style={{ alignItems: "center", marginBottom: 4 }}
             >
               <EmotionalCompanion
                 state="processing"
                 size={80}
                 themeColor={themeColors.primary}
               />
-            </View>
+            </Animated.View>
 
-            {/* Header */}
+            {/* Title */}
             <Animated.View
-              entering={FadeIn.delay(100).duration(900).easing(SOFT)}
-              className="items-center mb-3"
+              entering={FadeIn.duration(900).delay(120).easing(SOFT)}
+              style={{ alignItems: "center", marginBottom: 6 }}
             >
               <Text
-                className="text-center mb-1"
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
                   fontSize: 30,
+                  textAlign: "center",
                   opacity: 0.92,
                   letterSpacing: 0.2,
                   lineHeight: 38,
@@ -138,83 +143,96 @@ export function PrivacyPermissionsScreen() {
               >
                 Your privacy
               </Text>
+            </Animated.View>
+
+            {/* Subtitle */}
+            <Animated.View
+              entering={FadeIn.duration(900).delay(220).easing(SOFT)}
+              style={{ alignItems: "center", marginBottom: 24 }}
+            >
               <Text
                 style={{
-                  color: "rgba(255, 255, 255, 0.9)",
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.72)",
                   fontSize: 15,
                   textAlign: "center",
-                  fontFamily: "Inter_400Regular",
+                  lineHeight: 23,
                 }}
               >
                 Nothing leaves your phone without you knowing
               </Text>
             </Animated.View>
 
-            {/* Privacy Shield Card — all four items together */}
-            <Animated.View
-              entering={FadeIn.delay(250).duration(900).easing(SOFT)}
-              className="rounded-3xl mb-4"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                borderWidth: 1,
-                borderColor: "rgba(255, 255, 255, 0.2)",
-                paddingHorizontal: 16,
-                paddingVertical: 4,
-                marginBottom: 16,
-              }}
-            >
-              {privacyFeatures.map((feature, index) => (
-                <View
-                  key={index}
-                  className="flex-row items-center"
-                  style={{
-                    paddingVertical: 10,
-                    borderBottomWidth: index < privacyFeatures.length - 1 ? 1 : 0,
-                    borderBottomColor: "rgba(255,255,255,0.2)",
-                  }}
-                >
-                  <View
-                    className="w-9 h-9 rounded-xl items-center justify-center mr-3"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+            {/* Feature cards — one per row, matching NDValueScreen1 exactly */}
+            <View style={{ gap: 12, marginBottom: 28 }}>
+              {privacyFeatures.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <Animated.View
+                    key={item.title}
+                    entering={FadeIn.duration(700).delay(280 + index * 90).easing(SOFT)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                      backgroundColor: "rgba(255,255,255,0.10)",
+                      borderWidth: 1.5,
+                      borderColor: "rgba(255,255,255,0.18)",
+                      borderRadius: 20,
+                      padding: 16,
+                      gap: 14,
+                    }}
                   >
-                    {feature.icon}
-                  </View>
-                  <View className="flex-1">
-                    <Text
+                    {/* Icon badge */}
+                    <View
                       style={{
-                        color: "#FFFFFF",
-                        fontWeight: "bold",
-                        fontSize: 14,
-                        marginBottom: 2,
-                        fontFamily: "Inter_700Bold",
+                        width: 40,
+                        height: 40,
+                        borderRadius: 12,
+                        backgroundColor: "rgba(255,255,255,0.15)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
-                      {feature.title}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "rgba(255, 255, 255, 0.8)",
-                        fontSize: 12,
-                        lineHeight: 17,
-                        fontFamily: "Inter_400Regular",
-                      }}
-                    >
-                      {feature.description}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </Animated.View>
+                      <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                    </View>
 
-            {/* Continue Button */}
+                    {/* Text */}
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
+                          fontSize: 14,
+                          marginBottom: 4,
+                          lineHeight: 20,
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_400Regular",
+                          color: "rgba(255,255,255,0.70)",
+                          fontSize: 13,
+                          lineHeight: 20,
+                        }}
+                      >
+                        {item.description}
+                      </Text>
+                    </View>
+                  </Animated.View>
+                );
+              })}
+            </View>
+
+            {/* CTA */}
             <Animated.View
-              entering={FadeIn.delay(400).duration(800).easing(SOFT)}
-              className="pb-6"
+              entering={FadeIn.duration(800).delay(700).easing(SOFT)}
             >
               <OnboardingCTAButton label="Continue" onPress={handleContinue} />
             </Animated.View>
-            <View style={{ flex: 1 }} />
-          </View>
+          </ScrollView>
         </SafeAreaView>
       </LinearGradient>
     </View>
