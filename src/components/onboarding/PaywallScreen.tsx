@@ -4,14 +4,14 @@
  * Design principles:
  * - Annual-only on main screen; monthly shown as downsell on back/close
  * - Warm, reflective, trustworthy, premium — not aggressive or salesy
- * - 7-day free trial on annual plan
+ * - 3-day free trial on annual plan
  * - Feature flag support for A/B testing
  * - Analytics events for full funnel visibility
  *
  * Conversion features:
  * - Monthly plan hidden on main screen; surfaces as exit-offer modal on back
  * - Plutchik Model trust cue (research-backed, native to app)
- * - Day 5 trial reminder notification (2 days before expiry)
+ * - Day 2 trial reminder notification (1 day before expiry)
  */
 
 import React, { useState, useEffect } from "react";
@@ -68,7 +68,7 @@ function trackEvent(event: string, properties?: Record<string, any>) {
 // Anchors are kept in sync with Adapty Dashboard products:
 //   monthly_journal   → $9.99 / month        (exit-offer modal only)
 //   quarterly_journal → $24.99 / 3 months    (≈ $8.33/mo, ~17% off monthly)
-//   yearly_journal    → $79.99 / year        (≈ $6.67/mo, ~33% off monthly, 7-day trial)
+//   yearly_journal    → $79.99 / year        (≈ $6.67/mo, ~33% off monthly, 3-day trial)
 const MONTHLY_PRICE = "$9.99";
 const QUARTERLY_PRICE = "$24.99";
 const QUARTERLY_MONTHLY_EQUIVALENT = "$8.33";
@@ -76,7 +76,7 @@ const QUARTERLY_SAVINGS = "17%";
 const YEARLY_PRICE = "$79.99";
 const YEARLY_MONTHLY_EQUIVALENT = "$6.67";
 const YEARLY_SAVINGS = "33%";
-const TRIAL_DAYS = 7;
+const TRIAL_DAYS = 3;
 
 type PlanType = "yearly" | "quarterly" | "monthly";
 
@@ -335,7 +335,7 @@ export function PaywallScreen() {
     if (plan === "yearly" && FEATURE_FLAGS.trial_on_annual) {
       // Schedule trial reminders — wrapped in try/catch so a notification
       // failure never blocks advancing to the next onboarding screen.
-      try { NotificationService.scheduleTrialDay5Reminder(null); } catch {}
+      try { NotificationService.scheduleTrialDay2Reminder(null); } catch {}
       try { NotificationService.scheduleTrialEndReminder(null); } catch {}
     }
     setShowExitModal(false);

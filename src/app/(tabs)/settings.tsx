@@ -1704,7 +1704,7 @@ export default function SettingsScreen() {
               >
                 {hasSubscription
                   ? planType === "yearly"
-                    ? "Yearly Pro · $79.99 / year  ·  7-day free trial"
+                    ? "Yearly Pro · $79.99 / year  ·  3-day free trial"
                     : planType === "quarterly"
                       ? "Quarterly Pro · $24.99 every 3 months"
                       : planType === "monthly"

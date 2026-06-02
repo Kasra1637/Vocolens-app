@@ -373,6 +373,7 @@ export function StandalonePaywall() {
   const grantYearly = () => {
     successHaptic();
     setSubscription(true, "yearly");
+    NotificationService.scheduleTrialDay2Reminder(null);
     NotificationService.scheduleTrialEndReminder(null);
   };
 
@@ -470,9 +471,9 @@ export function StandalonePaywall() {
   };
 
   const timelineSteps: { icon: LucideIcon; label: string; sublabel: string }[] = [
-    { icon: Unlock,    label: "Today",                       sublabel: "Unlock all features instantly." },
-    { icon: BellRing,  label: "In 2 Days — Reminder",        sublabel: "We'll remind you before your trial ends." },
-    { icon: CreditCard, label: "In 3 Days — Billing Starts", sublabel: "You'll be charged unless you cancel." },
+    { icon: Unlock,     label: "Today",                        sublabel: "Unlock all features instantly." },
+    { icon: BellRing,   label: "In 2 Days — Reminder",         sublabel: "We'll remind you before your trial ends." },
+    { icon: CreditCard, label: "In 3 Days — Billing Starts",   sublabel: "You'll be charged unless you cancel." },
   ];
 
   return (

@@ -347,12 +347,12 @@ export class NotificationService {
   }
 
   /**
-   * Schedule a "Your trial ends in 2 days" notification — fires on Day 5 of a 7-day trial.
-   * If rcExpirationDate is provided, fires 2 days before expiry.
-   * Otherwise falls back to 5 days from now (= Day 5 of 7-day trial).
+   * Schedule a "Your trial ends tomorrow" notification — fires on Day 2 of a 3-day trial.
+   * If an expiration date is provided, fires 1 day before expiry.
+   * Otherwise falls back to 2 days from now (= Day 2 of a 3-day trial).
    */
-  static async scheduleTrialDay5Reminder(
-    rcExpirationDate?: string | null,
+  static async scheduleTrialDay2Reminder(
+    expirationDate?: string | null,
   ): Promise<string | null> {
     const N = getNotifications();
     if (!N) return null;
@@ -363,15 +363,15 @@ export class NotificationService {
 
       let triggerDate: Date;
 
-      if (rcExpirationDate) {
-        const expiry = new Date(rcExpirationDate);
-        // 2 days before expiry
+      if (expirationDate) {
+        const expiry = new Date(expirationDate);
+        // 1 day before expiry
         triggerDate = isNaN(expiry.getTime())
-          ? new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) // fallback: 5 days from now
-          : new Date(expiry.getTime() - 2 * 24 * 60 * 60 * 1000);
+          ? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // fallback: 2 days from now
+          : new Date(expiry.getTime() - 1 * 24 * 60 * 60 * 1000);
       } else {
-        // No expiration date — assume 7-day trial started now, fire at Day 5
-        triggerDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+        // No expiration date — assume 3-day trial started now, fire at Day 2
+        triggerDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
       }
 
       // Don't schedule if trigger is in the past
@@ -381,10 +381,10 @@ export class NotificationService {
 
       const id = await N.scheduleNotificationAsync({
         content: {
-          title: 'Your free trial ends in 2 days',
+          title: 'Your free trial ends tomorrow',
           body: "You're making great progress. Keep your journal going — continue your subscription to stay on track.",
           sound: 'default',
-          data: { type: 'trial-day5-reminder' },
+          data: { type: 'trial-day2-reminder' },
         },
         trigger: {
           type: (N as any).SchedulableTriggerInputTypes?.DATE ?? 'date',
@@ -393,11 +393,11 @@ export class NotificationService {
       });
 
       console.log(
-        `[NotificationService] Scheduled Day 5 trial reminder for ${triggerDate.toISOString()} (id: ${id})`,
+        `[NotificationService] Scheduled Day 2 trial reminder for ${triggerDate.toISOString()} (id: ${id})`,
       );
       return id;
     } catch (error) {
-      console.error('[NotificationService] scheduleTrialDay5Reminder error:', error);
+      console.error('[NotificationService] scheduleTrialDay2Reminder error:', error);
       return null;
     }
   }
