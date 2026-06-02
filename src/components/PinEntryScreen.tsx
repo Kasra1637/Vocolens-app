@@ -22,7 +22,7 @@
  * keyboard re-opens if the user dismissed it.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,11 @@ import {
   InteractionManager,
   StyleSheet,
 } from 'react-native';
+
+/** Imperative handle — lets a parent (e.g. a Modal's onShow) force keyboard open */
+export interface PinEntryScreenHandle {
+  focusKeyboard: () => void;
+}
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -63,7 +68,8 @@ interface PinEntryScreenProps {
   androidFocusDelay?: number;
 }
 
-export function PinEntryScreen({
+export const PinEntryScreen = forwardRef<PinEntryScreenHandle, PinEntryScreenProps>(
+function PinEntryScreen({
   mode = 'verify',
   onComplete,
   onSuccess,
@@ -71,7 +77,7 @@ export function PinEntryScreen({
   subtitle,
   maxAttempts = 5,
   androidFocusDelay = 0,
-}: PinEntryScreenProps) {
+}: PinEntryScreenProps, ref) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors   = THEME_COLORS[selectedTheme];
 
@@ -117,6 +123,17 @@ export function PinEntryScreen({
       setTimeout(() => inputRef.current?.focus(), delay);
     });
   }, [isLocked, busy, matched, androidFocusDelay]);
+
+  // Expose focusKeyboard so a parent Modal can call it from onShow —
+  // the only reliable signal that the modal is fully visible on screen.
+  useImperativeHandle(ref, () => ({
+    focusKeyboard: () => {
+      if (isLocked || busy || matched) return;
+      // Small delay lets the OS finish any residual animation frame.
+      const delay = Platform.OS === 'android' ? 100 : 50;
+      setTimeout(() => inputRef.current?.focus(), delay);
+    },
+  }), [isLocked, busy, matched]);
 
   // Focus on mount and whenever the setup phase changes
   useEffect(() => {
@@ -376,7 +393,7 @@ export function PinEntryScreen({
       </LinearGradient>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   // Zero-size, inside layout bounds so Android focus works

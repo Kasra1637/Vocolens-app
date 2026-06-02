@@ -3,7 +3,7 @@
  * Customizable settings menu for theme, notifications, dark mode, PIN, time, and sign out
  */
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -98,7 +98,7 @@ import { removePin, changePin } from "@/lib/auth-service";
 import { exportAllDataAsCsv } from "@/lib/export-data";
 import { getLanguageByCode } from "@/lib/languages";
 import { hexToRgba, GlassLayers } from "@/lib/glass";
-import { PinEntryScreen } from "@/components/PinEntryScreen";
+import { PinEntryScreen, type PinEntryScreenHandle } from "@/components/PinEntryScreen";
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -116,6 +116,8 @@ export default function SettingsScreen() {
   // 'verify' = enter current PIN, 'setup' = enter new PIN
   const [changePinStep, setChangePinStep] = useState<'verify' | 'setup'>('verify');
   const [pendingOldPin, setPendingOldPin] = useState('');
+  const changePinVerifyRef = useRef<PinEntryScreenHandle>(null);
+  const changePinSetupRef  = useRef<PinEntryScreenHandle>(null);
   // Onboarding Store (for theme and notification time)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const setSelectedTheme = useOnboardingStore((s) => s.setSelectedTheme);
@@ -302,6 +304,8 @@ export default function SettingsScreen() {
     // Current PIN confirmed — advance to new-PIN creation step
     confirmHaptic();
     setChangePinStep('setup');
+    // onShow won't fire again since modal is already open — focus explicitly
+    setTimeout(() => changePinSetupRef.current?.focusKeyboard(), 100);
   };
 
   const handleChangePinNewSaved = async () => {
@@ -1834,16 +1838,20 @@ export default function SettingsScreen() {
         animationType="slide"
         onRequestClose={handleChangePinCancel}
         onShow={() => {
-          // onShow fires after the modal slide animation completes —
-          // the most reliable moment to request keyboard focus on both platforms.
-          // PinEntryScreen's own focusInput() runs via useEffect on mount, but
-          // inside a Modal on Android the layout isn't ready yet at that point.
-          // Triggering it again here (after onShow) guarantees the keyboard opens.
+          // onShow fires after the OS finishes presenting the modal — the only
+          // reliable moment to request keyboard focus. Direct ref call skips
+          // InteractionManager timing entirely.
+          if (changePinStep === 'verify') {
+            changePinVerifyRef.current?.focusKeyboard();
+          } else {
+            changePinSetupRef.current?.focusKeyboard();
+          }
         }}
       >
         <View style={{ flex: 1 }}>
           {changePinStep === 'verify' ? (
             <PinEntryScreen
+              ref={changePinVerifyRef}
               mode="verify"
               title="Enter Your Current PIN"
               subtitle="Confirm your current PIN before setting a new one."
@@ -1853,6 +1861,7 @@ export default function SettingsScreen() {
             />
           ) : (
             <PinEntryScreen
+              ref={changePinSetupRef}
               mode="setup"
               title="Enter Your New PIN"
               subtitle="Choose a new 4-digit PIN for Vocolens."
