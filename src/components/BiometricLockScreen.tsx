@@ -60,7 +60,6 @@ import {
 import { EmotionalCompanion } from '@/components/EmotionalCompanion';
 import { BiometricUnlockCelebration } from '@/components/BiometricUnlockCelebration';
 import { PinEntryScreen } from '@/components/PinEntryScreen';
-import { PinSetupScreen } from '@/components/PinSetupScreen';
 
 // ─── View states ──────────────────────────────────────────────────────────────
 type LockView =
@@ -451,7 +450,8 @@ export function BiometricLockScreen() {
           )}
 
           {view === 'pin_setup' && pinContext && (
-            <PinSetupScreen
+            <PinEntryScreen
+              mode="setup"
               onComplete={handlePinSetupComplete}
               title={pinContext.title}
               subtitle={pinContext.subtitle}

@@ -48,7 +48,7 @@ import { EmotionalCompanion } from '@/components/EmotionalCompanion';
 import { ProgressBar } from '@/components/onboarding/ProgressBar';
 import { useClickSound } from '@/lib/hooks/useClickSound';
 import { OnboardingCTAButton } from '@/components/onboarding/OnboardingCTAButton';
-import { PinSetupScreen } from '@/components/PinSetupScreen';
+import { PinEntryScreen } from '@/components/PinEntryScreen';
 
 type Phase = 'intro' | 'pin_setup' | 'success';
 
@@ -169,7 +169,8 @@ export function BiometricSetupScreen() {
       : 'Choose a 4-digit PIN. Only you will be able to open Vocolens.';
 
     return (
-      <PinSetupScreen
+      <PinEntryScreen
+        mode="setup"
         onComplete={handlePinSaved}
         title={pinTitle}
         subtitle={pinSubtitle}
