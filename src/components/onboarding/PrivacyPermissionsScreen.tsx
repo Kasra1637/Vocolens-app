@@ -18,7 +18,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { Eye, Database, Lock } from "lucide-react-native";
+import { Eye, Database, Lock, Fingerprint } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -63,21 +63,27 @@ export function PrivacyPermissionsScreen() {
   const privacyFeatures = [
     {
       icon: <Database size={22} color="#FFFFFF" />,
-      title: "Journal data stays on-device",
+      title: "Your data never leaves your device",
       description:
-        "Entries, stats & badges are stored locally. No cloud backup, no account server.",
+        "Every journal entry, mood log, and badge lives exclusively on your phone. No cloud upload, no external servers, no exceptions.",
+    },
+    {
+      icon: <Fingerprint size={22} color="#FFFFFF" />,
+      title: "Biometric lock built in",
+      description:
+        "Protect Vocolens with Face ID or your fingerprint. Biometric credentials are verified by your device's secure enclave — we never see them.",
     },
     {
       icon: <Lock size={22} color="#FFFFFF" />,
-      title: "PIN-protected access",
+      title: "PIN as your safety net",
       description:
-        "Your 4-digit PIN is stored in your device's secure hardware keystore — never in plain text.",
+        "You'll also set a 4-digit PIN during setup. It's stored in your device's hardware keystore and acts as a secure fallback whenever biometrics are unavailable.",
     },
     {
       icon: <Eye size={22} color="#FFFFFF" />,
-      title: "No analytics or tracking",
+      title: "Zero tracking, zero analytics",
       description:
-        "We include zero tracking SDKs. All usage stats are computed locally and never transmitted.",
+        "We ship no advertising or analytics SDKs. Usage stats are computed on-device and never transmitted anywhere.",
     },
   ];
 
@@ -146,7 +152,7 @@ export function PrivacyPermissionsScreen() {
                   fontFamily: "Inter_400Regular",
                 }}
               >
-                How we protect your privacy
+                Your journal is protected by biometrics, a PIN, and nothing else
               </Text>
             </Animated.View>
 
@@ -166,8 +172,12 @@ export function PrivacyPermissionsScreen() {
               {privacyFeatures.map((feature, index) => (
                 <View
                   key={index}
-                  className="flex-row items-center border-b border-white/20"
-                  style={{ paddingVertical: 10 }}
+                  className="flex-row items-center"
+                  style={{
+                    paddingVertical: 10,
+                    borderBottomWidth: index < privacyFeatures.length - 1 ? 1 : 0,
+                    borderBottomColor: "rgba(255,255,255,0.2)",
+                  }}
                 >
                   <View
                     className="w-9 h-9 rounded-xl items-center justify-center mr-3"
