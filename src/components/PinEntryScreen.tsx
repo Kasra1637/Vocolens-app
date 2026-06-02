@@ -59,6 +59,8 @@ interface PinEntryScreenProps {
   title?: string;
   subtitle?: string;
   maxAttempts?: number;
+  /** Extra ms added to the Android focus delay — use when mounted inside a Modal */
+  androidFocusDelay?: number;
 }
 
 export function PinEntryScreen({
@@ -68,6 +70,7 @@ export function PinEntryScreen({
   title,
   subtitle,
   maxAttempts = 5,
+  androidFocusDelay = 0,
 }: PinEntryScreenProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors   = THEME_COLORS[selectedTheme];
@@ -110,10 +113,10 @@ export function PinEntryScreen({
   const focusInput = useCallback(() => {
     if (isLocked || busy || matched) return;
     InteractionManager.runAfterInteractions(() => {
-      const delay = Platform.OS === 'android' ? 150 : 50;
+      const delay = Platform.OS === 'android' ? 150 + androidFocusDelay : 50;
       setTimeout(() => inputRef.current?.focus(), delay);
     });
-  }, [isLocked, busy, matched]);
+  }, [isLocked, busy, matched, androidFocusDelay]);
 
   // Focus on mount and whenever the setup phase changes
   useEffect(() => {

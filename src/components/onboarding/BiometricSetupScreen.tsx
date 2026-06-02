@@ -29,13 +29,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
   Easing,
 } from 'react-native-reanimated';
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
-import { Fingerprint, ShieldCheck, Lock, Eye, KeyRound } from 'lucide-react-native';
+import { Fingerprint, Lock, Eye, KeyRound } from 'lucide-react-native';
 import { successHaptic, tapHaptic, errorHaptic } from '@/lib/haptics';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
@@ -50,7 +47,7 @@ import { useClickSound } from '@/lib/hooks/useClickSound';
 import { OnboardingCTAButton } from '@/components/onboarding/OnboardingCTAButton';
 import { PinEntryScreen } from '@/components/PinEntryScreen';
 
-type Phase = 'intro' | 'pin_setup' | 'success';
+type Phase = 'intro' | 'pin_setup';
 
 // Privacy points shown when biometric IS available
 const BIOMETRIC_POINTS = [
@@ -83,12 +80,6 @@ export function BiometricSetupScreen() {
   const [checking,      setChecking]     = useState(true);
   const [busy,          setBusy]         = useState(false);
   const [authError,     setAuthError]    = useState('');
-
-  const successScale = useSharedValue(0);
-  const successStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: successScale.value }],
-    opacity: successScale.value,
-  }));
 
   useEffect(() => {
     (async () => {
@@ -143,14 +134,13 @@ export function BiometricSetupScreen() {
     }
   }, [busy, checking, biometricAvailable, enableBiometric, playClickSound]);
 
-  // ── Called by PinSetupScreen once PIN is saved ────────────────────────────
+  // ── Called by PinEntryScreen once PIN is saved ───────────────────────────
   const handlePinSaved = useCallback(() => {
-    // Mark PIN as enabled in the store regardless of whether biometric is on
+    // Mark PIN as enabled in the store and finish onboarding immediately —
+    // no intermediate "You're all set!" screen.
     enablePin();
-    setPhase('success');
-    successScale.value = withSpring(1, { damping: 12, stiffness: 200 });
     finishOnboarding();
-  }, [enablePin, finishOnboarding, successScale]);
+  }, [enablePin, finishOnboarding]);
 
   // ─── Render ────────────────────────────────────────────────────────────────
   if (phase === 'pin_setup') {
@@ -172,19 +162,13 @@ export function BiometricSetupScreen() {
   }
 
   // ── Derive display strings ─────────────────────────────────────────────────
-  const screenTitle = phase === 'success'
-    ? "You're all set!"
-    : biometricAvailable
-      ? 'Protect your journal'
-      : 'Secure your journal';
+  const screenTitle = biometricAvailable
+    ? 'Protect your journal'
+    : 'Secure your journal';
 
-  const screenSubtitle = phase === 'success'
-    ? biometricAvailable
-        ? `${biometricName} lock is on. You also have a PIN fallback. Only you can get in.`
-        : 'Your PIN is set. Only you can open Vocolens.'
-    : biometricAvailable
-        ? `Use ${biometricName} so only you can open Vocolens. We'll also set a backup PIN.`
-        : 'Your device doesn\'t have biometrics. Set a 4-digit PIN to keep your journal private.';
+  const screenSubtitle = biometricAvailable
+    ? `Use ${biometricName} so only you can open Vocolens. We'll also set a backup PIN.`
+    : 'Your device doesn\'t have biometrics. Set a 4-digit PIN to keep your journal private.';
 
   const ctaLabel = checking
     ? 'Checking…'
@@ -223,7 +207,7 @@ export function BiometricSetupScreen() {
               style={{ alignItems: 'center', gap: 16 }}
             >
               <EmotionalCompanion
-                state={phase === 'success' ? 'success' : 'processing'}
+                state="processing"
                 size={80}
                 themeColor={selectedTheme === 'darkMode' ? '#9370DB' : themeColors.primary}
               />
@@ -256,117 +240,93 @@ export function BiometricSetupScreen() {
               </View>
             </Animated.View>
 
-            {/* Middle: icon badge or success check */}
+            {/* Middle: icon badge + privacy reassurance points */}
             <Animated.View
               entering={FadeIn.delay(100).duration(500).easing(SOFT)}
               style={{ alignItems: 'center', gap: 24, width: '100%' }}
             >
-              {phase === 'success' ? (
-                <Animated.View
-                  style={[
-                    {
-                      width: 96,
-                      height: 96,
-                      borderRadius: 48,
-                      backgroundColor: 'rgba(255,255,255,0.18)',
-                      borderWidth: 2.5,
-                      borderColor: 'rgba(255,255,255,0.7)',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    },
-                    successStyle,
-                  ]}
-                >
-                  <ShieldCheck size={48} color="#FFFFFF" strokeWidth={2} />
-                </Animated.View>
-              ) : (
-                <>
-                  {/* Icon — fingerprint when available, keypad when PIN-only */}
-                  <View
-                    style={{
-                      width: 110,
-                      height: 110,
-                      borderRadius: 55,
-                      backgroundColor: 'rgba(255,255,255,0.10)',
-                      borderWidth: 1.5,
-                      borderColor: 'rgba(255,255,255,0.25)',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {biometricAvailable
-                      ? <Fingerprint size={56} color="#FFFFFF" strokeWidth={1.6} />
-                      : <KeyRound    size={52} color="#FFFFFF" strokeWidth={1.6} />
-                    }
-                  </View>
+              {/* Icon — fingerprint when available, key when PIN-only */}
+              <View
+                style={{
+                  width: 110,
+                  height: 110,
+                  borderRadius: 55,
+                  backgroundColor: 'rgba(255,255,255,0.10)',
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(255,255,255,0.25)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {biometricAvailable
+                  ? <Fingerprint size={56} color="#FFFFFF" strokeWidth={1.6} />
+                  : <KeyRound    size={52} color="#FFFFFF" strokeWidth={1.6} />
+                }
+              </View>
 
-                  {/* Privacy reassurance points */}
-                  <View style={{ gap: 12, width: '100%', maxWidth: 340 }}>
-                    {privacyPoints.map((p, i) => {
-                      const Icon = p.icon;
-                      return (
-                        <View
-                          key={i}
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
-                        >
-                          <View
-                            style={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 10,
-                              backgroundColor: 'rgba(255,255,255,0.15)',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Icon size={18} color="#FFFFFF" strokeWidth={2} />
-                          </View>
-                          <Text
-                            style={{
-                              flex: 1,
-                              fontFamily: 'Inter_400Regular',
-                              fontSize: 14,
-                              color: 'rgba(255,255,255,0.85)',
-                              lineHeight: 19,
-                            }}
-                          >
-                            {p.text}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </>
-              )}
+              {/* Privacy reassurance points */}
+              <View style={{ gap: 12, width: '100%', maxWidth: 340 }}>
+                {privacyPoints.map((p, i) => {
+                  const Icon = p.icon;
+                  return (
+                    <View
+                      key={i}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+                    >
+                      <View
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          backgroundColor: 'rgba(255,255,255,0.15)',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Icon size={18} color="#FFFFFF" strokeWidth={2} />
+                      </View>
+                      <Text
+                        style={{
+                          flex: 1,
+                          fontFamily: 'Inter_400Regular',
+                          fontSize: 14,
+                          color: 'rgba(255,255,255,0.85)',
+                          lineHeight: 19,
+                        }}
+                      >
+                        {p.text}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
             </Animated.View>
 
-            {/* Bottom: CTAs */}
-            {phase !== 'success' && (
-              <Animated.View
-                entering={FadeIn.delay(160).duration(500).easing(SOFT)}
-                style={{ width: '100%', gap: 12 }}
-              >
-                {authError ? (
-                  <Text
-                    style={{
-                      fontFamily: 'Inter_500Medium',
-                      fontSize: 13,
-                      color: 'rgba(255,180,180,0.95)',
-                      textAlign: 'center',
-                      marginBottom: 4,
-                    }}
-                  >
-                    {authError}
-                  </Text>
-                ) : null}
+            {/* Bottom: CTA */}
+            <Animated.View
+              entering={FadeIn.delay(160).duration(500).easing(SOFT)}
+              style={{ width: '100%', gap: 12 }}
+            >
+              {authError ? (
+                <Text
+                  style={{
+                    fontFamily: 'Inter_500Medium',
+                    fontSize: 13,
+                    color: 'rgba(255,180,180,0.95)',
+                    textAlign: 'center',
+                    marginBottom: 4,
+                  }}
+                >
+                  {authError}
+                </Text>
+              ) : null}
 
-                <OnboardingCTAButton
-                  label={ctaLabel}
-                  onPress={handlePrimaryCTA}
-                  disabled={busy || checking}
-                />
-              </Animated.View>
-            )}
+              <OnboardingCTAButton
+                label={ctaLabel}
+                onPress={handlePrimaryCTA}
+                disabled={busy || checking}
+              />
+            </Animated.View>
           </View>
         </SafeAreaView>
       </LinearGradient>

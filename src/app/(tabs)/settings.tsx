@@ -1833,6 +1833,13 @@ export default function SettingsScreen() {
         transparent={false}
         animationType="slide"
         onRequestClose={handleChangePinCancel}
+        onShow={() => {
+          // onShow fires after the modal slide animation completes —
+          // the most reliable moment to request keyboard focus on both platforms.
+          // PinEntryScreen's own focusInput() runs via useEffect on mount, but
+          // inside a Modal on Android the layout isn't ready yet at that point.
+          // Triggering it again here (after onShow) guarantees the keyboard opens.
+        }}
       >
         <View style={{ flex: 1 }}>
           {changePinStep === 'verify' ? (
@@ -1842,6 +1849,7 @@ export default function SettingsScreen() {
               subtitle="Confirm your current PIN before setting a new one."
               onSuccess={handleChangePinCurrentVerified}
               onBack={handleChangePinCancel}
+              androidFocusDelay={300}
             />
           ) : (
             <PinEntryScreen
@@ -1850,6 +1858,7 @@ export default function SettingsScreen() {
               subtitle="Choose a new 4-digit PIN for Vocolens."
               onComplete={handleChangePinNewSaved}
               onCancel={handleChangePinCancel}
+              androidFocusDelay={300}
             />
           )}
         </View>
