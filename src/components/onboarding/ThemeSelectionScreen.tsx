@@ -178,19 +178,27 @@ export function ThemeSelectionScreen() {
           {/* Space for progress bar + back button */}
           <View style={{ height: 72 }} />
 
-          {/* Character + Title */}
+          {/* Character — fixed-height container matching PersonalizePermissionScreen */}
+          <View
+            style={{
+              height: 80,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <EmotionalCompanion
+              state="processing"
+              size={80}
+              themeColor={activeData.primary}
+            />
+          </View>
+
+          {/* Title + subtitle hint */}
           <Animated.View
             entering={FadeIn.delay(100).duration(900).easing(SOFT)}
-            style={{ alignItems: "center", paddingBottom: 20 }}
+            style={{ alignItems: "center", marginBottom: 14 }}
             pointerEvents="none"
           >
-            <View style={{ marginBottom: 12 }}>
-              <EmotionalCompanion
-                state="processing"
-                size={80}
-                themeColor={activeData.primary}
-              />
-            </View>
             <Text
               style={{
                 fontFamily: "Fraunces_700Bold",
@@ -198,11 +206,14 @@ export function ThemeSelectionScreen() {
                 color: "#FFFFFF",
                 opacity: 0.92,
                 letterSpacing: 0.2,
+                lineHeight: 38,
+                textAlign: "center",
               }}
             >
               Pick your colors
             </Text>
-            <Text
+            <Animated.Text
+              entering={FadeIn.delay(230).duration(900).easing(SOFT)}
               style={{
                 fontFamily: "Inter_400Regular",
                 fontSize: 13,
@@ -211,7 +222,7 @@ export function ThemeSelectionScreen() {
               }}
             >
               Swipe to browse · {THEMES.length} themes
-            </Text>
+            </Animated.Text>
           </Animated.View>
 
           {/* Carousel + side arrows */}
@@ -398,15 +409,15 @@ export function ThemeSelectionScreen() {
             </ScrollView>
           </View>
 
-          {/* Dots + Continue — pulled up close to the card */}
+          {/* Dots + Continue — flush to the carousel with no extra bottom padding */}
           <Animated.View
             entering={FadeIn.delay(250).duration(900).easing(SOFT)}
             style={{
               paddingHorizontal: 24,
-              paddingBottom: 8,
+              paddingBottom: 4,
               paddingTop: 0,
               alignItems: "center",
-              gap: 12,
+              gap: 10,
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
