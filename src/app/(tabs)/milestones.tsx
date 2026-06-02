@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -52,6 +52,7 @@ import {
   Library,
 } from "lucide-react-native";
 import Animated, {
+  FadeIn,
   FadeOut,
   useAnimatedStyle,
   useSharedValue,
@@ -59,9 +60,14 @@ import Animated, {
   withSequence,
   withTiming,
   withRepeat,
+  Easing,
 } from "react-native-reanimated";
+
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
+const ENTER_1 = FadeIn.duration(900).delay(100).easing(SOFT);
+const ENTER_2 = FadeIn.duration(900).delay(250).easing(SOFT);
 import { tapHaptic, selectHaptic, successHaptic } from "@/lib/haptics";
-import { router } from "expo-router";
+import { router, useIsFocused } from "expo-router";
 import {
   Colors as StaticColors,
   Gradients as StaticGradients,
@@ -154,6 +160,8 @@ const CATEGORY_OPTIONS: {
 
 export default function MilestonesScreen() {
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
+  const [animationKey, setAnimationKey] = useState(0);
   const [selectedCategory, setSelectedCategory] =
     useState<FilterCategory>("all");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -175,6 +183,11 @@ export default function MilestonesScreen() {
   const unlockedCount = useBadgesStore((s) => s.unlockedCount);
   const referralCode = useBadgesStore((s) => s.referralCode);
   const stats = useUserStatsStore((s) => s.stats);
+
+  // Replay entrance animations every time this tab gains focus
+  useEffect(() => {
+    if (isFocused) setAnimationKey((k) => k + 1);
+  }, [isFocused]);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -254,6 +267,7 @@ export default function MilestonesScreen() {
       />
 
       <ScrollView
+        key={`milestones-${animationKey}`}
         className="flex-1"
         contentContainerStyle={{
           paddingTop: insets.top + 20,
@@ -263,7 +277,7 @@ export default function MilestonesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View className="mb-6">
+        <Animated.View entering={ENTER_1} className="mb-6">
           <View className="flex-row items-center justify-center mb-6">
             <View className="items-center">
               <Text
@@ -287,12 +301,12 @@ export default function MilestonesScreen() {
               </Text>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Stats Overview */}
-        <View>
+        <Animated.View entering={ENTER_2}>
           <StatsOverview stats={userStats} isDarkMode={isDarkMode} />
-        </View>
+        </Animated.View>
 
         {/* Category Dropdown */}
         <View className="mb-4">

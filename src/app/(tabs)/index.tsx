@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Text, Pressable, Dimensions, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useIsFocused } from "expo-router";
 import {
   useFonts,
   Inter_400Regular,
@@ -157,6 +158,8 @@ const PROMPTS = [
 
 export default function SpeakScreen() {
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
+  const [animationKey, setAnimationKey] = useState(0);
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [currentPrompt, setCurrentPrompt] = useState(PROMPTS[0]);
   const [duration, setDuration] = useState(0);
@@ -246,6 +249,11 @@ export default function SpeakScreen() {
       );
     }
   }, [recordingState]);
+
+  // Replay entrance animations every time this tab gains focus
+  useEffect(() => {
+    if (isFocused) setAnimationKey((k) => k + 1);
+  }, [isFocused]);
 
   // Duration timer
   useEffect(() => {
@@ -584,6 +592,7 @@ export default function SpeakScreen() {
       />
 
       <View
+        key={`speak-${animationKey}`}
         className="flex-1 items-center"
         style={{
           paddingTop: insets.top + 20,

@@ -3,7 +3,7 @@
  * Customizable settings menu for theme, notifications, dark mode, PIN, time, and sign out
  */
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -60,7 +60,7 @@ import {
   successHaptic,
   errorHaptic,
 } from "@/lib/haptics";
-import { router } from "expo-router";
+import { router, useIsFocused } from "expo-router";
 import useOnboardingStore, {
   ThemeColorType,
   THEME_COLORS,
@@ -102,6 +102,8 @@ import { PinEntryScreen, type PinEntryScreenHandle } from "@/components/PinEntry
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
+  const [animationKey, setAnimationKey] = useState(0);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertType, setAlertType] = useState<"success" | "error">("success");
@@ -163,6 +165,11 @@ export default function SettingsScreen() {
   const Colors = getThemeColors(selectedTheme, isDarkMode);
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
+
+  // Replay entrance animations every time this tab gains focus
+  useEffect(() => {
+    if (isFocused) setAnimationKey((k) => k + 1);
+  }, [isFocused]);
 
   // Glassmorphic style — exact match to onboarding selection cards (white opacity, theme-adaptive)
   const surfaceBg = "rgba(255, 255, 255, 0.12)";
@@ -427,6 +434,7 @@ export default function SettingsScreen() {
 
           {/* Settings Content */}
           <ScrollView
+            key={`settings-${animationKey}`}
             className="flex-1 px-6"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}

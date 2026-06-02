@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useIsFocused } from "expo-router";
 import {
   useFonts,
   Inter_400Regular,
@@ -109,6 +109,8 @@ const fromDisplayEmotion = (emotion: DisplayEmotion): EmotionType => {
 export default function EntriesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isFocused = useIsFocused();
+  const [animationKey, setAnimationKey] = useState(0);
   const playClickSound = useClickSound();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSort, setSelectedSort] = useState<SortOption>("Newest First");
@@ -130,6 +132,11 @@ export default function EntriesScreen() {
   // Get entries from store
   const entries = useJournalStore((s) => s.entries);
   const deleteEntryMutation = useDeleteEntry();
+
+  // Replay entrance animations every time this tab gains focus
+  useEffect(() => {
+    if (isFocused) setAnimationKey((k) => k + 1);
+  }, [isFocused]);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -238,6 +245,7 @@ export default function EntriesScreen() {
         end={{ x: 0, y: 1 }}
       />
       <ScrollView
+        key={`entries-${animationKey}`}
         className="flex-1"
         contentContainerStyle={{
           paddingTop: insets.top + 16,
