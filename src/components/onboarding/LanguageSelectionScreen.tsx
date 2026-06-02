@@ -201,7 +201,7 @@ export function LanguageSelectionScreen() {
               textAlign: "center",
             }}
           >
-            Used for all voice recordings
+            Select from {LANGUAGES.length} languages to use for your voice journaling
           </Animated.Text>
         </View>
 
