@@ -36,12 +36,10 @@ import { useClickSound } from "@/lib/hooks/useClickSound";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const THEMES = Object.keys(THEME_COLORS) as ThemeColorType[];
 
-// Card layout — one card fully visible with a peek of the next
+// Card layout — each page is exactly SCREEN_WIDTH so pagingEnabled
+// locks to exactly one card per swipe, no matter how fast the user swipes.
 const H_PAD = 24;
-const CARD_GAP = 14;
-const PEEK = 48;
-const CARD_WIDTH = SCREEN_WIDTH - H_PAD * 2 - PEEK;
-const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
+const CARD_WIDTH = SCREEN_WIDTH - H_PAD * 2;
 
 // Orb dimensions
 const ORB = 100;
@@ -64,16 +62,16 @@ export function ThemeSelectionScreen() {
     if (initialIndex > 0) {
       setTimeout(() => {
         scrollRef.current?.scrollTo({
-          x: initialIndex * SNAP_INTERVAL,
+          x: initialIndex * SCREEN_WIDTH,
           animated: false,
         });
       }, 50);
     }
   }, []);
 
-  const handleMomentumScrollEnd = useCallback(
+  const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const raw = e.nativeEvent.contentOffset.x / SNAP_INTERVAL;
+      const raw = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
       const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
       if (clamped !== activeIndex) {
         setActiveIndex(clamped);
@@ -161,16 +159,15 @@ export function ThemeSelectionScreen() {
               ref={scrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
-              snapToInterval={SNAP_INTERVAL}
+              pagingEnabled
               decelerationRate="fast"
-              onMomentumScrollEnd={handleMomentumScrollEnd}
+              onMomentumScrollEnd={handleScroll}
               scrollEventThrottle={16}
               contentContainerStyle={{
                 paddingLeft: H_PAD,
-                paddingRight: PEEK,
-                gap: CARD_GAP,
+                paddingRight: H_PAD,
               }}
-              style={{ flexGrow: 0 }}
+              style={{ flexGrow: 0, width: SCREEN_WIDTH }}
             >
               {THEMES.map((theme, i) => {
                 const data = THEME_COLORS[theme];
@@ -182,7 +179,7 @@ export function ThemeSelectionScreen() {
                     onPress={() => {
                       if (!isActive) {
                         scrollRef.current?.scrollTo({
-                          x: i * SNAP_INTERVAL,
+                          x: i * SCREEN_WIDTH,
                           animated: true,
                         });
                         setActiveIndex(i);
