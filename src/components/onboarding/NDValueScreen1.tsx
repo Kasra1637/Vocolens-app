@@ -136,7 +136,7 @@ export function NDValueScreen1() {
                     entering={FadeIn.duration(700).delay(280 + index * 90).easing(SOFT)}
                     style={{
                       flexDirection: "row",
-                      alignItems: "flex-start",
+                      alignItems: "center",
                       backgroundColor: "rgba(255,255,255,0.10)",
                       borderWidth: 1.5,
                       borderColor: "rgba(255,255,255,0.18)",
