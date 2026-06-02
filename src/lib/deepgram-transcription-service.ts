@@ -70,6 +70,13 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
     process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
     undefined;
 
+  // Guard early — before any file I/O — so the error is clear and immediate.
+  if (!apiKey || apiKey === 'undefined' || apiKey === 'null' || apiKey === 'your_deepgram_api_key_here') {
+    throw new Error(
+      'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your .env file and restart Metro.'
+    );
+  }
+
   try {
     console.log('[Deepgram] Transcribing audio file:', audioUri);
     console.log('[Deepgram] Platform:', Platform.OS);
@@ -129,10 +136,6 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
     url.searchParams.append('punctuate', 'true');
     url.searchParams.append('smart_format', 'true');
     url.searchParams.append('diarize', 'false');
-
-    if (!apiKey) {
-      throw new Error('Deepgram API key is not configured. Set EXPO_PUBLIC_DEEPGRAM_API_KEY.');
-    }
 
     console.log('[Deepgram] Sending request to:', url.toString());
 

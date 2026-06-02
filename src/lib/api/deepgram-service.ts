@@ -100,6 +100,15 @@ export async function transcribeAudio(
       ...options,
     };
 
+    const DEEPGRAM_API_KEY = getDeepgramApiKey();
+
+    // Guard early — before any file I/O — so the error is clear and immediate.
+    if (!DEEPGRAM_API_KEY || DEEPGRAM_API_KEY === 'undefined' || DEEPGRAM_API_KEY === 'null' || DEEPGRAM_API_KEY === 'your_deepgram_api_key_here') {
+      throw new Error(
+        'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your .env file and restart Metro.'
+      );
+    }
+
     // Read the audio file as base64
     const audioBase64 = await FileSystem.readAsStringAsync(audioUri, {
       encoding: FileSystem.EncodingType.Base64,
