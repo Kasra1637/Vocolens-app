@@ -171,15 +171,15 @@ const styles = StyleSheet.create({
 export default function TabLayout() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
 
-  // The darkest stop of the background gradient — used as the scene container
-  // background so there is never a white flash between tab switches.
-  const sceneBg = THEME_COLORS[selectedTheme].backgroundGradient[2];
-
   const TabBarComponent = React.useMemo(() => {
     const Bar = (props: BottomTabBarProps) => <CustomTabBar {...props} />;
     Bar.displayName = "CustomTabBar";
     return Bar;
   }, []);
+
+  // Re-read on every render so sceneContainerStyle stays in sync when
+  // the user changes their theme — never reads a stale cached colour.
+  const sceneBg = THEME_COLORS[selectedTheme].backgroundGradient[2];
 
   return (
     <Tabs
@@ -187,10 +187,16 @@ export default function TabLayout() {
       initialRouteName="insights"
       screenOptions={{
         headerShown: useClientOnlyValue(false, false),
-        // Paint the native container behind every tab screen with the theme
-        // dark colour. This eliminates the white frame that briefly shows
-        // when a tab is first rendered before its own LinearGradient paints.
+        // Matches the darkest gradient stop so the native container never
+        // shows a colour that differs from the screen's own LinearGradient.
         sceneContainerStyle: { backgroundColor: sceneBg },
+        // Disable the navigator's own crossfade — we run our own per-screen
+        // entrance animations. The built-in animation adds an overlap frame
+        // that is the primary source of the remaining blank flash.
+        animation: "none",
+        // Pre-render all tab screens so switching is instant with no
+        // first-mount cost.
+        lazy: false,
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Record" }} />

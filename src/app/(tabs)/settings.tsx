@@ -415,7 +415,7 @@ export default function SettingsScreen() {
       >
         <SafeAreaView className="flex-1">
           {/* Header */}
-          <Animated.View entering={ENTER_1} className="px-6 pt-4 pb-6">
+          <Animated.View key={`s-hdr-${animationKey}`} entering={ENTER_1} className="px-6 pt-4 pb-6">
             <View>
               <Text
                 className="text-white font-bold mb-2 text-center"
@@ -434,13 +434,12 @@ export default function SettingsScreen() {
 
           {/* Settings Content */}
           <ScrollView
-            key={`settings-${animationKey}`}
             className="flex-1 px-6"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
           >
             {/* ── Subscription ── */}
-            <Animated.View entering={ENTER_2} className="mb-6">
+            <Animated.View key={`s-sub-${animationKey}`} entering={ENTER_2} className="mb-6">
               <Pressable
                 onPress={handleManageSubscription}
                 className="active:opacity-75"
@@ -611,7 +610,7 @@ export default function SettingsScreen() {
             </Animated.View>
 
             {/* Usage Limit Card */}
-            <Animated.View entering={ENTER_2} className="mb-6">
+            <Animated.View key={`s-usg-${animationKey}`} entering={ENTER_2} className="mb-6">
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
@@ -724,7 +723,7 @@ export default function SettingsScreen() {
             </Animated.View>
 
             {/* Theme Customization */}
-            <Animated.View entering={ENTER_3} className="mb-6">
+            <Animated.View key={`s-thm-${animationKey}`} entering={ENTER_3} className="mb-6">
               <View
                 className="rounded-3xl"
                 style={{
@@ -882,7 +881,7 @@ export default function SettingsScreen() {
             </Animated.View>
 
             {/* Notifications */}
-            <Animated.View entering={ENTER_4} className="mb-6">
+            <Animated.View key={`s-ntf-${animationKey}`} entering={ENTER_4} className="mb-6">
               <View
                 className="rounded-3xl"
                 style={{
@@ -944,7 +943,7 @@ export default function SettingsScreen() {
             </Animated.View>
 
             {/* Emotion Reflection */}
-            <Animated.View entering={ENTER_5} className="mb-6">
+            <Animated.View key={`s-emo-${animationKey}`} entering={ENTER_5} className="mb-6">
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{
@@ -1111,7 +1110,7 @@ export default function SettingsScreen() {
 
             {/* Transcription Language */}
             {/* Transcription Language */}
-            <Animated.View entering={ENTER_5} className="mb-6">
+            <Animated.View key={`s-lng-${animationKey}`} entering={ENTER_5} className="mb-6">
               <Pressable
                 onPress={() => {
                   tapHaptic();
@@ -1173,7 +1172,7 @@ export default function SettingsScreen() {
             </Animated.View>
 
             {/* Privacy & Security */}
-            <Animated.View entering={ENTER_6} className="mb-6">
+            <Animated.View key={`s-prv-${animationKey}`} entering={ENTER_6} className="mb-6">
               <View
                 className="rounded-3xl overflow-hidden"
                 style={{

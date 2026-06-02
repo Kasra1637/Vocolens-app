@@ -245,7 +245,6 @@ export default function EntriesScreen() {
         end={{ x: 0, y: 1 }}
       />
       <ScrollView
-        key={`entries-${animationKey}`}
         className="flex-1"
         contentContainerStyle={{
           paddingTop: insets.top + 16,
@@ -255,7 +254,7 @@ export default function EntriesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Animated.View entering={ENTER_1} className="mb-6">
+        <Animated.View key={`entries-hdr-${animationKey}`} entering={ENTER_1} className="mb-6">
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
@@ -298,7 +297,7 @@ export default function EntriesScreen() {
         </Animated.View>
 
         {/* Filter & Search Section */}
-        <Animated.View entering={ENTER_2}>
+        <Animated.View key={`entries-flt-${animationKey}`} entering={ENTER_2}>
           <View
             className="rounded-3xl overflow-hidden mb-6"
             style={{
@@ -509,7 +508,7 @@ export default function EntriesScreen() {
         </Animated.View>
 
         {/* Entry Cards */}
-        <Animated.View entering={ENTER_3}>
+        <Animated.View key={`entries-lst-${animationKey}`} entering={ENTER_3}>
         {filteredEntries.map((entry, index) => (
           <View key={entry.id}>
             <EntryCard

@@ -267,7 +267,6 @@ export default function MilestonesScreen() {
       />
 
       <ScrollView
-        key={`milestones-${animationKey}`}
         className="flex-1"
         contentContainerStyle={{
           paddingTop: insets.top + 20,
@@ -277,7 +276,7 @@ export default function MilestonesScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Animated.View entering={ENTER_1} className="mb-6">
+        <Animated.View key={`m-hdr-${animationKey}`} entering={ENTER_1} className="mb-6">
           <View className="flex-row items-center justify-center mb-6">
             <View className="items-center">
               <Text
@@ -304,7 +303,7 @@ export default function MilestonesScreen() {
         </Animated.View>
 
         {/* Stats Overview */}
-        <Animated.View entering={ENTER_2}>
+        <Animated.View key={`m-sts-${animationKey}`} entering={ENTER_2}>
           <StatsOverview stats={userStats} isDarkMode={isDarkMode} />
         </Animated.View>
 

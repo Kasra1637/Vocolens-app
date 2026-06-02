@@ -592,7 +592,6 @@ export default function SpeakScreen() {
       />
 
       <View
-        key={`speak-${animationKey}`}
         className="flex-1 items-center"
         style={{
           paddingTop: insets.top + 20,
@@ -602,7 +601,7 @@ export default function SpeakScreen() {
         }}
       >
         {/* Header */}
-        <Animated.View entering={ENTER_1} className="items-center">
+        <Animated.View key={`r-hdr-${animationKey}`} entering={ENTER_1} className="items-center">
           <Text
             style={{
               fontFamily: "Fraunces_700Bold",
