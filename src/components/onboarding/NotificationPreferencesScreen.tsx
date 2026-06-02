@@ -84,9 +84,6 @@ function WheelColumn({ items, selectedIndex, onSelect, primaryColor, width }: Wh
     [items.length, onSelect],
   );
 
-  // FADE_H: how tall the gradient fade zones are at top and bottom
-  const FADE_H = ITEM_H * 1.5;
-
   return (
     <View style={{ width, height: WHEEL_H, overflow: "hidden" }}>
       {/* Selection highlight band behind the centre row */}
@@ -149,37 +146,6 @@ function WheelColumn({ items, selectedIndex, onSelect, primaryColor, width }: Wh
         })}
       </ScrollView>
 
-      {/* Top fade — items dissolve into the background rather than hard-clip */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={["rgba(0,0,0,0.72)", "transparent"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: FADE_H,
-          zIndex: 2,
-        }}
-      />
-
-      {/* Bottom fade */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={["transparent", "rgba(0,0,0,0.72)"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: FADE_H,
-          zIndex: 2,
-        }}
-      />
     </View>
   );
 }
