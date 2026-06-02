@@ -7,7 +7,7 @@
  * - Connects to NotificationService.scheduleWeeklyNotifications()
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -16,18 +16,226 @@ import {
   ScrollView,
   Alert,
   Modal,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import { Clock, Bell, BellOff } from "lucide-react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+// DateTimePicker removed — replaced by custom TimeWheelPicker below
 import useOnboardingStore, {
   THEME_COLORS,
   DayOfWeek,
 } from "@/lib/state/onboarding-store";
+
+const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
+
+// ─── Custom branded scroll-wheel time picker ──────────────────────────────────
+// Renders three snap-scrolling columns: Hour · Minute · AM/PM.
+// Fully styled from the caller-supplied primaryColor — no native OS picker used.
+
+const ITEM_H = 52;   // height of each wheel row
+const VISIBLE = 5;   // odd number so the centre cell is the selected one
+const WHEEL_H = ITEM_H * VISIBLE;
+const PAD     = ITEM_H * Math.floor(VISIBLE / 2); // top/bottom padding
+
+const HOURS   = Array.from({ length: 12 },  (_, i) => String(i + 1).padStart(2, "0"));
+const MINUTES = Array.from({ length: 60 },  (_, i) => String(i).padStart(2, "0"));
+const PERIODS = ["AM", "PM"];
+
+interface WheelColumnProps {
+  items: string[];
+  selectedIndex: number;
+  onSelect: (index: number) => void;
+  primaryColor: string;
+  width: number;
+}
+
+function WheelColumn({ items, selectedIndex, onSelect, primaryColor, width }: WheelColumnProps) {
+  const scrollRef = useRef<ScrollView>(null);
+  const isScrolling = useRef(false);
+
+  // Scroll to the selected item whenever it changes externally
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: selectedIndex * ITEM_H, animated: false });
+  }, [selectedIndex]);
+
+  const handleMomentumEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const idx = Math.round(e.nativeEvent.contentOffset.y / ITEM_H);
+      const clamped = Math.max(0, Math.min(items.length - 1, idx));
+      onSelect(clamped);
+      isScrolling.current = false;
+    },
+    [items.length, onSelect],
+  );
+
+  const handleScrollBegin = useCallback(() => {
+    isScrolling.current = true;
+  }, []);
+
+  return (
+    <View style={{ width, height: WHEEL_H, overflow: "hidden" }}>
+      {/* Highlight band behind the centre row */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: PAD,
+          left: 4,
+          right: 4,
+          height: ITEM_H,
+          borderRadius: 14,
+          backgroundColor: primaryColor + "30",
+          borderWidth: 1.5,
+          borderColor: primaryColor + "70",
+          zIndex: 1,
+        }}
+      />
+      <ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        snapToInterval={ITEM_H}
+        decelerationRate="fast"
+        contentContainerStyle={{ paddingTop: PAD, paddingBottom: PAD }}
+        onScrollBeginDrag={handleScrollBegin}
+        onMomentumScrollEnd={handleMomentumEnd}
+        scrollEventThrottle={16}
+        bounces={false}
+      >
+        {items.map((label, i) => {
+          const isSelected = i === selectedIndex;
+          return (
+            <Pressable
+              key={label + i}
+              onPress={() => {
+                onSelect(i);
+                scrollRef.current?.scrollTo({ y: i * ITEM_H, animated: true });
+              }}
+              style={{
+                height: ITEM_H,
+                width,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: isSelected ? "Inter_700Bold" : "Inter_400Regular",
+                  fontSize: isSelected ? 28 : 20,
+                  color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.30)",
+                  letterSpacing: isSelected ? 0.5 : 0,
+                }}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      {/* Top fade */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: PAD,
+          zIndex: 2,
+          // gradient overlay simulated with opacity layer
+          backgroundColor: "transparent",
+        }}
+      />
+    </View>
+  );
+}
+
+interface TimeWheelPickerProps {
+  value: Date;
+  onChange: (date: Date) => void;
+  primaryColor: string;
+}
+
+function TimeWheelPicker({ value, onChange, primaryColor }: TimeWheelPickerProps) {
+  const rawHour   = value.getHours();
+  const period    = rawHour >= 12 ? 1 : 0;                  // 0=AM 1=PM
+  const hour12    = rawHour % 12 === 0 ? 12 : rawHour % 12; // 1-12
+  const hourIdx   = hour12 - 1;                             // 0-11
+  const minuteIdx = value.getMinutes();                     // 0-59
+
+  const emit = useCallback(
+    (hIdx: number, mIdx: number, pIdx: number) => {
+      const h12    = hIdx + 1;
+      const hour24 = pIdx === 1
+        ? h12 === 12 ? 12 : h12 + 12
+        : h12 === 12 ? 0  : h12;
+      const d = new Date(value);
+      d.setHours(hour24, mIdx, 0, 0);
+      onChange(d);
+    },
+    [value, onChange],
+  );
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 4,
+      }}
+    >
+      {/* Hours */}
+      <WheelColumn
+        items={HOURS}
+        selectedIndex={hourIdx}
+        onSelect={(i) => emit(i, minuteIdx, period)}
+        primaryColor={primaryColor}
+        width={80}
+      />
+
+      {/* Colon separator */}
+      <Text
+        style={{
+          color: "rgba(255,255,255,0.60)",
+          fontSize: 28,
+          fontFamily: "Inter_700Bold",
+          marginBottom: 4,
+          width: 16,
+          textAlign: "center",
+        }}
+      >
+        :
+      </Text>
+
+      {/* Minutes */}
+      <WheelColumn
+        items={MINUTES}
+        selectedIndex={minuteIdx}
+        onSelect={(i) => emit(hourIdx, i, period)}
+        primaryColor={primaryColor}
+        width={80}
+      />
+
+      {/* Thin divider */}
+      <View style={{ width: 12 }} />
+
+      {/* AM / PM */}
+      <WheelColumn
+        items={PERIODS}
+        selectedIndex={period}
+        onSelect={(i) => emit(hourIdx, minuteIdx, i)}
+        primaryColor={primaryColor}
+        width={64}
+      />
+    </View>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
@@ -592,14 +800,14 @@ export function NotificationPreferencesScreen() {
               style={{
                 borderTopLeftRadius: 32,
                 borderTopRightRadius: 32,
-                paddingTop: 28,
-                paddingBottom: Platform.OS === "ios" ? 40 : 28,
+                paddingTop: 16,
+                paddingBottom: Platform.OS === "ios" ? 44 : 32,
                 paddingHorizontal: 24,
                 borderTopWidth: 1.5,
                 borderColor: "rgba(255,255,255,0.18)",
               }}
             >
-              {/* Handle bar */}
+              {/* Drag handle */}
               <View
                 style={{
                   width: 40,
@@ -607,7 +815,7 @@ export function NotificationPreferencesScreen() {
                   borderRadius: 2,
                   backgroundColor: "rgba(255,255,255,0.35)",
                   alignSelf: "center",
-                  marginBottom: 20,
+                  marginBottom: 24,
                 }}
               />
 
@@ -627,98 +835,74 @@ export function NotificationPreferencesScreen() {
               <Text
                 style={{
                   fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.65)",
+                  color: "rgba(255,255,255,0.60)",
                   fontSize: 13,
                   textAlign: "center",
-                  marginBottom: 20,
+                  marginBottom: 28,
                 }}
               >
-                We'll remind you to journal at this time
+                We'll send your reminder at this time
               </Text>
 
-              {/* Native picker — spinner on iOS, clock on Android */}
-              <View
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  borderRadius: 20,
-                  overflow: "hidden",
-                  marginBottom: 24,
-                }}
-              >
-                <DateTimePicker
-                  value={tempTime}
-                  mode="time"
-                  display={Platform.OS === "ios" ? "spinner" : "clock"}
-                  textColor="#FFFFFF"
-                  themeVariant="dark"
-                  onChange={(_, date) => {
-                    if (date) setTempTime(date);
-                    if (Platform.OS === "android") {
-                      setSelectedTime(date ?? tempTime);
-                      setShowTimePicker(false);
-                    }
-                  }}
-                  style={{
-                    height: Platform.OS === "ios" ? 180 : 100,
-                    width: "100%",
-                  }}
-                />
+              {/* Branded scroll-wheel picker */}
+              <TimeWheelPicker
+                value={tempTime}
+                onChange={setTempTime}
+                primaryColor={themeColors.primary}
+              />
+
+              {/* Action buttons */}
+              <View style={{ flexDirection: "row", gap: 12, marginTop: 32 }}>
+                <Pressable
+                  onPress={handleCancelTime}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    borderRadius: 18,
+                    paddingVertical: 16,
+                    alignItems: "center",
+                    backgroundColor: pressed
+                      ? "rgba(255,255,255,0.18)"
+                      : "rgba(255,255,255,0.10)",
+                    borderWidth: 1.5,
+                    borderColor: "rgba(255,255,255,0.22)",
+                  })}
+                >
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.75)",
+                      fontFamily: "Inter_600SemiBold",
+                      fontSize: 16,
+                    }}
+                  >
+                    Cancel
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={handleConfirmTime}
+                  style={({ pressed }) => ({
+                    flex: 2,
+                    borderRadius: 18,
+                    paddingVertical: 16,
+                    alignItems: "center",
+                    backgroundColor: pressed
+                      ? themeColors.primary + "BB"
+                      : themeColors.primary,
+                    borderWidth: 2,
+                    borderColor: "rgba(255,255,255,0.35)",
+                  })}
+                >
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontFamily: "Inter_700Bold",
+                      fontSize: 16,
+                    }}
+                  >
+                    Set reminder
+                  </Text>
+                </Pressable>
               </View>
-
-              {/* iOS action buttons */}
-              {Platform.OS === "ios" && (
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  <Pressable
-                    onPress={handleCancelTime}
-                    style={({ pressed }) => ({
-                      flex: 1,
-                      borderRadius: 18,
-                      paddingVertical: 15,
-                      alignItems: "center",
-                      backgroundColor: pressed
-                        ? "rgba(255,255,255,0.18)"
-                        : "rgba(255,255,255,0.10)",
-                      borderWidth: 1.5,
-                      borderColor: "rgba(255,255,255,0.25)",
-                    })}
-                  >
-                    <Text
-                      style={{
-                        color: "rgba(255,255,255,0.80)",
-                        fontFamily: "Inter_600SemiBold",
-                        fontSize: 16,
-                      }}
-                    >
-                      Cancel
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={handleConfirmTime}
-                    style={({ pressed }) => ({
-                      flex: 2,
-                      borderRadius: 18,
-                      paddingVertical: 15,
-                      alignItems: "center",
-                      backgroundColor: pressed
-                        ? themeColors.primary + "CC"
-                        : themeColors.primary,
-                      borderWidth: 2,
-                      borderColor: "rgba(255,255,255,0.40)",
-                    })}
-                  >
-                    <Text
-                      style={{
-                        color: "#FFFFFF",
-                        fontFamily: "Inter_700Bold",
-                        fontSize: 16,
-                      }}
-                    >
-                      Set reminder
-                    </Text>
-                  </Pressable>
-                </View>
-              )}
             </LinearGradient>
           </View>
         </Modal>

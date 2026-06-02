@@ -63,27 +63,27 @@ export function PrivacyPermissionsScreen() {
   const privacyFeatures = [
     {
       icon: <Smartphone size={22} color="#FFFFFF" />,
-      title: "Your entries live on your phone",
+      title: "Your entries stay on your phone",
       description:
-        "Voice notes, moods, insights — all on your device, nowhere else. Close the app and your data stays right where you left it.",
+        "Voice notes, moods, insights — all saved here, nowhere else. Your data never touches another server.",
     },
     {
       icon: <Mic size={22} color="#FFFFFF" />,
-      title: "AI listens, then forgets",
+      title: "The AI hears you, then moves on",
       description:
-        "Your words reach the AI just long enough to craft your insight, then they're gone for good. We never store, read, or sell your transcripts.",
+        "Your words reach the AI just long enough to work their magic. After that, they disappear — no trace, nothing left behind.",
     },
     {
       icon: <Lock size={22} color="#FFFFFF" />,
-      title: "Locked to you, and only you",
+      title: "Locked to you alone",
       description:
-        "Face ID, fingerprint, or a 4-digit PIN — your choice. Set one up once and Vocolens stays yours, every single time you open it.",
+        "Face ID, fingerprint, or PIN — you pick. Set it once and Vocolens stays locked to you every time.",
     },
     {
       icon: <ShieldCheck size={22} color="#FFFFFF" />,
-      title: "No ads, no trackers, ever",
+      title: "Just you and your journal",
       description:
-        "We don't profile you, follow you around, or sell a single thing about you. Your journal is not a product.",
+        "Built for people, not advertisers. What you share stays between you and the app, always.",
     },
   ];
 
@@ -152,7 +152,7 @@ export function PrivacyPermissionsScreen() {
                   fontFamily: "Inter_400Regular",
                 }}
               >
-                Your journal, your rules — nothing leaves without you knowing
+                Nothing leaves your phone without you knowing
               </Text>
             </Animated.View>
 
