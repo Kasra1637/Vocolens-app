@@ -179,6 +179,8 @@ interface OnboardingState {
   // Onboarding completion
   hasCompletedOnboarding: boolean;
   hasExistingAccount: boolean;
+  /** True after the first-launch welcome celebration has played — never shown again. */
+  hasSeenWelcomeCelebration: boolean;
 
   // User profile
   userName: string | null;
@@ -202,6 +204,7 @@ interface OnboardingState {
   // Actions
   setHasCompletedOnboarding: (completed: boolean) => void;
   setHasExistingAccount: (existing: boolean) => void;
+  markWelcomeCelebrationSeen: () => void;
   setUserName: (name: string) => void;
   setSelectedTheme: (theme: ThemeColorType) => void;
   setSelectedMood: (mood: MoodType) => void;
@@ -226,6 +229,7 @@ const useOnboardingStore = create<OnboardingState>()(
     (set, get) => ({
       hasCompletedOnboarding: false,
       hasExistingAccount: false,
+      hasSeenWelcomeCelebration: false,
       userName: null,
       selectedTheme: "darkMode",
       selectedMood: null,
@@ -244,6 +248,8 @@ const useOnboardingStore = create<OnboardingState>()(
         set({ hasCompletedOnboarding: completed }),
       setHasExistingAccount: (existing) =>
         set({ hasExistingAccount: existing }),
+      markWelcomeCelebrationSeen: () =>
+        set({ hasSeenWelcomeCelebration: true }),
       setUserName: (name) => set({ userName: name }),
       setSelectedTheme: (theme) => set({ selectedTheme: theme }),
       setSelectedMood: (mood) => set({ selectedMood: mood }),
@@ -300,6 +306,7 @@ const useOnboardingStore = create<OnboardingState>()(
       partialize: (state) => ({
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         hasExistingAccount: state.hasExistingAccount,
+        hasSeenWelcomeCelebration: state.hasSeenWelcomeCelebration,
         userName: state.userName,
         selectedTheme: state.selectedTheme,
         selectedMood: state.selectedMood,

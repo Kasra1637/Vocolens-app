@@ -24,6 +24,7 @@ import useSubscriptionStore from '@/lib/state/subscription-store';
 import { OnboardingFlow } from './onboarding';
 import { BiometricLockScreen } from './BiometricLockScreen';
 import { StandalonePaywall } from './StandalonePaywall';
+import { FirstLaunchCelebration } from './FirstLaunchCelebration';
 import { activateAdapty, getProfile, isAdaptyEnabled, hasEntitlement } from '@/lib/adaptyClient';
 import { NotificationService } from '@/lib/services/notification-service';
 
@@ -39,6 +40,8 @@ export function AuthGate({ children }: AuthGateProps) {
 
   const hasCompletedOnboarding = useOnboardingStore((s) => s.hasCompletedOnboarding);
   const notificationPreferences = useOnboardingStore((s) => s.notificationPreferences);
+  const hasSeenWelcomeCelebration = useOnboardingStore((s) => s.hasSeenWelcomeCelebration);
+  const markWelcomeCelebrationSeen = useOnboardingStore((s) => s.markWelcomeCelebrationSeen);
 
   const isBiometricEnabled = useBiometricStore((s) => s.isBiometricEnabled);
   const isPinEnabled = useBiometricStore((s) => s.isPinEnabled);
@@ -115,5 +118,16 @@ export function AuthGate({ children }: AuthGateProps) {
     return <BiometricLockScreen />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {/* Show the first-launch celebration as an overlay on top of the app,
+          but only once — gated by hasSeenWelcomeCelebration (persisted). */}
+      {!hasSeenWelcomeCelebration && (
+        <FirstLaunchCelebration
+          onDone={markWelcomeCelebrationSeen}
+        />
+      )}
+    </>
+  );
 }
