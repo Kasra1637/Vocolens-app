@@ -1,25 +1,38 @@
 /**
  * PinEntryScreen
  *
- * Unified component for PIN creation (setup) and PIN verification (verify).
- * Uses a rendered in-app numeric keypad — no system keyboard, no digit labels
- * on the keys, no back button.
+ * Unified PIN creation (setup) and PIN verification (verify) screen.
+ * Input is driven entirely by the native device number-pad keyboard via a
+ * hidden zero-size TextInput — no custom numpad tiles rendered at all.
  *
- * mode="setup"   (first-time PIN creation)
- *   Screen 1 — "Enter Your PIN": user taps 4 digits on the keypad.
- *   Screen 2 — "Confirm Your PIN": user re-enters the same 4 digits.
- *              Each dot turns green ✓ or red ✗ per key press to show
- *              whether that position matches the first PIN.
- *              On full match → setPin() → onComplete().
- *              On full mismatch → shake + error, clear and try again.
+ * mode="setup"  — first-time creation
+ *   Screen 1 "Enter Your PIN":    user types 4 digits on the native keypad.
+ *   Screen 2 "Confirm Your PIN":  user re-enters the same 4 digits.
+ *     · Each dot turns green ✓ (position matches) or red ✗ (mismatch) as
+ *       each key is pressed, giving live per-digit feedback.
+ *     · Full match → setPin() → onComplete().
+ *     · Full mismatch → shake + error, clear and retry.
  *
- * mode="verify"  (unlock, default)
- *   Single screen. User taps 4 digits → verifyPin() → onSuccess() on match,
- *   shake + error on mismatch. Locks out after maxAttempts.
+ * mode="verify" (default) — unlock
+ *   User types 4 digits → verifyPin() → onSuccess() on match.
+ *   Shake + remaining-attempts warning on mismatch.
+ *   Locks out after maxAttempts.
+ *
+ * Tapping anywhere on the dot row re-focuses the hidden input so the
+ * keyboard re-opens if the user dismissed it.
  */
 
-import React, { useState, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  TextInput,
+  Keyboard,
+  Platform,
+  InteractionManager,
+  StyleSheet,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -30,7 +43,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { Lock, Delete, Check, X } from 'lucide-react-native';
+import { Lock, Check, X } from 'lucide-react-native';
 import { successHaptic, confirmHaptic, errorHaptic, tapHaptic } from '@/lib/haptics';
 import { setPin, verifyPin } from '@/lib/auth-service';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
@@ -41,8 +54,8 @@ interface PinEntryScreenProps {
   mode?: 'setup' | 'verify';
   onComplete?: () => void;   // setup: called after PIN saved
   onSuccess?: () => void;    // verify: called after PIN verified
-  onCancel?: () => void;     // kept for API compatibility, not rendered
-  onBack?: () => void;       // kept for API compatibility, not rendered
+  onCancel?: () => void;     // kept for API compatibility
+  onBack?: () => void;       // kept for API compatibility
   title?: string;
   subtitle?: string;
   maxAttempts?: number;
@@ -59,6 +72,9 @@ export function PinEntryScreen({
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors   = THEME_COLORS[selectedTheme];
 
+  const inputRef = useRef<TextInput>(null);
+
+  // shared state
   const [currentPin, setCurrentPin] = useState('');
   const [errorMsg,   setErrorMsg]   = useState('');
   const [busy,       setBusy]       = useState(false);
@@ -72,7 +88,7 @@ export function PinEntryScreen({
   const [attempts, setAttempts] = useState(0);
   const isLocked = mode === 'verify' && attempts >= maxAttempts;
 
-  // shake animation
+  // ── shake animation ──────────────────────────────────────────────────────
   const shakeX = useSharedValue(0);
   const dotAnimStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shakeX.value }],
@@ -90,42 +106,47 @@ export function PinEntryScreen({
     );
   }, [shakeX]);
 
-  // heading text — stays "Enter Your PIN" on both setup screens unless overridden
-  const headingText = (): string => {
-    if (title) return title;
-    if (mode === 'setup' && setupPhase === 'confirm') return 'Confirm Your PIN';
-    return 'Enter Your PIN';
-  };
+  // ── focus helpers ────────────────────────────────────────────────────────
+  const focusInput = useCallback(() => {
+    if (isLocked || busy || matched) return;
+    InteractionManager.runAfterInteractions(() => {
+      const delay = Platform.OS === 'android' ? 150 : 50;
+      setTimeout(() => inputRef.current?.focus(), delay);
+    });
+  }, [isLocked, busy, matched]);
 
-  // subtitle text
-  const subtitleText = (): string => {
-    if (subtitle && setupPhase === 'create') return subtitle;
-    if (mode === 'setup' && setupPhase === 'confirm') {
-      return 'Re-enter your PIN to confirm.';
+  // Focus on mount and whenever the setup phase changes
+  useEffect(() => {
+    if (isLocked) {
+      Keyboard.dismiss();
+    } else {
+      focusInput();
     }
-    if (subtitle) return subtitle;
-    return 'Use your 4-digit PIN to unlock Vocolens.';
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocked, setupPhase]);
 
-  // numpad digit press
-  const handleDigit = useCallback(
-    async (digit: number) => {
+  // Dismiss keyboard once matched/saved
+  useEffect(() => {
+    if (matched) Keyboard.dismiss();
+  }, [matched]);
+
+  // ── text input handler ───────────────────────────────────────────────────
+  const handleChange = useCallback(
+    async (text: string) => {
       if (busy || matched || isLocked) return;
-      if (currentPin.length >= 4) return;
 
-      tapHaptic();
-      const next = currentPin + digit.toString();
-      setCurrentPin(next);
+      // Strip non-digits, cap at 4
+      const digits = text.replace(/[^\d]/g, '').slice(0, 4);
+      setCurrentPin(digits);
       if (errorMsg) setErrorMsg('');
 
-      if (next.length < 4) return;
+      if (digits.length < 4) return;
 
-      // 4 digits complete
+      // ── 4 digits entered ────────────────────────────────────────────────
       if (mode === 'setup') {
         if (setupPhase === 'create') {
           confirmHaptic();
-          setFirstPin(next);
-          // Transition to confirm: clear input then switch phase
+          setFirstPin(digits);
           setTimeout(() => {
             setCurrentPin('');
             setSetupPhase('confirm');
@@ -133,20 +154,20 @@ export function PinEntryScreen({
           return;
         }
 
-        // confirm phase — check full match
-        if (next !== firstPin) {
+        // confirm phase
+        if (digits !== firstPin) {
           triggerShake();
           setErrorMsg("PINs don't match — try again");
           setTimeout(() => setCurrentPin(''), 500);
           return;
         }
 
-        // Match — save PIN
+        // match — save
         confirmHaptic();
         setMatched(true);
         setBusy(true);
         try {
-          await setPin(next);
+          await setPin(digits);
           successHaptic();
           setTimeout(() => onComplete?.(), 600);
         } catch {
@@ -161,11 +182,12 @@ export function PinEntryScreen({
 
       // verify mode
       setBusy(true);
-      const valid = await verifyPin(next);
+      const valid = await verifyPin(digits);
       setBusy(false);
 
       if (valid) {
         successHaptic();
+        Keyboard.dismiss();
         onSuccess?.();
         return;
       }
@@ -176,6 +198,7 @@ export function PinEntryScreen({
 
       if (newAttempts >= maxAttempts) {
         setErrorMsg('Too many incorrect attempts. Please wait and try again.');
+        Keyboard.dismiss();
       } else {
         const remaining = maxAttempts - newAttempts;
         setErrorMsg(
@@ -187,27 +210,30 @@ export function PinEntryScreen({
       setTimeout(() => setCurrentPin(''), 500);
     },
     [
-      busy, matched, isLocked, currentPin, errorMsg,
+      busy, matched, isLocked, errorMsg,
       mode, setupPhase, firstPin,
       attempts, maxAttempts,
       triggerShake, onComplete, onSuccess,
     ],
   );
 
-  // backspace
-  const handleDelete = useCallback(() => {
-    if (busy || matched || isLocked) return;
-    if (currentPin.length === 0) return;
-    tapHaptic();
-    setCurrentPin((p) => p.slice(0, -1));
-    if (errorMsg) setErrorMsg('');
-  }, [busy, matched, isLocked, currentPin, errorMsg]);
+  // ── heading / subtitle ───────────────────────────────────────────────────
+  const headingText = (): string => {
+    if (title) return title;
+    if (mode === 'setup' && setupPhase === 'confirm') return 'Confirm Your PIN';
+    return 'Enter Your PIN';
+  };
 
-  // ── dot row ───────────────────────────────────────────────────────────────
-  // confirm step: each dot shows green ✓ (match) or red ✗ (mismatch) per
-  // digit typed so far. Untyped positions stay as empty circles.
-  // matched state: all four dots turn green ✓.
-  // create/verify: filled circle per digit typed, empty otherwise.
+  const subtitleText = (): string => {
+    if (mode === 'setup' && setupPhase === 'confirm') return 'Re-enter your PIN to confirm.';
+    if (subtitle) return subtitle;
+    return 'Use your 4-digit PIN to unlock Vocolens.';
+  };
+
+  // ── dot row ──────────────────────────────────────────────────────────────
+  // confirm step: green ✓ if digit matches first PIN at that index, red ✗ if not.
+  // matched state: all four dots green ✓.
+  // create / verify: filled circle per digit typed, empty otherwise.
   const renderDots = () => {
     const isConfirmStep = mode === 'setup' && setupPhase === 'confirm';
 
@@ -227,10 +253,7 @@ export function PinEntryScreen({
           if (isConfirmStep && isTyped) {
             const ok = currentPin[i] === firstPin[i];
             return (
-              <View
-                key={i}
-                style={[styles.dot, ok ? styles.dotGreen : styles.dotRed]}
-              >
+              <View key={i} style={[styles.dot, ok ? styles.dotGreen : styles.dotRed]}>
                 {ok
                   ? <Check size={11} color="#FFFFFF" strokeWidth={3} />
                   : <X     size={11} color="#FFFFFF" strokeWidth={3} />
@@ -258,65 +281,7 @@ export function PinEntryScreen({
     );
   };
 
-  // ── numpad — keys have NO digit labels, only the backspace icon ───────────
-  const numpadDisabled = busy || matched || isLocked;
-
-  const numKeyStyle = ({ pressed }: { pressed: boolean }) => [
-    styles.numKey,
-    {
-      backgroundColor: pressed
-        ? 'rgba(255,255,255,0.26)'
-        : 'rgba(255,255,255,0.12)',
-      opacity: numpadDisabled ? 0.45 : 1,
-    },
-  ];
-
-  const renderNumpad = () => (
-    <View style={styles.numpad}>
-      {/* Rows 1-3: keys with no labels */}
-      {[[1, 2, 3], [4, 5, 6], [7, 8, 9]].map((row) => (
-        <View key={row[0]} style={styles.numRow}>
-          {row.map((n) => (
-            <Pressable
-              key={n}
-              onPress={() => handleDigit(n)}
-              disabled={numpadDisabled || currentPin.length >= 4}
-              style={numKeyStyle}
-            />
-          ))}
-        </View>
-      ))}
-
-      {/* Row 4: empty spacer | 0 key (no label) | backspace icon */}
-      <View style={styles.numRow}>
-        <View style={[styles.numKey, { backgroundColor: 'transparent' }]} />
-
-        <Pressable
-          onPress={() => handleDigit(0)}
-          disabled={numpadDisabled || currentPin.length >= 4}
-          style={numKeyStyle}
-        />
-
-        <Pressable
-          onPress={handleDelete}
-          disabled={numpadDisabled || currentPin.length === 0}
-          style={({ pressed }) => [
-            styles.numKey,
-            {
-              backgroundColor: pressed
-                ? 'rgba(255,255,255,0.18)'
-                : 'transparent',
-              opacity: (numpadDisabled || currentPin.length === 0) ? 0.30 : 1,
-            },
-          ]}
-        >
-          <Delete size={24} color="rgba(255,255,255,0.85)" strokeWidth={2} />
-        </Pressable>
-      </View>
-    </View>
-  );
-
-  // ── layout ────────────────────────────────────────────────────────────────
+  // ── layout ───────────────────────────────────────────────────────────────
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient
@@ -326,9 +291,30 @@ export function PinEntryScreen({
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
+          {/*
+            Hidden zero-size TextInput — the sole source of input.
+            Placed inside layout bounds (not absolute off-screen) so Android's
+            focus system can always reach it.
+          */}
+          <TextInput
+            ref={inputRef}
+            value={currentPin}
+            onChangeText={handleChange}
+            keyboardType="number-pad"
+            inputMode="numeric"
+            textContentType="oneTimeCode"
+            maxLength={4}
+            autoFocus
+            caretHidden
+            secureTextEntry
+            editable={!busy && !matched && !isLocked}
+            style={styles.hiddenInput}
+            accessibilityLabel="PIN entry"
+          />
+
           <View style={styles.content}>
 
-            {/* Lock badge + heading — animated once on mount only */}
+            {/* Lock badge + heading — animated once on mount */}
             <Animated.View entering={FadeInDown.duration(380)} style={styles.topArea}>
               <View
                 style={[
@@ -343,7 +329,7 @@ export function PinEntryScreen({
               </View>
               <View style={{ alignItems: 'center', gap: 8 }}>
                 <Text style={styles.heading}>{headingText()}</Text>
-                {/* key forces subtitle to cross-fade when phase changes */}
+                {/* key cross-fades subtitle when phase changes */}
                 <Animated.Text
                   key={setupPhase}
                   entering={FadeIn.duration(220)}
@@ -354,33 +340,33 @@ export function PinEntryScreen({
               </View>
             </Animated.View>
 
-            {/* Dots or locked message */}
+            {/* Dots — tap to re-open keyboard if dismissed */}
             {isLocked ? (
-              <Animated.View
-                entering={FadeIn.duration(300)}
-                style={styles.lockedArea}
-              >
+              <Animated.View entering={FadeIn.duration(300)} style={styles.lockedArea}>
                 <Text style={styles.lockedText}>
                   Too many failed attempts. Please restart the app or wait a
                   moment and try again.
                 </Text>
               </Animated.View>
             ) : (
-              <View style={styles.dotArea}>
+              <Pressable
+                onPress={focusInput}
+                accessibilityRole="button"
+                accessibilityLabel="Tap to open keypad"
+                style={styles.dotArea}
+              >
                 {errorMsg !== '' && (
-                  <Animated.Text
-                    entering={FadeIn.duration(200)}
-                    style={styles.errorText}
-                  >
+                  <Animated.Text entering={FadeIn.duration(200)} style={styles.errorText}>
                     {errorMsg}
                   </Animated.Text>
                 )}
                 {renderDots()}
-              </View>
+                <Text style={styles.tapHint}>Tap to open keypad</Text>
+              </Pressable>
             )}
 
-            {/* Numpad */}
-            {renderNumpad()}
+            {/* Bottom spacer keeps layout stable when keyboard is open */}
+            <View style={styles.bottomSpacer} />
 
           </View>
         </SafeAreaView>
@@ -390,13 +376,20 @@ export function PinEntryScreen({
 }
 
 const styles = StyleSheet.create({
+  // Zero-size, inside layout bounds so Android focus works
+  hiddenInput: {
+    width: 0,
+    height: 0,
+    opacity: 0,
+    position: 'absolute',
+  },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 28,
     paddingTop: 24,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
   topArea: {
     alignItems: 'center',
@@ -430,12 +423,12 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     gap: 18,
+    paddingVertical: 16,
   },
   dotRow: {
     flexDirection: 'row',
     gap: 22,
     justifyContent: 'center',
-    paddingVertical: 8,
   },
   dot: {
     width: 20,
@@ -452,6 +445,12 @@ const styles = StyleSheet.create({
   dotRed: {
     backgroundColor: 'rgba(255,99,99,0.85)',
     borderColor: 'rgba(255,99,99,1)',
+  },
+  tapHint: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.45)',
+    textAlign: 'center',
   },
   errorText: {
     fontFamily: 'Inter_500Medium',
@@ -470,20 +469,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  numpad: {
-    width: '100%',
-    maxWidth: 320,
-    gap: 12,
-  },
-  numRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  numKey: {
-    flex: 1,
-    height: 64,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+  bottomSpacer: {
+    height: 40,
   },
 });
