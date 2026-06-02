@@ -325,10 +325,10 @@ export function PaywallScreen() {
     successHaptic();
     setSubscription(true, plan);
     if (plan === "yearly" && FEATURE_FLAGS.trial_on_annual) {
-      // Schedule Day 5 reminder (2 days before trial end)
-      NotificationService.scheduleTrialDay5Reminder(null);
-      // Schedule end-of-trial reminder
-      NotificationService.scheduleTrialEndReminder(null);
+      // Schedule trial reminders — wrapped in try/catch so a notification
+      // failure never blocks advancing to the next onboarding screen.
+      try { NotificationService.scheduleTrialDay5Reminder(null); } catch {}
+      try { NotificationService.scheduleTrialEndReminder(null); } catch {}
     }
     setShowExitModal(false);
     nextStep();

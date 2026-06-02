@@ -32,7 +32,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
-import { Fingerprint, Lock, Eye, KeyRound } from 'lucide-react-native';
+import { Fingerprint, Lock, Eye, KeyRound, ShieldCheck } from 'lucide-react-native';
 import { successHaptic, tapHaptic, errorHaptic } from '@/lib/haptics';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
