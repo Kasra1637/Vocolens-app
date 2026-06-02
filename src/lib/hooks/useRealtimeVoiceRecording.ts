@@ -233,13 +233,22 @@ export function useRealtimeVoiceRecording(): [
       });
 
       // Try to connect to Deepgram for real-time streaming
+      // ─── Native (iOS/Android) cannot stream PCM audio to Deepgram ──────────
+      // expo-av's Audio.Recording does not expose raw PCM chunks while
+      // recording — only the final file once stopAndUnloadAsync() is called.
+      // Therefore, on native we DO NOT open the Deepgram realtime WebSocket
+      // at all (it would just sit idle with no audio and time out, while the
+      // UI misleadingly shows "Live Transcription"). Native uses post-recording
+      // transcription via the REST API — fast, reliable, and accurate.
+      // True word-by-word native streaming would require a different audio
+      // capture library (e.g. react-native-live-audio-stream) and a new build.
       let streamingConnected = false;
       const isWeb = Platform.OS === 'web';
       const canUseWebAudioStreaming = isWeb && webAudioStreamingService.isAvailable();
 
-      if (deepgramRealtimeService.isConfigured()) {
+      if (deepgramRealtimeService.isConfigured() && canUseWebAudioStreaming) {
         try {
-          console.log('[useRealtimeVoiceRecording] Connecting to Deepgram realtime...');
+          console.log('[useRealtimeVoiceRecording] Connecting to Deepgram realtime (web)...');
           await deepgramRealtimeService.connect(
             {
               language,
@@ -269,6 +278,7 @@ export function useRealtimeVoiceRecording(): [
           setStreamingMode('post-recording');
         }
       } else {
+        // Native (or web with no MediaRecorder support) — use post-recording mode
         setStreamingMode('post-recording');
       }
 
@@ -398,9 +408,13 @@ export function useRealtimeVoiceRecording(): [
 
       // On Android, the file may not be flushed to disk immediately after
       // stopAndUnloadAsync resolves. Poll for up to 3 seconds before giving up.
+      // NOTE: Use the legacy subpath — `expo-file-system/legacy` is the only
+      // export that still ships `getInfoAsync` in v55+. The previous code
+      // destructured `{ FileSystem }` from a default import, which is undefined
+      // and silently failed the wait loop on every Android device.
       let uri = rawUri;
       if (uri && Platform.OS === 'android') {
-        const { FileSystem } = await import('expo-file-system');
+        const FileSystem = await import('expo-file-system/legacy');
         let waited = 0;
         while (waited < 3000) {
           const info = await FileSystem.getInfoAsync(uri);

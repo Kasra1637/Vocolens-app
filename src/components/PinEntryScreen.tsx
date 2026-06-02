@@ -1,9 +1,9 @@
 /**
  * PinEntryScreen
  *
- * Full-screen 4-digit PIN entry used as the biometric fallback.
- * Renders inline (not as a Modal) inside BiometricLockScreen so transitions
- * are seamless and the user is never shown a blank background.
+ * Full-screen 4-digit PIN entry used as the biometric fallback. Uses the
+ * device's NATIVE numeric keyboard via a hidden TextInput. We render only
+ * the dot indicators on screen; the OS handles input.
  *
  * Props
  * ─────
@@ -14,14 +14,28 @@
  * maxAttempts     Defaults to 5. After that the screen shows a locked message.
  */
 
-import React, { useState, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  Keyboard,
+  Platform,
+} from 'react-native';
+import Animated, {
+  FadeInDown,
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { Lock, ArrowLeft } from 'lucide-react-native';
-import { successHaptic } from '@/lib/haptics';
+import { successHaptic, errorHaptic } from '@/lib/haptics';
 import { verifyPin } from '@/lib/auth-service';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
-import { PinKeypad } from '@/components/PinKeypad';
 
 interface PinEntryScreenProps {
   onSuccess: () => void;
@@ -34,70 +48,113 @@ interface PinEntryScreenProps {
 export function PinEntryScreen({
   onSuccess,
   onBack,
-  title    = 'Enter your PIN',
+  title = 'Enter your PIN',
   subtitle = 'Use your 4-digit PIN to unlock Vocolens.',
   maxAttempts = 5,
 }: PinEntryScreenProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const themeColors   = THEME_COLORS[selectedTheme];
+  const themeColors = THEME_COLORS[selectedTheme];
 
-  const [currentPin,  setCurrentPin]  = useState('');
-  const [errorShake,  setErrorShake]  = useState(false);
-  const [errorMsg,    setErrorMsg]    = useState('');
-  const [verifying,   setVerifying]   = useState(false);
-  const [attempts,    setAttempts]    = useState(0);
+  const inputRef = useRef<TextInput>(null);
+
+  const [currentPin, setCurrentPin] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [attempts, setAttempts] = useState(0);
 
   const isLocked = attempts >= maxAttempts;
 
+  // Shake animation on wrong PIN
+  const shakeX = useSharedValue(0);
+  const dotStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+
   const triggerShake = useCallback(() => {
-    setErrorShake(true);
-    setTimeout(() => setErrorShake(false), 700);
-  }, []);
+    errorHaptic();
+    shakeX.value = withSequence(
+      withTiming(-10, { duration: 60 }),
+      withTiming(10, { duration: 60 }),
+      withTiming(-8, { duration: 60 }),
+      withTiming(8, { duration: 60 }),
+      withTiming(-4, { duration: 60 }),
+      withTiming(0, { duration: 60 }),
+    );
+  }, [shakeX]);
 
-  const handleDigit = useCallback(async (digit: string) => {
-    if (verifying || isLocked) return;
+  // Open the OS keyboard on mount and re-focus on demand
+  const focusInput = useCallback(() => {
+    if (isLocked) return;
+    setTimeout(() => inputRef.current?.focus(), Platform.OS === 'android' ? 300 : 100);
+  }, [isLocked]);
 
-    const next = currentPin + digit;
-    setCurrentPin(next);
-    setErrorMsg('');
-
-    if (next.length < 4) return;
-
-    setVerifying(true);
-    const valid = await verifyPin(next);
-    setVerifying(false);
-
-    if (valid) {
-      successHaptic();
-      onSuccess();
-      return;
-    }
-
-    const newAttempts = attempts + 1;
-    setAttempts(newAttempts);
-    triggerShake();
-
-    if (newAttempts >= maxAttempts) {
-      setErrorMsg('Too many incorrect attempts. Please wait and try again.');
+  useEffect(() => {
+    if (isLocked) {
+      Keyboard.dismiss();
     } else {
-      const remaining = maxAttempts - newAttempts;
-      setErrorMsg(
-        remaining === 1
-          ? 'Incorrect PIN — 1 attempt remaining.'
-          : `Incorrect PIN — ${remaining} attempts remaining.`,
-      );
+      focusInput();
     }
-    setTimeout(() => setCurrentPin(''), 600);
-  }, [currentPin, verifying, isLocked, attempts, maxAttempts, onSuccess, triggerShake]);
+  }, [isLocked, focusInput]);
 
-  const handleDelete = useCallback(() => {
-    if (verifying || isLocked) return;
-    setCurrentPin((p) => p.slice(0, -1));
-    setErrorMsg('');
-  }, [verifying, isLocked]);
+  const handleChange = useCallback(
+    async (text: string) => {
+      if (verifying || isLocked) return;
+
+      const digits = text.replace(/[^\d]/g, '').slice(0, 4);
+      setCurrentPin(digits);
+      if (errorMsg) setErrorMsg('');
+
+      if (digits.length < 4) return;
+
+      setVerifying(true);
+      const valid = await verifyPin(digits);
+      setVerifying(false);
+
+      if (valid) {
+        successHaptic();
+        Keyboard.dismiss();
+        onSuccess();
+        return;
+      }
+
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      triggerShake();
+
+      if (newAttempts >= maxAttempts) {
+        setErrorMsg('Too many incorrect attempts. Please wait and try again.');
+        Keyboard.dismiss();
+      } else {
+        const remaining = maxAttempts - newAttempts;
+        setErrorMsg(
+          remaining === 1
+            ? 'Incorrect PIN — 1 attempt remaining.'
+            : `Incorrect PIN — ${remaining} attempts remaining.`,
+        );
+      }
+      setTimeout(() => setCurrentPin(''), 500);
+    },
+    [verifying, isLocked, errorMsg, attempts, maxAttempts, onSuccess, triggerShake],
+  );
 
   return (
     <View style={styles.container}>
+      {/* Hidden TextInput drives the native numeric keyboard */}
+      <TextInput
+        ref={inputRef}
+        value={currentPin}
+        onChangeText={handleChange}
+        keyboardType="number-pad"
+        inputMode="numeric"
+        textContentType="oneTimeCode"
+        maxLength={4}
+        autoFocus
+        caretHidden
+        style={styles.hiddenInput}
+        accessibilityLabel="PIN entry"
+        editable={!verifying && !isLocked}
+        secureTextEntry
+      />
 
       {/* Back button */}
       {onBack && (
@@ -112,7 +169,15 @@ export function PinEntryScreen({
 
       {/* Top area */}
       <Animated.View entering={FadeInDown.duration(350)} style={styles.topArea}>
-        <View style={[styles.lockBadge, { borderColor: `${themeColors.primary}60`, backgroundColor: `${themeColors.primary}20` }]}>
+        <View
+          style={[
+            styles.lockBadge,
+            {
+              borderColor: `${themeColors.primary}60`,
+              backgroundColor: `${themeColors.primary}20`,
+            },
+          ]}
+        >
           <Lock size={36} color="#FFFFFF" strokeWidth={1.8} />
         </View>
         <View style={{ alignItems: 'center', gap: 8 }}>
@@ -121,38 +186,55 @@ export function PinEntryScreen({
         </View>
       </Animated.View>
 
-      {/* Keypad or locked state */}
+      {/* Dots or locked state */}
       {isLocked ? (
         <Animated.View
           entering={FadeIn.duration(300)}
           style={{ alignItems: 'center', paddingHorizontal: 24, gap: 16 }}
         >
           <Text style={styles.lockedText}>
-            Too many failed attempts. Please restart the app or wait a moment and try again.
+            Too many failed attempts. Please restart the app or wait a moment and
+            try again.
           </Text>
         </Animated.View>
       ) : (
         <Animated.View
           entering={FadeInDown.delay(80).duration(350)}
-          style={styles.keypadWrap}
+          style={styles.dotArea}
         >
           {errorMsg !== '' && (
-            <Animated.Text
-              entering={FadeIn.duration(200)}
-              style={styles.errorText}
-            >
+            <Animated.Text entering={FadeIn.duration(200)} style={styles.errorText}>
               {errorMsg}
             </Animated.Text>
           )}
-          <PinKeypad
-            pin={currentPin}
-            onDigit={handleDigit}
-            onDelete={handleDelete}
-            disabled={verifying}
-            errorShake={errorShake}
-            themeColor={themeColors.primary}
-            isDark
-          />
+
+          <Pressable onPress={focusInput} accessibilityRole="button">
+            <Animated.View style={[styles.dotRow, dotStyle]}>
+              {[0, 1, 2, 3].map((i) => {
+                const filled = currentPin.length > i;
+                return (
+                  <View
+                    key={i}
+                    style={[
+                      styles.dot,
+                      {
+                        backgroundColor: filled
+                          ? themeColors.primary
+                          : 'transparent',
+                        borderColor: filled
+                          ? themeColors.primary
+                          : 'rgba(255,255,255,0.45)',
+                      },
+                    ]}
+                  />
+                );
+              })}
+            </Animated.View>
+          </Pressable>
+
+          <Pressable onPress={focusInput} style={styles.tapHintWrap}>
+            <Text style={styles.tapHint}>Tap here to open the keyboard</Text>
+          </Pressable>
         </Animated.View>
       )}
 
@@ -169,6 +251,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 24,
     paddingBottom: 16,
+  },
+  // Off-screen but still focusable — drives the OS numeric keyboard
+  hiddenInput: {
+    position: 'absolute',
+    top: -1000,
+    left: -1000,
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
   backBtn: {
     position: 'absolute',
@@ -204,9 +295,32 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     maxWidth: '88%',
   },
-  keypadWrap: {
+  dotArea: {
     width: '100%',
-    gap: 10,
+    alignItems: 'center',
+    gap: 20,
+  },
+  dotRow: {
+    flexDirection: 'row',
+    gap: 22,
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  dot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+  },
+  tapHintWrap: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  tapHint: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center',
   },
   errorText: {
     fontFamily: 'Inter_500Medium',

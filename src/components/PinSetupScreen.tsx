@@ -1,7 +1,11 @@
 /**
  * PinSetupScreen
  *
- * Full-screen 4-digit PIN creation with a confirm step.
+ * Full-screen 4-digit PIN creation with a confirm step. Uses the device's
+ * NATIVE numeric keyboard via a hidden TextInput — the keypad you see when
+ * you tap a phone field anywhere else on the device. We render only the dot
+ * indicators on screen; the OS handles input.
+ *
  * Used in two contexts:
  *   1. Onboarding — called from BiometricSetupScreen after biometric is enabled,
  *      so every user who opts into the lock also has a PIN safety net.
@@ -11,16 +15,30 @@
  * Flow: create (enter 4 digits) → confirm (re-enter 4 digits) → success → onComplete()
  */
 
-import React, { useState, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  Keyboard,
+  Platform,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { ShieldCheck, ArrowLeft } from 'lucide-react-native';
-import { successHaptic, confirmHaptic } from '@/lib/haptics';
+import { successHaptic, confirmHaptic, errorHaptic } from '@/lib/haptics';
 import { setPin } from '@/lib/auth-service';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
-import { PinKeypad } from '@/components/PinKeypad';
 import { EmotionalCompanion } from '@/components/EmotionalCompanion';
 
 type Phase = 'create' | 'confirm' | 'success';
@@ -42,14 +60,33 @@ export function PinSetupScreen({
   subtitle,
 }: PinSetupScreenProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const themeColors   = THEME_COLORS[selectedTheme];
+  const themeColors = THEME_COLORS[selectedTheme];
 
-  const [phase,       setPhase]       = useState<Phase>('create');
-  const [firstPin,    setFirstPin]    = useState('');
-  const [currentPin,  setCurrentPin]  = useState('');
-  const [errorShake,  setErrorShake]  = useState(false);
-  const [errorMsg,    setErrorMsg]    = useState('');
-  const [saving,      setSaving]      = useState(false);
+  const inputRef = useRef<TextInput>(null);
+
+  const [phase, setPhase] = useState<Phase>('create');
+  const [firstPin, setFirstPin] = useState('');
+  const [currentPin, setCurrentPin] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Shake animation for the dot row on a wrong PIN
+  const shakeX = useSharedValue(0);
+  const dotStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+
+  const triggerShake = useCallback(() => {
+    errorHaptic();
+    shakeX.value = withSequence(
+      withTiming(-10, { duration: 60 }),
+      withTiming(10, { duration: 60 }),
+      withTiming(-8, { duration: 60 }),
+      withTiming(8, { duration: 60 }),
+      withTiming(-4, { duration: 60 }),
+      withTiming(0, { duration: 60 }),
+    );
+  }, [shakeX]);
 
   const headingText = (): string => {
     if (phase === 'success') return "You're protected";
@@ -63,58 +100,69 @@ export function PinSetupScreen({
     return subtitle ?? 'Choose a 4-digit PIN. You can always change it in Settings.';
   };
 
-  const triggerShake = useCallback(() => {
-    setErrorShake(true);
-    setTimeout(() => setErrorShake(false), 700);
+  // Open the system keyboard on mount and whenever the phase changes to a
+  // PIN-entry phase. A short setTimeout is needed on Android so the request
+  // isn't dropped during the screen mount/transition.
+  const focusInput = useCallback(() => {
+    setTimeout(() => inputRef.current?.focus(), Platform.OS === 'android' ? 300 : 100);
   }, []);
 
-  const handleDigit = useCallback(async (digit: string) => {
-    if (saving) return;
-    const next = currentPin + digit;
-    setCurrentPin(next);
-    setErrorMsg('');
+  useEffect(() => {
+    if (phase === 'success') {
+      Keyboard.dismiss();
+    } else {
+      focusInput();
+    }
+  }, [phase, focusInput]);
 
-    if (next.length < 4) return;
+  // Called by the hidden TextInput on every keystroke
+  const handleChange = useCallback(
+    async (text: string) => {
+      if (saving || phase === 'success') return;
 
-    // PIN now complete — advance phase after a brief visual pause
-    if (phase === 'create') {
-      confirmHaptic();
-      setFirstPin(next);
-      setTimeout(() => {
+      // Only digits, max 4 chars
+      const digits = text.replace(/[^\d]/g, '').slice(0, 4);
+      setCurrentPin(digits);
+      if (errorMsg) setErrorMsg('');
+
+      if (digits.length < 4) return;
+
+      // ── PIN now complete — advance phase or save ─────────────────────────
+      if (phase === 'create') {
+        confirmHaptic();
+        setFirstPin(digits);
+        setTimeout(() => {
+          setCurrentPin('');
+          setPhase('confirm');
+        }, 200);
+        return;
+      }
+
+      // confirm phase: must match firstPin
+      if (digits !== firstPin) {
+        triggerShake();
+        setErrorMsg("PINs don't match — try again");
+        setTimeout(() => setCurrentPin(''), 500);
+        return;
+      }
+
+      // Match — save PIN
+      setSaving(true);
+      try {
+        await setPin(digits);
+        successHaptic();
+        Keyboard.dismiss();
+        setPhase('success');
+        setTimeout(() => onComplete(), 1200);
+      } catch {
+        setErrorMsg('Could not save PIN. Please try again.');
+        triggerShake();
+        setSaving(false);
         setCurrentPin('');
-        setPhase('confirm');
-      }, 200);
-      return;
-    }
-
-    // Confirm phase: verify match
-    if (next !== firstPin) {
-      triggerShake();
-      setErrorMsg("PINs don't match — try again");
-      setTimeout(() => setCurrentPin(''), 600);
-      return;
-    }
-
-    // Match — save PIN
-    setSaving(true);
-    try {
-      await setPin(next);
-      successHaptic();
-      setPhase('success');
-      setTimeout(() => onComplete(), 1200);
-    } catch {
-      setErrorMsg('Could not save PIN. Please try again.');
-      triggerShake();
-      setSaving(false);
-      setCurrentPin('');
-    }
-  }, [currentPin, phase, firstPin, saving, onComplete, triggerShake]);
-
-  const handleDelete = useCallback(() => {
-    if (saving) return;
-    setCurrentPin((p) => p.slice(0, -1));
-    setErrorMsg('');
-  }, [saving]);
+      }
+    },
+    [saving, phase, errorMsg, firstPin, triggerShake, onComplete],
+  );
 
   const handleBack = useCallback(() => {
     if (phase === 'confirm') {
@@ -122,6 +170,7 @@ export function PinSetupScreen({
       setCurrentPin('');
       setErrorMsg('');
     } else {
+      Keyboard.dismiss();
       onCancel?.();
     }
   }, [phase, onCancel]);
@@ -137,8 +186,25 @@ export function PinSetupScreen({
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }}>
-          <View style={styles.content}>
+          {/* Hidden TextInput — drives the system numeric keyboard.
+              Off-screen rather than display:none so iOS keeps it focusable. */}
+          <TextInput
+            ref={inputRef}
+            value={currentPin}
+            onChangeText={handleChange}
+            keyboardType="number-pad"
+            inputMode="numeric"
+            textContentType="oneTimeCode"
+            maxLength={4}
+            autoFocus
+            caretHidden
+            style={styles.hiddenInput}
+            accessibilityLabel="PIN entry"
+            editable={!saving && phase !== 'success'}
+            secureTextEntry
+          />
 
+          <View style={styles.content}>
             {/* Back / cancel button */}
             {phase !== 'success' && (onCancel || phase === 'confirm') && (
               <Pressable
@@ -163,7 +229,7 @@ export function PinSetupScreen({
               </View>
             </Animated.View>
 
-            {/* Middle: keypad or success badge */}
+            {/* Middle: dot indicators or success badge */}
             {phase === 'success' ? (
               <Animated.View
                 entering={FadeIn.duration(400)}
@@ -174,7 +240,7 @@ export function PinSetupScreen({
             ) : (
               <Animated.View
                 entering={FadeInDown.delay(80).duration(400)}
-                style={styles.keypadWrap}
+                style={styles.dotArea}
               >
                 {errorMsg !== '' && (
                   <Animated.Text
@@ -184,15 +250,35 @@ export function PinSetupScreen({
                     {errorMsg}
                   </Animated.Text>
                 )}
-                <PinKeypad
-                  pin={currentPin}
-                  onDigit={handleDigit}
-                  onDelete={handleDelete}
-                  disabled={saving}
-                  errorShake={errorShake}
-                  themeColor={themeColors.primary}
-                  isDark
-                />
+
+                {/* Tap the dots area to bring the keyboard back if the user dismissed it */}
+                <Pressable onPress={focusInput} accessibilityRole="button">
+                  <Animated.View style={[styles.dotRow, dotStyle]}>
+                    {[0, 1, 2, 3].map((i) => {
+                      const filled = currentPin.length > i;
+                      return (
+                        <View
+                          key={i}
+                          style={[
+                            styles.dot,
+                            {
+                              backgroundColor: filled
+                                ? themeColors.primary
+                                : 'transparent',
+                              borderColor: filled
+                                ? themeColors.primary
+                                : 'rgba(255,255,255,0.45)',
+                            },
+                          ]}
+                        />
+                      );
+                    })}
+                  </Animated.View>
+                </Pressable>
+
+                <Pressable onPress={focusInput} style={styles.tapHintWrap}>
+                  <Text style={styles.tapHint}>Tap here to open the keyboard</Text>
+                </Pressable>
               </Animated.View>
             )}
 
@@ -206,6 +292,15 @@ export function PinSetupScreen({
 }
 
 const styles = StyleSheet.create({
+  // Off-screen but still focusable — drives the OS numeric keyboard
+  hiddenInput: {
+    position: 'absolute',
+    top: -1000,
+    left: -1000,
+    width: 1,
+    height: 1,
+    opacity: 0,
+  },
   content: {
     flex: 1,
     alignItems: 'center',
@@ -241,9 +336,32 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     maxWidth: '88%',
   },
-  keypadWrap: {
+  dotArea: {
     width: '100%',
-    gap: 12,
+    alignItems: 'center',
+    gap: 24,
+  },
+  dotRow: {
+    flexDirection: 'row',
+    gap: 22,
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  dot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+  },
+  tapHintWrap: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  tapHint: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center',
   },
   errorText: {
     fontFamily: 'Inter_500Medium',

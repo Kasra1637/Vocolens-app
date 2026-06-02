@@ -8,7 +8,12 @@
  * Supports both native (iOS/Android) and web platforms.
  */
 
-import * as FileSystem from 'expo-file-system';
+// expo-file-system v55 removed `EncodingType` and `readAsStringAsync` from
+// the top-level export. The legacy subpath retains the v53 API surface that
+// this codebase relies on (and crashes without — `EncodingType.Base64` is
+// undefined on the new top-level export, which is the real cause of the
+// "cannot read property base64 of undefined" runtime error).
+import * as FileSystem from 'expo-file-system/legacy';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 

@@ -29,7 +29,9 @@ import {
   isDeepgramConfigured,
 } from "./api/deepgram-service";
 import { analyzeWithOpenRouter } from "./api/openrouter-service";
-import * as FileSystem from "expo-file-system";
+// Use legacy subpath — v55's top-level export no longer includes
+// `EncodingType.Base64`, so the audio-to-base64 conversion crashes without this.
+import * as FileSystem from "expo-file-system/legacy";
 import { recordSessionUsage } from "./api/usage-service";
 import { buildPersonalizationPrompt } from "./personalization";
 

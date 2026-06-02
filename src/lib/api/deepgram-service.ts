@@ -9,7 +9,9 @@
  * - Support for multiple audio formats
  */
 
-import * as FileSystem from 'expo-file-system';
+// Use the legacy subpath — v55's top-level export no longer includes
+// `EncodingType`, which would make this file crash at runtime.
+import * as FileSystem from 'expo-file-system/legacy';
 
 const DEEPGRAM_API_KEY = process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY;
 const DEEPGRAM_API_URL = 'https://api.deepgram.com/v1/listen';

@@ -3,7 +3,10 @@
  * Exports all app data (journal entries, stats, badges, settings) as a CSV file.
  */
 
-import * as FileSystem from 'expo-file-system';
+// expo-file-system v55: legacy subpath retains `cacheDirectory`, `EncodingType`,
+// and `writeAsStringAsync`. The new top-level export has migrated to a
+// File/Paths handle-based API and these symbols are undefined there.
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import useJournalStore from './state/journal-store';
 import useBadgesStore, { BADGE_DEFINITIONS } from './state/badges-store';
