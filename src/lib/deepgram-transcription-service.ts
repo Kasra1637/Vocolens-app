@@ -69,7 +69,13 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
     console.log('[Deepgram] Platform:', Platform.OS);
 
     let audioBytes: Uint8Array;
-    let contentType = 'audio/wav';
+    // Content-type must match the actual file produced by the recorder:
+    //   Android → MPEG_4/AAC → audio/mp4
+    //   iOS     → WAV/PCM   → audio/wav
+    //   Web     → WebM/Opus → audio/webm
+    let contentType = Platform.OS === 'android' ? 'audio/mp4'
+                    : Platform.OS === 'web'     ? 'audio/webm'
+                    : 'audio/wav';
 
     if (Platform.OS === 'web') {
       // Web platform: Use fetch to get blob and convert to ArrayBuffer

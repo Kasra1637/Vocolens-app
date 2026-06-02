@@ -308,15 +308,18 @@ export function useRealtimeVoiceRecording(): [
       }
 
       // Create recording with optimal settings (for file backup and non-web platforms)
+      // Android: Use MPEG_4 / AAC — AndroidOutputFormat.DEFAULT produces an undocumented
+      // container on many devices (often AMR or 3GP) which Deepgram rejects.
+      // MPEG_4 + AAC is universally supported and Deepgram accepts audio/mp4.
       const recordingOptions: Audio.RecordingOptions = {
         isMeteringEnabled: true,
         android: {
-          extension: '.wav',
-          outputFormat: Audio.AndroidOutputFormat.DEFAULT,
-          audioEncoder: Audio.AndroidAudioEncoder.DEFAULT,
+          extension: '.m4a',
+          outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+          audioEncoder: Audio.AndroidAudioEncoder.AAC,
           sampleRate: 16000,
           numberOfChannels: 1,
-          bitRate: 256000,
+          bitRate: 128000,
         },
         ios: {
           extension: '.wav',
