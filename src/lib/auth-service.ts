@@ -178,9 +178,12 @@ export async function authenticateWithBiometrics(
 
     const result = await LocalAuth.authenticateAsync({
       promptMessage,
-      cancelLabel: 'Use PIN instead',
+      // No cancelLabel — removes the extra button text from the OS dialog,
+      // keeping the system sheet as minimal as possible.
       disableDeviceFallback: true,   // We manage PIN fallback ourselves
-    });
+      // Android: confirm immediately on scan — no extra "Confirm" tap needed.
+      requireConfirmation: false,
+    } as Parameters<typeof LocalAuth.authenticateAsync>[0]);
 
     if (result.success) {
       return { success: true, cancelled: false, available: true, invalidated: false };

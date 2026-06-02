@@ -72,13 +72,10 @@ type LockView =
 
 export function BiometricLockScreen() {
   const setUnlocked                  = useBiometricStore((s) => s.setUnlocked);
-  const disableBiometric             = useBiometricStore((s) => s.disableBiometric);
   const isBiometricEnabled           = useBiometricStore((s) => s.isBiometricEnabled);
   const needsPinReAuth               = useBiometricStore((s) => s.needsPinReAuth);
   const markBiometricInvalidated     = useBiometricStore((s) => s.markBiometricInvalidated);
   const clearBiometricInvalidation   = useBiometricStore((s) => s.clearBiometricInvalidation);
-  const hasSeenFirstUnlockCelebration = useBiometricStore((s) => s.hasSeenFirstUnlockCelebration);
-  const markFirstUnlockCelebrationSeen = useBiometricStore((s) => s.markFirstUnlockCelebrationSeen);
   const enableBiometric              = useBiometricStore((s) => s.enableBiometric);
 
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
@@ -188,11 +185,9 @@ export function BiometricLockScreen() {
     if (result.success) {
       enableBiometric();
       successHaptic();
-      if (!hasSeenFirstUnlockCelebration) {
-        setShowCelebration(true);
-      } else {
-        setUnlocked(true);
-      }
+      // Always show celebration on successful biometric unlock —
+      // the warm animation reinforces the emotional habit loop every time.
+      setShowCelebration(true);
       return;
     }
 
@@ -244,9 +239,10 @@ export function BiometricLockScreen() {
 
   // ─── After PIN success during invalidation flow OR PIN-only unlock ───────
   const handlePinFallbackSuccess = useCallback(async () => {
-    // PIN-only user (biometric was never enabled) — just unlock the session
+    // PIN-only user (biometric was never enabled) — unlock with celebration
     if (!isBiometricEnabled) {
-      setUnlocked(true);
+      successHaptic();
+      setShowCelebration(true);
       return;
     }
 
@@ -263,11 +259,7 @@ export function BiometricLockScreen() {
     if (result.success) {
       enableBiometric();
       successHaptic();
-      if (!hasSeenFirstUnlockCelebration) {
-        setShowCelebration(true);
-      } else {
-        setUnlocked(true);
-      }
+      setShowCelebration(true);
     } else {
       // User cancelled or hardware issue — unlock anyway; biometric still enabled
       setUnlocked(true);
@@ -276,7 +268,6 @@ export function BiometricLockScreen() {
     isBiometricEnabled,
     clearBiometricInvalidation,
     enableBiometric,
-    hasSeenFirstUnlockCelebration,
     setUnlocked,
   ]);
 
@@ -299,9 +290,8 @@ export function BiometricLockScreen() {
 
   // ─── Celebration done ─────────────────────────────────────────────────────
   const handleCelebrationDone = useCallback(() => {
-    markFirstUnlockCelebrationSeen();
     setUnlocked(true);
-  }, [markFirstUnlockCelebrationSeen, setUnlocked]);
+  }, [setUnlocked]);
 
   // ─── Render helpers ───────────────────────────────────────────────────────
   const bgColors = themeColors.backgroundGradient;
