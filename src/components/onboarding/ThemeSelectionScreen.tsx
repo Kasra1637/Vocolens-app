@@ -136,7 +136,15 @@ export function ThemeSelectionScreen() {
     [activeIndex],
   );
 
-  const handleContinue = () => { playClickSound(); confirmHaptic(); nextStep(); };
+  const handleContinue = () => {
+    // Commit the currently displayed card's theme to the store before advancing.
+    // This guarantees the correct theme is saved even if the scroll event
+    // fired slightly before or after the carousel settled.
+    setSelectedTheme(THEMES[activeIndex]);
+    playClickSound();
+    confirmHaptic();
+    nextStep();
+  };
   const handleBack     = () => { playClickSound(); tapHaptic();     prevStep(); };
 
   const activeData = THEME_COLORS[THEMES[activeIndex]];
