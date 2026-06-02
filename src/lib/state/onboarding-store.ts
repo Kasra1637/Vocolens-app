@@ -95,6 +95,19 @@ export const THEME_COLORS: Record<
   ThemeColorType,
   ThemeColors & { name: string; description: string }
 > = {
+  darkMode: {
+    name: "Midnight Glow",
+    description: "Sleek dark with lavender",
+    primary: "#9370DB",
+    secondary: "#A78BFA",
+    gradientStart: "#252333",
+    gradientEnd: "#0F0E1A",
+    accent: "#A78BFA",
+    backgroundGradient: ["#252333", "#181624", "#0F0E1A"],
+    buttonGradient: ["#9370DB", "#6A3FC0"],
+    micButtonGradient: ["#A78BFA", "#9370DB", "#6A3FC0"],
+    buttonGlowColor: "rgba(167, 139, 250, 0.5)",
+  },
   lavenderBliss: {
     name: "Lavender Dreams",
     description: "Cheerful lavender vibes",
@@ -159,19 +172,6 @@ export const THEME_COLORS: Record<
     buttonGradient: ["#3A75B5", "#1A5090"],
     micButtonGradient: ["#5A8FCC", "#3A75B5", "#1A5090"],
     buttonGlowColor: "rgba(90, 143, 204, 0.5)",
-  },
-  darkMode: {
-    name: "Midnight Glow",
-    description: "Sleek dark with lavender",
-    primary: "#9370DB",
-    secondary: "#A78BFA",
-    gradientStart: "#252333",
-    gradientEnd: "#0F0E1A",
-    accent: "#A78BFA",
-    backgroundGradient: ["#252333", "#181624", "#0F0E1A"],
-    buttonGradient: ["#9370DB", "#6A3FC0"],
-    micButtonGradient: ["#A78BFA", "#9370DB", "#6A3FC0"],
-    buttonGlowColor: "rgba(167, 139, 250, 0.5)",
   },
 };
 
