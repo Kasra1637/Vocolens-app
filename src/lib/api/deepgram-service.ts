@@ -129,8 +129,6 @@ export async function transcribeAudio(
       queryParams.append('diarize', 'true');
     }
 
-    const DEEPGRAM_API_KEY = getDeepgramApiKey();
-
     // Make API request
     const response = await fetch(`${DEEPGRAM_API_URL}?${queryParams.toString()}`, {
       method: 'POST',
