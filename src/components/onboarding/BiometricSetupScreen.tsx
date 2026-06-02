@@ -90,7 +90,7 @@ export function BiometricSetupScreen() {
 
   // ── Primary CTA ────────────────────────────────────────────────────────────
   const handlePrimaryCTA = useCallback(() => {
-    if (busy || checking) return;
+    if (checking) return;
     playClickSound();
     tapHaptic();
 
@@ -115,7 +115,7 @@ export function BiometricSetupScreen() {
     enableBiometric();
     successHaptic();
     setPhase('pin_setup');
-  }, [busy, checking, biometricAvailable, enableBiometric, playClickSound]);
+  }, [checking, biometricAvailable, enableBiometric, playClickSound]);
 
   // ── Called by PinEntryScreen once PIN is saved ───────────────────────────
   const handlePinSaved = useCallback(() => {
