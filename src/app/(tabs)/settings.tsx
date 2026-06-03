@@ -1335,7 +1335,7 @@ export default function SettingsScreen() {
                   <Text
                     style={{
                       fontFamily: "Inter_600SemiBold",
-                      color: "#EF4444",
+                      color: "#FFFFFF",
                       fontSize: 15,
                       marginBottom: 4,
                     }}
@@ -1387,12 +1387,10 @@ export default function SettingsScreen() {
                           color: "#FFFFFF",
                           fontFamily: "Inter_700Bold",
                           fontSize: 18,
-                          marginRight: 6,
                         }}
                       >
                         Reset All Data
                       </Text>
-                      <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
                     </LinearGradient>
                   </Pressable>
                 </View>
