@@ -1356,19 +1356,43 @@ export default function SettingsScreen() {
                   <Pressable
                     data-testid="reset-all-data-button"
                     onPress={handleResetAllData}
-                    className="rounded-full py-3 items-center active:opacity-80"
                     style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.18)",
-                      borderWidth: 1.5,
-                      borderColor: "rgba(255, 255, 255, 0.35)",
+                      width: "100%",
+                      borderRadius: 18,
+                      borderWidth: 2,
+                      borderColor: "#EF4444",
+                      overflow: "hidden",
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 16,
+                      elevation: Platform.OS === "android" ? 0 : 8,
                     }}
+                    android_ripple={{ color: "rgba(255,255,255,0.2)" }}
                   >
-                    <Text
-                      className="text-sm text-white"
-                      style={{ fontFamily: "Inter_600SemiBold" }}
+                    <LinearGradient
+                      colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 0, y: 1 }}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingVertical: 16,
+                      }}
                     >
-                      Reset All Data
-                    </Text>
+                      <Text
+                        style={{
+                          color: "#FFFFFF",
+                          fontFamily: "Inter_700Bold",
+                          fontSize: 18,
+                          marginRight: 6,
+                        }}
+                      >
+                        Reset All Data
+                      </Text>
+                      <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+                    </LinearGradient>
                   </Pressable>
                 </View>
               </View>

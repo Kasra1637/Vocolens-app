@@ -23,7 +23,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 import { tapHaptic, selectHaptic, confirmHaptic, selectionHaptic } from "@/lib/haptics";
-import { Clock, Bell, BellOff, X } from "lucide-react-native";
+import { Clock, Bell, BellOff, Check } from "lucide-react-native";
 // DateTimePicker removed — replaced by custom TimeWheelPicker below
 import useOnboardingStore, {
   THEME_COLORS,
@@ -820,7 +820,7 @@ export function NotificationPreferencesScreen() {
                   marginBottom: 6,
                 }}
               >
-                {/* X — closes without saving */}
+                {/* Check — saves and closes */}
                 <Pressable
                   onPress={handleCancelTime}
                   hitSlop={12}
@@ -836,10 +836,10 @@ export function NotificationPreferencesScreen() {
                     borderWidth: 1.5,
                     borderColor: "rgba(255,255,255,0.22)",
                   })}
-                  accessibilityLabel="Cancel"
+                  accessibilityLabel="Confirm"
                   accessibilityRole="button"
                 >
-                  <X size={18} color="rgba(255,255,255,0.80)" strokeWidth={2.5} />
+                  <Check size={18} color="rgba(255,255,255,0.80)" strokeWidth={2.5} />
                 </Pressable>
 
                 {/* Title — centred in remaining space */}
