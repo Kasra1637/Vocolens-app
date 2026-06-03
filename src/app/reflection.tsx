@@ -355,13 +355,11 @@ export default function ReflectionScreen() {
               style={[
                 s.nextBtn,
                 {
-                  overflow: "hidden",
                   backgroundColor: "rgba(255, 255, 255, 0.12)",
                   borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <Text style={s.nextBtnText}>Next</Text>
               <ChevronRight size={18} color="#FFFFFF" />
             </Pressable>
@@ -460,17 +458,16 @@ export default function ReflectionScreen() {
             )}
 
             <Pressable
+            <Pressable
               onPress={nextStep}
               style={[
                 s.nextBtn,
                 {
-                  overflow: "hidden",
                   backgroundColor: "rgba(255, 255, 255, 0.12)",
                   borderColor: "rgba(255, 255, 255, 0.20)",
                 },
               ]}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
               {isLast ? (
                 <Sparkles size={16} color="#FFFFFF" />
