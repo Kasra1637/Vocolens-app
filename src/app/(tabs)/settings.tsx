@@ -1356,36 +1356,19 @@ export default function SettingsScreen() {
                   <Pressable
                     data-testid="reset-all-data-button"
                     onPress={handleResetAllData}
-                    className="rounded-3xl overflow-hidden active:opacity-80"
+                    className="rounded-full py-3 items-center active:opacity-80"
+                    style={{
+                      backgroundColor: "rgba(255, 255, 255, 0.18)",
+                      borderWidth: 1.5,
+                      borderColor: "rgba(255, 255, 255, 0.35)",
+                    }}
                   >
-                    <View
-                      style={{
-                        paddingVertical: 14,
-                        paddingHorizontal: 24,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "rgba(239, 68, 68, 0.15)",
-                        borderWidth: 2,
-                        borderColor: hexToRgba(Colors.primary, 0.30),
-                        borderRadius: 24,
-                      }}
+                    <Text
+                      className="text-sm text-white"
+                      style={{ fontFamily: "Inter_600SemiBold" }}
                     >
-                      <Trash2
-                        size={18}
-                        color="#FFFFFF"
-                        style={{ marginRight: 8 }}
-                      />
-                      <Text
-                        style={{
-                          fontFamily: "Inter_700Bold",
-                          color: "#FFFFFF",
-                          fontSize: 15,
-                        }}
-                      >
-                        Reset All Data
-                      </Text>
-                    </View>
+                      Reset All Data
+                    </Text>
                   </Pressable>
                 </View>
               </View>
