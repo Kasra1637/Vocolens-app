@@ -65,17 +65,17 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
     throw new Error('Audio file URI is missing. The recording may not have saved correctly — please try again.');
   }
 
-  const apiKey: string | undefined =
+  // Try every possible source the key could come from.
+  // On development builds, Constants.expoConfig.extra may not be populated,
+  // so we also check process.env directly (Metro inlines EXPO_PUBLIC_* vars).
+  const apiKeyRaw =
     Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
+    Constants.manifest?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
+    Constants.manifest2?.extra?.expoClient?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
     process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
     undefined;
 
-  // Guard early — before any file I/O — so the error is clear and immediate.
-  // NOTE: Check for JS null/undefined explicitly in addition to string forms.
-  // app.config.js previously injected JS null (not the string "null") when the
-  // env var was missing — null passes `!apiKey` as false but `=== 'null'` also
-  // misses it because null !== 'null'. Belt-and-suspenders: cast to string first.
-  const apiKeyStr = apiKey == null ? '' : String(apiKey).trim();
+  const apiKeyStr = apiKeyRaw == null ? '' : String(apiKeyRaw).trim();
   if (!apiKeyStr || apiKeyStr === 'undefined' || apiKeyStr === 'null' || apiKeyStr === 'your_deepgram_api_key_here') {
     throw new Error(
       'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your EAS secrets and rebuild.'
@@ -210,9 +210,12 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
  * Check if Deepgram API is configured
  */
 export function isDeepgramConfigured(): boolean {
-  const apiKey: string | undefined =
+  const apiKey =
     Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
+    Constants.manifest?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
+    Constants.manifest2?.extra?.expoClient?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
     process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
     undefined;
-  return Boolean(apiKey);
+  const apiKeyStr = apiKey == null ? '' : String(apiKey).trim();
+  return Boolean(apiKeyStr) && apiKeyStr !== 'undefined' && apiKeyStr !== 'null' && apiKeyStr !== 'your_deepgram_api_key_here';
 }
