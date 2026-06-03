@@ -1116,14 +1116,13 @@ export default function SettingsScreen() {
                 }}
                 className="active:opacity-70"
                 style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.1),
-                  borderWidth: 1.5,
-                  borderColor: hexToRgba(Colors.primary, 0.25),
+                  backgroundColor: surfaceBg,
+                  borderWidth: 2,
+                  borderColor: borderColor,
                   borderRadius: 24,
                   overflow: "hidden",
                 }}
               >
-                <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
                 {/* Section header */}
                 <View
                   className="flex-row items-center px-5 pt-5 pb-4"
@@ -1138,7 +1137,7 @@ export default function SettingsScreen() {
                       width: 40,
                       height: 40,
                       borderRadius: 12,
-                      backgroundColor: hexToRgba(Colors.primary, 0.2),
+                      backgroundColor: "rgba(255, 255, 255, 0.15)",
                     }}
                   >
                     <Text style={{ fontSize: 18 }}>{currentLang.flag}</Text>
