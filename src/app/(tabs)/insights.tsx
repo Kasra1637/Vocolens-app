@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "expo-router";
 import {
@@ -41,6 +43,7 @@ import {
   Zap as Shock,
   Heart as HeartFace,
   Clock,
+  Share2,
 } from "lucide-react-native";
 import Animated, {
   FadeOut,
@@ -97,6 +100,234 @@ import { StreakCalendar } from "@/components/StreakCalendar";
 import { MoodStoryTimeline } from "@/components/MoodStoryTimeline";
 import ValenceArousalChart from "@/components/ValenceArousalChart";
 import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
+
+// ── PDF Report Generator ───────────────────────────────────────────────────────
+
+async function generateInsightsPDF({
+  userName,
+  stats,
+  entries,
+  primaryColor,
+  priorityInsights,
+  triggerData,
+}: {
+  userName: string;
+  stats: any;
+  entries: any[];
+  primaryColor: string;
+  priorityInsights: any;
+  triggerData: any;
+}) {
+  const now = new Date();
+  const reportDate = now.toLocaleDateString("en-US", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
+  const reportTime = now.toLocaleTimeString("en-US", {
+    hour: "2-digit", minute: "2-digit",
+  });
+
+  // ── Compute emotion frequencies ──────────────────────────────────────────
+  const emotionCounts: Record<string, number> = {};
+  entries.forEach((e) => {
+    (e.emotions || []).forEach((em: string) => {
+      emotionCounts[em] = (emotionCounts[em] || 0) + 1;
+    });
+  });
+  const topEmotions = Object.entries(emotionCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  // ── Compute valence/arousal averages ─────────────────────────────────────
+  const avgValence = entries.length
+    ? Math.round(entries.reduce((s, e) => s + (e.valence ?? 0), 0) / entries.length)
+    : 0;
+  const avgArousal = entries.length
+    ? Math.round(entries.reduce((s, e) => s + (e.arousal ?? 0), 0) / entries.length)
+    : 0;
+  const valenceLabel =
+    avgValence > 20 ? "Mostly Pleasant" :
+    avgValence < -20 ? "Mostly Unpleasant" : "Neutral / Mixed";
+  const arousalLabel =
+    avgArousal > 60 ? "High Energy" :
+    avgArousal < 40 ? "Calm / Low Energy" : "Moderate Energy";
+
+  // ── Time of day breakdown ─────────────────────────────────────────────────
+  const timeSlots: Record<string, number> = { Morning: 0, Afternoon: 0, Evening: 0, Night: 0 };
+  entries.forEach((e) => {
+    const h = new Date(e.createdAt).getHours();
+    if (h >= 5 && h < 12) timeSlots.Morning++;
+    else if (h >= 12 && h < 17) timeSlots.Afternoon++;
+    else if (h >= 17 && h < 21) timeSlots.Evening++;
+    else timeSlots.Night++;
+  });
+
+  // ── Distress overview ────────────────────────────────────────────────────
+  const highDistress = entries.filter((e) => e.distressLevel === "high").length;
+  const groundingUsed = entries.filter((e) => e.groundingUsed).length;
+
+  // ── Recent entries (last 5) ───────────────────────────────────────────────
+  const recentEntries = [...entries]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
+  // ── AI insights ──────────────────────────────────────────────────────────
+  const insights = (priorityInsights || []).slice(0, 3);
+
+  // ── Triggers ─────────────────────────────────────────────────────────────
+  const triggers = triggerData?.triggers?.slice(0, 4) || [];
+
+  const col = primaryColor;
+
+  const emotionRows = topEmotions.map(([name, count]) => `
+    <tr>
+      <td style="padding:8px 12px;text-transform:capitalize;font-weight:600">${name}</td>
+      <td style="padding:8px 12px;">${count} ${count === 1 ? "entry" : "entries"}</td>
+      <td style="padding:8px 12px;">
+        <div style="background:#eee;border-radius:4px;height:8px;width:100%">
+          <div style="background:${col};border-radius:4px;height:8px;width:${Math.round((count / entries.length) * 100)}%"></div>
+        </div>
+      </td>
+    </tr>`).join("");
+
+  const timeRows = Object.entries(timeSlots).map(([slot, count]) => `
+    <tr>
+      <td style="padding:8px 12px;font-weight:600">${slot}</td>
+      <td style="padding:8px 12px;">${count} ${count === 1 ? "entry" : "entries"}</td>
+    </tr>`).join("");
+
+  const recentRows = recentEntries.map((e) => {
+    const d = new Date(e.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const dur = Math.round(e.duration / 60);
+    return `
+    <tr>
+      <td style="padding:8px 12px;">${d}</td>
+      <td style="padding:8px 12px;text-transform:capitalize">${e.primaryEmotion || "—"}</td>
+      <td style="padding:8px 12px;">${dur} min</td>
+      <td style="padding:8px 12px;font-size:12px;color:#555;max-width:200px;overflow:hidden">${(e.title || "").slice(0, 60)}${(e.title || "").length > 60 ? "…" : ""}</td>
+    </tr>`;
+  }).join("");
+
+  const insightCards = insights.map((ins: any) => `
+    <div style="border-left:3px solid ${col};padding:10px 14px;margin-bottom:12px;background:#fafafa;border-radius:0 8px 8px 0">
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px">${ins.emoji || "💡"} ${ins.title || ""}</div>
+      <div style="font-size:13px;color:#444;line-height:1.5">${ins.message || ""}</div>
+    </div>`).join("");
+
+  const triggerItems = triggers.map((t: any) => `
+    <li style="margin-bottom:6px"><strong>${t.topic || t.id || "Pattern"}</strong> — ${t.frequency || t.count || ""} occurrences</li>`).join("");
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #1a1a1a; background: #fff; padding: 40px; font-size: 14px; line-height: 1.6; }
+    h1 { font-size: 26px; font-weight: 800; color: ${col}; margin-bottom: 2px; }
+    h2 { font-size: 16px; font-weight: 700; color: ${col}; margin: 28px 0 12px; border-bottom: 2px solid ${col}22; padding-bottom: 6px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 3px solid ${col}; padding-bottom: 20px; }
+    .header-left h1 { margin-bottom: 4px; }
+    .header-left p { color: #666; font-size: 13px; }
+    .header-right { text-align: right; font-size: 12px; color: #888; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 8px; }
+    .stat-card { background: ${col}11; border: 1.5px solid ${col}33; border-radius: 12px; padding: 16px; text-align: center; }
+    .stat-card .value { font-size: 28px; font-weight: 800; color: ${col}; }
+    .stat-card .label { font-size: 11px; color: #666; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mood-row { display: flex; gap: 16px; margin-bottom: 8px; }
+    .mood-chip { background: ${col}11; border: 1.5px solid ${col}33; border-radius: 8px; padding: 10px 16px; font-size: 13px; }
+    .mood-chip strong { color: ${col}; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: ${col}; color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    td { border-bottom: 1px solid #eee; }
+    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 11px; color: #aaa; text-align: center; }
+    .badge { display: inline-block; background: ${col}22; color: ${col}; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; }
+    .section { margin-bottom: 32px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <h1>Vocolens Insights Report</h1>
+      <p>Prepared for <strong>${userName}</strong> · ${reportDate} at ${reportTime}</p>
+      <p style="margin-top:4px;font-size:12px;color:#999">This report is intended to support conversations with healthcare professionals.</p>
+    </div>
+    <div class="header-right">
+      <div style="font-size:22px;font-weight:800;color:${col}">Vocolens</div>
+      <div>Voice Journaling &amp; Emotional Wellness</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Overview</h2>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="value">${stats.totalEntries}</div><div class="label">Total Entries</div></div>
+      <div class="stat-card"><div class="value">${stats.currentStreak}</div><div class="label">Current Streak (days)</div></div>
+      <div class="stat-card"><div class="value">${stats.longestStreak}</div><div class="label">Longest Streak (days)</div></div>
+      <div class="stat-card"><div class="value">${stats.weeklyEntries}</div><div class="label">This Week</div></div>
+      <div class="stat-card"><div class="value">${stats.monthlyEntries}</div><div class="label">This Month</div></div>
+      <div class="stat-card"><div class="value">${Math.round(stats.totalDuration / 60)}</div><div class="label">Total Minutes</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Emotional Tone</h2>
+    <div class="mood-row">
+      <div class="mood-chip">Valence: <strong>${valenceLabel}</strong> <span style="color:#888">(avg ${avgValence > 0 ? "+" : ""}${avgValence})</span></div>
+      <div class="mood-chip">Energy: <strong>${arousalLabel}</strong> <span style="color:#888">(avg ${avgArousal}%)</span></div>
+      <div class="mood-chip">Avg Mood: <strong>${stats.averageMood}/100</strong></div>
+    </div>
+    ${highDistress > 0 ? `<div class="mood-chip" style="margin-top:8px;display:inline-block">⚠️ High distress recorded in <strong>${highDistress}</strong> ${highDistress === 1 ? "entry" : "entries"}${groundingUsed > 0 ? ` · Grounding used <strong>${groundingUsed}</strong> times` : ""}</div>` : ""}
+  </div>
+
+  ${topEmotions.length > 0 ? `
+  <div class="section">
+    <h2>Top Emotions</h2>
+    <table>
+      <thead><tr><th>Emotion</th><th>Frequency</th><th style="width:35%">Prevalence</th></tr></thead>
+      <tbody>${emotionRows}</tbody>
+    </table>
+  </div>` : ""}
+
+  <div class="section">
+    <h2>Journaling by Time of Day</h2>
+    <table>
+      <thead><tr><th>Time of Day</th><th>Entries</th></tr></thead>
+      <tbody>${timeRows}</tbody>
+    </table>
+  </div>
+
+  ${insights.length > 0 ? `
+  <div class="section">
+    <h2>AI-Generated Insights</h2>
+    ${insightCards}
+  </div>` : ""}
+
+  ${triggers.length > 0 ? `
+  <div class="section">
+    <h2>Identified Patterns &amp; Triggers</h2>
+    <ul style="padding-left:20px;font-size:13px">${triggerItems}</ul>
+  </div>` : ""}
+
+  ${recentEntries.length > 0 ? `
+  <div class="section">
+    <h2>Recent Journal Entries</h2>
+    <table>
+      <thead><tr><th>Date</th><th>Primary Emotion</th><th>Duration</th><th>Title</th></tr></thead>
+      <tbody>${recentRows}</tbody>
+    </table>
+  </div>` : ""}
+
+  <div class="footer">
+    Generated by Vocolens on ${reportDate} · This document is confidential and intended for personal health tracking and professional consultation only.
+  </div>
+</body>
+</html>`;
+
+  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  return uri;
+}
 
 // Core emotions with icons and emojis - 8 Plutchik emotions
 // Row 1: Happiness, Sadness, Anger, Anticipation
@@ -196,6 +427,7 @@ function InsightsContent({
   const [triggerTimeWindow, setTriggerTimeWindow] = useState<
     "7D" | "14D" | "30D"
   >("30D");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Get theme from context
   const { Colors, Gradients, Shadows } = useTheme();
@@ -459,6 +691,33 @@ function InsightsContent({
     }, 100);
   };
 
+  const handleSharePDF = async () => {
+    try {
+      tapHaptic();
+      setIsGeneratingPDF(true);
+      const uri = await generateInsightsPDF({
+        userName: user.name,
+        stats,
+        entries,
+        primaryColor: Colors.primary,
+        priorityInsights,
+        triggerData,
+      });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: "Share Insights Report",
+          UTI: "com.adobe.pdf",
+        });
+      }
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <View className="flex-1" style={{ backgroundColor: Gradients.background[2] }}>
       <LinearGradient
@@ -467,6 +726,33 @@ function InsightsContent({
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
       />
+
+      {/* Share button — fixed top-right, always visible above scroll */}
+      <Pressable
+        onPress={handleSharePDF}
+        disabled={isGeneratingPDF}
+        style={{
+          position: "absolute",
+          top: insets.top + 10,
+          right: 20,
+          zIndex: 50,
+          width: 38,
+          height: 38,
+          borderRadius: 19,
+          backgroundColor: hexToRgba(Colors.primary, 0.18),
+          borderWidth: 1.5,
+          borderColor: hexToRgba(Colors.primary, 0.40),
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {isGeneratingPDF ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Share2 size={17} color="#FFFFFF" strokeWidth={2} />
+        )}
+      </Pressable>
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
