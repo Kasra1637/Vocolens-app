@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { Check, Search } from "lucide-react-native";
+import { hexToRgba, GlassLayers } from "@/lib/glass";
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -188,7 +189,17 @@ export function LanguageSelectionScreen() {
               lineHeight: 38,
             }}
           >
-            Select your native tongue
+            Select{" "}
+            <Text
+              style={{
+                color: hexToRgba(theme.primary, 0.95),
+                textShadowColor: hexToRgba(theme.primary, 0.5),
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 12,
+              }}
+            >
+              your native tongue
+            </Text>
           </Animated.Text>
           <Animated.Text
             entering={FadeIn.delay(120).duration(500).easing(SOFT)}
@@ -220,8 +231,10 @@ export function LanguageSelectionScreen() {
               paddingVertical: 10,
               borderWidth: 1,
               borderColor: "rgba(255,255,255,0.15)",
+              overflow: "hidden",
             }}
           >
+            <GlassLayers primaryColor={theme.primary} borderRadius={14} blur={false} />
             <Search size={15} color="rgba(255,255,255,0.55)" />
             <TextInput
               value={query}
