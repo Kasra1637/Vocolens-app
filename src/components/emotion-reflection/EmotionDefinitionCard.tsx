@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { X } from 'lucide-react-native';
 import { EmotionDefinition } from '@/lib/emotion-definitions';
 import { getThemeColors } from '@/lib/theme';
-import { hexToRgba, GlassLayers } from '@/lib/glass';
+import { hexToRgba } from '@/lib/glass';
 
 export default function EmotionDefinitionCard({ definition, onClose }: { definition: EmotionDefinition; onClose: () => void }) {
   const themeColors = getThemeColors();
@@ -15,11 +15,9 @@ export default function EmotionDefinitionCard({ definition, onClose }: { definit
         {
           backgroundColor: hexToRgba(themeColors.primary, 0.1),
           borderColor: hexToRgba(themeColors.primary, 0.15),
-          overflow: 'hidden',
         },
       ]}
     >
-      <GlassLayers primaryColor={themeColors.primary} borderRadius={16} blur={false} />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ fontSize: 28, marginRight: 10 }}>{definition.emoji}</Text>

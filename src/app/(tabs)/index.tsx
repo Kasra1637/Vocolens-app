@@ -70,7 +70,7 @@ import {
   useIsAtLimit,
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { hexToRgba } from "@/lib/glass";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -707,10 +707,8 @@ export default function SpeakScreen() {
                 borderColor: isAtLimit
                   ? "rgba(255, 100, 100, 0.45)"
                   : "rgba(255, 210, 80, 0.4)",
-                overflow: "hidden",
               }}
             >
-              <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
               <View className="flex-row items-start">
                 <Text style={{ fontSize: 18, marginRight: 10 }}>
                   {isAtLimit ? "🔒" : "⚠️"}

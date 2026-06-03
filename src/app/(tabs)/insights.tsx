@@ -86,7 +86,7 @@ import {
 import { EmotionType } from "@/lib/types";
 import { populateDummyData } from "@/lib/populate-dummy-data";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { hexToRgba } from "@/lib/glass";
 import {
   TriggerInsightCard,
   TriggerEmptyState,

@@ -7,7 +7,7 @@ import { EmotionType, BodySensation, DistressLevel } from '@/lib/types';
 import { getEmotionDefinition } from '@/lib/emotion-definitions';
 import { tapHaptic, successHaptic } from '@/lib/haptics';
 import { getThemeColors } from '@/lib/theme';
-import { hexToRgba, GlassLayers } from '@/lib/glass';
+import { hexToRgba } from '@/lib/glass';
 import ValenceSlider from './ValenceSlider';
 import ArousalSlider from './ArousalSlider';
 import EmotionDefinitionCard from './EmotionDefinitionCard';
@@ -89,7 +89,6 @@ export default function EmotionReflectionScreen({
           <Animated.View entering={FadeInUp.delay(100)}>
             <Text style={s.sectionLabel}>What we heard</Text>
             <View style={[s.card, { backgroundColor: hexToRgba(themeColors.primary, 0.1), borderColor: hexToRgba(themeColors.primary, 0.15) }]}>
-              <GlassLayers primaryColor={themeColors.primary} borderRadius={16} />
               <Text style={s.transcriptText} numberOfLines={4}>{transcript}</Text>
             </View>
           </Animated.View>

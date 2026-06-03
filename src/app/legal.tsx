@@ -23,7 +23,7 @@ import {
 import { ArrowLeft, FileText, Shield } from "lucide-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { hexToRgba } from "@/lib/glass";
 import {
   getThemeColors,
   getThemeGradients,
@@ -192,14 +192,12 @@ function Section({
           backgroundColor: "rgba(255, 255, 255, 0.12)",
           borderWidth: 2,
           borderColor: "rgba(255, 255, 255, 0.20)",
-          overflow: "hidden",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.08,
           shadowRadius: 8,
         }}
       >
-        <GlassLayers primaryColor={primaryColor} borderRadius={24} />
         <Text
           style={{
             fontFamily: "Inter_700Bold",
@@ -337,14 +335,12 @@ function PrivacyPolicy({
             backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 2,
             borderColor: "rgba(255, 255, 255, 0.20)",
-            overflow: "hidden",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.08,
             shadowRadius: 8,
           }}
         >
-          <GlassLayers primaryColor={primaryColor} borderRadius={24} />
           <MetaLine label="App" value={APP_NAME} />
           <MetaLine label="Effective Date" value={EFFECTIVE_DATE} />
           <MetaLine label="Contact" value={CONTACT_EMAIL} />
@@ -628,14 +624,12 @@ function TermsOfService({
             backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 2,
             borderColor: "rgba(255, 255, 255, 0.20)",
-            overflow: "hidden",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.08,
             shadowRadius: 8,
           }}
         >
-          <GlassLayers primaryColor={primaryColor} borderRadius={24} />
           <MetaLine label="App" value={APP_NAME} />
           <MetaLine label="Effective Date" value={EFFECTIVE_DATE} />
           <MetaLine label="Contact" value={CONTACT_EMAIL} />

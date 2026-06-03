@@ -4,7 +4,7 @@ import { Shield, Wind } from 'lucide-react-native';
 import { DistressLevel } from '@/lib/types';
 import { tapHaptic } from '@/lib/haptics';
 import { getThemeColors } from '@/lib/theme';
-import { hexToRgba, GlassLayers } from '@/lib/glass';
+import { hexToRgba } from '@/lib/glass';
 
 export default function DistressBanner({
   level,
@@ -24,11 +24,9 @@ export default function DistressBanner({
         {
           backgroundColor: hexToRgba(bannerColor, 0.1),
           borderColor: hexToRgba(bannerColor, 0.25),
-          overflow: 'hidden',
         },
       ]}
     >
-      <GlassLayers primaryColor={bannerColor} borderRadius={16} blur={false} />
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
         <Shield size={18} color={bannerColor} />
         <Text style={[s.title, { color: bannerColor }]}>

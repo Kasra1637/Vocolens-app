@@ -37,7 +37,7 @@ import { PinEntryModal } from "@/components/PinEntryModal";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeColors, getThemeGradients, BorderRadius } from "@/lib/theme";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { hexToRgba } from "@/lib/glass";
 
 export default function PrivacySettingsScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
@@ -226,13 +226,8 @@ export default function PrivacySettingsScreen() {
                 borderWidth: 1,
                 borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
-                overflow: "hidden",
               }}
             >
-              <GlassLayers
-                primaryColor={themeColors.primary}
-                borderRadius={BorderRadius.xlarge}
-              />
               <View className="p-5">
                 <View className="flex-row items-center mb-3">
                   <View
@@ -308,13 +303,8 @@ export default function PrivacySettingsScreen() {
                 borderWidth: 1,
                 borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
-                overflow: "hidden",
               }}
             >
-              <GlassLayers
-                primaryColor={themeColors.primary}
-                borderRadius={BorderRadius.xlarge}
-              />
               <View className="p-5">
                 <View className="flex-row items-center mb-3">
                   <View
@@ -387,13 +377,8 @@ export default function PrivacySettingsScreen() {
                 borderWidth: 1,
                 borderColor: hexToRgba(themeColors.primary, 0.15),
                 borderRadius: BorderRadius.xlarge,
-                overflow: "hidden",
               }}
             >
-              <GlassLayers
-                primaryColor={themeColors.primary}
-                borderRadius={BorderRadius.xlarge}
-              />
               <View className="p-5">
                 <View className="flex-row items-center mb-3">
                   <View

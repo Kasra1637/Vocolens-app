@@ -95,7 +95,7 @@ import {
 import { removePin, changePin } from "@/lib/auth-service";
 import { exportAllDataAsCsv } from "@/lib/export-data";
 import { getLanguageByCode } from "@/lib/languages";
-import { hexToRgba, GlassLayers } from "@/lib/glass";
+import { hexToRgba } from "@/lib/glass";
 import { PinEntryScreen, type PinEntryScreenHandle } from "@/components/PinEntryScreen";
 
 export default function SettingsScreen() {
@@ -1414,7 +1414,6 @@ export default function SettingsScreen() {
               ...Shadows.large,
             }}
           >
-            <GlassLayers primaryColor={Colors.primary} borderRadius={24} />
             <View className="items-center mb-4">
               <View
                 className="w-16 h-16 rounded-full items-center justify-center mb-4"
