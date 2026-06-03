@@ -15,17 +15,6 @@
         "NPM_FLAGS": "--legacy-peer-deps"
       }
     },
-    "Development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "channel": "development",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "NPM_FLAGS": "--legacy-peer-deps"
-      }
-    },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
@@ -37,22 +26,7 @@
         "NPM_FLAGS": "--legacy-peer-deps"
       }
     },
-    "Preview": {
-      "distribution": "internal",
-      "channel": "preview",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_BLINK_PREVIEW_ENABLED": "true",
-        "NPM_FLAGS": "--legacy-peer-deps"
-      }
-    },
     "production": {
-      "autoIncrement": true,
-      "channel": "main"
-    },
-    "Production": {
       "autoIncrement": true,
       "channel": "main"
     }
