@@ -52,7 +52,6 @@ import {
   Library,
 } from "lucide-react-native";
 import Animated, {
-  FadeIn,
   FadeOut,
   useAnimatedStyle,
   useSharedValue,

@@ -33,7 +33,6 @@ import {
 } from "lucide-react-native";
 import Animated, {
   FadeOut,
-  FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withSpring,

@@ -44,8 +44,6 @@ import {
 } from "lucide-react-native";
 import Animated, {
   FadeOut,
-  FadeInUp,
-  FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withSpring,

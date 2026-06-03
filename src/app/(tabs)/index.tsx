@@ -29,7 +29,6 @@ import Animated, {
   Easing,
   cancelAnimation,
   FadeOut,
-  FadeIn,
   interpolateColor,
 } from "react-native-reanimated";
 import {
