@@ -14,7 +14,7 @@
 // undefined on the new top-level export, which is the real cause of the
 // "cannot read property base64 of undefined" runtime error).
 import * as FileSystem from 'expo-file-system/legacy';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 
 export interface TranscriptionResult {
   transcript: string;
@@ -67,6 +67,13 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
   // In Expo SDK 55, EXPO_PUBLIC_* vars are inlined by Metro at bundle time.
   // process.env is the only reliable source across all build profiles.
   const apiKeyStr = (process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ?? '').trim();
+
+  // TEMPORARY DIAGNOSTIC
+  Alert.alert(
+    'Transcription Service Key Debug',
+    `Length: ${apiKeyStr.length}\nFirst 8: ${apiKeyStr.slice(0, 8)}\nEmpty: ${apiKeyStr === ''}\nValue: "${apiKeyStr.slice(0, 12)}..."`
+  );
+
   if (!apiKeyStr || apiKeyStr === 'undefined' || apiKeyStr === 'null' || apiKeyStr === 'your_deepgram_api_key_here') {
     throw new Error(
       'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your EAS secrets and rebuild.'
