@@ -69,13 +69,7 @@ class DeepgramRealtimeService {
    * Get the Deepgram API key from environment
    */
   private getApiKey(): string | null {
-    const apiKeyRaw =
-      Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-      Constants.manifest?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-      Constants.manifest2?.extra?.expoClient?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-      process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-      undefined;
-    const apiKeyStr = apiKeyRaw == null ? '' : String(apiKeyRaw).trim();
+    const apiKeyStr = (process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ?? '').trim();
     return (apiKeyStr && apiKeyStr !== 'undefined' && apiKeyStr !== 'null') ? apiKeyStr : null;
   }
 

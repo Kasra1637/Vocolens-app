@@ -14,7 +14,6 @@
 // undefined on the new top-level export, which is the real cause of the
 // "cannot read property base64 of undefined" runtime error).
 import * as FileSystem from 'expo-file-system/legacy';
-import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 export interface TranscriptionResult {
@@ -65,17 +64,9 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
     throw new Error('Audio file URI is missing. The recording may not have saved correctly — please try again.');
   }
 
-  // Try every possible source the key could come from.
-  // On development builds, Constants.expoConfig.extra may not be populated,
-  // so we also check process.env directly (Metro inlines EXPO_PUBLIC_* vars).
-  const apiKeyRaw =
-    Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    Constants.manifest?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    Constants.manifest2?.extra?.expoClient?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    undefined;
-
-  const apiKeyStr = apiKeyRaw == null ? '' : String(apiKeyRaw).trim();
+  // In Expo SDK 55, EXPO_PUBLIC_* vars are inlined by Metro at bundle time.
+  // process.env is the only reliable source across all build profiles.
+  const apiKeyStr = (process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ?? '').trim();
   if (!apiKeyStr || apiKeyStr === 'undefined' || apiKeyStr === 'null' || apiKeyStr === 'your_deepgram_api_key_here') {
     throw new Error(
       'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your EAS secrets and rebuild.'
@@ -210,12 +201,6 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
  * Check if Deepgram API is configured
  */
 export function isDeepgramConfigured(): boolean {
-  const apiKey =
-    Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    Constants.manifest?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    Constants.manifest2?.extra?.expoClient?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    undefined;
-  const apiKeyStr = apiKey == null ? '' : String(apiKey).trim();
+  const apiKeyStr = (process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ?? '').trim();
   return Boolean(apiKeyStr) && apiKeyStr !== 'undefined' && apiKeyStr !== 'null' && apiKeyStr !== 'your_deepgram_api_key_here';
 }

@@ -12,20 +12,15 @@
 // Use the legacy subpath — v55's top-level export no longer includes
 // `EncodingType`, which would make this file crash at runtime.
 import * as FileSystem from 'expo-file-system/legacy';
-import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-// Resolved lazily inside each function so Constants.expoConfig is fully
-// populated by the time it's read (module-load-time reads can be too early).
-// Checks all manifest paths — development builds may use manifest/manifest2
-// instead of expoConfig.extra.
+// In Expo SDK 55, EXPO_PUBLIC_* variables are inlined by Metro at bundle time
+// via process.env — this is the only reliable source across ALL build profiles
+// (development, preview, production). Constants.expoConfig.extra requires the
+// key to be present at Metro bundle time AND injected via app.config.js, which
+// adds an extra failure point. process.env.EXPO_PUBLIC_* always works.
 function getDeepgramApiKey(): string {
-  const raw =
-    Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    Constants.manifest?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    Constants.manifest2?.extra?.expoClient?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    '';
+  const raw = process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY;
   return raw == null ? '' : String(raw).trim();
 }
 
