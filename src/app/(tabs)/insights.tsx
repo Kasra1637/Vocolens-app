@@ -325,12 +325,10 @@ async function generateInsightsPDF({
 </body>
 </html>`;
 
-  const { uri } = await (async () => {
-    const fileUri = FileSystem.cacheDirectory + `vocolens-insights-${Date.now()}.html`;
-    await FileSystem.writeAsStringAsync(fileUri, html, { encoding: FileSystem.EncodingType.UTF8 });
-    return { uri: fileUri };
-  })();
-  return uri;
+  const cacheDir = FileSystem.cacheDirectory ?? "file:///tmp/";
+  const fileUri = cacheDir + `vocolens-insights-${Date.now()}.html`;
+  await FileSystem.writeAsStringAsync(fileUri, html, { encoding: "utf8" as any });
+  return fileUri;
 }
 
 // Core emotions with icons and emojis - 8 Plutchik emotions
