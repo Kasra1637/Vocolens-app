@@ -1,19 +1,13 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/transcribe.js",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
     {
       "src": "/health",
-      "dest": "api/health.js"
+      "dest": "/api/health.js"
     },
     {
       "src": "/api/transcribe",
-      "dest": "api/transcribe.js"
+      "dest": "/api/transcribe.js"
     }
   ]
 }
