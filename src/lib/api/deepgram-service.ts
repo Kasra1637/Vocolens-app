@@ -12,7 +12,7 @@
 // Use the legacy subpath — v55's top-level export no longer includes
 // `EncodingType`, which would make this file crash at runtime.
 import * as FileSystem from 'expo-file-system/legacy';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 
 // In Expo SDK 55, EXPO_PUBLIC_* variables are inlined by Metro at bundle time
 // via process.env — this is the only reliable source across ALL build profiles
@@ -101,6 +101,12 @@ export async function transcribeAudio(
     };
 
     const DEEPGRAM_API_KEY = getDeepgramApiKey();
+
+    // TEMPORARY DIAGNOSTIC — shows exact key value on device so we can debug
+    Alert.alert(
+      'Deepgram Key Debug',
+      `Length: ${DEEPGRAM_API_KEY.length}\nFirst 8: ${DEEPGRAM_API_KEY.slice(0, 8)}\nLast 4: ${DEEPGRAM_API_KEY.slice(-4)}\nEmpty: ${DEEPGRAM_API_KEY === ''}`
+    );
 
     // Guard early — before any file I/O — so the error is clear and immediate.
     if (!DEEPGRAM_API_KEY || DEEPGRAM_API_KEY === 'undefined' || DEEPGRAM_API_KEY === 'null' || DEEPGRAM_API_KEY === 'your_deepgram_api_key_here') {
