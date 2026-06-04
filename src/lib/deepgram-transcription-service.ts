@@ -64,21 +64,15 @@ export async function transcribeAudioFile(audioUri: string | null | undefined, l
     throw new Error('Audio file URI is missing. The recording may not have saved correctly — please try again.');
   }
 
-  // In Expo SDK 55, EXPO_PUBLIC_* vars are inlined by Metro at bundle time.
-  // process.env is the only reliable source across all build profiles.
   const apiKeyStr = (process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ?? '').trim();
 
-  // TEMPORARY DIAGNOSTIC
+  // TEMPORARY DIAGNOSTIC — shows exact value the app sees at runtime
   Alert.alert(
-    'Transcription Service Key Debug',
-    `Length: ${apiKeyStr.length}\nFirst 8: ${apiKeyStr.slice(0, 8)}\nEmpty: ${apiKeyStr === ''}\nValue: "${apiKeyStr.slice(0, 12)}..."`
+    'Transcription Key Debug',
+    `Length: ${apiKeyStr.length}\nFirst 8: "${apiKeyStr.slice(0, 8)}"\nFull value: "${apiKeyStr}"`
   );
 
-  if (!apiKeyStr || apiKeyStr === 'undefined' || apiKeyStr === 'null' || apiKeyStr === 'your_deepgram_api_key_here') {
-    throw new Error(
-      'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your EAS secrets and rebuild.'
-    );
-  }
+  // Guard removed temporarily to see what actually reaches Deepgram
 
   try {
     console.log('[Deepgram] Transcribing audio file:', audioUri);

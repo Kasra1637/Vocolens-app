@@ -102,18 +102,13 @@ export async function transcribeAudio(
 
     const DEEPGRAM_API_KEY = getDeepgramApiKey();
 
-    // TEMPORARY DIAGNOSTIC — shows exact key value on device so we can debug
+    // TEMPORARY DIAGNOSTIC — shows exact value the app sees at runtime
     Alert.alert(
       'Deepgram Key Debug',
-      `Length: ${DEEPGRAM_API_KEY.length}\nFirst 8: ${DEEPGRAM_API_KEY.slice(0, 8)}\nLast 4: ${DEEPGRAM_API_KEY.slice(-4)}\nEmpty: ${DEEPGRAM_API_KEY === ''}`
+      `Length: ${DEEPGRAM_API_KEY.length}\nFirst 8: "${DEEPGRAM_API_KEY.slice(0, 8)}"\nFull value: "${DEEPGRAM_API_KEY}"`
     );
 
-    // Guard early — before any file I/O — so the error is clear and immediate.
-    if (!DEEPGRAM_API_KEY || DEEPGRAM_API_KEY === 'undefined' || DEEPGRAM_API_KEY === 'null' || DEEPGRAM_API_KEY === 'your_deepgram_api_key_here') {
-      throw new Error(
-        'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your EAS secrets and rebuild.'
-      );
-    }
+    // Guard removed temporarily — proceed regardless to see what Deepgram returns
 
     // Read the audio file as base64
     const audioBase64 = await FileSystem.readAsStringAsync(audioUri, {
