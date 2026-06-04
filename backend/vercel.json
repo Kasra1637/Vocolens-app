@@ -2,18 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["src/**"],
-        "maxLambdaSize": "50mb"
-      }
+      "src": "api/transcribe.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "src/index.ts"
+      "src": "/health",
+      "dest": "api/health.js"
+    },
+    {
+      "src": "/api/transcribe",
+      "dest": "api/transcribe.js"
     }
   ]
 }
