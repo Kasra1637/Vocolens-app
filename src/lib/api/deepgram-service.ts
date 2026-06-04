@@ -13,15 +13,20 @@
 // `EncodingType`, which would make this file crash at runtime.
 import * as FileSystem from 'expo-file-system/legacy';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 // Resolved lazily inside each function so Constants.expoConfig is fully
 // populated by the time it's read (module-load-time reads can be too early).
-function getDeepgramApiKey(): string | undefined {
-  return (
+// Checks all manifest paths — development builds may use manifest/manifest2
+// instead of expoConfig.extra.
+function getDeepgramApiKey(): string {
+  const raw =
     Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
+    Constants.manifest?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
+    Constants.manifest2?.extra?.expoClient?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
     process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ||
-    undefined
-  );
+    '';
+  return raw == null ? '' : String(raw).trim();
 }
 
 const DEEPGRAM_API_URL = 'https://api.deepgram.com/v1/listen';
@@ -105,7 +110,7 @@ export async function transcribeAudio(
     // Guard early — before any file I/O — so the error is clear and immediate.
     if (!DEEPGRAM_API_KEY || DEEPGRAM_API_KEY === 'undefined' || DEEPGRAM_API_KEY === 'null' || DEEPGRAM_API_KEY === 'your_deepgram_api_key_here') {
       throw new Error(
-        'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your .env file and restart Metro.'
+        'Deepgram API key is not configured. Add EXPO_PUBLIC_DEEPGRAM_API_KEY to your EAS secrets and rebuild.'
       );
     }
 
@@ -114,8 +119,19 @@ export async function transcribeAudio(
       encoding: FileSystem.EncodingType.Base64,
     });
 
-    // Convert base64 to binary buffer
+    // Convert base64 to binary buffer — use Uint8Array directly, do NOT call
+    // .buffer.slice() on it. On Hermes (React Native / Android), .buffer.slice()
+    // on a Uint8Array created from atob() returns a detached zero-length buffer
+    // that fetch cannot serialize, causing an empty body → Deepgram 401.
     const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
+
+    // Content-type must match the actual file format the recorder produces:
+    //   Android → MPEG_4/AAC  → audio/mp4
+    //   iOS     → WAV/PCM     → audio/wav
+    //   Web     → WebM/Opus   → audio/webm
+    const contentType = Platform.OS === 'android' ? 'audio/mp4'
+                      : Platform.OS === 'web'     ? 'audio/webm'
+                      : 'audio/wav';
 
     // Build query parameters
     const queryParams = new URLSearchParams({
@@ -129,14 +145,14 @@ export async function transcribeAudio(
       queryParams.append('diarize', 'true');
     }
 
-    // Make API request
+    // Make API request — pass Uint8Array directly as body (not a sliced ArrayBuffer)
     const response = await fetch(`${DEEPGRAM_API_URL}?${queryParams.toString()}`, {
       method: 'POST',
       headers: {
         'Authorization': `Token ${DEEPGRAM_API_KEY}`,
-        'Content-Type': 'audio/wav',
+        'Content-Type': contentType,
       },
-      body: audioBuffer,
+      body: audioBuffer as unknown as BodyInit,
     });
 
     if (!response.ok) {
@@ -205,5 +221,6 @@ export async function transcribeAudioWithRetry(
  * @returns true if API key is configured
  */
 export function isDeepgramConfigured(): boolean {
-  return Boolean(getDeepgramApiKey());
+  const key = getDeepgramApiKey();
+  return Boolean(key) && key !== 'undefined' && key !== 'null' && key !== 'your_deepgram_api_key_here';
 }
