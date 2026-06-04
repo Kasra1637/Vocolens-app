@@ -1,9 +1,7 @@
 {
   "cli": { "version": ">= 13.2.0", "appVersionSource": "local" },
   "build": {
-    "base": { "hooks": { "pre-install": "./eas-hooks/pre-install.sh" } },
     "development": {
-      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
@@ -11,14 +9,12 @@
       "env": { "NPM_FLAGS": "--legacy-peer-deps" }
     },
     "preview": {
-      "extends": "base",
       "distribution": "internal",
       "channel": "preview",
       "android": { "buildType": "apk" },
       "env": { "EXPO_PUBLIC_BLINK_PREVIEW_ENABLED": "true", "NPM_FLAGS": "--legacy-peer-deps" }
     },
     "production": {
-      "extends": "base",
       "autoIncrement": true,
       "channel": "main"
     }
