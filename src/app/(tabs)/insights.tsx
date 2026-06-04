@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import * as FileSystem from "expo-file-system";
@@ -707,16 +707,16 @@ function InsightsContent({
         priorityInsights,
         triggerData,
       });
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(uri, {
-          mimeType: "text/html",
-          dialogTitle: "Share Insights Report",
-          UTI: "public.html",
-        });
-      }
-    } catch (err) {
-      console.error("PDF generation failed:", err);
+      await Sharing.shareAsync(uri, {
+        mimeType: "text/html",
+        dialogTitle: "Share Insights Report",
+        UTI: "public.html",
+      });
+    } catch (err: any) {
+      Alert.alert(
+        "Could not share report",
+        err?.message || "An unexpected error occurred. Please try again.",
+      );
     } finally {
       setIsGeneratingPDF(false);
     }
