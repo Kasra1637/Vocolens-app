@@ -1,5 +1,12 @@
 {
   "version": 2,
+  "buildCommand": "echo skip",
+  "outputDirectory": ".",
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs22.x"
+    }
+  },
   "routes": [
     {
       "src": "/health",
