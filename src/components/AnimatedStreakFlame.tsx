@@ -11,7 +11,7 @@
  * gentle overshoot, nothing jarring or looping aggressively.
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
 import Animated, {
   useSharedValue,
@@ -22,6 +22,7 @@ import Animated, {
   withRepeat,
   withDelay,
   Easing,
+  cancelAnimation,
 } from "react-native-reanimated";
 import { Flame } from "lucide-react-native";
 
@@ -57,11 +58,15 @@ export function AnimatedStreakFlame({
   const scale = useSharedValue(1);
   const ringScale = useSharedValue(0.7);
   const ringOpacity = useSharedValue(0);
-  const prevStreak = useSharedValue(streak);
   const breathe = useSharedValue(0);
+
+  // Use a plain ref to track the previous streak value — avoids using a
+  // shared value as a ref (which is not supported in Reanimated 4).
+  const prevStreakRef = useRef(streak);
 
   // Gentle continuous "breathing" while a streak is active.
   useEffect(() => {
+    cancelAnimation(breathe);
     if (streak > 0) {
       breathe.value = withRepeat(
         withSequence(
@@ -74,11 +79,13 @@ export function AnimatedStreakFlame({
     } else {
       breathe.value = withTiming(0, { duration: 300 });
     }
-  }, [streak]);
+  }, [streak > 0]); // only restart the loop when active state changes, not on every count change
 
   // Celebratory pop + glow ring whenever the streak increases.
   useEffect(() => {
-    const prev = prevStreak.value;
+    const prev = prevStreakRef.current;
+    prevStreakRef.current = streak;
+
     if (streak > prev && streak > 0) {
       // Springy pop with a gentle overshoot
       scale.value = withSequence(
@@ -96,7 +103,6 @@ export function AnimatedStreakFlame({
         easing: Easing.out(Easing.ease),
       });
     }
-    prevStreak.value = streak;
   }, [streak]);
 
   const iconStyle = useAnimatedStyle(() => {
