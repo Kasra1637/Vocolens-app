@@ -25,6 +25,7 @@ import { OnboardingFlow } from './onboarding';
 import { BiometricLockScreen } from './BiometricLockScreen';
 import { StandalonePaywall } from './StandalonePaywall';
 import { FirstLaunchCelebration } from './FirstLaunchCelebration';
+import { SplashScreen } from './onboarding/SplashScreen';
 import { activateAdapty, getProfile, isAdaptyEnabled, hasEntitlement } from '@/lib/adaptyClient';
 import { NotificationService } from '@/lib/services/notification-service';
 
@@ -51,8 +52,20 @@ export function AuthGate({ children }: AuthGateProps) {
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
   const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
 
+  // Splash shown on every launch — new and returning users alike
+  const [showSplash, setShowSplash] = useState(true);
+
   // Tracks whether we've finished verifying against Adapty
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
+
+  // Show splash immediately on every launch before anything else renders
+  if (showSplash) {
+    return (
+      <View style={{ flex: 1 }}>
+        <SplashScreen onDone={() => setShowSplash(false)} />
+      </View>
+    );
+  }
 
   useEffect(() => {
     checkAuthStatus();

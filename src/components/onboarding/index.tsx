@@ -31,10 +31,9 @@
  *  24 BiometricSetupScreen
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import useOnboardingStore from '@/lib/state/onboarding-store';
-import { SplashScreen } from './SplashScreen';
 import { WelcomeScreen } from './WelcomeScreen';
 import { NDValueScreen1 } from './NDValueScreen1';
 import { NDValueScreen2 } from './NDValueScreen2';
@@ -64,16 +63,6 @@ import { OnboardingGlowOrbs } from './OnboardingGlowOrbs';
 
 export function OnboardingFlow() {
   const currentStep = useOnboardingStore((s) => s.currentStep);
-  // Show splash only on first entry (step 0). Once dismissed it never shows again.
-  const [showSplash, setShowSplash] = useState(currentStep === 0);
-
-  if (showSplash) {
-    return (
-      <View className="flex-1">
-        <SplashScreen onDone={() => setShowSplash(false)} />
-      </View>
-    );
-  }
 
   const renderScreen = () => {
     switch (currentStep) {

@@ -2,11 +2,7 @@
  * OnboardingGlowOrbs
  *
  * Reusable pulsing background glow orbs used on every onboarding screen.
- * Renders as a non-interactive absolute overlay — place as the FIRST
- * child inside any screen's root View so content renders on top.
- *
- * Two orbs pulse independently at different frequencies and offsets,
- * creating a gentle living background effect without distraction.
+ * Color adapts to the user's selected theme primary color.
  */
 
 import React, { useEffect } from "react";
@@ -20,12 +16,20 @@ import Animated, {
   withDelay,
   Easing,
 } from "react-native-reanimated";
+import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 
-// Primary purple at very low opacity — matches Midnight Glow default
-const GLOW_COLOR = "rgba(147, 112, 219, 0.10)";
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export function OnboardingGlowOrbs() {
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const primary = THEME_COLORS[selectedTheme].primary;
+  const glowColor = hexToRgba(primary, 0.12);
 
   const orb1Opacity = useSharedValue(0.25);
   const orb2Opacity = useSharedValue(0.12);
@@ -57,7 +61,6 @@ export function OnboardingGlowOrbs() {
 
   return (
     <>
-      {/* Orb 1 — upper-left */}
       <Animated.View
         pointerEvents="none"
         style={[
@@ -69,11 +72,10 @@ export function OnboardingGlowOrbs() {
             width: screenWidth * 0.85,
             height: screenWidth * 0.85,
             borderRadius: screenWidth * 0.425,
-            backgroundColor: GLOW_COLOR,
+            backgroundColor: glowColor,
           },
         ]}
       />
-      {/* Orb 2 — lower-right */}
       <Animated.View
         pointerEvents="none"
         style={[
@@ -85,7 +87,7 @@ export function OnboardingGlowOrbs() {
             width: screenWidth * 0.80,
             height: screenWidth * 0.80,
             borderRadius: screenWidth * 0.40,
-            backgroundColor: GLOW_COLOR,
+            backgroundColor: glowColor,
           },
         ]}
       />
