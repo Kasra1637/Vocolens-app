@@ -136,21 +136,27 @@ export default function EmotionCorrectionModal({
     setStep(s);
   }, []);
 
-  // Horizontal swipe PanResponder — dx > 60 = next, dx < -60 = prev
+  // Horizontal swipe PanResponder — used for step navigation only.
+  // HIGH threshold + velocity requirement so slider drags never trigger it.
+  // capture=false so child PanResponders (sliders) always win first.
   const swipePan = useRef(
     PanResponder.create({
+      onStartShouldSetPanResponder:        () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponderCapture:  () => false,
       onMoveShouldSetPanResponder: (_evt, gs) =>
-        Math.abs(gs.dx) > 12 && Math.abs(gs.dx) > Math.abs(gs.dy),
+        // Only claim a fast, clearly-horizontal, long swipe — never a slider drag
+        Math.abs(gs.dx) > 80 &&
+        Math.abs(gs.dx) > Math.abs(gs.dy) * 3 &&
+        Math.abs(gs.vx) > 0.4,
       onPanResponderRelease: (_evt, gs) => {
-        if (gs.dx < -60) {
-          // swipe left → advance
+        if (gs.dx < -80 && Math.abs(gs.vx) > 0.4) {
           setStep((prev) => {
             if (prev === "initial") return "replace";
             if (prev === "replace") return "explain";
             return prev;
           });
-        } else if (gs.dx > 60) {
-          // swipe right → go back
+        } else if (gs.dx > 80 && Math.abs(gs.vx) > 0.4) {
           setStep((prev) => {
             if (prev === "explain") return "replace";
             if (prev === "replace") return "initial";
