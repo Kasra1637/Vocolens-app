@@ -53,7 +53,7 @@ export function LanguageSelectionScreen() {
     );
   }, [query]);
 
-  // When searching show all filtered results, otherwise show only the 4 featured languages
+  // Always show only the top 4 — whether default or search results
   const isSearching = query.trim().length > 0;
   const featuredLangs = LANGUAGES.slice(0, 4); // English, Spanish, French, Danish
 
@@ -255,8 +255,8 @@ export function LanguageSelectionScreen() {
             showsVerticalScrollIndicator={true}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Language rows — featured 4 when not searching, full filtered list when searching */}
-            {(isSearching ? filtered : featuredLangs).map(renderLanguageRow)}
+            {/* Language rows — always top 4 whether browsing or searching */}
+            {(isSearching ? filtered.slice(0, 4) : featuredLangs).map(renderLanguageRow)}
 
             {isSearching && filtered.length === 0 && (
               <Text

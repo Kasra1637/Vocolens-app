@@ -253,6 +253,13 @@ export default function SpeakScreen() {
     if (isFocused) setAnimationKey((k) => k + 1);
   }, [isFocused]);
 
+  // Clear transcript and reset voice state when user navigates away from this tab
+  useEffect(() => {
+    if (!isFocused) {
+      voiceActions.reset();
+    }
+  }, [isFocused]);
+
   // Duration timer
   useEffect(() => {
     if (recordingState === "recording") {
