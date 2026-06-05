@@ -154,8 +154,11 @@ export default function UnifiedSlider({
               bottom: 0,
               backgroundColor: accentColor,
               borderRadius: trackHeight / 2,
+              // Bipolar (e.g. -100 to +100): fill grows from the 50% centre mark.
+              // Width = abs(value) as a percentage of the half-range (100 units = 50% of bar).
+              // Unipolar (e.g. 0 to 100): plain left-to-right fill.
               width: isBipolar
-                ? `${(Math.abs(value) / (max - min)) * 200}%` as any
+                ? `${Math.abs(value)}%` as any
                 : `${normalized * 100}%` as any,
               left: isBipolar && value >= 0 ? "50%" : undefined,
               right: isBipolar && value < 0 ? "50%" : undefined,

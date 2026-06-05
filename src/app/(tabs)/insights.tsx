@@ -1052,8 +1052,6 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   const usagePct = Math.min(1, user.usageMinutes / USAGE_LIMIT_MINUTES);
   const isNearLimit = usagePct >= 0.8 && usagePct < 1;
   const isAtLimit = usagePct >= 1;
-
-  // Dynamic time-of-day greeting
   const greeting = React.useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return `Good morning, ${user.name}.`;
@@ -1243,14 +1241,9 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                   overflow: "hidden",
                 }}
               >
-                <Animated.View style={[progressStyle]}>
-                  <LinearGradient
-                    colors={Gradients.primary}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{ height: "100%", borderRadius: BorderRadius.round }}
-                  />
-                </Animated.View>
+                <Animated.View
+                  style={[progressStyle, { height: "100%", borderRadius: BorderRadius.round, backgroundColor: "#FFFFFF" }]}
+                />
               </View>
             </View>
           </View>
@@ -1332,7 +1325,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                     {
                       height: "100%",
                       borderRadius: BorderRadius.round,
-                      backgroundColor: usageBarColor,
+                      backgroundColor: "#FFFFFF",
                     },
                   ]}
                 />
