@@ -1,222 +1,66 @@
-/**
- * Deepgram API Service
- * Handles audio transcription using the Deepgram API
- *
- * Features:
- * - Secure API key management via environment variables
- * - Audio file transcription with speaker diarization
- * - Error handling and retry logic
- * - Support for multiple audio formats
- */
-
-// Use the legacy subpath — v55's top-level export no longer includes
-// `EncodingType`, which would make this file crash at runtime.
 import * as FileSystem from 'expo-file-system/legacy';
-import { Platform, Alert } from 'react-native';
-
-// In Expo SDK 55, EXPO_PUBLIC_* variables are inlined by Metro at bundle time
-// via process.env — this is the only reliable source across ALL build profiles
-// (development, preview, production). Constants.expoConfig.extra requires the
-// key to be present at Metro bundle time AND injected via app.config.js, which
-// adds an extra failure point. process.env.EXPO_PUBLIC_* always works.
-function getDeepgramApiKey(): string {
-  const raw = process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY;
-  return raw == null ? '' : String(raw).trim();
-}
-
-const DEEPGRAM_API_URL = 'https://api.deepgram.com/v1/listen';
-
-interface DeepgramTranscriptionOptions {
-  language?: string;
-  punctuate?: boolean;
-  diarize?: boolean;
-  model?: 'nova-2' | 'nova' | 'enhanced' | 'base';
-  smart_format?: boolean;
-}
-
-interface DeepgramResponse {
-  results: {
-    channels: Array<{
-      alternatives: Array<{
-        transcript: string;
-        confidence: number;
-        words?: Array<{
-          word: string;
-          start: number;
-          end: number;
-          confidence: number;
-          speaker?: number;
-        }>;
-      }>;
-    }>;
-  };
-  metadata: {
-    transaction_key: string;
-    request_id: string;
-    sha256: string;
-    created: string;
-    duration: number;
-    channels: number;
-  };
-}
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 export interface TranscriptionResult {
   transcript: string;
   confidence: number;
   duration: number;
-  words?: Array<{
-    word: string;
-    start: number;
-    end: number;
-    confidence: number;
-    speaker?: number;
-  }>;
 }
 
-/**
- * Transcribe audio file using Deepgram API
- * @param audioUri - Local file URI of the audio recording
- * @param options - Transcription options
- * @returns Transcription result with transcript and metadata
- */
+function getBackendUrl(): string {
+  const url =
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL ||
+    process.env.EXPO_PUBLIC_BACKEND_URL ||
+    'https://vocolens-app.vercel.app';
+  return String(url).replace(/\/$/, '');
+}
+
 export async function transcribeAudio(
   audioUri: string | null | undefined,
-  options: DeepgramTranscriptionOptions = {}
+  options: { language?: string } = {}
 ): Promise<TranscriptionResult> {
-  // Guard: catch null/undefined URI before any file I/O so the error message
-  // is clear instead of "cannot read base64 of undefined".
   if (!audioUri || typeof audioUri !== 'string' || audioUri.trim().length === 0) {
-    throw new Error('Audio file URI is missing. The recording may not have saved correctly — please try again.');
+    throw new Error('Audio file URI is missing.');
   }
-
-  try {
-    // Default options optimized for voice journaling
-    const transcriptionOptions: DeepgramTranscriptionOptions = {
-      language: 'en',
-      punctuate: true,
-      diarize: false, // Single speaker for journaling
-      model: 'nova-2', // Latest and most accurate model
-      smart_format: true, // Auto-format dates, times, etc.
-      ...options,
-    };
-
-    const DEEPGRAM_API_KEY = getDeepgramApiKey();
-
-    // TEMPORARY DIAGNOSTIC — shows exact value the app sees at runtime
-    Alert.alert(
-      'Deepgram Key Debug',
-      `Length: ${DEEPGRAM_API_KEY.length}\nFirst 8: "${DEEPGRAM_API_KEY.slice(0, 8)}"\nFull value: "${DEEPGRAM_API_KEY}"`
-    );
-
-    // Guard removed temporarily — proceed regardless to see what Deepgram returns
-
-    // Read the audio file as base64
-    const audioBase64 = await FileSystem.readAsStringAsync(audioUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    // Convert base64 to binary buffer — use Uint8Array directly, do NOT call
-    // .buffer.slice() on it. On Hermes (React Native / Android), .buffer.slice()
-    // on a Uint8Array created from atob() returns a detached zero-length buffer
-    // that fetch cannot serialize, causing an empty body → Deepgram 401.
-    const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
-
-    // Content-type must match the actual file format the recorder produces:
-    //   Android → MPEG_4/AAC  → audio/mp4
-    //   iOS     → WAV/PCM     → audio/wav
-    //   Web     → WebM/Opus   → audio/webm
-    const contentType = Platform.OS === 'android' ? 'audio/mp4'
-                      : Platform.OS === 'web'     ? 'audio/webm'
-                      : 'audio/wav';
-
-    // Build query parameters
-    const queryParams = new URLSearchParams({
-      punctuate: String(transcriptionOptions.punctuate),
-      language: transcriptionOptions.language || 'en',
-      model: transcriptionOptions.model || 'nova-2',
-      smart_format: String(transcriptionOptions.smart_format),
-    });
-
-    if (transcriptionOptions.diarize) {
-      queryParams.append('diarize', 'true');
-    }
-
-    // Make API request — pass Uint8Array directly as body (not a sliced ArrayBuffer)
-    const response = await fetch(`${DEEPGRAM_API_URL}?${queryParams.toString()}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${DEEPGRAM_API_KEY}`,
-        'Content-Type': contentType,
-      },
-      body: audioBuffer as unknown as BodyInit,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Deepgram API error (${response.status}): ${errorText}`);
-    }
-
-    const data: DeepgramResponse = await response.json();
-
-    // Extract transcription from response
-    const channel = data.results.channels[0];
-    const alternative = channel.alternatives[0];
-
-    if (!alternative || !alternative.transcript) {
-      throw new Error('No transcription found in Deepgram response');
-    }
-
-    return {
-      transcript: alternative.transcript,
-      confidence: alternative.confidence,
-      duration: data.metadata.duration,
-      words: alternative.words,
-    };
-  } catch (error) {
-    console.error('Deepgram transcription error:', error);
-    throw new Error(
-      `Failed to transcribe audio: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+  const mimeType = Platform.OS === 'android' ? 'audio/mp4' : Platform.OS === 'web' ? 'audio/webm' : 'audio/wav';
+  const audioBase64 = await FileSystem.readAsStringAsync(audioUri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  const backendUrl = getBackendUrl();
+  const response = await fetch(`${backendUrl}/api/transcribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audioBase64, language: options.language || 'en', mimeType }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Transcription failed (${response.status}): ${errorText}`);
   }
+  const data = await response.json();
+  if (!data.success) throw new Error(data.error || 'Transcription failed');
+  return { transcript: data.transcript || '', confidence: 0, duration: 0 };
 }
 
-/**
- * Transcribe audio with retry logic
- * @param audioUri - Local file URI of the audio recording
- * @param options - Transcription options
- * @param maxRetries - Maximum number of retry attempts (default: 3)
- * @returns Transcription result
- */
 export async function transcribeAudioWithRetry(
   audioUri: string,
-  options: DeepgramTranscriptionOptions = {},
+  options: { language?: string } = {},
   maxRetries: number = 3
 ): Promise<TranscriptionResult> {
   let lastError: Error | null = null;
-
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await transcribeAudio(audioUri, options);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Unknown error');
-      console.warn(`Transcription attempt ${attempt} failed:`, lastError.message);
-
-      // Wait before retrying (exponential backoff)
       if (attempt < maxRetries) {
-        const delayMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
       }
     }
   }
-
   throw lastError || new Error('Transcription failed after all retries');
 }
 
-/**
- * Check if Deepgram API is configured
- * @returns true if API key is configured
- */
 export function isDeepgramConfigured(): boolean {
-  const key = getDeepgramApiKey();
-  return Boolean(key) && key !== 'undefined' && key !== 'null' && key !== 'your_deepgram_api_key_here';
+  return true;
 }
