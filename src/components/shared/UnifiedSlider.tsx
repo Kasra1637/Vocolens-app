@@ -1,4 +1,3 @@
-notepad src\components\shared\UnifiedSlider.tsx
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import {
   View,
