@@ -114,13 +114,11 @@ export function WelcomeScreen() {
             >
               <Text
                 style={{
-                  fontFamily: "Inter_700Bold",
-                  color: "rgba(255,255,255,0.8)",
-                  fontSize: 18,
-                  fontWeight: "600",
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.72)",
+                  fontSize: 15,
                   textAlign: "center",
-                  letterSpacing: 0.2,
-                  lineHeight: 28,
+                  lineHeight: 23,
                 }}
               >
                 Turn your thoughts into clear insights
