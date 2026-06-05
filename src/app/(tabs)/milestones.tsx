@@ -67,8 +67,6 @@ import {
 import { tapHaptic, selectHaptic, successHaptic } from "@/lib/haptics";
 import { router, useIsFocused } from "expo-router";
 import {
-  Colors as StaticColors,
-  Gradients as StaticGradients,
   BorderRadius,
   getThemeColors,
   getThemeGradients,
@@ -76,7 +74,7 @@ import {
 } from "@/lib/theme";
 import useBadgesStore from "@/lib/state/badges-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
-import useOnboardingStore from "@/lib/state/onboarding-store";
+import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { Badge, BadgeCategory, BadgeRarity } from "@/lib/types";
 import { hexToRgba } from "@/lib/glass";
@@ -113,14 +111,14 @@ const BADGE_ICONS: Record<string, typeof Flame> = {
   compass: Compass,
 };
 
-// Rarity colors and effects
+// Rarity colors for badge cards (grid)
 const RARITY_CONFIG: Record<
   BadgeRarity,
   { colors: readonly [string, string]; glow: string; label: string }
 > = {
   common: {
-    colors: [StaticColors.purple200, StaticColors.purple300] as const,
-    glow: StaticColors.purple300,
+    colors: ["#9B8FD4", "#7B68C8"] as const,
+    glow: "#9B8FD4",
     label: "Common",
   },
   rare: {
@@ -765,6 +763,52 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
   );
 }
 
+// ─── Rarity config (mirrors MilestoneCelebration) ────────────────────────────
+const MODAL_RARITY_CONFIG: Record<
+  BadgeRarity,
+  {
+    gradient: readonly [string, string];
+    glow: string;
+    chipBg: string;
+    chipBorder: string;
+    chipText: string;
+    label: string;
+  }
+> = {
+  common: {
+    gradient: ["#9B8FD4", "#7B68C8"] as const,
+    glow: "#9B8FD4",
+    chipBg: "rgba(155,143,212,0.18)",
+    chipBorder: "rgba(155,143,212,0.45)",
+    chipText: "#C4B9F0",
+    label: "Common",
+  },
+  rare: {
+    gradient: ["#7B5FE8", "#5A3FC0"] as const,
+    glow: "#8E6BFF",
+    chipBg: "rgba(123,95,232,0.20)",
+    chipBorder: "rgba(142,107,255,0.50)",
+    chipText: "#B09CFF",
+    label: "Rare",
+  },
+  epic: {
+    gradient: ["#C77DFF", "#9D4EDD"] as const,
+    glow: "#C77DFF",
+    chipBg: "rgba(199,125,255,0.20)",
+    chipBorder: "rgba(199,125,255,0.50)",
+    chipText: "#DDA8FF",
+    label: "Epic",
+  },
+  legendary: {
+    gradient: ["#FFD93D", "#FF6B6B"] as const,
+    glow: "#FFD93D",
+    chipBg: "rgba(255,217,61,0.18)",
+    chipBorder: "rgba(255,217,61,0.50)",
+    chipText: "#FFE580",
+    label: "Legendary",
+  },
+};
+
 // Badge Detail Modal
 interface BadgeModalProps {
   visible: boolean;
@@ -774,19 +818,15 @@ interface BadgeModalProps {
 }
 
 function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
-  // Get theme colors - must be before any early returns
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   const Colors = getThemeColors(selectedTheme, isDarkMode);
-
-  React.useEffect(() => {
-    // No glow animation needed for unlocked badges
-  }, [visible, badge]);
+  const theme = THEME_COLORS[selectedTheme] ?? THEME_COLORS.darkMode;
 
   if (!badge) return null;
 
   const Icon = BADGE_ICONS[badge.icon] || Award;
-  const rarityConfig = RARITY_CONFIG[badge.rarity];
+  const rc = MODAL_RARITY_CONFIG[badge.rarity];
 
   const formatUnlockDate = (dateString?: string) => {
     if (!dateString) return "";
@@ -805,244 +845,277 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
       animationType="fade"
       onRequestClose={onClose}
     >
+      {/* Scrim with theme tint */}
       <View
         style={{
           flex: 1,
-          backgroundColor: "rgba(0, 0, 0, 0.95)",
           justifyContent: "center",
           alignItems: "center",
           padding: 20,
         }}
       >
+        <LinearGradient
+          colors={[theme.gradientEnd + "F0", "rgba(4,2,12,0.96)"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+
         <View
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.12)",
-            borderRadius: BorderRadius.xxlarge,
-            padding: 28,
             width: "100%",
             maxWidth: 400,
-            borderWidth: 2,
-            borderColor: "rgba(255, 255, 255, 0.20)",
+            borderRadius: BorderRadius.xxlarge,
             overflow: "hidden",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 8,
+            borderWidth: 1.5,
+            borderColor: rc.glow + "55",
+            shadowColor: rc.glow,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.5,
+            shadowRadius: 28,
+            elevation: 16,
           }}
         >
-          {/* Close Button */}
-          <Pressable
-            onPress={onClose}
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              zIndex: 10,
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: "transparent",
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 0,
-            }}
-          >
-            <X size={20} color="#FFFFFF" strokeWidth={2.5} />
-          </Pressable>
+          {/* Card background — theme gradient */}
+          <LinearGradient
+            colors={[theme.backgroundGradient[0], theme.backgroundGradient[1], theme.backgroundGradient[2]]}
+            start={{ x: 0.3, y: 0 }}
+            end={{ x: 0.7, y: 1 }}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          />
 
-          {/* Badge Icon with Glow */}
-          <View className="items-center mb-6">
-            <View style={{ position: "relative" }}>
+          {/* Top accent bar — rarity gradient */}
+          <LinearGradient
+            colors={rc.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ height: 5, width: "100%" }}
+          />
+
+          <View style={{ padding: 28 }}>
+            {/* Close Button */}
+            <Pressable
+              onPress={onClose}
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                zIndex: 10,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: "rgba(255,255,255,0.12)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <X size={18} color="#FFFFFF" strokeWidth={2.5} />
+            </Pressable>
+
+            {/* Rarity chip */}
+            <View style={{ alignItems: "center", marginBottom: 20 }}>
+              <View
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 5,
+                  borderRadius: 20,
+                  backgroundColor: rc.chipBg,
+                  borderWidth: 1,
+                  borderColor: rc.chipBorder,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Inter_700Bold",
+                    fontSize: 10,
+                    color: rc.chipText,
+                    textTransform: "uppercase",
+                    letterSpacing: 1.4,
+                  }}
+                >
+                  {rc.label}
+                </Text>
+              </View>
+            </View>
+
+            {/* Badge Icon — gradient circle */}
+            <View className="items-center mb-5">
               <View
                 style={{
                   width: 100,
                   height: 100,
                   borderRadius: 50,
+                  overflow: "hidden",
                   alignItems: "center",
                   justifyContent: "center",
-                  overflow: "hidden",
-                  shadowColor: "#000000",
+                  shadowColor: rc.glow,
                   shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 12,
-                  elevation: Platform.OS === "android" ? 0 : 8,
+                  shadowOpacity: 0.55,
+                  shadowRadius: 18,
+                  elevation: Platform.OS === "android" ? 0 : 10,
                 }}
               >
-                <View
+                <LinearGradient
+                  colors={rc.gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                   style={{
                     position: "absolute",
                     width: 100,
                     height: 100,
                     borderRadius: 50,
-                    backgroundColor: Colors.primary,
-                    borderWidth: 2,
-                    borderColor: Colors.primary,
                   }}
                 />
-                <View style={{ zIndex: 1 }}>
-                  <Icon size={50} color="#FFFFFF" strokeWidth={2} />
-                </View>
+                <Icon size={50} color="#FFFFFF" strokeWidth={1.8} />
               </View>
             </View>
-          </View>
 
-          {/* Badge Title & Rarity */}
-          <Text
-            style={{
-              fontFamily: "Fraunces_700Bold",
-              color: "#FFFFFF",
-              textAlign: "center",
-              fontSize: 24,
-              marginBottom: 8,
-            }}
-          >
-            {badge.title}
-          </Text>
-          <Text
-            style={{
-              fontFamily: "Inter_500Medium",
-              color: "rgba(255, 255, 255, 0.8)",
-              textAlign: "center",
-              fontSize: 14,
-              marginBottom: 16,
-            }}
-          >
-            {rarityConfig.label}
-          </Text>
-
-          {/* Description */}
-          <Text
-            style={{
-              fontFamily: "Inter_400Regular",
-              color: "rgba(255, 255, 255, 0.7)",
-              textAlign: "center",
-              fontSize: 15,
-              lineHeight: 22,
-              marginBottom: 20,
-            }}
-          >
-            {badge.description}
-          </Text>
-
-          {/* Requirement */}
-          <View
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: BorderRadius.large,
-              padding: 14,
-              marginBottom: 16,
-              borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.15)",
-            }}
-          >
+            {/* Title */}
             <Text
               style={{
-                fontFamily: "Inter_600SemiBold",
-                color: "rgba(255, 255, 255, 0.8)",
-                fontSize: 10,
-                letterSpacing: 0.5,
-                marginBottom: 6,
+                fontFamily: "Fraunces_700Bold",
+                color: "#FFFFFF",
+                textAlign: "center",
+                fontSize: 24,
+                marginBottom: 8,
               }}
             >
-              REQUIREMENT
+              {badge.title}
             </Text>
+
+            {/* Description */}
             <Text
               style={{
-                fontFamily: "Inter_600SemiBold",
-                color: "rgba(255, 255, 255, 0.9)",
+                fontFamily: "Inter_400Regular",
+                color: "rgba(255,255,255,0.70)",
+                textAlign: "center",
                 fontSize: 15,
                 lineHeight: 22,
+                marginBottom: 20,
               }}
             >
-              {badge.requirement}
+              {badge.description}
             </Text>
-          </View>
 
-          {/* Tip */}
-          <View
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderRadius: BorderRadius.large,
-              padding: 14,
-              marginBottom: 20,
-              borderLeftWidth: 4,
-              borderLeftColor: "rgba(255, 255, 255, 0.60)",
-              borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.15)",
-            }}
-          >
-            <Text
+            {/* Requirement */}
+            <View
               style={{
-                fontFamily: "Inter_600SemiBold",
-                color: Colors.primary,
-                fontSize: 10,
-                letterSpacing: 0.5,
-                marginBottom: 6,
+                backgroundColor: "rgba(255,255,255,0.07)",
+                borderRadius: BorderRadius.large,
+                padding: 14,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.12)",
               }}
             >
-              TIP
-            </Text>
-            <Text
-              style={{
-                fontFamily: "Inter_500Medium",
-                color: "rgba(255, 255, 255, 0.9)",
-                fontSize: 13,
-                lineHeight: 21,
-              }}
-            >
-              {badge.tip}
-            </Text>
-          </View>
+              <Text
+                style={{
+                  fontFamily: "Inter_600SemiBold",
+                  color: "rgba(255,255,255,0.55)",
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                }}
+              >
+                Requirement
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter_600SemiBold",
+                  color: "rgba(255,255,255,0.90)",
+                  fontSize: 14,
+                  lineHeight: 21,
+                }}
+              >
+                {badge.requirement}
+              </Text>
+            </View>
 
-          {/* Unlock Date */}
-          {badge.unlocked && badge.unlockDate && (
-            <View className="items-center mb-6">
+            {/* Tip — rarity accent left border */}
+            <View
+              style={{
+                backgroundColor: "rgba(255,255,255,0.07)",
+                borderRadius: BorderRadius.large,
+                padding: 14,
+                marginBottom: 20,
+                borderLeftWidth: 4,
+                borderLeftColor: rc.glow,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.12)",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Inter_600SemiBold",
+                  color: rc.chipText,
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                }}
+              >
+                Tip
+              </Text>
               <Text
                 style={{
                   fontFamily: "Inter_500Medium",
-                  color: StaticColors.textTertiary,
-                  fontSize: 12,
+                  color: "rgba(255,255,255,0.90)",
+                  fontSize: 13,
+                  lineHeight: 21,
                 }}
               >
-                Unlocked on {formatUnlockDate(badge.unlockDate)}
+                {badge.tip}
               </Text>
             </View>
-          )}
 
-          {/* Share Button */}
-          {badge.unlocked && (
-            <Pressable
-              onPress={onShare}
-              style={{
-                borderRadius: BorderRadius.large,
-                overflow: "hidden",
-              }}
-            >
-              <LinearGradient
-                colors={StaticGradients.button}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  padding: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Share2 size={18} color="#FFFFFF" strokeWidth={2} />
+            {/* Unlock Date */}
+            {badge.unlocked && badge.unlockDate && (
+              <View className="items-center mb-5">
                 <Text
                   style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "#FFFFFF",
-                    fontSize: 15,
-                    marginLeft: 8,
+                    fontFamily: "Inter_500Medium",
+                    color: "rgba(255,255,255,0.45)",
+                    fontSize: 12,
                   }}
                 >
-                  Share Milestone
+                  Unlocked on {formatUnlockDate(badge.unlockDate)}
                 </Text>
-              </LinearGradient>
-            </Pressable>
-          )}
+              </View>
+            )}
+
+            {/* Share Button — theme mic gradient */}
+            {badge.unlocked && (
+              <Pressable
+                onPress={onShare}
+                style={{ borderRadius: BorderRadius.large, overflow: "hidden" }}
+              >
+                <LinearGradient
+                  colors={theme.micButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    padding: 15,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Share2 size={18} color="#FFFFFF" strokeWidth={2} />
+                  <Text
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#FFFFFF",
+                      fontSize: 15,
+                    }}
+                  >
+                    Share Milestone
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+            )}
+          </View>
         </View>
       </View>
     </Modal>

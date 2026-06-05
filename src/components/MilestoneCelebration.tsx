@@ -1,5 +1,41 @@
-import React, { useEffect, useRef, useState } from "react";
+/**
+ * MilestoneCelebration
+ *
+ * Full-screen badge unlock celebration modal. Enhancements over the original:
+ *
+ * THEME INTEGRATION
+ *  - Confetti colours are seeded from the active theme's gradient palette so
+ *    the burst always feels in-brand rather than generic rainbow.
+ *  - Card uses a real LinearGradient drawn from backgroundGradient instead of
+ *    the flat near-black tile.
+ *  - Overlay scrim blends the theme's gradient end colour with a dark base.
+ *
+ * RARITY SYSTEM
+ *  - Four distinct rarity tiers (Common / Rare / Epic / Legendary) each carry
+ *    their own gradient pair, glow colour, and label colour applied to the
+ *    icon ring, the chip, the top accent bar and the glow shadow.
+ *  - Legendary tier adds a slow, continuous golden shimmer / pulse on the icon
+ *    ring so it reads as truly special.
+ *
+ * BADGE ICON
+ *  - The icon circle is filled with the rarity gradient (LinearGradient).
+ *  - For streak-category badges the AnimatedStreakFlame component replaces the
+ *    static icon, giving it its breathing + glow-ring behaviour.
+ *  - Non-streak badges get a continuous gentle pulse on the icon circle
+ *    (scale 1.0 → 1.06 → 1.0, 2 s loop) so the visual never goes dead.
+ *
+ * TOP ACCENT BAR
+ *  - Replaced the 3 px flat strip with a 6 px LinearGradient bar that uses
+ *    the rarity gradient colours, giving each tier a distinct look.
+ *
+ * BUTTONS
+ *  - Share button uses the theme's micButtonGradient (3-stop) instead of the
+ *    single flat themeColor fill.
+ */
+
+import React, { useEffect, useRef } from "react";
 import { View, Text, Modal, Pressable, Dimensions } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,7 +43,10 @@ import Animated, {
   withTiming,
   withDelay,
   withSequence,
+  withRepeat,
   runOnJS,
+  Easing,
+  cancelAnimation,
 } from "react-native-reanimated";
 import { celebrationHaptic, tapHaptic, selectHaptic } from "@/lib/haptics";
 import {
@@ -41,15 +80,15 @@ import {
 import useBadgesStore from "@/lib/state/badges-store";
 import { shareMilestone } from "@/lib/share-utils";
 import { useMilestoneSound } from "@/lib/hooks/useMilestoneSound";
-import { Badge } from "@/lib/types";
-import useOnboardingStore from "@/lib/state/onboarding-store";
-import { THEME_COLORS } from "@/lib/state/onboarding-store";
+import { Badge, BadgeRarity } from "@/lib/types";
+import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
+import useUserStatsStore from "@/lib/state/user-stats-store";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Icon map ─────────────────────────────────────────────────────────────────
 
-// Same icon map used by the badge screen — keeps both in sync
 const BADGE_ICONS: Record<
   string,
   React.ComponentType<{ size: number; color: string; strokeWidth: number }>
@@ -80,33 +119,87 @@ const BADGE_ICONS: Record<
   compass: Compass,
 };
 
-const CONFETTI_COLORS = [
-  "#FF6B6B",
-  "#FFD93D",
-  "#6BCB77",
-  "#4D96FF",
-  "#A78BFA",
-  "#FF9FF3",
-  "#FFA94D",
-  "#63E6BE",
-];
+// ─── Rarity visual config ─────────────────────────────────────────────────────
 
-// Pre-computed particle layout (stable across renders)
-const PARTICLES = Array.from({ length: 22 }, (_, i) => ({
-  id: i,
-  x: (i / 22) * SW + ((i % 3) - 1) * 18,
-  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-  delay: i * 55,
-  duration: 1900 + (i % 5) * 180,
-  driftX: ((i % 4) - 1.5) * 55,
-  rot: (i % 2 === 0 ? 1 : -1) * (200 + i * 15),
-  size: i % 3 === 0 ? 10 : 7,
-  shape: i % 4 === 0 ? "circle" : "rect",
-}));
+const RARITY_CONFIG: Record<
+  BadgeRarity,
+  {
+    gradient: readonly [string, string];
+    glow: string;
+    chipBg: string;
+    chipBorder: string;
+    chipText: string;
+    label: string;
+  }
+> = {
+  common: {
+    gradient: ["#9B8FD4", "#7B68C8"] as const,
+    glow: "#9B8FD4",
+    chipBg: "rgba(155, 143, 212, 0.18)",
+    chipBorder: "rgba(155, 143, 212, 0.45)",
+    chipText: "#C4B9F0",
+    label: "Common",
+  },
+  rare: {
+    gradient: ["#7B5FE8", "#5A3FC0"] as const,
+    glow: "#8E6BFF",
+    chipBg: "rgba(123, 95, 232, 0.20)",
+    chipBorder: "rgba(142, 107, 255, 0.50)",
+    chipText: "#B09CFF",
+    label: "Rare",
+  },
+  epic: {
+    gradient: ["#C77DFF", "#9D4EDD"] as const,
+    glow: "#C77DFF",
+    chipBg: "rgba(199, 125, 255, 0.20)",
+    chipBorder: "rgba(199, 125, 255, 0.50)",
+    chipText: "#DDA8FF",
+    label: "Epic",
+  },
+  legendary: {
+    gradient: ["#FFD93D", "#FF6B6B"] as const,
+    glow: "#FFD93D",
+    chipBg: "rgba(255, 217, 61, 0.18)",
+    chipBorder: "rgba(255, 217, 61, 0.50)",
+    chipText: "#FFE580",
+    label: "Legendary",
+  },
+};
 
-// ─── Confetti particle ────────────────────────────────────────────────────────
+// ─── Confetti — theme-tinted particles ────────────────────────────────────────
 
-function Particle({ cfg, run }: { cfg: (typeof PARTICLES)[0]; run: boolean }) {
+function buildParticles(themeGradStart: string, themeGradEnd: string, themeAccent: string) {
+  // Mix theme colours with a couple of neutral brights for variety
+  const palette = [
+    themeGradStart,
+    themeGradEnd,
+    themeAccent,
+    "#FFFFFF",
+    "#FFD93D",
+    themeGradStart + "CC",
+    themeAccent + "AA",
+    themeGradEnd + "DD",
+  ];
+  return Array.from({ length: 26 }, (_, i) => ({
+    id: i,
+    x: (i / 26) * SW + ((i % 3) - 1) * 18,
+    color: palette[i % palette.length],
+    delay: i * 48,
+    duration: 1800 + (i % 5) * 200,
+    driftX: ((i % 4) - 1.5) * 60,
+    rot: (i % 2 === 0 ? 1 : -1) * (190 + i * 14),
+    size: i % 3 === 0 ? 11 : 7,
+    shape: i % 4 === 0 ? "circle" : "rect",
+  }));
+}
+
+function Particle({
+  cfg,
+  run,
+}: {
+  cfg: ReturnType<typeof buildParticles>[0];
+  run: boolean;
+}) {
   const y = useSharedValue(-20);
   const x = useSharedValue(0);
   const rot = useSharedValue(0);
@@ -114,19 +207,9 @@ function Particle({ cfg, run }: { cfg: (typeof PARTICLES)[0]; run: boolean }) {
 
   useEffect(() => {
     if (!run) return;
-    opacity.value = withDelay(cfg.delay, withTiming(1, { duration: 80 }));
-    y.value = withDelay(
-      cfg.delay,
-      withTiming(SH + 40, { duration: cfg.duration }),
-    );
-    x.value = withDelay(
-      cfg.delay,
-      withTiming(cfg.driftX, { duration: cfg.duration }),
-    );
-    rot.value = withDelay(
-      cfg.delay,
-      withTiming(cfg.rot, { duration: cfg.duration }),
-    );
+    y.value = withDelay(cfg.delay, withTiming(SH + 40, { duration: cfg.duration }));
+    x.value = withDelay(cfg.delay, withTiming(cfg.driftX, { duration: cfg.duration }));
+    rot.value = withDelay(cfg.delay, withTiming(cfg.rot, { duration: cfg.duration }));
     opacity.value = withDelay(
       cfg.delay,
       withSequence(
@@ -163,19 +246,143 @@ function Particle({ cfg, run }: { cfg: (typeof PARTICLES)[0]; run: boolean }) {
   );
 }
 
+// ─── Icon circle with gradient + optional animated streak flame ──────────────
+
+interface BadgeIconCircleProps {
+  badge: Badge;
+  rarity: (typeof RARITY_CONFIG)[BadgeRarity];
+  currentStreak: number;
+  emojiStyle: ReturnType<typeof useAnimatedStyle>;
+}
+
+function BadgeIconCircle({ badge, rarity, currentStreak, emojiStyle }: BadgeIconCircleProps) {
+  // Continuous gentle pulse on the icon circle (non-legendary)
+  const ringPulse = useSharedValue(1);
+  // Legendary: slower, more dramatic glow pulse
+  const legendaryPulse = useSharedValue(0.7);
+
+  const isLegendary = badge.rarity === "legendary";
+
+  useEffect(() => {
+    cancelAnimation(ringPulse);
+    cancelAnimation(legendaryPulse);
+    if (isLegendary) {
+      legendaryPulse.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.7, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+        false,
+      );
+    } else {
+      ringPulse.value = withRepeat(
+        withSequence(
+          withTiming(1.06, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.0, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+        false,
+      );
+    }
+  }, [isLegendary]);
+
+  const pulseBorderStyle = useAnimatedStyle(() => ({
+    opacity: isLegendary ? legendaryPulse.value : 1,
+    transform: [{ scale: isLegendary ? 1 + (1 - legendaryPulse.value) * 0.08 : ringPulse.value }],
+  }));
+
+  const isStreakBadge = badge.category === "streak";
+
+  return (
+    <Animated.View style={[emojiStyle, { alignItems: "center", justifyContent: "center" }]}>
+      {/* Outer glow ring — pulses on legendary, breathes on others */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          pulseBorderStyle,
+          {
+            position: "absolute",
+            width: 104,
+            height: 104,
+            borderRadius: 52,
+            borderWidth: isLegendary ? 2 : 1.5,
+            borderColor: rarity.glow + (isLegendary ? "AA" : "55"),
+          },
+        ]}
+      />
+
+      {/* Gradient-filled icon circle */}
+      <View
+        style={{
+          width: 88,
+          height: 88,
+          borderRadius: 44,
+          overflow: "hidden",
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: rarity.glow,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.6,
+          shadowRadius: 20,
+          elevation: 12,
+        }}
+      >
+        <LinearGradient
+          colors={rarity.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            position: "absolute",
+            width: 88,
+            height: 88,
+            borderRadius: 44,
+          }}
+        />
+        {isStreakBadge ? (
+          <AnimatedStreakFlame
+            streak={currentStreak}
+            size={36}
+            badgeSize={72}
+            badgeRadius={36}
+            badgeColor="transparent"
+            glowColor={rarity.glow + "88"}
+            iconColor="#FFFFFF"
+            strokeWidth={1.8}
+          />
+        ) : (
+          (() => {
+            const BadgeIcon = BADGE_ICONS[badge.icon] ?? Award;
+            return <BadgeIcon size={42} color="#FFFFFF" strokeWidth={1.5} />;
+          })()
+        )}
+      </View>
+    </Animated.View>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function MilestoneCelebration() {
   const pendingCelebrations = useBadgesStore((s) => s.pendingCelebrations);
   const referralCode = useBadgesStore((s) => s.referralCode);
   const dequeueCelebration = useBadgesStore((s) => s.dequeueCelebration);
+  const getBadgeWithState = useBadgesStore((s) => s.getBadgeWithState);
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const currentStreak = useUserStatsStore((s) => s.stats.currentStreak);
 
   const { playCelebration, playBadgePop } = useMilestoneSound();
 
-  const [visible, setVisible] = useState(false);
-  const [badge, setBadge] = useState<Badge | null>(null);
-  const [confettiOn, setConfettiOn] = useState(false);
+  const [visible, setVisible] = React.useState(false);
+  const [badge, setBadge] = React.useState<Badge | null>(null);
+  const [confettiOn, setConfettiOn] = React.useState(false);
+  const [particles, setParticles] = React.useState(() =>
+    buildParticles(
+      THEME_COLORS.darkMode.gradientStart,
+      THEME_COLORS.darkMode.gradientEnd,
+      THEME_COLORS.darkMode.accent,
+    ),
+  );
 
   // Animations
   const overlayOpacity = useSharedValue(0);
@@ -184,51 +391,44 @@ export function MilestoneCelebration() {
   const emojiScale = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
 
-  const themeColor = THEME_COLORS[selectedTheme]?.primary ?? "#9370DB";
-
-  const getBadgeWithState = useBadgesStore((s) => s.getBadgeWithState);
+  const theme = THEME_COLORS[selectedTheme] ?? THEME_COLORS.darkMode;
+  const rarity = badge ? RARITY_CONFIG[badge.rarity] : RARITY_CONFIG.common;
 
   // Watch for new celebrations
   useEffect(() => {
     if (pendingCelebrations.length > 0 && !visible) {
       const badgeId = dequeueCelebration();
       if (!badgeId) return;
-      // Use the same store method as the badge screen for consistent data
       const fullBadge = getBadgeWithState(badgeId);
       if (!fullBadge) return;
+
+      // Build theme-tinted confetti for this celebration
+      setParticles(
+        buildParticles(theme.gradientStart, theme.gradientEnd, theme.accent),
+      );
 
       setBadge(fullBadge);
       setVisible(true);
     }
   }, [pendingCelebrations.length]);
 
-  // Entrance animation when visible
+  // Entrance animation
   useEffect(() => {
     if (!visible) return;
 
-    // Reset
     overlayOpacity.value = 0;
     cardScale.value = 0.5;
     cardOpacity.value = 0;
     emojiScale.value = 0;
     contentOpacity.value = 0;
 
-    // Play sounds with stagger
     playCelebration();
     setTimeout(() => playBadgePop(), 350);
     setTimeout(() => setConfettiOn(true), 50);
 
-    // Animate overlay
     overlayOpacity.value = withTiming(1, { duration: 300 });
-
-    // Card entrance
-    cardScale.value = withDelay(
-      100,
-      withSpring(1, { damping: 14, stiffness: 160 }),
-    );
+    cardScale.value = withDelay(100, withSpring(1, { damping: 14, stiffness: 160 }));
     cardOpacity.value = withDelay(100, withTiming(1, { duration: 250 }));
-
-    // Emoji bounce in
     emojiScale.value = withDelay(
       320,
       withSequence(
@@ -236,8 +436,6 @@ export function MilestoneCelebration() {
         withSpring(1.0, { damping: 10, stiffness: 200 }),
       ),
     );
-
-    // Content fade in
     contentOpacity.value = withDelay(420, withTiming(1, { duration: 300 }));
 
     celebrationHaptic();
@@ -264,9 +462,7 @@ export function MilestoneCelebration() {
     await shareMilestone({ badge, referralCode });
   };
 
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: overlayOpacity.value,
-  }));
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,
     transform: [{ scale: cardScale.value }],
@@ -274,13 +470,9 @@ export function MilestoneCelebration() {
   const emojiStyle = useAnimatedStyle(() => ({
     transform: [{ scale: emojiScale.value }],
   }));
-  const contentStyle = useAnimatedStyle(() => ({
-    opacity: contentOpacity.value,
-  }));
+  const contentStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
 
   if (!badge) return null;
-
-  const BadgeIcon = BADGE_ICONS[badge.icon] ?? Award;
 
   return (
     <Modal
@@ -290,29 +482,34 @@ export function MilestoneCelebration() {
       statusBarTranslucent
       onRequestClose={handleDismiss}
     >
-      {/* Confetti layer */}
+      {/* Confetti layer — theme-tinted */}
       <View
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         pointerEvents="none"
       >
-        {PARTICLES.map((p) => (
+        {particles.map((p) => (
           <Particle key={p.id} cfg={p} run={confettiOn} />
         ))}
       </View>
 
-      {/* Overlay */}
+      {/* Scrim — blends theme gradient-end with deep dark */}
       <Animated.View
         style={[
           overlayStyle,
-          {
-            flex: 1,
-            backgroundColor: "rgba(8,4,18,0.82)",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingHorizontal: 28,
-          },
+          { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 28 },
         ]}
       >
+        {/* Theme-tinted overlay gradient */}
+        <LinearGradient
+          colors={[
+            theme.gradientEnd + "E8",
+            "rgba(4,2,12,0.92)",
+          ]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+
         {/* Close button */}
         <Pressable
           onPress={handleDismiss}
@@ -339,37 +536,43 @@ export function MilestoneCelebration() {
               width: "100%",
               maxWidth: 360,
               borderRadius: 28,
-              backgroundColor: "rgba(18,10,36,0.96)",
-              borderWidth: 1.5,
-              borderColor: themeColor + "60",
               overflow: "hidden",
-              shadowColor: themeColor,
+              borderWidth: 1.5,
+              borderColor: rarity.glow + "55",
+              shadowColor: rarity.glow,
               shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.55,
-              shadowRadius: 32,
+              shadowOpacity: 0.6,
+              shadowRadius: 36,
               elevation: 20,
             },
           ]}
         >
-          {/* Top glow band */}
-          <View
-            style={{
-              height: 3,
-              backgroundColor: themeColor,
-              opacity: 0.9,
-            }}
+          {/* Card background — theme gradient */}
+          <LinearGradient
+            colors={[theme.backgroundGradient[0], theme.backgroundGradient[1], theme.backgroundGradient[2]]}
+            start={{ x: 0.3, y: 0 }}
+            end={{ x: 0.7, y: 1 }}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+
+          {/* Top accent bar — rarity gradient */}
+          <LinearGradient
+            colors={rarity.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ height: 6, width: "100%" }}
           />
 
           <View style={{ padding: 28, alignItems: "center" }}>
             {/* Rarity chip */}
             <View
               style={{
-                paddingHorizontal: 12,
-                paddingVertical: 4,
+                paddingHorizontal: 14,
+                paddingVertical: 5,
                 borderRadius: 20,
-                backgroundColor: themeColor + "22",
+                backgroundColor: rarity.chipBg,
                 borderWidth: 1,
-                borderColor: themeColor + "55",
+                borderColor: rarity.chipBorder,
                 marginBottom: 20,
               }}
             >
@@ -377,37 +580,27 @@ export function MilestoneCelebration() {
                 style={{
                   fontFamily: "Inter_700Bold",
                   fontSize: 10,
-                  color: themeColor,
+                  color: rarity.chipText,
                   textTransform: "uppercase",
-                  letterSpacing: 1.2,
+                  letterSpacing: 1.4,
                 }}
               >
-                {badge.rarity.charAt(0).toUpperCase() + badge.rarity.slice(1)} Milestone
+                {rarity.label} Milestone
               </Text>
             </View>
 
-            {/* Icon */}
-            <Animated.View
-              style={[
-                emojiStyle,
-                {
-                  width: 88,
-                  height: 88,
-                  borderRadius: 44,
-                  backgroundColor: themeColor + "28",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 18,
-                  borderWidth: 1.5,
-                  borderColor: themeColor + "50",
-                },
-              ]}
-            >
-              <BadgeIcon size={42} color="#FFFFFF" strokeWidth={1.5} />
-            </Animated.View>
+            {/* Badge icon circle */}
+            <View style={{ marginBottom: 20 }}>
+              <BadgeIconCircle
+                badge={badge}
+                rarity={rarity}
+                currentStreak={currentStreak}
+                emojiStyle={emojiStyle}
+              />
+            </View>
 
-            {/* Title + description */}
-            <Animated.View style={[contentStyle, { alignItems: "center" }]}>
+            {/* Text content */}
+            <Animated.View style={[contentStyle, { alignItems: "center", width: "100%" }]}>
               <Text
                 style={{
                   fontFamily: "Fraunces_700Bold",
@@ -435,9 +628,9 @@ export function MilestoneCelebration() {
                 style={{
                   fontFamily: "Inter_600SemiBold",
                   fontSize: 13,
-                  color: themeColor,
+                  color: rarity.chipText,
                   textAlign: "center",
-                  marginBottom: 26,
+                  marginBottom: 28,
                 }}
               >
                 {badge.tip}
@@ -445,29 +638,34 @@ export function MilestoneCelebration() {
 
               {/* Buttons */}
               <View style={{ width: "100%", gap: 10 }}>
-                {/* Share */}
+                {/* Share — theme mic gradient */}
                 <Pressable
                   onPress={handleShare}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: themeColor,
-                    borderRadius: 16,
-                    paddingVertical: 14,
-                    gap: 8,
-                  }}
+                  style={{ borderRadius: 16, overflow: "hidden" }}
                 >
-                  <Share2 size={17} color="#FFFFFF" strokeWidth={2.5} />
-                  <Text
+                  <LinearGradient
+                    colors={theme.micButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
                     style={{
-                      fontFamily: "Inter_700Bold",
-                      fontSize: 15,
-                      color: "#FFFFFF",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 15,
+                      gap: 8,
                     }}
                   >
-                    Share Milestone
-                  </Text>
+                    <Share2 size={17} color="#FFFFFF" strokeWidth={2.5} />
+                    <Text
+                      style={{
+                        fontFamily: "Inter_700Bold",
+                        fontSize: 15,
+                        color: "#FFFFFF",
+                      }}
+                    >
+                      Share Milestone
+                    </Text>
+                  </LinearGradient>
                 </Pressable>
 
                 {/* Continue */}
