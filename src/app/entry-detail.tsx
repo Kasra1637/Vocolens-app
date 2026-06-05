@@ -1050,7 +1050,7 @@ export default function EntryDetailScreen() {
                 <Pressable
                   onPress={handleDeleteCancel}
                   className="rounded-2xl py-4 items-center"
-                  style={{ borderWidth: 2, borderColor: GLASS_BORDER, backgroundColor: GLASS_INNER_BG }}
+                  style={{ borderWidth: 2, borderColor: Colors.primary, backgroundColor: "transparent" }}
                 >
                   <Text className="text-base font-bold" style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}>Cancel</Text>
                 </Pressable>

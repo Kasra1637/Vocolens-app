@@ -1300,7 +1300,7 @@ export default function SettingsScreen() {
                         justifyContent: "center",
                         backgroundColor: hexToRgba(Colors.primary, 0.15),
                         borderWidth: 2,
-                        borderColor: hexToRgba(Colors.primary, 0.30),
+                        borderColor: "rgba(255, 255, 255, 0.20)",
                         borderRadius: 24,
                       }}
                     >
