@@ -26,6 +26,7 @@ import { BiometricLockScreen } from './BiometricLockScreen';
 import { StandalonePaywall } from './StandalonePaywall';
 import { FirstLaunchCelebration } from './FirstLaunchCelebration';
 import { SplashScreen } from './onboarding/SplashScreen';
+import { OnboardingGlowOrbs } from './onboarding/OnboardingGlowOrbs';
 import { activateAdapty, getProfile, isAdaptyEnabled, hasEntitlement } from '@/lib/adaptyClient';
 import { NotificationService } from '@/lib/services/notification-service';
 
@@ -58,15 +59,7 @@ export function AuthGate({ children }: AuthGateProps) {
   // Tracks whether we've finished verifying against Adapty
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
 
-  // Show splash immediately on every launch before anything else renders
-  if (showSplash) {
-    return (
-      <View style={{ flex: 1 }}>
-        <SplashScreen onDone={() => setShowSplash(false)} />
-      </View>
-    );
-  }
-
+  // ALL hooks must be declared before any early return — Rules of Hooks
   useEffect(() => {
     checkAuthStatus();
   }, [hasCompletedOnboarding]);
@@ -116,9 +109,23 @@ export function AuthGate({ children }: AuthGateProps) {
     );
   }
 
+  // Splash shown on every launch before any other screen
+  if (showSplash) {
+    return (
+      <View style={{ flex: 1 }}>
+        <SplashScreen onDone={() => setShowSplash(false)} />
+      </View>
+    );
+  }
+
   // Step 1 — onboarding not done yet (paywall is embedded as step 16)
   if (!hasCompletedOnboarding) {
-    return <OnboardingFlow />;
+    return (
+      <View style={{ flex: 1 }}>
+        <OnboardingGlowOrbs />
+        <OnboardingFlow />
+      </View>
+    );
   }
 
   // Step 2 — onboarding done but no active subscription → show standalone paywall

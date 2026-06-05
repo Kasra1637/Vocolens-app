@@ -1,8 +1,12 @@
 /**
  * OnboardingGlowOrbs
  *
- * Reusable pulsing background glow orbs used on every onboarding screen.
+ * Persistent pulsing background glow orbs rendered behind all onboarding screens.
+ * Mounted once in AuthGate — never remounts on step changes, so no hooks violation.
  * Color adapts to the user's selected theme primary color.
+ *
+ * Usage: render as the FIRST child inside a `position: "relative"` or `flex: 1` View,
+ * followed by the screen content. Orbs are absolutely positioned and non-interactive.
  */
 
 import React, { useEffect } from "react";
@@ -29,7 +33,7 @@ export function OnboardingGlowOrbs() {
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const primary = THEME_COLORS[selectedTheme].primary;
-  const glowColor = hexToRgba(primary, 0.12);
+  const glowColor = hexToRgba(primary, 0.14);
 
   const orb1Opacity = useSharedValue(0.25);
   const orb2Opacity = useSharedValue(0.12);
@@ -40,7 +44,7 @@ export function OnboardingGlowOrbs() {
   useEffect(() => {
     orb1Opacity.value = withRepeat(
       withSequence(
-        withTiming(0.55, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.60, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
         withTiming(0.20, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
@@ -50,8 +54,8 @@ export function OnboardingGlowOrbs() {
       700,
       withRepeat(
         withSequence(
-          withTiming(0.42, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.08, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.45, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.10, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
         false,
@@ -61,13 +65,14 @@ export function OnboardingGlowOrbs() {
 
   return (
     <>
+      {/* Orb 1 — upper-left quadrant */}
       <Animated.View
         pointerEvents="none"
         style={[
           styles.orb,
           orb1Style,
           {
-            top: -screenHeight * 0.12,
+            top: screenHeight * 0.05,
             left: -screenWidth * 0.20,
             width: screenWidth * 0.85,
             height: screenWidth * 0.85,
@@ -76,13 +81,14 @@ export function OnboardingGlowOrbs() {
           },
         ]}
       />
+      {/* Orb 2 — lower-right quadrant */}
       <Animated.View
         pointerEvents="none"
         style={[
           styles.orb,
           orb2Style,
           {
-            bottom: -screenHeight * 0.10,
+            bottom: screenHeight * 0.05,
             right: -screenWidth * 0.25,
             width: screenWidth * 0.80,
             height: screenWidth * 0.80,
@@ -96,5 +102,8 @@ export function OnboardingGlowOrbs() {
 }
 
 const styles = StyleSheet.create({
-  orb: { position: "absolute" },
+  orb: {
+    position: "absolute",
+    zIndex: 0,
+  },
 });
