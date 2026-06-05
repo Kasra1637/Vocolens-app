@@ -12,7 +12,7 @@ function getBackendUrl(): string {
   const url =
     Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL ||
     process.env.EXPO_PUBLIC_BACKEND_URL ||
-    'https://vocolens-app.vercel.app';
+    'https://vocolens-api.kasrammarvel.workers.dev';
   return String(url).replace(/\/$/, '');
 }
 
