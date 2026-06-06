@@ -14,6 +14,7 @@
 // instead so the Insights tab never breaks.
 
 import { JournalEntry } from './types';
+import Constants from 'expo-constants';
 import {
   DeepInsight,
   EmotionalPattern,
@@ -37,7 +38,17 @@ export interface AIAnalysisResponse {
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const MODEL = 'anthropic/claude-3.5-sonnet-20241022';
-const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY || '';
+
+// Read lazily via a function so Constants.expoConfig is fully populated.
+// Module-load-time reads fire before the Expo config is hydrated on device,
+// returning '' even when the EAS secret is correctly set.
+function getOpenRouterApiKey(): string {
+  return (
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_OPENROUTER_API_KEY ||
+    process.env.EXPO_PUBLIC_OPENROUTER_API_KEY ||
+    ''
+  );
+}
 
 // ============================================================================
 // CACHE
@@ -113,6 +124,7 @@ Content: ${entry.transcript.slice(0, 300)}${entry.transcript.length > 300 ? '...
 // ============================================================================
 
 async function callOpenRouterDirect(entriesText: string): Promise<AIAnalysisResponse> {
+  const OPENROUTER_API_KEY = getOpenRouterApiKey();
   if (!OPENROUTER_API_KEY || !OPENROUTER_API_KEY.startsWith('sk-or-')) {
     console.warn(
       '[AI Emotional Intelligence] OpenRouter API key missing or invalid — returning default analysis.',
