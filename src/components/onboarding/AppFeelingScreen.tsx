@@ -29,9 +29,9 @@ interface Option {
 
 const OPTIONS: Option[] = [
   { id: "quiet-room",         label: "Private space to self discover", icon: Home },
-  { id: "understanding-tool", label: "Tool for self-discovery",  icon: FlaskConical },
-  { id: "listening-friend",   label: "Friend, not a fixer",      icon: Heart },
-  { id: "private-notebook",   label: "Totally private notebook", icon: BookOpen },
+  { id: "understanding-tool", label: "Daily emotional check-in",  icon: FlaskConical },
+  { id: "listening-friend",   label: "Friend, not a fixer",       icon: Heart },
+  { id: "private-notebook",   label: "Safe space, just for me",   icon: BookOpen },
 ];
 
 export function AppFeelingScreen() {
