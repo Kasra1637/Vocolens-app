@@ -105,7 +105,7 @@ function buildSystemPrompt(personalizationContext?: string): string {
 Analyse the journal transcript text and return ONLY a valid JSON object — no markdown, no explanation.${personalization}
 
 {
-  "title": "Quiet Morning Finally Brings Clarity",
+  "title": "Quiet Morning Finally Brings Real Clarity",
   "emotions": ["emotion1", "emotion2"],
   "primaryEmotion": "emotion",
   "emotionIntensity": 75,
@@ -144,7 +144,7 @@ Rules:
 - ambivalenceFlags: opposite pairs both ≥ 35 → "e1↔e2"
   Pairs: happiness↔sadness, anger↔fear, trust↔disgust, anticipation↔surprise
 - valence: −100 to +100 | arousal: 0–100 | distressLevel: low|moderate|high
-- title: 4 to 5 word evocative title in Title Case capturing the emotional core (e.g. "Tension At Work Eases", "Quiet Morning Brings Clarity")
+- title: MUST be exactly 5 or 6 words in Title Case capturing the emotional core. Count every word. Examples of correct 5-word titles: "Tension At Work Finally Eases", "Quiet Morning Brings Real Clarity". Examples of correct 6-word titles: "Feeling Lost But Finding My Way", "Work Stress Finally Starting To Lift". DO NOT produce titles shorter than 5 words or longer than 6 words.
 - reflection: warm, second-person ("you"), suitable for TTS
 - Plutchik tiers: 0-35=low(Serenity/Acceptance/...), 36-69=mid, 70-100=high(Ecstasy/Admiration/...)
 - Only valid base emotions: happiness, sadness, anger, disgust, fear, surprise, trust, anticipation`;
@@ -212,10 +212,18 @@ function parseDirectResponse(content: string): OpenRouterAnalysisResult {
       ? (result.ambivalenceFlags as string[])
       : detectAmbivalence(emotionScores);
 
+  const rawTitle = typeof result.title === 'string' ? result.title.trim() : '';
+  const titleWords = rawTitle.split(/\s+/).filter(Boolean);
+  const title = titleWords.length >= 5 && titleWords.length <= 6
+    ? rawTitle.slice(0, 80)
+    : titleWords.length > 6
+      ? titleWords.slice(0, 6).join(' ')  // trim to 6 words
+      : rawTitle.length > 0
+        ? rawTitle.slice(0, 80)           // keep what we got rather than discard
+        : 'Journal Entry';
+
   return {
-    title: (typeof result.title === 'string' && result.title.trim().length > 0)
-      ? result.title.trim().slice(0, 80)
-      : 'Journal Entry',
+    title,
     emotions,
     primaryEmotion,
     emotionIntensity: Math.max(0, Math.min(100, Number(result.emotionIntensity) || 50)),
