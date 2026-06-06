@@ -1,6 +1,6 @@
 /**
  * Onboarding: App Feeling Screen
- * "How do you want Vocolens to feel?"
+ * "I want Vocolens to be my..."
  */
 
 import React, { useState } from "react";
@@ -28,7 +28,7 @@ interface Option {
 }
 
 const OPTIONS: Option[] = [
-  { id: "quiet-room",         label: "Calm space to breathe",    icon: Home },
+  { id: "quiet-room",         label: "Private space to self discover", icon: Home },
   { id: "understanding-tool", label: "Tool for self-discovery",  icon: FlaskConical },
   { id: "listening-friend",   label: "Friend, not a fixer",      icon: Heart },
   { id: "private-notebook",   label: "Totally private notebook", icon: BookOpen },
@@ -104,7 +104,7 @@ export function AppFeelingScreen() {
                   lineHeight: 38,
                 }}
               >
-                How do you want Vocolens to feel?
+                I want Vocolens to be my...
               </Text>
               <Text
                 style={{
