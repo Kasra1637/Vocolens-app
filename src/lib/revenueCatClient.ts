@@ -149,5 +149,7 @@ export const addCustomerInfoListener = (
 ): (() => void) => {
   if (!isEnabled || !Purchases) return () => {};
   const customerInfoUpdatedListener = Purchases!.addCustomerInfoUpdateListener(callback);
-  return () => customerInfoUpdatedListener.remove();
+  return () => {
+    try { customerInfoUpdatedListener?.remove?.(); } catch {}
+  };
 };

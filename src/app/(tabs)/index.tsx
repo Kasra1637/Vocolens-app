@@ -849,7 +849,7 @@ export default function SpeakScreen() {
                       setShowTopicDropdown(!showTopicDropdown);
                     }}
                     className="flex-row items-center rounded-full px-3 py-2.5"
-                    style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
+                    style={{ backgroundColor: "transparent" }}
                   >
                     <Text
                       style={{
