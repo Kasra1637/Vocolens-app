@@ -4,18 +4,21 @@ import Animated, {
   useSharedValue,
   withTiming,
   useAnimatedStyle,
-  withRepeat,
-  withSequence,
   Easing,
+  FadeIn,
+  FadeOut,
 } from "react-native-reanimated";
+import { successHaptic, tapHaptic } from "@/lib/haptics";
 
 type Phase = "ready" | "inhale" | "hold" | "exhale" | "done";
 
-const PHASES: { phase: Phase; label: string; duration: number }[] = [
-  { phase: "inhale", label: "Breathe In", duration: 4000 },
-  { phase: "hold", label: "Hold", duration: 7000 },
-  { phase: "exhale", label: "Breathe Out", duration: 8000 },
+const PHASES: { phase: Phase; label: string; emoji: string; duration: number; color: string }[] = [
+  { phase: "inhale", label: "Breathe In",  emoji: "🫁", duration: 4000, color: "rgba(99, 179, 237, 0.35)"  },
+  { phase: "hold",   label: "Hold",        emoji: "🤍", duration: 7000, color: "rgba(255,255,255,0.18)"    },
+  { phase: "exhale", label: "Breathe Out", emoji: "🌿", duration: 8000, color: "rgba(104, 211, 145, 0.35)" },
 ];
+
+const TOTAL_CYCLES = 3;
 
 interface Props {
   onComplete?: () => void;
@@ -23,96 +26,169 @@ interface Props {
 }
 
 export default function BreathingExercise({ onComplete, onSkip }: Props) {
-  const [phase, setPhase] = useState<Phase>("ready");
-  const [cycle, setCycle] = useState(0);
-  const scale = useSharedValue(0.6);
-  const opacity = useSharedValue(0.4);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [phase,       setPhase]      = useState<Phase>("ready");
+  const [cycle,       setCycle]      = useState(0);
+  const [countdown,   setCountdown]  = useState(0);
+  const [phaseIdx,    setPhaseIdx]   = useState(0);
 
-  const totalCycles = 3;
+  const scale        = useSharedValue(0.55);
+  const outerScale   = useSharedValue(0.70);
+  const ringOpacity  = useSharedValue(0.0);
 
-  const runCycle = useCallback(
-    (idx: number) => {
-      if (idx >= PHASES.length) {
-        setCycle((c) => {
-          const next = c + 1;
-          if (next >= totalCycles) {
-            setPhase("done");
-            return next;
-          }
-          runCycle(0);
-          return next;
-        });
+  const timerRef     = useRef<ReturnType<typeof setTimeout>  | null>(null);
+  const countRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearTimers = () => {
+    if (timerRef.current)  clearTimeout(timerRef.current);
+    if (countRef.current)  clearInterval(countRef.current);
+  };
+
+  // Start countdown display for a phase
+  const startCountdown = (seconds: number) => {
+    clearInterval(countRef.current!);
+    setCountdown(seconds);
+    countRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) { clearInterval(countRef.current!); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+  };
+
+  const runPhase = useCallback((pIdx: number, cyc: number) => {
+    if (pIdx >= PHASES.length) {
+      const nextCycle = cyc + 1;
+      setCycle(nextCycle);
+      if (nextCycle >= TOTAL_CYCLES) {
+        setPhase("done");
+        successHaptic();
         return;
       }
+      runPhase(0, nextCycle);
+      return;
+    }
 
-      const p = PHASES[idx];
-      setPhase(p.phase);
+    const p = PHASES[pIdx];
+    setPhase(p.phase);
+    setPhaseIdx(pIdx);
+    startCountdown(Math.round(p.duration / 1000));
+    tapHaptic();
 
-      if (p.phase === "inhale") {
-        scale.value = withTiming(1.0, {
-          duration: p.duration,
-          easing: Easing.out(Easing.ease),
-        });
-        opacity.value = withTiming(0.9, { duration: p.duration });
-      } else if (p.phase === "exhale") {
-        scale.value = withTiming(0.6, {
-          duration: p.duration,
-          easing: Easing.in(Easing.ease),
-        });
-        opacity.value = withTiming(0.4, { duration: p.duration });
-      }
+    if (p.phase === "inhale") {
+      scale.value      = withTiming(1.0, { duration: p.duration, easing: Easing.out(Easing.ease) });
+      outerScale.value = withTiming(1.15, { duration: p.duration, easing: Easing.out(Easing.ease) });
+      ringOpacity.value = withTiming(0.6, { duration: 600 });
+    } else if (p.phase === "exhale") {
+      scale.value      = withTiming(0.55, { duration: p.duration, easing: Easing.in(Easing.ease) });
+      outerScale.value = withTiming(0.70, { duration: p.duration, easing: Easing.in(Easing.ease) });
+      ringOpacity.value = withTiming(0.2, { duration: 600 });
+    }
 
-      timerRef.current = setTimeout(() => runCycle(idx + 1), p.duration);
-    },
-    [scale, opacity],
-  );
+    timerRef.current = setTimeout(() => runPhase(pIdx + 1, cyc), p.duration);
+  }, []);
 
   const start = useCallback(() => {
+    tapHaptic();
     setCycle(0);
-    runCycle(0);
-  }, [runCycle]);
+    runPhase(0, 0);
+  }, [runPhase]);
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
+  useEffect(() => () => clearTimers(), []);
 
   const circleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    opacity: opacity.value,
   }));
 
-  const phaseLabel =
-    phase === "ready"
-      ? "Tap to start"
-      : phase === "done"
-        ? "Well done"
-        : (PHASES.find((p) => p.phase === phase)?.label ?? "");
+  const outerStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: outerScale.value }],
+    opacity: ringOpacity.value,
+  }));
+
+  const currentPhaseData = PHASES.find((p) => p.phase === phase);
+  const bgColor = currentPhaseData?.color ?? "rgba(255,255,255,0.12)";
+  const emoji   = currentPhaseData?.emoji ?? "🫧";
 
   return (
     <View style={s.container}>
       <Text style={s.title}>4-7-8 Breathing</Text>
       <Text style={s.sub}>
         {phase === "ready"
-          ? "3 cycles to calm your nervous system"
-          : `Cycle ${Math.min(cycle + 1, totalCycles)} of ${totalCycles}`}
+          ? "3 cycles · calms your nervous system"
+          : phase === "done"
+          ? "Well done 🌿"
+          : `Cycle ${Math.min(cycle + 1, TOTAL_CYCLES)} of ${TOTAL_CYCLES}`}
       </Text>
 
+      {/* Cycle dots */}
+      <View style={s.cycleDots}>
+        {Array.from({ length: TOTAL_CYCLES }).map((_, i) => (
+          <View
+            key={i}
+            style={[
+              s.cycleDot,
+              i < cycle && s.cycleDotDone,
+              i === cycle && phase !== "ready" && phase !== "done" && s.cycleDotActive,
+            ]}
+          />
+        ))}
+      </View>
+
+      {/* Breathing orb */}
       <Pressable
         onPress={phase === "ready" ? start : undefined}
         style={s.circleWrap}
+        disabled={phase !== "ready"}
       >
-        <Animated.View style={[s.circle, circleStyle]} />
-        <Text style={s.phaseText}>{phaseLabel}</Text>
+        {/* Outer glow ring */}
+        <Animated.View style={[s.outerRing, { borderColor: bgColor }, outerStyle]} />
+
+        {/* Main orb */}
+        <Animated.View style={[s.circle, { backgroundColor: bgColor }, circleStyle]}>
+          {phase !== "ready" && phase !== "done" && (
+            <Text style={s.countdownNum}>{countdown}</Text>
+          )}
+        </Animated.View>
+
+        {/* Emoji + label */}
+        <View style={s.labelWrap} pointerEvents="none">
+          {phase === "ready" ? (
+            <Text style={s.tapLabel}>Tap to start</Text>
+          ) : phase === "done" ? (
+            <Text style={s.phaseEmoji}>✨</Text>
+          ) : (
+            <>
+              <Text style={s.phaseEmoji}>{emoji}</Text>
+              <Text style={s.phaseLabel}>{currentPhaseData?.label}</Text>
+            </>
+          )}
+        </View>
       </Pressable>
 
-      {phase === "done" && (
-        <Pressable onPress={onComplete} style={s.doneBtn}>
-          <Text style={s.doneBtnText}>Continue</Text>
-        </Pressable>
+      {/* Phase progress bar */}
+      {phase !== "ready" && phase !== "done" && (
+        <Animated.View entering={FadeIn.duration(300)} style={s.phaseBar}>
+          {PHASES.map((p, i) => (
+            <View
+              key={p.phase}
+              style={[
+                s.phaseSegment,
+                i === phaseIdx && s.phaseSegmentActive,
+                i < phaseIdx  && s.phaseSegmentDone,
+              ]}
+            />
+          ))}
+        </Animated.View>
       )}
+
+      {/* Actions */}
+      {phase === "done" && (
+        <Animated.View entering={FadeIn.duration(400)}>
+          <Pressable onPress={onComplete} style={s.doneBtn}>
+            <Text style={s.doneBtnText}>Continue →</Text>
+          </Pressable>
+        </Animated.View>
+      )}
+
       <Pressable onPress={onSkip} style={s.skipBtn}>
         <Text style={s.skipText}>Skip</Text>
       </Pressable>
@@ -120,42 +196,65 @@ export default function BreathingExercise({ onComplete, onSkip }: Props) {
   );
 }
 
+const ORB = 180;
+
 const s = StyleSheet.create({
-  container: { alignItems: "center", padding: 24 },
-  title: { fontSize: 20, fontWeight: "700", color: "#FFFFFF", marginBottom: 4 },
-  sub: { fontSize: 13, color: "rgba(255,255,255,0.65)", marginBottom: 32 },
+  container:  { alignItems: "center", padding: 24 },
+  title:      { fontSize: 20, fontFamily: "Fraunces_700Bold", color: "#FFFFFF", marginBottom: 4 },
+  sub:        { fontSize: 13, color: "rgba(255,255,255,0.65)", marginBottom: 20 },
+
+  cycleDots:  { flexDirection: "row", gap: 8, marginBottom: 24 },
+  cycleDot:   { width: 8, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.2)" },
+  cycleDotActive: { backgroundColor: "#FFFFFF", width: 22, borderRadius: 4 },
+  cycleDotDone:   { backgroundColor: "rgba(255,255,255,0.55)" },
+
   circleWrap: {
     alignItems: "center",
     justifyContent: "center",
-    width: 180,
-    height: 180,
-    marginBottom: 32,
+    width: ORB + 60,
+    height: ORB + 60,
+    marginBottom: 24,
+  },
+  outerRing: {
+    position: "absolute",
+    width: ORB + 40,
+    height: ORB + 40,
+    borderRadius: (ORB + 40) / 2,
+    borderWidth: 2,
   },
   circle: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    width: ORB,
+    height: ORB,
+    borderRadius: ORB / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  countdownNum:  { fontSize: 44, fontWeight: "700", color: "#FFFFFF", opacity: 0.5 },
+  labelWrap:     { position: "absolute", alignItems: "center" },
+  tapLabel:      { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
+  phaseEmoji:    { fontSize: 28, marginBottom: 4 },
+  phaseLabel:    { fontSize: 16, fontWeight: "700", color: "#FFFFFF" },
+
+  phaseBar: { flexDirection: "row", gap: 6, marginBottom: 24, width: "60%" },
+  phaseSegment: {
+    flex: 1, height: 5, borderRadius: 3,
     backgroundColor: "rgba(255,255,255,0.15)",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.3)",
-    position: "absolute",
   },
-  phaseText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
-    position: "absolute",
-  },
+  phaseSegmentActive: { backgroundColor: "rgba(255,255,255,0.75)" },
+  phaseSegmentDone:   { backgroundColor: "rgba(255,255,255,0.40)" },
+
   doneBtn: {
-    backgroundColor: "rgba(255,255,255,0.25)",
-    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    borderRadius: 18,
     paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingHorizontal: 36,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.4)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.40)",
   },
   doneBtnText: { fontSize: 16, fontWeight: "600", color: "#FFFFFF" },
-  skipBtn: { paddingVertical: 8, paddingHorizontal: 16 },
-  skipText: { fontSize: 14, color: "rgba(255,255,255,0.6)" },
+  skipBtn:     { paddingVertical: 8, paddingHorizontal: 16 },
+  skipText:    { fontSize: 14, color: "rgba(255,255,255,0.5)" },
 });
