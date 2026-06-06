@@ -1,6 +1,6 @@
 /**
- * OpenRouter Mobile Service — Claude 3.5 Sonnet
- * Direct Claude 3.5 Sonnet calls (client-side primary, backend fallback).
+ * OpenRouter Mobile Service — Claude 3.7 Sonnet
+ * Direct Claude 3.7 Sonnet calls (client-side primary, backend fallback).
  * Client-side compute for top-3, blended emotions, and ambivalence flags.
  */
 
@@ -18,7 +18,7 @@ import {
 } from '../types';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-const MODEL = 'anthropic/claude-3.5-sonnet-20241022';
+const MODEL = 'anthropic/claude-3-7-sonnet';
 
 const BACKEND_URL =
   Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL ||

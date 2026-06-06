@@ -1,5 +1,5 @@
 /**
- * OpenRouter API Client — Claude 3.5 Sonnet
+ * OpenRouter API Client — Claude 3.7 Sonnet
  * Simplified text-only pipeline: Deepgram transcribes; Claude analyses.
  */
 
