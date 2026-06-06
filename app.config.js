@@ -54,7 +54,7 @@ export default ({ config }) => ({
       },
     ],
     'expo-updates',
-    'react-native-purchases',
+    // react-native-purchases has no Expo config plugin — native linking only
   ],
   owner: 'kasra1637',
   runtimeVersion: {
