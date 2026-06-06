@@ -105,7 +105,7 @@ export function RecommendationCard({
   compact = false,
 }: RecommendationCardProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Stop speech on unmount
   useEffect(() => () => { Speech.stop(); }, []);
@@ -160,7 +160,7 @@ export function RecommendationCard({
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-            <Sparkles size={13} color={themeColor} strokeWidth={2} />
+            <Sparkles size={13} color="#FFFFFF" strokeWidth={2} />
             <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 12 }}>
               AI Recommendation
             </Text>
@@ -259,118 +259,132 @@ export function RecommendationCard({
     >
       <View style={{ padding: 20 }}>
 
-        {/* Header */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          <View
-            style={{
-              backgroundColor: GLASS_INNER_BG,
-              borderRadius: 8,
-              padding: 6,
-              borderWidth: 1,
-              borderColor: GLASS_INNER_BORDER,
-            }}
-          >
-            <Sparkles size={16} color={themeColor} strokeWidth={2} />
-          </View>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
-            Recommendation
-          </Text>
-          <View
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 3,
-              borderRadius: 20,
-              backgroundColor: GLASS_INNER_BG,
-              borderWidth: 1,
-              borderColor: GLASS_INNER_BORDER,
-            }}
-          >
-            <Text style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.7)', fontSize: 9 }}>
-              AI
-            </Text>
-          </View>
-        </View>
-
-        {/* Text block */}
-        <View
+        {/* Header — tappable, toggles collapse */}
+        <Pressable
+          onPress={() => { tapHaptic(); setIsExpanded((v) => !v); }}
           style={{
-            backgroundColor: GLASS_INNER_BG,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: GLASS_INNER_BORDER,
-            padding: 16,
-            marginBottom: advice && !isGenerating ? 14 : 0,
-            minHeight: 56,
-            justifyContent: 'center',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: isExpanded ? 16 : 0,
           }}
         >
-          {isGenerating || !advice ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <ActivityIndicator size="small" color="rgba(255,255,255,0.5)" />
-              <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.45)', fontSize: 13, fontStyle: 'italic' }}>
-                Crafting your personalised advice…
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View
+              style={{
+                backgroundColor: GLASS_INNER_BG,
+                borderRadius: 8,
+                padding: 6,
+                borderWidth: 1,
+                borderColor: GLASS_INNER_BORDER,
+              }}
+            >
+              <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
+            </View>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
+              Recommendation
+            </Text>
+            <View
+              style={{
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 20,
+                backgroundColor: GLASS_INNER_BG,
+                borderWidth: 1,
+                borderColor: GLASS_INNER_BORDER,
+              }}
+            >
+              <Text style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.7)', fontSize: 9 }}>
+                AI
               </Text>
             </View>
-          ) : (
-            <Text style={{ fontFamily: 'Inter_400Regular', lineHeight: 24, color: 'rgba(255,255,255,0.92)', fontSize: 14 }}>
-              {advice}
-            </Text>
-          )}
-        </View>
+          </View>
+          {isExpanded
+            ? <ChevronUp   size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+            : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+        </Pressable>
 
-        {/* Audio row — only visible when advice is ready */}
-        {advice && !isGenerating && (
-          <Animated.View entering={FadeIn.duration(400)}>
-            <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginBottom: 14 }} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-
-              {/* Left: icon + waveform / label */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View
-                  style={{
-                    backgroundColor: GLASS_INNER_BG,
-                    borderRadius: 8,
-                    padding: 6,
-                    borderWidth: 1,
-                    borderColor: GLASS_INNER_BORDER,
-                  }}
-                >
-                  <Volume2
-                    size={14}
-                    color={isSpeaking ? themeColor : 'rgba(255,255,255,0.5)'}
-                    strokeWidth={2}
-                  />
+        {/* Collapsible body */}
+        {isExpanded && (
+          <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+            {/* Text block */}
+            <View
+              style={{
+                backgroundColor: GLASS_INNER_BG,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: GLASS_INNER_BORDER,
+                padding: 16,
+                marginBottom: advice && !isGenerating ? 14 : 0,
+                minHeight: 56,
+                justifyContent: 'center',
+              }}
+            >
+              {isGenerating || !advice ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <ActivityIndicator size="small" color="rgba(255,255,255,0.5)" />
+                  <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.45)', fontSize: 13, fontStyle: 'italic' }}>
+                    Crafting your personalised advice…
+                  </Text>
                 </View>
-                {isSpeaking
-                  ? <AudioWaveform isPlaying />
-                  : <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Tap to listen</Text>}
-              </View>
-
-              {/* Right: Play / Stop */}
-              <Pressable
-                onPress={handleToggleSpeech}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: 20,
-                  paddingVertical: 8,
-                  paddingHorizontal: 18,
-                  backgroundColor: isSpeaking ? 'rgba(239,68,68,0.20)' : GLASS_INNER_BG,
-                  borderWidth: 1.5,
-                  borderColor: isSpeaking ? 'rgba(239,68,68,0.45)' : GLASS_INNER_BORDER,
-                  gap: 7,
-                }}
-              >
-                {isSpeaking
-                  ? <Square size={14} color="#FFFFFF" strokeWidth={2} />
-                  : <Play   size={14} color="#FFFFFF" strokeWidth={2} />}
-                <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 13 }}>
-                  {isSpeaking ? 'Stop' : 'Listen'}
+              ) : (
+                <Text style={{ fontFamily: 'Inter_400Regular', lineHeight: 24, color: 'rgba(255,255,255,0.92)', fontSize: 14 }}>
+                  {advice}
                 </Text>
-              </Pressable>
-
+              )}
             </View>
+
+            {/* Audio row — only visible when advice is ready */}
+            {advice && !isGenerating && (
+              <Animated.View entering={FadeIn.duration(400)}>
+                <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginBottom: 14 }} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+
+                  {/* Left: icon + waveform / label */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View
+                      style={{
+                        backgroundColor: GLASS_INNER_BG,
+                        borderRadius: 8,
+                        padding: 6,
+                        borderWidth: 1,
+                        borderColor: GLASS_INNER_BORDER,
+                      }}
+                    >
+                      <Volume2 size={14} color="#FFFFFF" strokeWidth={2} />
+                    </View>
+                    {isSpeaking
+                      ? <AudioWaveform isPlaying />
+                      : <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Tap to listen</Text>}
+                  </View>
+
+                  {/* Right: Play / Stop */}
+                  <Pressable
+                    onPress={handleToggleSpeech}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 20,
+                      paddingVertical: 8,
+                      paddingHorizontal: 18,
+                      backgroundColor: isSpeaking ? 'rgba(239,68,68,0.20)' : GLASS_INNER_BG,
+                      borderWidth: 1.5,
+                      borderColor: isSpeaking ? 'rgba(239,68,68,0.45)' : GLASS_INNER_BORDER,
+                      gap: 7,
+                    }}
+                  >
+                    {isSpeaking
+                      ? <Square size={14} color="#FFFFFF" strokeWidth={2} />
+                      : <Play   size={14} color="#FFFFFF" strokeWidth={2} />}
+                    <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 13 }}>
+                      {isSpeaking ? 'Stop' : 'Listen'}
+                    </Text>
+                  </Pressable>
+
+                </View>
+              </Animated.View>
+            )}
           </Animated.View>
         )}
       </View>

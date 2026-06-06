@@ -102,7 +102,7 @@ export default function EntryDetailScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [expandedSection, setExpandedSection] = useState<
     "emotions" | "analysis" | "reflection" | null
-  >("emotions");
+  >(null);
   const [transcriptExpanded, setTranscriptExpanded] = useState(false);
   const [barContainerWidth, setBarContainerWidth] = useState(0);
   const [showRefineModal, setShowRefineModal] = useState(false);
@@ -426,7 +426,8 @@ export default function EntryDetailScreen() {
 
         {/* ── Full Transcript ─────────────────────────────────────────────── */}
         <Animated.View entering={FadeInDown.delay(300).duration(600)} style={{ marginBottom: 16 }}>
-          <View
+          <Pressable
+            onPress={() => toggleSection("analysis")}
             className="rounded-3xl overflow-hidden"
             style={{
               backgroundColor: GLASS_BG,
@@ -439,71 +440,81 @@ export default function EntryDetailScreen() {
             }}
           >
             <View style={{ padding: 20 }}>
-              {/* Section header */}
-              <View className="flex-row items-center" style={{ marginBottom: 14, gap: 8 }}>
-                <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                  <MessageSquare size={16} color="#FFFFFF" strokeWidth={2} />
+              {/* Section header — always visible */}
+              <View className="flex-row items-center justify-between" style={{ marginBottom: expandedSection === "analysis" ? 14 : 0 }}>
+                <View className="flex-row items-center" style={{ gap: 8 }}>
+                  <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
+                    <MessageSquare size={16} color="#FFFFFF" strokeWidth={2} />
+                  </View>
+                  <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
+                    Full Transcript
+                  </Text>
                 </View>
-                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
-                  Full Transcript
-                </Text>
+                {expandedSection === "analysis"
+                  ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                  : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
               </View>
 
-              {isEditing ? (
-                <TextInput
-                  value={editedTranscript}
-                  onChangeText={setEditedTranscript}
-                  multiline
-                  numberOfLines={10}
-                  textAlignVertical="top"
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    fontSize: 14,
-                    lineHeight: 24,
-                    color: "#FFFFFF",
-                    backgroundColor: GLASS_INNER_BG,
-                    borderRadius: 12,
-                    padding: 14,
-                    minHeight: 200,
-                    borderWidth: 1,
-                    borderColor: GLASS_BORDER,
-                  }}
-                  placeholderTextColor="rgba(255,255,255,0.4)"
-                />
-              ) : (
-                <View
-                  style={{
-                    backgroundColor: GLASS_INNER_BG,
-                    borderRadius: 14,
-                    borderWidth: 1,
-                    borderColor: GLASS_INNER_BORDER,
-                    padding: 14,
-                  }}
-                >
-                  <Text
-                    style={{ fontFamily: "Inter_400Regular", lineHeight: 24, color: "rgba(255,255,255,0.92)", fontSize: 14 }}
-                    numberOfLines={transcriptExpanded ? undefined : 4}
-                  >
-                    {entry.transcript}
-                  </Text>
-                  {entry.transcript && entry.transcript.length > 180 && (
-                    <Pressable
-                      onPress={() => { tapHaptic(); setTranscriptExpanded(!transcriptExpanded); }}
-                      className="flex-row items-center mt-3"
-                      style={{ gap: 4 }}
+              {/* Collapsible body */}
+              {expandedSection === "analysis" && (
+                <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+                  {isEditing ? (
+                    <TextInput
+                      value={editedTranscript}
+                      onChangeText={setEditedTranscript}
+                      multiline
+                      numberOfLines={10}
+                      textAlignVertical="top"
+                      style={{
+                        fontFamily: "Inter_400Regular",
+                        fontSize: 14,
+                        lineHeight: 24,
+                        color: "#FFFFFF",
+                        backgroundColor: GLASS_INNER_BG,
+                        borderRadius: 12,
+                        padding: 14,
+                        minHeight: 200,
+                        borderWidth: 1,
+                        borderColor: GLASS_BORDER,
+                      }}
+                      placeholderTextColor="rgba(255,255,255,0.4)"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        backgroundColor: GLASS_INNER_BG,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: GLASS_INNER_BORDER,
+                        padding: 14,
+                      }}
                     >
-                      {transcriptExpanded
-                        ? <ChevronUp size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-                        : <ChevronDown size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
-                      <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.75)", fontSize: 13 }}>
-                        {transcriptExpanded ? "Show less" : "Read more"}
+                      <Text
+                        style={{ fontFamily: "Inter_400Regular", lineHeight: 24, color: "rgba(255,255,255,0.92)", fontSize: 14 }}
+                        numberOfLines={transcriptExpanded ? undefined : 4}
+                      >
+                        {entry.transcript}
                       </Text>
-                    </Pressable>
+                      {entry.transcript && entry.transcript.length > 180 && (
+                        <Pressable
+                          onPress={(e) => { e.stopPropagation?.(); tapHaptic(); setTranscriptExpanded(!transcriptExpanded); }}
+                          className="flex-row items-center mt-3"
+                          style={{ gap: 4 }}
+                        >
+                          {transcriptExpanded
+                            ? <ChevronUp size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                            : <ChevronDown size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+                          <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.75)", fontSize: 13 }}>
+                            {transcriptExpanded ? "Show less" : "Read more"}
+                          </Text>
+                        </Pressable>
+                      )}
+                    </View>
                   )}
-                </View>
+                </Animated.View>
               )}
             </View>
-          </View>
+          </Pressable>
         </Animated.View>
 
 
@@ -524,7 +535,7 @@ export default function EntryDetailScreen() {
             >
               <View style={{ padding: 20 }}>
                 <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15, marginBottom: 14 }}>
-                  Recording
+                  Your recording
                 </Text>
                 <AudioPlayer
                   audioUri={entry.audioUri}
