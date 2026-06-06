@@ -668,12 +668,11 @@ function EntryCard({
   isDarkMode = false,
 }: EntryCardProps) {
   // ── Recommendation state ───────────────────────────────────────────────────
-  // Seed from aiReflection if already generated; generate fresh if not.
+  // One generation per entry. Seed immediately from persisted aiReflection.
   const [recommendationText, setRecommendationText] = useState<string | null>(
     entry.aiReflection?.trim() || null,
   );
   const [isGenerating, setIsGenerating] = useState(false);
-  const [hasFailed, setHasFailed] = useState(false);
   const hasFetched = useRef(false);
 
   const updateEntry = useJournalStore((s) => s.updateEntry);
@@ -681,7 +680,6 @@ function EntryCard({
   const fetchRecommendation = useCallback(async () => {
     if (!entry.transcript?.trim() || isGenerating) return;
     setIsGenerating(true);
-    setHasFailed(false);
     try {
       const result = await generateRecommendation(
         entry.transcript,
@@ -689,17 +687,17 @@ function EntryCard({
       );
       const text = result.advice;
       setRecommendationText(text);
-      // Persist so entry-detail can use it too
+      // Persist to store so entry-detail sees the same text without re-fetching
       updateEntry(entry.id, { aiReflection: text });
     } catch (err) {
-      console.warn("[EntryCard] recommendation failed:", err);
-      setHasFailed(true);
+      // generateRecommendation never throws — this is just a safety net
+      console.warn("[EntryCard] recommendation error:", err);
     } finally {
       setIsGenerating(false);
     }
-  }, [entry.transcript, entry.primaryEmotion, entry.id, isGenerating, updateEntry]);
+  }, [entry.transcript, entry.primaryEmotion, entry.id, updateEntry]);
 
-  // Auto-fetch once per entry when no recommendation exists yet
+  // Auto-generate once per entry — only when no persisted recommendation exists
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
@@ -981,19 +979,12 @@ function EntryCard({
               </View>
             )}
 
-          {/* AI Analysis Snippet — replaced by RecommendationCard below */}
-
           {/* Recommendation Card (compact inline) */}
           {entry.transcript && entry.transcript.trim().length > 0 && (
             <View className="mb-4">
               <RecommendationCard
                 advice={recommendationText}
                 isGenerating={isGenerating}
-                hasFailed={hasFailed}
-                onRegenerate={() => {
-                  setHasFailed(false);
-                  fetchRecommendation();
-                }}
                 themeColor={primaryColor}
                 compact
               />

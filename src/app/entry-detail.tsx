@@ -112,7 +112,6 @@ export default function EntryDetailScreen() {
     setBarContainerWidth(e.nativeEvent.layout.width);
   }, []);
   const [isGeneratingRecommendation, setIsGeneratingRecommendation] = useState(false);
-  const [generationFailed, setGenerationFailed] = useState(false);
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   // Time is always displayed in the device's local 12-hour format.
@@ -189,31 +188,27 @@ export default function EntryDetailScreen() {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
+  // Generate recommendation once — only when entry has no persisted aiReflection
   const handleGenerateRecommendation = async () => {
     if (!entry || !entry.transcript || isGeneratingRecommendation) return;
     setIsGeneratingRecommendation(true);
-    setGenerationFailed(false);
     try {
+      // generateRecommendation never throws — 3-path cascade always returns a result
       const result = await generateRecommendation(
         entry.transcript,
         entry.primaryEmotion,
       );
-      const advice = result.advice;
-      if (advice && advice.trim().length > 0) {
-        updateEntry(entry.id, { aiReflection: advice });
+      if (result.advice && result.advice.trim().length > 0) {
+        updateEntry(entry.id, { aiReflection: result.advice });
       }
-    } catch (e) {
-      console.log("[Recommendation] generation failed:", e);
-      setGenerationFailed(true);
     } finally {
       setIsGeneratingRecommendation(false);
     }
   };
 
-  // Auto-generate recommendation when entry has no aiReflection yet
+  // Auto-generate once per entry — fires only when aiReflection is absent
   React.useEffect(() => {
     if (!entry) return;
-    setGenerationFailed(false);
     const hasReflection = entry.aiReflection && entry.aiReflection.trim().length > 0;
     if (!hasReflection && entry.transcript && entry.transcript.trim().length > 0) {
       handleGenerateRecommendation();
@@ -549,11 +544,6 @@ export default function EntryDetailScreen() {
             <RecommendationCard
               advice={entry.aiReflection?.trim() || null}
               isGenerating={isGeneratingRecommendation}
-              hasFailed={generationFailed}
-              onRegenerate={() => {
-                setGenerationFailed(false);
-                handleGenerateRecommendation();
-              }}
               themeColor={Colors.primary}
               compact={false}
             />
