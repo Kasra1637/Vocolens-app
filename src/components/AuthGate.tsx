@@ -1,18 +1,12 @@
 /**
- * Auth Gate Component
+ * Auth Gate — RevenueCat v10
  *
- * Wraps the app and handles onboarding + subscription gating.
  * Flow:
- *  1. Onboarding not done → show OnboardingFlow (paywall is step 20)
- *  2. Onboarding done, no active subscription → show StandalonePaywall
- *  3. Any lock is enabled (biometric OR PIN-only) but session not yet
- *     unlocked → show BiometricLockScreen (which handles both paths)
- *  4. All good → show app, then re-schedule notifications in background
- *
- * Lock-screen trigger:
- *   • isBiometricEnabled — user set up fingerprint/Face ID lock
- *   • isPinEnabled        — user set up a PIN-only lock (no biometric hardware)
- *   Either flag being true means the lock screen must be shown on every launch.
+ *  1. Show splash on every launch
+ *  2. Onboarding not done → OnboardingFlow (paywall embedded as step 23)
+ *  3. Onboarding done, no active subscription → StandalonePaywall
+ *  4. Lock enabled but not unlocked this session → BiometricLockScreen
+ *  5. All good → show app
  */
 
 import React, { useEffect, useState } from 'react';
@@ -26,7 +20,13 @@ import { BiometricLockScreen } from './BiometricLockScreen';
 import { StandalonePaywall } from './StandalonePaywall';
 import { FirstLaunchCelebration } from './FirstLaunchCelebration';
 import { SplashScreen } from './onboarding/SplashScreen';
-import { activateAdapty, getProfile, isAdaptyEnabled, hasEntitlement } from '@/lib/adaptyClient';
+import {
+  configureRevenueCat,
+  getCustomerInfo,
+  hasEntitlement,
+  isRevenueCatEnabled,
+  addCustomerInfoListener,
+} from '@/lib/revenueCatClient';
 import { NotificationService } from '@/lib/services/notification-service';
 
 interface AuthGateProps {
@@ -34,34 +34,45 @@ interface AuthGateProps {
 }
 
 export function AuthGate({ children }: AuthGateProps) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const isLoading        = useAuthStore((s) => s.isLoading);
   const setAuthenticated = useAuthStore((s) => s.setAuthenticated);
-  const setLoading = useAuthStore((s) => s.setLoading);
+  const setLoading       = useAuthStore((s) => s.setLoading);
 
-  const hasCompletedOnboarding = useOnboardingStore((s) => s.hasCompletedOnboarding);
-  const notificationPreferences = useOnboardingStore((s) => s.notificationPreferences);
+  const hasCompletedOnboarding    = useOnboardingStore((s) => s.hasCompletedOnboarding);
+  const notificationPreferences   = useOnboardingStore((s) => s.notificationPreferences);
   const hasSeenWelcomeCelebration = useOnboardingStore((s) => s.hasSeenWelcomeCelebration);
   const markWelcomeCelebrationSeen = useOnboardingStore((s) => s.markWelcomeCelebrationSeen);
 
   const isBiometricEnabled = useBiometricStore((s) => s.isBiometricEnabled);
-  const isPinEnabled = useBiometricStore((s) => s.isPinEnabled);
-  const isUnlocked = useBiometricStore((s) => s.isUnlocked);
+  const isPinEnabled       = useBiometricStore((s) => s.isPinEnabled);
+  const isUnlocked         = useBiometricStore((s) => s.isUnlocked);
 
-  const hasSubscription = useSubscriptionStore((s) => s.hasSubscription);
-  const setSubscription = useSubscriptionStore((s) => s.setSubscription);
+  const hasSubscription   = useSubscriptionStore((s) => s.hasSubscription);
+  const setSubscription   = useSubscriptionStore((s) => s.setSubscription);
   const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
 
-  // Splash shown on every launch — new and returning users alike
-  const [showSplash, setShowSplash] = useState(true);
-
-  // Tracks whether we've finished verifying against Adapty
+  const [showSplash,           setShowSplash]           = useState(true);
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
 
-  // ALL hooks must be declared before any early return — Rules of Hooks
+  // ── Configure SDK once on mount ────────────────────────────────────────────
+  useEffect(() => {
+    configureRevenueCat();
+  }, []);
+
+  // ── Verify subscription on launch ─────────────────────────────────────────
   useEffect(() => {
     checkAuthStatus();
   }, [hasCompletedOnboarding]);
+
+  // ── Listen for real-time subscription changes (e.g. renewal, cancellation) ─
+  useEffect(() => {
+    const removeListener = addCustomerInfoListener((info) => {
+      const active = hasEntitlement(info);
+      if (active) setSubscription(true);
+      else clearSubscription();
+    });
+    return removeListener;
+  }, []);
 
   const checkAuthStatus = async () => {
     if (!hasCompletedOnboarding) {
@@ -69,29 +80,27 @@ export function AuthGate({ children }: AuthGateProps) {
       return;
     }
 
-    // Verify subscription against Adapty on every app start
-    let confirmedActive = hasSubscription; // fall back to persisted value
-    if (isAdaptyEnabled()) {
-      await activateAdapty();
-      const result = await getProfile();
+    let confirmedActive = hasSubscription; // cached fallback
+
+    if (isRevenueCatEnabled()) {
+      const result = await getCustomerInfo();
       if (result.ok) {
-        confirmedActive = hasEntitlement(result.data, 'pro_journal');
-        if (confirmedActive) {
-          setSubscription(true);
-        } else {
-          clearSubscription();
-        }
+        confirmedActive = hasEntitlement(result.data);
+        if (confirmedActive) setSubscription(true);
+        else clearSubscription();
       }
-      // If Adapty call failed (network issue), fall back to persisted value
+      // If SDK call failed (network), fall back to cached value
     }
 
     setSubscriptionVerified(true);
     setAuthenticated(true);
     setLoading(false);
 
-    // Re-schedule daily notifications only when the subscription is confirmed
-    // active AND the user set notification preferences during onboarding.
-    if (confirmedActive && notificationPreferences?.time && notificationPreferences.days.length > 0) {
+    if (
+      confirmedActive &&
+      notificationPreferences?.time &&
+      notificationPreferences.days.length > 0
+    ) {
       NotificationService.rescheduleFromPreferences(
         notificationPreferences.time,
         notificationPreferences.days,
@@ -100,15 +109,17 @@ export function AuthGate({ children }: AuthGateProps) {
     }
   };
 
-  if (isLoading || (hasCompletedOnboarding && !subscriptionVerified && isAdaptyEnabled())) {
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  if (isLoading || (hasCompletedOnboarding && !subscriptionVerified && isRevenueCatEnabled())) {
     return (
-      <View className="flex-1 items-center justify-center bg-purple-50">
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0F0E1A' }}>
         <ActivityIndicator size="large" color="#9333ea" />
       </View>
     );
   }
 
-  // Splash shown on every launch before any other screen
+  // Splash on every launch
   if (showSplash) {
     return (
       <View style={{ flex: 1 }}>
@@ -117,17 +128,17 @@ export function AuthGate({ children }: AuthGateProps) {
     );
   }
 
-  // Step 1 — onboarding not done yet (paywall is embedded as step 16)
+  // Onboarding
   if (!hasCompletedOnboarding) {
     return <OnboardingFlow />;
   }
 
-  // Step 2 — onboarding done but no active subscription → show standalone paywall
+  // No active subscription
   if (!hasSubscription) {
     return <StandalonePaywall />;
   }
 
-  // Step 3 — any lock enabled (biometric OR PIN-only) but not yet unlocked this session
+  // Biometric / PIN lock
   if ((isBiometricEnabled || isPinEnabled) && !isUnlocked) {
     return <BiometricLockScreen />;
   }
@@ -135,12 +146,8 @@ export function AuthGate({ children }: AuthGateProps) {
   return (
     <>
       {children}
-      {/* Show the first-launch celebration as an overlay on top of the app,
-          but only once — gated by hasSeenWelcomeCelebration (persisted). */}
       {!hasSeenWelcomeCelebration && (
-        <FirstLaunchCelebration
-          onDone={markWelcomeCelebrationSeen}
-        />
+        <FirstLaunchCelebration onDone={markWelcomeCelebrationSeen} />
       )}
     </>
   );

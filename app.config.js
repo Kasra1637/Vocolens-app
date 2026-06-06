@@ -54,7 +54,7 @@ export default ({ config }) => ({
       },
     ],
     'expo-updates',
-    'react-native-adapty',
+    'react-native-purchases',
   ],
   owner: 'kasra1637',
   runtimeVersion: {
@@ -80,8 +80,6 @@ export default ({ config }) => ({
       process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY || undefined,
     EXPO_PUBLIC_OPENROUTER_API_KEY:
       process.env.EXPO_PUBLIC_OPENROUTER_API_KEY || undefined,
-    EXPO_PUBLIC_ADAPTY_KEY:
-      process.env.EXPO_PUBLIC_ADAPTY_KEY || undefined,
     EXPO_PUBLIC_BACKEND_URL:
       process.env.EXPO_PUBLIC_BACKEND_URL || undefined,
   },
