@@ -197,14 +197,15 @@ export default function EntryDetailScreen() {
   };
 
   const handleToggleSpeech = async () => {
-    if (!entry?.aiReflection) return;
+    const textToSpeak = entry?.aiReflection?.trim() || entry?.aiAnalysis?.trim() || null;
+    if (!textToSpeak) return;
     selectHaptic();
     if (isSpeaking) {
       await Speech.stop();
       setIsSpeaking(false);
     } else {
       setIsSpeaking(true);
-      Speech.speak(entry.aiReflection, {
+      Speech.speak(textToSpeak, {
         language: "en-US",
         pitch: 1.0,
         rate: 0.9,
@@ -602,7 +603,16 @@ export default function EntryDetailScreen() {
 
 
         {/* ── Recommendation ─────────────────────────────────────────────── */}
-        {entry.aiReflection && entry.aiReflection.trim().length > 0 && (
+        {/* Uses aiReflection if available, falls back to aiAnalysis so every entry shows this section */}
+        {(() => {
+          const recommendationText =
+            (entry.aiReflection && entry.aiReflection.trim().length > 0)
+              ? entry.aiReflection
+              : (entry.aiAnalysis && entry.aiAnalysis.trim().length > 0)
+              ? entry.aiAnalysis
+              : null;
+          if (!recommendationText) return null;
+          return (
           <Animated.View entering={FadeInDown.delay(370).duration(600)} style={{ marginBottom: 16 }}>
             <View
               className="rounded-3xl overflow-hidden"
@@ -668,13 +678,14 @@ export default function EntryDetailScreen() {
                       fontSize: 14,
                     }}
                   >
-                    {entry.aiReflection}
+                    {recommendationText}
                   </Text>
                 </View>
               </View>
             </View>
           </Animated.View>
-        )}
+          );
+        })()}
 
 
         {/* ── EmotionBreakdownCard (Claude 3.5 Sonnet deep analysis) ─────── */}
