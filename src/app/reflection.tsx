@@ -549,7 +549,10 @@ export default function ReflectionScreen() {
               successHaptic();
               handleSave();
             }}
-            onSkip={skipStep}
+            onSkip={() => {
+              tapHaptic();
+              handleSave();
+            }}
           />
         )}
         {step === ("senses" as any) && (
@@ -558,7 +561,10 @@ export default function ReflectionScreen() {
               successHaptic();
               handleSave();
             }}
-            onSkip={skipStep}
+            onSkip={() => {
+              tapHaptic();
+              handleSave();
+            }}
           />
         )}
       </ScrollView>
