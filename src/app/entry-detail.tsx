@@ -117,6 +117,7 @@ export default function EntryDetailScreen() {
   }, []);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isGeneratingRecommendation, setIsGeneratingRecommendation] = useState(false);
+  const [generationFailed, setGenerationFailed] = useState(false);
   const [autoPlayedRecommendation, setAutoPlayedRecommendation] = useState(false);
 
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
@@ -236,6 +237,7 @@ export default function EntryDetailScreen() {
       }
     } catch (e) {
       console.log("[Recommendation] generation failed:", e);
+      setGenerationFailed(true);
     } finally {
       setIsGeneratingRecommendation(false);
     }
@@ -245,6 +247,7 @@ export default function EntryDetailScreen() {
   // and auto-play once the text is ready
   React.useEffect(() => {
     if (!entry) return;
+    setGenerationFailed(false); // Reset error state when entry changes
     const hasReflection = entry.aiReflection && entry.aiReflection.trim().length > 0;
     if (hasReflection && !autoPlayedRecommendation) {
       // Entry already has reflection — auto-play after short delay
@@ -254,7 +257,8 @@ export default function EntryDetailScreen() {
       }, 800);
       return () => clearTimeout(timer);
     } else if (!hasReflection && entry.transcript && entry.transcript.trim().length > 0) {
-      // No reflection yet — silently generate in background
+      // No reflection yet — immediately show "Personalizing…" BEFORE the async call
+      setIsGeneratingRecommendation(true);
       handleGenerateRecommendation();
     }
   }, [entry?.id]); // Only runs once per entry (when entry id changes)
@@ -712,6 +716,20 @@ export default function EntryDetailScreen() {
                     <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 13, fontStyle: "italic" }}>
                       Personalizing your recommendation…
                     </Text>
+                  ) : generationFailed ? (
+                    <View>
+                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 13, fontStyle: "italic", marginBottom: 10 }}>
+                        Could not load recommendation. Tap to retry.
+                      </Text>
+                      <Pressable
+                        onPress={() => { setGenerationFailed(false); handleGenerateRecommendation(); }}
+                        className="flex-row items-center justify-center rounded-2xl py-2 px-4"
+                        style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1.5, borderColor: GLASS_INNER_BORDER, gap: 6 }}
+                      >
+                        <RefreshCw size={14} color="#FFFFFF" strokeWidth={2} />
+                        <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13 }}>Retry</Text>
+                      </Pressable>
+                    </View>
                   ) : entry.aiReflection ? (
                     <Text style={{ fontFamily: "Inter_400Regular", lineHeight: 24, color: "rgba(255,255,255,0.92)", fontSize: 14 }}>
                       {entry.aiReflection}

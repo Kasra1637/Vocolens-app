@@ -678,6 +678,18 @@ export async function createJournalEntry(
       suggestedBodySensations: [],
       distressLevel: reflectionOverride.distressLevel,
     };
+
+    // Fetch personalized reflection for entries created via the reflection flow
+    if (transcript.trim().length > 0) {
+      try {
+        const orResult = await analyzeWithOpenRouter(transcript);
+        if (orResult.reflection && orResult.reflection.trim().length > 0) {
+          analysis.reflection = orResult.reflection;
+        }
+      } catch (reflectionError) {
+        console.warn("[createJournalEntry] reflection fetch failed (non-fatal):", reflectionError);
+      }
+    }
   } else if (preTranscribedText) {
     transcript = preTranscribedText;
 
