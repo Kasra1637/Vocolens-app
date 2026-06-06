@@ -6,7 +6,6 @@ import Animated, {
   useAnimatedStyle,
   Easing,
   FadeIn,
-  FadeOut,
 } from "react-native-reanimated";
 import { successHaptic, tapHaptic } from "@/lib/haptics";
 
@@ -39,20 +38,21 @@ export default function BreathingExercise({ onComplete, onSkip }: Props) {
   const countRef     = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearTimers = () => {
-    if (timerRef.current)  clearTimeout(timerRef.current);
-    if (countRef.current)  clearInterval(countRef.current);
+    if (timerRef.current != null) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (countRef.current != null) { clearInterval(countRef.current); countRef.current = null; }
   };
 
   // Start countdown display for a phase
   const startCountdown = (seconds: number) => {
-    clearInterval(countRef.current!);
+    if (countRef.current != null) { clearInterval(countRef.current); countRef.current = null; }
     setCountdown(seconds);
-    countRef.current = setInterval(() => {
+    const id = setInterval(() => {
       setCountdown((c) => {
-        if (c <= 1) { clearInterval(countRef.current!); return 0; }
+        if (c <= 1) { clearInterval(id); return 0; }
         return c - 1;
       });
     }, 1000);
+    countRef.current = id;
   };
 
   const runPhase = useCallback((pIdx: number, cyc: number) => {
