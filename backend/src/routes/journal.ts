@@ -11,6 +11,7 @@ import {
   isOpenRouterConfigured,
   generateWeeklyReflection,
   generateAIEmotionalAnalysis,
+  generateRecommendation,
 } from "../lib/openrouter";
 
 export const journalRouter = new Hono();
@@ -140,6 +141,41 @@ journalRouter.post("/ai-completion", async (c) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI completion failed";
     console.error("AI completion error:", message);
+    return c.json({ error: message }, 500);
+  }
+});
+
+
+// POST /api/journal/recommendation — Generate a warm, personalised recommendation
+const recommendationSchema = z.object({
+  transcript: z.string().min(1, "Transcript is required"),
+  primaryEmotion: z.string().optional().default("happiness"),
+});
+
+journalRouter.post("/recommendation", async (c) => {
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
+  const parsed = recommendationSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message ?? "Validation failed" }, 400);
+  }
+
+  if (!isOpenRouterConfigured()) {
+    return c.json({ error: "OpenRouter API key not configured on server" }, 503);
+  }
+
+  try {
+    const { transcript, primaryEmotion } = parsed.data;
+    const result = await generateRecommendation(transcript, primaryEmotion);
+    return c.json({ success: true, data: result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Recommendation generation failed";
+    console.error("Recommendation error:", message);
     return c.json({ error: message }, 500);
   }
 });

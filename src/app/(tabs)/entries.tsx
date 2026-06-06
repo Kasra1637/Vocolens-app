@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -66,6 +66,8 @@ import {
   getEmotionSubLabel,
 } from "@/lib/types";
 import { AudioPlayer } from "@/components/AudioPlayer";
+import { RecommendationCard } from "@/components/RecommendationCard";
+import { generateRecommendation } from "@/lib/api/openrouter-service";
 
 // Display types for UI (capitalized versions)
 type DisplayEmotion =
@@ -665,7 +667,48 @@ function EntryCard({
   primaryColor,
   isDarkMode = false,
 }: EntryCardProps) {
+  // ── Recommendation state ───────────────────────────────────────────────────
+  // Seed from aiReflection if already generated; generate fresh if not.
+  const [recommendationText, setRecommendationText] = useState<string | null>(
+    entry.aiReflection?.trim() || null,
+  );
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [hasFailed, setHasFailed] = useState(false);
+  const hasFetched = useRef(false);
 
+  const updateEntry = useJournalStore((s) => s.updateEntry);
+
+  const fetchRecommendation = useCallback(async () => {
+    if (!entry.transcript?.trim() || isGenerating) return;
+    setIsGenerating(true);
+    setHasFailed(false);
+    try {
+      const result = await generateRecommendation(
+        entry.transcript,
+        entry.primaryEmotion,
+      );
+      const text = result.advice;
+      setRecommendationText(text);
+      // Persist so entry-detail can use it too
+      updateEntry(entry.id, { aiReflection: text });
+    } catch (err) {
+      console.warn("[EntryCard] recommendation failed:", err);
+      setHasFailed(true);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [entry.transcript, entry.primaryEmotion, entry.id, isGenerating, updateEntry]);
+
+  // Auto-fetch once per entry when no recommendation exists yet
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    if (!recommendationText && entry.transcript?.trim()) {
+      fetchRecommendation();
+    }
+  }, []);
+
+  // ── Title display ──────────────────────────────────────────────────────────
   // Display the AI-generated title stored on the entry.
   // For legacy entries that still have the generic "Journal Entry" placeholder,
   // fall back to the first 50 chars of the transcript so they still look meaningful.
@@ -938,29 +981,22 @@ function EntryCard({
               </View>
             )}
 
-          {/* AI Analysis Snippet */}
-          {entry.aiAnalysis && entry.aiAnalysis.trim().length > 1 && (
+          {/* AI Analysis Snippet — replaced by RecommendationCard below */}
+
+          {/* Recommendation Card (compact inline) */}
+          {entry.transcript && entry.transcript.trim().length > 0 && (
             <View className="mb-4">
-              <View
-                className="p-3 rounded-lg"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.15)",
+              <RecommendationCard
+                advice={recommendationText}
+                isGenerating={isGenerating}
+                hasFailed={hasFailed}
+                onRegenerate={() => {
+                  setHasFailed(false);
+                  fetchRecommendation();
                 }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.9)",
-                    lineHeight: 22,
-                  }}
-                  className="text-xs"
-                  numberOfLines={2}
-                >
-                  {entry.aiAnalysis}
-                </Text>
-              </View>
+                themeColor={primaryColor}
+                compact
+              />
             </View>
           )}
 

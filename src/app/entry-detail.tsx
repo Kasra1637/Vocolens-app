@@ -30,11 +30,7 @@ import {
   ChevronUp,
   Activity,
   MessageSquare,
-  Lightbulb,
   Target,
-  Play,
-  Square,
-  Volume2,
   BarChart2,
   RefreshCw,
   CheckCircle2,
@@ -49,7 +45,6 @@ import {
   successHaptic,
   confirmHaptic,
 } from "@/lib/haptics";
-import * as Speech from "expo-speech";
 import {
   getThemeColors,
   getThemeGradients,
@@ -70,11 +65,12 @@ import {
   BODY_REGION_EMOJIS,
 } from "@/lib/types";
 import { AudioPlayer } from "@/components/AudioPlayer";
+import { RecommendationCard } from "@/components/RecommendationCard";
 import EmotionBreakdownCard from "@/components/EmotionBreakdownCard";
 import EmotionCorrectionModal from "@/components/EmotionCorrectionModal";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { queryKeys } from "@/lib/hooks";
-import { analyzeWithOpenRouter } from "@/lib/api/openrouter-service";
+import { analyzeWithOpenRouter, generateRecommendation } from "@/lib/api/openrouter-service";
 import { useQueryClient } from "@tanstack/react-query";
 
 const ALL_EMOTIONS: EmotionType[] = [
@@ -115,11 +111,8 @@ export default function EntryDetailScreen() {
   const onBarContainerLayout = useCallback((e: LayoutChangeEvent) => {
     setBarContainerWidth(e.nativeEvent.layout.width);
   }, []);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isGeneratingRecommendation, setIsGeneratingRecommendation] = useState(false);
   const [generationFailed, setGenerationFailed] = useState(false);
-  const [autoPlayedRecommendation, setAutoPlayedRecommendation] = useState(false);
-
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   // Time is always displayed in the device's local 12-hour format.
@@ -141,7 +134,6 @@ export default function EntryDetailScreen() {
 
   const handleBack = () => {
     tapHaptic();
-    if (isSpeaking) Speech.stop();
     if (isEditing) {
       setIsEditing(false);
       setEditedTranscript("");
@@ -182,7 +174,6 @@ export default function EntryDetailScreen() {
   const handleDeleteConfirm = () => {
     if (!entry) return;
     confirmHaptic();
-    if (isSpeaking) Speech.stop();
     deleteEntryMutation.mutate(entry.id);
     setShowDeleteModal(false);
     router.back();
@@ -198,40 +189,18 @@ export default function EntryDetailScreen() {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  const speakRecommendation = (text: string) => {
-    setIsSpeaking(true);
-    Speech.speak(text, {
-      language: "en-US",
-      pitch: 1.25,   // higher pitch → softer female-sounding voice
-      rate: 0.88,
-      onDone: () => setIsSpeaking(false),
-      onError: () => setIsSpeaking(false),
-      onStopped: () => setIsSpeaking(false),
-    });
-  };
-
-  const handleToggleSpeech = async () => {
-    const textToSpeak = entry?.aiReflection?.trim() || null;
-    if (!textToSpeak) return;
-    selectHaptic();
-    if (isSpeaking) {
-      await Speech.stop();
-      setIsSpeaking(false);
-    } else {
-      speakRecommendation(textToSpeak);
-    }
-  };
-
   const handleGenerateRecommendation = async () => {
     if (!entry || !entry.transcript || isGeneratingRecommendation) return;
     setIsGeneratingRecommendation(true);
+    setGenerationFailed(false);
     try {
-      const result = await analyzeWithOpenRouter(entry.transcript);
-      if (result.reflection && result.reflection.trim().length > 0) {
-        updateEntry(entry.id, { aiReflection: result.reflection });
-        // Auto-play immediately after generation
-        setTimeout(() => speakRecommendation(result.reflection), 400);
-        setAutoPlayedRecommendation(true);
+      const result = await generateRecommendation(
+        entry.transcript,
+        entry.primaryEmotion,
+      );
+      const advice = result.advice;
+      if (advice && advice.trim().length > 0) {
+        updateEntry(entry.id, { aiReflection: advice });
       }
     } catch (e) {
       console.log("[Recommendation] generation failed:", e);
@@ -241,25 +210,15 @@ export default function EntryDetailScreen() {
     }
   };
 
-  // Auto-generate recommendation when opening an entry that doesn't have one yet
-  // and auto-play once the text is ready
+  // Auto-generate recommendation when entry has no aiReflection yet
   React.useEffect(() => {
     if (!entry) return;
-    setGenerationFailed(false); // Reset error state when entry changes
+    setGenerationFailed(false);
     const hasReflection = entry.aiReflection && entry.aiReflection.trim().length > 0;
-    if (hasReflection && !autoPlayedRecommendation) {
-      // Entry already has reflection — auto-play after short delay
-      const timer = setTimeout(() => {
-        speakRecommendation(entry.aiReflection!);
-        setAutoPlayedRecommendation(true);
-      }, 800);
-      return () => clearTimeout(timer);
-    } else if (!hasReflection && entry.transcript && entry.transcript.trim().length > 0) {
-      // No reflection yet — immediately show "Personalizing…" BEFORE the async call
-      setIsGeneratingRecommendation(true);
+    if (!hasReflection && entry.transcript && entry.transcript.trim().length > 0) {
       handleGenerateRecommendation();
     }
-  }, [entry?.id]); // Only runs once per entry (when entry id changes)
+  }, [entry?.id]);
 
   if (!fontsLoaded) return null;
 
@@ -437,69 +396,6 @@ export default function EntryDetailScreen() {
         </Animated.View>
 
 
-        {/* ── AI Reflection (TTS) ─────────────────────────────────────────── */}
-        {entry.aiReflection && entry.aiReflection.trim().length > 0 && (
-          <Animated.View entering={FadeInDown.delay(150).duration(600)} style={{ marginBottom: 16 }}>
-            <Pressable
-              onPress={() => toggleSection("reflection")}
-              className="rounded-3xl overflow-hidden"
-              style={{
-                backgroundColor: GLASS_BG,
-                borderWidth: 2,
-                borderColor: GLASS_BORDER,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
-              }}
-            >
-              <View style={{ padding: 20 }}>
-                <View className="flex-row items-center justify-between" style={{ marginBottom: expandedSection === "reflection" ? 14 : 0 }}>
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Volume2 size={16} color="#FFFFFF" strokeWidth={2} />
-                    </View>
-                    <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
-                      Your Reflection
-                    </Text>
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.7)", fontSize: 9 }}>AI</Text>
-                    </View>
-                  </View>
-                  {expandedSection === "reflection"
-                    ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-                    : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
-                </View>
-
-                {expandedSection === "reflection" && (
-                  <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
-                    <Text style={{ fontFamily: "Inter_400Regular", lineHeight: 24, color: "rgba(255,255,255,0.92)", fontSize: 14, marginBottom: 16 }}>
-                      {entry.aiReflection}
-                    </Text>
-                    <Pressable
-                      onPress={handleToggleSpeech}
-                      className="flex-row items-center justify-center rounded-2xl py-3 px-5"
-                      style={{
-                        backgroundColor: isSpeaking ? "rgba(239,68,68,0.2)" : GLASS_INNER_BG,
-                        borderWidth: 1.5,
-                        borderColor: isSpeaking ? "rgba(239,68,68,0.45)" : GLASS_BORDER,
-                      }}
-                    >
-                      {isSpeaking
-                        ? <Square size={15} color="#FFFFFF" strokeWidth={2} />
-                        : <Play size={15} color="#FFFFFF" strokeWidth={2} />}
-                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13, marginLeft: 8 }}>
-                        {isSpeaking ? "Stop Reading" : "Listen to Reflection"}
-                      </Text>
-                    </Pressable>
-                  </Animated.View>
-                )}
-              </View>
-            </Pressable>
-          </Animated.View>
-        )}
-
-
         {/* ── Conversation Prompt ─────────────────────────────────────────── */}
         {entry.conversationPrompt && (
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={{ marginBottom: 16 }}>
@@ -650,96 +546,17 @@ export default function EntryDetailScreen() {
         {/* ── Recommendation ─────────────────────────────────────────────── */}
         {entry.transcript && entry.transcript.trim().length > 0 && (
           <Animated.View entering={FadeInDown.delay(370).duration(600)} style={{ marginBottom: 16 }}>
-            <View
-              className="rounded-3xl overflow-hidden"
-              style={{
-                backgroundColor: GLASS_BG,
-                borderWidth: 2,
-                borderColor: GLASS_BORDER,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
+            <RecommendationCard
+              advice={entry.aiReflection?.trim() || null}
+              isGenerating={isGeneratingRecommendation}
+              hasFailed={generationFailed}
+              onRegenerate={() => {
+                setGenerationFailed(false);
+                handleGenerateRecommendation();
               }}
-            >
-              <View style={{ padding: 20 }}>
-                {/* Section header */}
-                <View className="flex-row items-center justify-between" style={{ marginBottom: 14 }}>
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Lightbulb size={16} color="#FFFFFF" strokeWidth={2} />
-                    </View>
-                    <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
-                      Recommendation
-                    </Text>
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.7)", fontSize: 9 }}>AI</Text>
-                    </View>
-                  </View>
-                  {/* Play / Stop — always visible */}
-                  <Pressable
-                    onPress={handleToggleSpeech}
-                    disabled={isGeneratingRecommendation || !entry.aiReflection}
-                    className="flex-row items-center rounded-2xl px-3 py-2"
-                    style={{
-                      backgroundColor: isSpeaking ? "rgba(239,68,68,0.18)" : GLASS_INNER_BG,
-                      borderWidth: 1.5,
-                      borderColor: isSpeaking ? "rgba(239,68,68,0.45)" : GLASS_INNER_BORDER,
-                      gap: 6,
-                      opacity: (isGeneratingRecommendation || !entry.aiReflection) ? 0.4 : 1,
-                    }}
-                  >
-                    {isSpeaking
-                      ? <Square size={13} color="#FFFFFF" strokeWidth={2} />
-                      : <Play size={13} color="#FFFFFF" strokeWidth={2} />}
-                    <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 12 }}>
-                      {isSpeaking ? "Stop" : "Play"}
-                    </Text>
-                  </Pressable>
-                </View>
-
-                {/* Content */}
-                <View
-                  style={{
-                    backgroundColor: GLASS_INNER_BG,
-                    borderRadius: 14,
-                    borderWidth: 1,
-                    borderColor: GLASS_INNER_BORDER,
-                    padding: 14,
-                    minHeight: 52,
-                    justifyContent: "center",
-                  }}
-                >
-                  {isGeneratingRecommendation ? (
-                    <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 13, fontStyle: "italic" }}>
-                      Personalizing your recommendation…
-                    </Text>
-                  ) : generationFailed ? (
-                    <View>
-                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 13, fontStyle: "italic", marginBottom: 10 }}>
-                        Could not load recommendation. Tap to retry.
-                      </Text>
-                      <Pressable
-                        onPress={() => { setGenerationFailed(false); handleGenerateRecommendation(); }}
-                        className="flex-row items-center justify-center rounded-2xl py-2 px-4"
-                        style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1.5, borderColor: GLASS_INNER_BORDER, gap: 6 }}
-                      >
-                        <RefreshCw size={14} color="#FFFFFF" strokeWidth={2} />
-                        <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13 }}>Retry</Text>
-                      </Pressable>
-                    </View>
-                  ) : entry.aiReflection ? (
-                    <Text style={{ fontFamily: "Inter_400Regular", lineHeight: 24, color: "rgba(255,255,255,0.92)", fontSize: 14 }}>
-                      {entry.aiReflection}
-                    </Text>
-                  ) : (
-                    <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.35)", fontSize: 13, fontStyle: "italic" }}>
-                      Preparing your personalized recommendation…
-                    </Text>
-                  )}
-                </View>
-              </View>
-            </View>
+              themeColor={Colors.primary}
+              compact={false}
+            />
           </Animated.View>
         )}
 

@@ -34,4 +34,7 @@ export {
   analyzeTranscriptWithRetry,
   generateWeeklyReflection,
   generateAIEmotionalAnalysis,
+  generateRecommendation,
 } from "./client.ts";
+
+export type { RecommendationResult } from "./client.ts";

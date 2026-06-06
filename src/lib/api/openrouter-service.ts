@@ -344,3 +344,132 @@ export async function checkOpenRouterStatus(): Promise<boolean> {
     return false;
   }
 }
+
+
+// ── Warm Recommendation ───────────────────────────────────────────────────────
+
+export interface RecommendationResult {
+  /** Full warm advice text (3–4 sentences, for display) */
+  advice: string;
+  /** Shorter TTS-optimised spoken version (1–2 sentences) */
+  audioAdvice: string;
+}
+
+const RECOMMENDATION_SYSTEM_PROMPT = `You are a warm, compassionate emotional wellness companion.
+Your role is to provide a heartfelt, personalised recommendation based on a journal entry transcription.
+
+TONE GUIDELINES:
+- Speak directly to the person in the second person ("you", "your").
+- Be warm, gentle, and encouraging — like a trusted friend who truly listened.
+- Acknowledge what they are feeling before suggesting anything.
+- Keep suggestions concrete, gentle, and immediately actionable.
+- Never be clinical, preachy, or diagnostic.
+- Do NOT repeat the same phrasing in "advice" and "audioAdvice".
+
+Return ONLY a valid JSON object — no markdown, no explanation, no preamble:
+
+{
+  "advice": "3–4 sentence warm recommendation grounded in the specific emotional content of the entry. Acknowledge the emotion, validate the experience, then offer one or two gentle, specific actions tailored to what was shared.",
+  "audioAdvice": "1–2 sentence spoken version. Warmer and more personal in tone. Suitable for TTS — use natural rhythm, no lists or bullet points."
+}
+
+RULES:
+- "advice": 3–4 sentences. Specific to the entry content and primary emotion. Warm, not generic.
+- "audioAdvice": 1–2 sentences max. More intimate and conversational. No em-dashes or special characters.
+- Both fields must always be present and non-empty.
+- Never start with "I" — always address the person directly.
+- Ground the advice in at least one specific detail from the transcript.`;
+
+/**
+ * Generate a warm, personalised recommendation for a journal entry.
+ * Priority: 1) Direct Claude call (client-side key)  2) Backend /api/journal/recommendation
+ */
+export async function generateRecommendation(
+  transcript: string,
+  primaryEmotion: string = 'happiness',
+): Promise<RecommendationResult> {
+  if (!transcript || transcript.trim().length === 0) {
+    throw new Error('Transcript is empty');
+  }
+
+  // PATH 1: Direct Claude API call (client-side key)
+  const apiKey = getOpenRouterApiKey();
+  if (apiKey && apiKey.startsWith('sk-or-')) {
+    try {
+      console.log('[OpenRouter] Generating recommendation (direct)…');
+      const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://blink.new',
+          'X-Title': 'Vocolens',
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: 'system', content: RECOMMENDATION_SYSTEM_PROMPT },
+            {
+              role: 'user',
+              content: `Here is my journal entry:\n\n"${transcript}"\n\nPrimary emotion detected: ${primaryEmotion}\n\nPlease provide a warm, personalised recommendation.`,
+            },
+          ],
+          temperature: 0.85,
+          max_tokens: 500,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json() as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          const jsonStr = content
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/```\s*$/i, '')
+            .trim();
+          const result = JSON.parse(jsonStr);
+          const advice =
+            typeof result.advice === 'string' && result.advice.trim().length > 0
+              ? result.advice.trim()
+              : 'Take a moment to acknowledge what you\'re feeling. Your emotions are valid, and simply expressing them here is a meaningful act of self-care.';
+          const audioAdvice =
+            typeof result.audioAdvice === 'string' && result.audioAdvice.trim().length > 0
+              ? result.audioAdvice.trim()
+              : advice.split('.')[0] + '.';
+          console.log('[OpenRouter] Recommendation generated (direct)');
+          return { advice, audioAdvice };
+        }
+      }
+    } catch (err) {
+      console.warn('[OpenRouter] Direct recommendation failed, trying backend:', err);
+    }
+  }
+
+  // PATH 2: Backend endpoint
+  const response = await fetch(`${BACKEND_URL}/api/journal/recommendation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript, primaryEmotion }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Backend recommendation error (${response.status}): ${errText}`);
+  }
+
+  const json = await response.json() as {
+    success: boolean;
+    data: RecommendationResult;
+    error?: string;
+  };
+
+  if (!json.success || !json.data) {
+    throw new Error(json.error || 'Invalid response from recommendation backend');
+  }
+
+  console.log('[OpenRouter] Recommendation generated (backend)');
+  return json.data;
+}

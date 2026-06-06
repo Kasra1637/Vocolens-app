@@ -15,7 +15,7 @@ import type {
   AICompletionRequest,
   EmotionType,
 } from "./types.ts";
-import { SYSTEM_PROMPT } from "./prompts.ts";
+import { SYSTEM_PROMPT, RECOMMENDATION_SYSTEM_PROMPT } from "./prompts.ts";
 import { parseAnalysisJson } from "./parser.ts";
 
 function buildHeaders(apiKey: string): Record<string, string> {
@@ -236,4 +236,85 @@ export async function generateAIEmotionalAnalysis(request: AICompletionRequest):
     .trim();
 
   return JSON.parse(jsonStr);
+}
+
+
+// ── Warm Recommendation ───────────────────────────────────────────────────────
+
+export interface RecommendationResult {
+  /** Full warm advice text (3–4 sentences, for display) */
+  advice: string;
+  /** Shorter TTS-optimised version (1–2 sentences, for audio playback) */
+  audioAdvice: string;
+}
+
+/**
+ * Generate a warm, compassionate recommendation for a journal entry.
+ * Returns both a full text version and a TTS-optimised spoken version.
+ */
+export async function generateRecommendation(
+  transcript: string,
+  primaryEmotion: string,
+): Promise<RecommendationResult> {
+  const apiKey = getApiKey();
+
+  if (!apiKey || !apiKey.startsWith("sk-or-")) {
+    throw new Error("[OpenRouter] OPENROUTER_API_KEY is missing or invalid.");
+  }
+
+  if (!transcript || transcript.trim().length === 0) {
+    throw new Error("[OpenRouter] Transcript is empty.");
+  }
+
+  console.log(`[OpenRouter] Generating recommendation | emotion=${primaryEmotion}`);
+
+  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: buildHeaders(apiKey),
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        { role: "system", content: RECOMMENDATION_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: `Here is my journal entry:\n\n"${transcript}"\n\nPrimary emotion detected: ${primaryEmotion}\n\nPlease provide a warm, personalised recommendation.`,
+        },
+      ],
+      temperature: 0.85,
+      max_tokens: 500,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`[OpenRouter] Recommendation error (${response.status}): ${errText}`);
+  }
+
+  const data = await response.json() as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error("[OpenRouter] Recommendation returned empty content");
+  }
+
+  const jsonStr = content
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+
+  const result = JSON.parse(jsonStr);
+
+  const advice = typeof result.advice === "string" && result.advice.trim().length > 0
+    ? result.advice.trim()
+    : "Take a moment to acknowledge what you're feeling. Your emotions are valid, and simply expressing them here is a meaningful act of self-care.";
+
+  const audioAdvice = typeof result.audioAdvice === "string" && result.audioAdvice.trim().length > 0
+    ? result.audioAdvice.trim()
+    : advice.split(".")[0] + ".";
+
+  console.log(`[OpenRouter] Recommendation generated | chars=${advice.length}`);
+  return { advice, audioAdvice };
 }
