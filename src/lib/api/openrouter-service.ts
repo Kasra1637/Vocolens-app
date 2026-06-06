@@ -380,19 +380,93 @@ RULES:
 - Never start with "I" — always address the person directly.
 - Ground the advice in at least one specific detail from the transcript.`;
 
+// ── Local emotion-aware fallback ──────────────────────────────────────────────
+/**
+ * Generates a warm, emotion-specific recommendation locally when both API
+ * paths fail. Always succeeds — guarantees the user sees something useful.
+ * Picks a tailored opening for each emotion and grounds it in the transcript.
+ */
+function generateLocalRecommendation(
+  transcript: string,
+  primaryEmotion: EmotionType | string,
+): RecommendationResult {
+  const emotion = (primaryEmotion || 'happiness').toLowerCase() as EmotionType;
+
+  // Extract a short anchor phrase from the transcript (first 60 chars, words only)
+  const cleaned = transcript.replace(/\s+/g, ' ').trim();
+  const anchor =
+    cleaned.length > 60
+      ? cleaned.slice(0, 60).split(' ').slice(0, -1).join(' ').trim() + '…'
+      : cleaned;
+
+  const adviceMap: Record<EmotionType, { advice: string; audioAdvice: string }> = {
+    happiness: {
+      advice: `It is wonderful to hear the warmth coming through in your words. Take a moment to truly let this feeling settle in — notice what made today feel this way, and consider how you might gently bring more of it into the days ahead. You deserve to savour these bright moments.`,
+      audioAdvice: `It is wonderful to hear that warmth coming through. Let yourself fully savour this feeling, and notice what helped create it.`,
+    },
+    sadness: {
+      advice: `What you are feeling makes complete sense, and it is okay to sit with it for a while without rushing to fix anything. Try giving yourself a small kindness today — a warm drink, a quiet walk, or simply permission to rest. You are not alone in this, and brighter days will come gently in their own time.`,
+      audioAdvice: `What you are feeling makes complete sense. Be gentle with yourself today, and remember it is okay to rest.`,
+    },
+    anger: {
+      advice: `Your frustration is valid — it is telling you something important about what matters to you. Before reacting, try taking a few slow breaths and naming exactly what feels unfair or hurtful. When you are ready, channel that energy into one small, constructive step that moves you toward what you actually need.`,
+      audioAdvice: `Your frustration is valid. Take a few slow breaths, and trust that your feelings are pointing you toward what matters.`,
+    },
+    disgust: {
+      advice: `Strong reactions like this often reveal your deepest values. Take a moment to reflect on what specifically did not sit right with you, and what that tells you about the boundaries you want to honour. You can acknowledge the discomfort while also choosing to step away from what no longer serves you.`,
+      audioAdvice: `Strong reactions like this often reveal what matters most to you. Honour your boundaries and step toward what feels right.`,
+    },
+    fear: {
+      advice: `It takes courage to put your worries into words like you just did. Try to gently separate what is happening right now from what might happen — most of our fear lives in the unknown future. Pick one small, manageable step you can take today, and let that be enough for now. You are safe in this moment.`,
+      audioAdvice: `It takes courage to name your worries. Focus on this moment, and trust that one small step is more than enough.`,
+    },
+    surprise: {
+      advice: `Unexpected moments can be unsettling, but they often open doors we did not know existed. Give yourself time to absorb what just happened before deciding what it means. Stay curious — sometimes the most surprising shifts lead to the most meaningful growth.`,
+      audioAdvice: `Unexpected moments often open new doors. Give yourself time to absorb what is happening, and stay curious.`,
+    },
+    trust: {
+      advice: `There is a quiet strength in what you shared — a sense of being grounded and at peace with where you are. Hold on to that feeling and remember what helped you arrive here. This kind of trust, in yourself and in others, is worth nurturing every day.`,
+      audioAdvice: `There is a quiet strength in your words today. Hold on to this sense of trust, and let it guide you forward.`,
+    },
+    anticipation: {
+      advice: `That spark of looking forward is a beautiful thing — it means you are leaning into possibility. Channel that energy into one concrete action today, however small, that brings you closer to what you are hoping for. Your future self will thank you for the momentum you are building right now.`,
+      audioAdvice: `That spark of looking forward is beautiful. Take one small action today toward what you are hoping for.`,
+    },
+  };
+
+  const fallback = adviceMap[emotion] ?? adviceMap.trust;
+
+  // Lightly weave in the transcript anchor for personalisation when meaningful
+  if (anchor.length > 8 && Math.random() > 0.5) {
+    const personalisedOpening = `Reading what you shared — "${anchor}" — `;
+    return {
+      advice: personalisedOpening + fallback.advice.charAt(0).toLowerCase() + fallback.advice.slice(1),
+      audioAdvice: fallback.audioAdvice,
+    };
+  }
+
+  return fallback;
+}
+
 /**
  * Generate a warm, personalised recommendation for a journal entry.
- * Priority: 1) Direct Claude call (client-side key)  2) Backend /api/journal/recommendation
+ * Priority: 1) Direct Claude call  2) Backend endpoint  3) Local fallback (always succeeds)
  */
 export async function generateRecommendation(
   transcript: string,
   primaryEmotion: string = 'happiness',
 ): Promise<RecommendationResult> {
   if (!transcript || transcript.trim().length === 0) {
-    throw new Error('Transcript is empty');
+    // Even with no transcript, return a gentle generic recommendation
+    return {
+      advice:
+        'Thank you for taking a moment to check in with yourself. Whatever you are feeling right now is valid, and showing up here is already a meaningful act of self-care.',
+      audioAdvice:
+        'Thank you for checking in with yourself. Whatever you are feeling is valid.',
+    };
   }
 
-  // PATH 1: Direct Claude API call (client-side key)
+  // ── PATH 1: Direct Claude API call (client-side key) ───────────────────────
   const apiKey = getOpenRouterApiKey();
   if (apiKey && apiKey.startsWith('sk-or-')) {
     try {
@@ -420,7 +494,7 @@ export async function generateRecommendation(
       });
 
       if (response.ok) {
-        const data = await response.json() as {
+        const data = (await response.json()) as {
           choices?: Array<{ message?: { content?: string } }>;
         };
         const content = data.choices?.[0]?.message?.content;
@@ -430,46 +504,75 @@ export async function generateRecommendation(
             .replace(/^```\s*/i, '')
             .replace(/```\s*$/i, '')
             .trim();
-          const result = JSON.parse(jsonStr);
-          const advice =
-            typeof result.advice === 'string' && result.advice.trim().length > 0
-              ? result.advice.trim()
-              : 'Take a moment to acknowledge what you\'re feeling. Your emotions are valid, and simply expressing them here is a meaningful act of self-care.';
-          const audioAdvice =
-            typeof result.audioAdvice === 'string' && result.audioAdvice.trim().length > 0
-              ? result.audioAdvice.trim()
-              : advice.split('.')[0] + '.';
-          console.log('[OpenRouter] Recommendation generated (direct)');
-          return { advice, audioAdvice };
+          try {
+            const result = JSON.parse(jsonStr);
+            const advice =
+              typeof result.advice === 'string' && result.advice.trim().length > 0
+                ? result.advice.trim()
+                : null;
+            const audioAdvice =
+              typeof result.audioAdvice === 'string' && result.audioAdvice.trim().length > 0
+                ? result.audioAdvice.trim()
+                : null;
+            if (advice) {
+              console.log('[OpenRouter] Recommendation generated (direct)');
+              return {
+                advice,
+                audioAdvice: audioAdvice ?? advice.split('.')[0] + '.',
+              };
+            }
+          } catch (parseErr) {
+            // Some models return prose without JSON wrapping — use it as advice directly
+            const fallbackAdvice = jsonStr.replace(/[{}"]/g, '').trim();
+            if (fallbackAdvice.length > 30) {
+              console.log('[OpenRouter] Recommendation generated (direct, prose)');
+              return {
+                advice: fallbackAdvice,
+                audioAdvice: fallbackAdvice.split('.')[0] + '.',
+              };
+            }
+          }
         }
+      } else {
+        console.warn(
+          `[OpenRouter] Direct call returned ${response.status}, trying backend`,
+        );
       }
     } catch (err) {
       console.warn('[OpenRouter] Direct recommendation failed, trying backend:', err);
     }
+  } else {
+    console.log('[OpenRouter] No client-side API key, trying backend');
   }
 
-  // PATH 2: Backend endpoint
-  const response = await fetch(`${BACKEND_URL}/api/journal/recommendation`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ transcript, primaryEmotion }),
-  });
+  // ── PATH 2: Backend endpoint ───────────────────────────────────────────────
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/journal/recommendation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript, primaryEmotion }),
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Backend recommendation error (${response.status}): ${errText}`);
+    if (response.ok) {
+      const json = (await response.json()) as {
+        success: boolean;
+        data: RecommendationResult;
+        error?: string;
+      };
+      if (json.success && json.data?.advice) {
+        console.log('[OpenRouter] Recommendation generated (backend)');
+        return json.data;
+      }
+    } else {
+      console.warn(
+        `[OpenRouter] Backend recommendation returned ${response.status}, falling back to local`,
+      );
+    }
+  } catch (err) {
+    console.warn('[OpenRouter] Backend recommendation failed, falling back to local:', err);
   }
 
-  const json = await response.json() as {
-    success: boolean;
-    data: RecommendationResult;
-    error?: string;
-  };
-
-  if (!json.success || !json.data) {
-    throw new Error(json.error || 'Invalid response from recommendation backend');
-  }
-
-  console.log('[OpenRouter] Recommendation generated (backend)');
-  return json.data;
+  // ── PATH 3: Local fallback (always succeeds) ───────────────────────────────
+  console.log('[OpenRouter] Using local recommendation fallback');
+  return generateLocalRecommendation(transcript, primaryEmotion);
 }
