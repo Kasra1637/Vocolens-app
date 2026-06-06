@@ -100,9 +100,10 @@ export default function EntryDetailScreen() {
   const [editedTranscript, setEditedTranscript] = useState("");
   const [editedTitle, setEditedTitle] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<
-    "emotions" | "analysis" | "reflection" | null
-  >(null);
+  // Independent collapse state — multiple sections can be open simultaneously
+  const [sectionEmotions,    setSectionEmotions]    = useState(true);  // open by default
+  const [sectionReflection,  setSectionReflection]  = useState(true);  // open by default
+  const [sectionTranscript,  setSectionTranscript]  = useState(false); // closed by default
   const [transcriptExpanded, setTranscriptExpanded] = useState(false);
   const [barContainerWidth, setBarContainerWidth] = useState(0);
   const [showRefineModal, setShowRefineModal] = useState(false);
@@ -185,7 +186,9 @@ export default function EntryDetailScreen() {
 
   const toggleSection = (section: "emotions" | "analysis" | "reflection") => {
     tapHaptic();
-    setExpandedSection(expandedSection === section ? null : section);
+    if (section === "emotions")   setSectionEmotions((v)   => !v);
+    if (section === "analysis")   setSectionTranscript((v) => !v);
+    if (section === "reflection") setSectionReflection((v) => !v);
   };
 
   // Generate recommendation once — only when entry has no persisted aiReflection
@@ -441,7 +444,7 @@ export default function EntryDetailScreen() {
           >
             <View style={{ padding: 20 }}>
               {/* Section header — always visible */}
-              <View className="flex-row items-center justify-between" style={{ marginBottom: expandedSection === "analysis" ? 14 : 0 }}>
+              <View className="flex-row items-center justify-between" style={{ marginBottom: sectionTranscript ? 14 : 0 }}>
                 <View className="flex-row items-center" style={{ gap: 8 }}>
                   <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
                     <MessageSquare size={16} color="#FFFFFF" strokeWidth={2} />
@@ -450,13 +453,13 @@ export default function EntryDetailScreen() {
                     Full Transcript
                   </Text>
                 </View>
-                {expandedSection === "analysis"
+                {sectionTranscript
                   ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
                   : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
               </View>
 
               {/* Collapsible body */}
-              {expandedSection === "analysis" && (
+              {sectionTranscript && (
                 <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
                   {isEditing ? (
                     <TextInput
@@ -591,7 +594,7 @@ export default function EntryDetailScreen() {
           >
             <View style={{ padding: 20 }}>
               {/* Header row */}
-              <View className="flex-row items-center justify-between" style={{ marginBottom: expandedSection === "emotions" ? 16 : 0 }}>
+              <View className="flex-row items-center justify-between" style={{ marginBottom: sectionEmotions ? 16 : 0 }}>
                 <View className="flex-row items-center" style={{ gap: 8 }}>
                   <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
                     <BarChart2 size={16} color="#FFFFFF" strokeWidth={2} />
@@ -605,13 +608,13 @@ export default function EntryDetailScreen() {
                     </View>
                   )}
                 </View>
-                {expandedSection === "emotions"
+                {sectionEmotions
                   ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
                   : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
               </View>
 
 
-              {expandedSection === "emotions" && (
+              {sectionEmotions && (
                 <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
                   {entry.emotionScores ? (
                     <View style={{ gap: 10 }} onLayout={onBarContainerLayout}>
@@ -721,7 +724,8 @@ export default function EntryDetailScreen() {
           entry.bodySensation ||
           entry.groundingUsed) && (
           <Animated.View entering={FadeInDown.delay(450).duration(600)} style={{ marginBottom: 16 }}>
-            <View
+            <Pressable
+              onPress={() => toggleSection("reflection")}
               className="rounded-3xl overflow-hidden"
               style={{
                 backgroundColor: GLASS_BG,
@@ -734,91 +738,98 @@ export default function EntryDetailScreen() {
               }}
             >
               <View style={{ padding: 20 }}>
-                {/* Header */}
-                <View className="flex-row items-center justify-between" style={{ marginBottom: 18 }}>
+                {/* Header — always visible */}
+                <View className="flex-row items-center justify-between" style={{ marginBottom: sectionReflection ? 18 : 0 }}>
                   <View className="flex-row items-center" style={{ gap: 8 }}>
                     <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
                       <Heart size={16} color="#FFFFFF" strokeWidth={2} />
                     </View>
                     <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>Your Reflection</Text>
                   </View>
-                  {entry.userValidated ? (
-                    <View className="flex-row items-center px-2.5 py-1 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                      <CheckCircle2 size={12} color="#FFFFFF" strokeWidth={2} />
-                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 10, marginLeft: 4 }}>Confirmed</Text>
-                    </View>
-                  ) : entry.aiCorrected ? (
-                    <View className="flex-row items-center px-2.5 py-1 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                      <RefreshCw size={12} color="#FFFFFF" strokeWidth={2} />
-                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 10, marginLeft: 4 }}>Adjusted</Text>
-                    </View>
-                  ) : null}
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
+                    {entry.userValidated ? (
+                      <View className="flex-row items-center px-2.5 py-1 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
+                        <CheckCircle2 size={12} color="#FFFFFF" strokeWidth={2} />
+                        <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 10, marginLeft: 4 }}>Confirmed</Text>
+                      </View>
+                    ) : entry.aiCorrected ? (
+                      <View className="flex-row items-center px-2.5 py-1 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
+                        <RefreshCw size={12} color="#FFFFFF" strokeWidth={2} />
+                        <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 10, marginLeft: 4 }}>Adjusted</Text>
+                      </View>
+                    ) : null}
+                    {sectionReflection
+                      ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                      : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+                  </View>
                 </View>
 
-                {/* Valence & Arousal */}
-                {(entry.valence !== undefined || entry.arousal !== undefined) && (
-                  <View style={{ gap: 16, marginBottom: 16 }}>
-                    {entry.valence !== undefined && (
-                      <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 12, borderWidth: 1, borderColor: GLASS_INNER_BORDER, padding: 14 }}>
-                        <View className="flex-row items-center justify-between" style={{ marginBottom: 8 }}>
-                          <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.8)", fontSize: 12 }}>Valence</Text>
-                          <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 12 }}>
-                            {entry.valence > 0 ? "+" : ""}{entry.valence}
+                {/* Collapsible body */}
+                {sectionReflection && (
+                  <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+                    {/* Valence & Arousal */}
+                    {(entry.valence !== undefined || entry.arousal !== undefined) && (
+                      <View style={{ gap: 16, marginBottom: 16 }}>
+                        {entry.valence !== undefined && (
+                          <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 12, borderWidth: 1, borderColor: GLASS_INNER_BORDER, padding: 14 }}>
+                            <View className="flex-row items-center justify-between" style={{ marginBottom: 8 }}>
+                              <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.8)", fontSize: 12 }}>Valence</Text>
+                              <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 12 }}>
+                                {entry.valence > 0 ? "+" : ""}{entry.valence}
+                              </Text>
+                            </View>
+                            <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+                              <View style={{ height: "100%", borderRadius: 4, width: `${Math.abs(entry.valence)}%`, backgroundColor: "#FFFFFF", marginLeft: entry.valence < 0 ? `${100 - Math.abs(entry.valence)}%` : 0 }} />
+                            </View>
+                            <View className="flex-row justify-between" style={{ marginTop: 6 }}>
+                              <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Unpleasant</Text>
+                              <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Pleasant</Text>
+                            </View>
+                          </View>
+                        )}
+                        {entry.arousal !== undefined && (
+                          <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 12, borderWidth: 1, borderColor: GLASS_INNER_BORDER, padding: 14 }}>
+                            <View className="flex-row items-center justify-between" style={{ marginBottom: 8 }}>
+                              <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.8)", fontSize: 12 }}>Arousal</Text>
+                              <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 12 }}>{entry.arousal}%</Text>
+                            </View>
+                            <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+                              <View style={{ height: "100%", borderRadius: 4, width: `${entry.arousal}%`, backgroundColor: "#FFFFFF" }} />
+                            </View>
+                            <View className="flex-row justify-between" style={{ marginTop: 6 }}>
+                              <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Calm</Text>
+                              <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Activated</Text>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    )}
+
+                    {/* Body Sensation & Grounding chips */}
+                    <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                      {entry.bodySensation && (
+                        <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
+                          <AlertTriangle size={12} color="#FFFFFF" strokeWidth={2} />
+                          <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6, textTransform: "capitalize" }}>
+                            {entry.bodySensation.replace(/_/g, " ")}
                           </Text>
                         </View>
-                        <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-                          <View style={{ height: "100%", borderRadius: 4, width: `${Math.abs(entry.valence)}%`, backgroundColor: "#FFFFFF", marginLeft: entry.valence < 0 ? `${100 - Math.abs(entry.valence)}%` : 0 }} />
+                      )}
+                      {entry.groundingUsed && (
+                        <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
+                          <Wind size={12} color="#FFFFFF" strokeWidth={2} />
+                          <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6 }}>Grounding used</Text>
                         </View>
-                        <View className="flex-row justify-between" style={{ marginTop: 6 }}>
-                          <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Unpleasant</Text>
-                          <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Pleasant</Text>
+                      )}
+                      {entry.distressLevel && (
+                        <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
+                          <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, textTransform: "capitalize" }}>
+                            {entry.distressLevel} distress
+                          </Text>
                         </View>
-                      </View>
-                    )}
-                    {entry.arousal !== undefined && (
-                      <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 12, borderWidth: 1, borderColor: GLASS_INNER_BORDER, padding: 14 }}>
-                        <View className="flex-row items-center justify-between" style={{ marginBottom: 8 }}>
-                          <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.8)", fontSize: 12 }}>Arousal</Text>
-                          <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 12 }}>{entry.arousal}%</Text>
-                        </View>
-                        <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-                          <View style={{ height: "100%", borderRadius: 4, width: `${entry.arousal}%`, backgroundColor: "#FFFFFF" }} />
-                        </View>
-                        <View className="flex-row justify-between" style={{ marginTop: 6 }}>
-                          <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Calm</Text>
-                          <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Activated</Text>
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                )}
-
-
-                {/* Body Sensation & Grounding chips */}
-                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                  {entry.bodySensation && (
-                    <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                      <AlertTriangle size={12} color="#FFFFFF" strokeWidth={2} />
-                      <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6, textTransform: "capitalize" }}>
-                        {entry.bodySensation.replace(/_/g, " ")}
-                      </Text>
-                    </View>
-                  )}
-                  {entry.groundingUsed && (
-                    <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                      <Wind size={12} color="#FFFFFF" strokeWidth={2} />
-                      <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6 }}>Grounding used</Text>
-                    </View>
-                  )}
-                  {entry.distressLevel && (
-                    <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                      <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, textTransform: "capitalize" }}>
-                        {entry.distressLevel} distress
-                      </Text>
-                    </View>
-                  )}
-                  {entry.userValidated && (
-                    <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
+                      )}
+                      {entry.userValidated && (
+                        <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
                       <CheckCircle2 size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6 }}>Validated</Text>
                     </View>
@@ -842,8 +853,10 @@ export default function EntryDetailScreen() {
                     </View>
                   </View>
                 )}
+                  </Animated.View>
+                )}
               </View>
-            </View>
+            </Pressable>
           </Animated.View>
         )}
 
