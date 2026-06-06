@@ -679,17 +679,6 @@ export async function createJournalEntry(
       distressLevel: reflectionOverride.distressLevel,
     };
 
-    // Fetch personalized reflection for entries created via the reflection flow
-    if (transcript.trim().length > 0) {
-      try {
-        const orResult = await analyzeWithOpenRouter(transcript);
-        if (orResult.reflection && orResult.reflection.trim().length > 0) {
-          analysis.reflection = orResult.reflection;
-        }
-      } catch (reflectionError) {
-        console.warn("[createJournalEntry] reflection fetch failed (non-fatal):", reflectionError);
-      }
-    }
   } else if (preTranscribedText) {
     transcript = preTranscribedText;
 
@@ -762,6 +751,19 @@ export async function createJournalEntry(
     conversationTopic,
     conversationPrompt,
   });
+
+  // Fire-and-forget: populate aiReflection after entry is saved (visible in entry-detail reactively)
+  if (reflectionOverride && preTranscribedText && transcript.trim().length > 0 && !analysis.reflection) {
+    analyzeWithOpenRouter(transcript)
+      .then((orResult) => {
+        if (orResult.reflection && orResult.reflection.trim().length > 0) {
+          journalStore.updateEntry(entry.id, { aiReflection: orResult.reflection });
+        }
+      })
+      .catch((err) => {
+        console.warn("[createJournalEntry] background reflection fetch failed:", err);
+      });
+  }
 
   // Update user stats - IMPORTANT: incrementEntries MUST be called first
   userStatsStore.incrementEntries();

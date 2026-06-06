@@ -127,7 +127,7 @@ export default function EntryDetailScreen() {
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
 
-  const getEntry = useJournalStore((s) => s.getEntry);
+  const entry = useJournalStore((s) => (id ? s.entries.find((e) => e.id === id) ?? null : null));
   const updateEntry = useJournalStore((s) => s.updateEntry);
   const deleteEntryMutation = useDeleteEntry();
 
@@ -137,8 +137,6 @@ export default function EntryDetailScreen() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
-
-  const entry = id ? getEntry(id) : null;
 
 
   const handleBack = () => {
