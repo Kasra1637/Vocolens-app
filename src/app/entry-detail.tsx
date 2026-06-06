@@ -74,6 +74,7 @@ import EmotionBreakdownCard from "@/components/EmotionBreakdownCard";
 import EmotionCorrectionModal from "@/components/EmotionCorrectionModal";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { queryKeys } from "@/lib/hooks";
+import { analyzeWithOpenRouter } from "@/lib/api/openrouter-service";
 import { useQueryClient } from "@tanstack/react-query";
 
 const ALL_EMOTIONS: EmotionType[] = [
@@ -115,6 +116,7 @@ export default function EntryDetailScreen() {
     setBarContainerWidth(e.nativeEvent.layout.width);
   }, []);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isGeneratingRecommendation, setIsGeneratingRecommendation] = useState(false);
 
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
@@ -213,6 +215,22 @@ export default function EntryDetailScreen() {
         onError: () => setIsSpeaking(false),
         onStopped: () => setIsSpeaking(false),
       });
+    }
+  };
+
+  const handleGenerateRecommendation = async () => {
+    if (!entry || !entry.transcript || isGeneratingRecommendation) return;
+    tapHaptic();
+    setIsGeneratingRecommendation(true);
+    try {
+      const result = await analyzeWithOpenRouter(entry.transcript);
+      if (result.reflection && result.reflection.trim().length > 0) {
+        updateEntry(entry.id, { aiReflection: result.reflection });
+      }
+    } catch (e) {
+      console.log("[Recommendation] generation failed:", e);
+    } finally {
+      setIsGeneratingRecommendation(false);
     }
   };
 
@@ -603,89 +621,107 @@ export default function EntryDetailScreen() {
 
 
         {/* ── Recommendation ─────────────────────────────────────────────── */}
-        {/* Uses aiReflection if available, falls back to aiAnalysis so every entry shows this section */}
-        {(() => {
-          const recommendationText =
-            (entry.aiReflection && entry.aiReflection.trim().length > 0)
-              ? entry.aiReflection
-              : (entry.aiAnalysis && entry.aiAnalysis.trim().length > 0)
-              ? entry.aiAnalysis
-              : null;
-          if (!recommendationText) return null;
-          return (
-          <Animated.View entering={FadeInDown.delay(370).duration(600)} style={{ marginBottom: 16 }}>
-            <View
-              className="rounded-3xl overflow-hidden"
-              style={{
-                backgroundColor: GLASS_BG,
-                borderWidth: 2,
-                borderColor: GLASS_BORDER,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
-              }}
-            >
-              <View style={{ padding: 20 }}>
-                {/* Section header */}
-                <View className="flex-row items-center justify-between" style={{ marginBottom: 14 }}>
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Lightbulb size={16} color="#FFFFFF" strokeWidth={2} />
+        {entry.transcript && entry.transcript.trim().length > 0 && (
+          (() => {
+            const hasReflection = entry.aiReflection && entry.aiReflection.trim().length > 0;
+            return (
+            <Animated.View entering={FadeInDown.delay(370).duration(600)} style={{ marginBottom: 16 }}>
+              <View
+                className="rounded-3xl overflow-hidden"
+                style={{
+                  backgroundColor: GLASS_BG,
+                  borderWidth: 2,
+                  borderColor: GLASS_BORDER,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 8,
+                }}
+              >
+                <View style={{ padding: 20 }}>
+                  {/* Section header */}
+                  <View className="flex-row items-center justify-between" style={{ marginBottom: hasReflection ? 14 : 0 }}>
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
+                        <Lightbulb size={16} color="#FFFFFF" strokeWidth={2} />
+                      </View>
+                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
+                        Recommendation
+                      </Text>
+                      <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
+                        <Text style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.7)", fontSize: 9 }}>AI</Text>
+                      </View>
                     </View>
-                    <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
-                      Recommendation
-                    </Text>
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.7)", fontSize: 9 }}>AI</Text>
-                    </View>
+                    {/* Play button — only when text exists */}
+                    {hasReflection && (
+                      <Pressable
+                        onPress={handleToggleSpeech}
+                        className="flex-row items-center rounded-2xl px-3 py-2"
+                        style={{
+                          backgroundColor: isSpeaking ? "rgba(239,68,68,0.18)" : GLASS_INNER_BG,
+                          borderWidth: 1.5,
+                          borderColor: isSpeaking ? "rgba(239,68,68,0.45)" : GLASS_INNER_BORDER,
+                          gap: 6,
+                        }}
+                      >
+                        {isSpeaking
+                          ? <Square size={13} color="#FFFFFF" strokeWidth={2} />
+                          : <Play size={13} color="#FFFFFF" strokeWidth={2} />}
+                        <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 12 }}>
+                          {isSpeaking ? "Stop" : "Play"}
+                        </Text>
+                      </Pressable>
+                    )}
                   </View>
-                  {/* Play / Stop button */}
-                  <Pressable
-                    onPress={handleToggleSpeech}
-                    className="flex-row items-center rounded-2xl px-3 py-2"
-                    style={{
-                      backgroundColor: isSpeaking ? "rgba(239,68,68,0.18)" : GLASS_INNER_BG,
-                      borderWidth: 1.5,
-                      borderColor: isSpeaking ? "rgba(239,68,68,0.45)" : GLASS_INNER_BORDER,
-                      gap: 6,
-                    }}
-                  >
-                    {isSpeaking
-                      ? <Square size={13} color="#FFFFFF" strokeWidth={2} />
-                      : <Play size={13} color="#FFFFFF" strokeWidth={2} />}
-                    <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 12 }}>
-                      {isSpeaking ? "Stop" : "Play"}
-                    </Text>
-                  </Pressable>
-                </View>
 
-                {/* Recommendation text */}
-                <View
-                  style={{
-                    backgroundColor: GLASS_INNER_BG,
-                    borderRadius: 14,
-                    borderWidth: 1,
-                    borderColor: GLASS_INNER_BORDER,
-                    padding: 14,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      lineHeight: 24,
-                      color: "rgba(255,255,255,0.92)",
-                      fontSize: 14,
-                    }}
-                  >
-                    {recommendationText}
-                  </Text>
+                  {hasReflection ? (
+                    /* Show personalised AI recommendation text */
+                    <View
+                      style={{
+                        backgroundColor: GLASS_INNER_BG,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: GLASS_INNER_BORDER,
+                        padding: 14,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "Inter_400Regular",
+                          lineHeight: 24,
+                          color: "rgba(255,255,255,0.92)",
+                          fontSize: 14,
+                        }}
+                      >
+                        {entry.aiReflection}
+                      </Text>
+                    </View>
+                  ) : (
+                    /* No reflection yet — show generate button */
+                    <Pressable
+                      onPress={handleGenerateRecommendation}
+                      disabled={isGeneratingRecommendation}
+                      className="flex-row items-center justify-center rounded-2xl py-3 px-5"
+                      style={{
+                        backgroundColor: GLASS_INNER_BG,
+                        borderWidth: 1.5,
+                        borderColor: GLASS_BORDER,
+                        marginTop: 14,
+                        opacity: isGeneratingRecommendation ? 0.6 : 1,
+                      }}
+                    >
+                      <Lightbulb size={15} color="#FFFFFF" strokeWidth={2} />
+                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13, marginLeft: 8 }}>
+                        {isGeneratingRecommendation ? "Generating…" : "Generate Recommendation"}
+                      </Text>
+                    </Pressable>
+                  )}
                 </View>
               </View>
-            </View>
-          </Animated.View>
-          );
-        })()}
+            </Animated.View>
+            );
+          })()
+        )}
 
 
         {/* ── EmotionBreakdownCard (Claude 3.5 Sonnet deep analysis) ─────── */}

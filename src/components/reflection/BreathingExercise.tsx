@@ -149,20 +149,22 @@ export default function BreathingExercise({ onComplete, onSkip }: Props) {
           )}
         </Animated.View>
 
-        {/* Emoji + label */}
+        {/* Label only — no emoji overlaying the countdown number */}
         <View style={s.labelWrap} pointerEvents="none">
           {phase === "ready" ? (
             <Text style={s.tapLabel}>Tap to start</Text>
           ) : phase === "done" ? (
             <Text style={s.phaseEmoji}>✨</Text>
-          ) : (
-            <>
-              <Text style={s.phaseEmoji}>{emoji}</Text>
-              <Text style={s.phaseLabel}>{currentPhaseData?.label}</Text>
-            </>
-          )}
+          ) : null}
         </View>
       </Pressable>
+
+      {/* Phase label — shown below orb during active phases */}
+      {phase !== "ready" && phase !== "done" && (
+        <Text style={[s.phaseLabel, { marginTop: 8, marginBottom: 4 }]}>
+          {currentPhaseData?.label}
+        </Text>
+      )}
 
       {/* Phase progress bar */}
       {phase !== "ready" && phase !== "done" && (
