@@ -57,8 +57,8 @@ const BIOMETRIC_POINTS = [
 // Privacy points shown when only PIN is available
 const PIN_ONLY_POINTS = [
   { icon: Lock,         text: 'Only you can open your journal' },
-  { icon: Lock,         text: 'A 4-digit PIN keeps your entries private' },
-  { icon: ShieldCheck,  text: 'You can always change your PIN in Settings' },
+  { icon: Lock,         text: 'A PIN keeps your entries private' },
+  { icon: ShieldCheck,  text: 'Change your PIN anytime in Settings' },
 ];
 
 export function BiometricSetupScreen() {
@@ -235,12 +235,24 @@ export function BiometricSetupScreen() {
               </View>
             </Animated.View>
 
-            {/* Middle: privacy reassurance points */}
+            {/* Middle: privacy reassurance points — glassmorphic card */}
             <Animated.View
               entering={FadeIn.delay(100).duration(500).easing(SOFT)}
               style={{ alignItems: 'center', width: '100%', marginTop: 28 }}
             >
-              <View style={{ gap: 12, width: '100%', maxWidth: 340 }}>
+              <View
+                style={{
+                  width: '100%',
+                  maxWidth: 340,
+                  backgroundColor: 'rgba(255, 255, 255, 0.10)',
+                  borderRadius: 24,
+                  borderWidth: 1.5,
+                  borderColor: 'rgba(255, 255, 255, 0.18)',
+                  paddingVertical: 20,
+                  paddingHorizontal: 20,
+                  gap: 16,
+                }}
+              >
                 {privacyPoints.map((p, i) => {
                   const Icon = p.icon;
                   return (
@@ -256,6 +268,7 @@ export function BiometricSetupScreen() {
                           backgroundColor: 'rgba(255,255,255,0.15)',
                           alignItems: 'center',
                           justifyContent: 'center',
+                          flexShrink: 0,
                         }}
                       >
                         <Icon size={18} color="#FFFFFF" strokeWidth={2} />
