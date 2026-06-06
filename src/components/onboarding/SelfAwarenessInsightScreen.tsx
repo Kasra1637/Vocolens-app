@@ -43,13 +43,13 @@ const SELF_AWARENESS_LABELS: Record<SelfAwarenessType, string> = {
 // Personalised insight copy per selection
 const SELF_AWARENESS_INSIGHTS: Record<SelfAwarenessType, string> = {
   "deep-focus":
-    "People who find flow in focused activities often process emotions most clearly after a session of deep work. Vocolens will gently prompt you right in those windows.",
+    "Emotions surface most clearly after deep focus. We'll prompt you there.",
   "no-demands":
-    "Feeling most yourself in uninterrupted space is a sign of a reflective mind. Research shows that scheduled journaling in low-demand moments leads to more honest, insightful entries.",
+    "Journaling in low-demand moments leads to your most honest entries.",
   "talking-aloud":
-    "Thinking out loud is one of the most powerful forms of self-discovery. Voice journaling is built exactly for you — no typing, just speak and let clarity find you.",
+    "Voice journaling is built for you — just speak and let clarity find you.",
   "after-movement":
-    "Movement shifts your state and opens the mind. Studies show that journaling within 30 minutes of physical activity captures your most grounded, clear-headed thoughts.",
+    "Journaling after movement captures your most grounded, clear-headed thoughts.",
 };
 
 export function SelfAwarenessInsightScreen() {

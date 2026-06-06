@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Home, FlaskConical, Heart, BookOpen } from "lucide-react-native";
+import { Home, CalendarCheck, Heart } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   AppFeelingType,
@@ -29,9 +29,8 @@ interface Option {
 
 const OPTIONS: Option[] = [
   { id: "quiet-room",         label: "Private space to self discover", icon: Home },
-  { id: "understanding-tool", label: "Daily emotional check-in",  icon: FlaskConical },
-  { id: "listening-friend",   label: "Friend, not a fixer",       icon: Heart },
-  { id: "private-notebook",   label: "Safe space, just for me",   icon: BookOpen },
+  { id: "understanding-tool", label: "Daily emotional check-in",        icon: CalendarCheck },
+  { id: "listening-friend",   label: "Friend, not a fixer",             icon: Heart },
 ];
 
 export function AppFeelingScreen() {

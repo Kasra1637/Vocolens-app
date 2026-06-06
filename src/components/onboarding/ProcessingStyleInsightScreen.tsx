@@ -43,13 +43,13 @@ const PROCESSING_LABELS: Record<ProcessingStyleType, string> = {
 // Personalised insight per selection
 const PROCESSING_INSIGHTS: Record<ProcessingStyleType, string> = {
   "talking-out":
-    "Verbalising is one of the most powerful forms of emotional processing. When you hear your own words, your brain makes connections that silent thinking never could. Voice journaling is built exactly for this — speak and let the clarity come.",
+    "Hearing your own words creates connections silent thinking never could.",
   "seeing-written":
-    "Seeing your thoughts laid out gives your mind distance to evaluate them more objectively. Vocolens transcribes everything you say, so you always have a written record to reflect on — your words, in writing, waiting for you.",
+    "Vocolens transcribes everything — your words in writing, waiting for you.",
   "noticing-patterns":
-    "Pattern-thinkers often find breakthroughs not in single entries but in the connections between them. Vocolens tracks your emotions, triggers, and body sensations over time — so the pattern you've been looking for starts to appear.",
+    "Vocolens tracks emotions and triggers over time so patterns start to appear.",
   "right-question":
-    "The right question can unlock more than hours of analysis. Vocolens uses AI to surface the question beneath your words — the one you didn't know you were asking — and reflects it back to you.",
+    "Vocolens surfaces the question beneath your words and reflects it back.",
 };
 
 // Icon per selection — mirrors ProcessingStyleScreen
