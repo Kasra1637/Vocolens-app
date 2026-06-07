@@ -613,18 +613,13 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
   return (
     <View style={[{ width: CARD_WIDTH }]}>
       <Pressable onPress={onPress}>
-        {/* Outer wrapper: no overflow so shadow isn't clipped */}
+        {/* Outer wrapper */}
         <View
           style={{
             backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 2,
             borderColor: "rgba(255, 255, 255, 0.20)",
             borderRadius: BorderRadius.xlarge,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 8,
-            elevation: 2,
           }}
         >
           {/* Inner wrapper: clips content to rounded corners */}
