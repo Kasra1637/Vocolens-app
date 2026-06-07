@@ -15,7 +15,7 @@
  */
 
 // ─── Model ───────────────────────────────────────────────────────────────────
-const MODEL = "anthropic/claude-3.7-sonnet";
+const MODEL = "anthropic/claude-sonnet-4";
 
 // ─── CORS headers ─────────────────────────────────────────────────────────────
 const CORS = {

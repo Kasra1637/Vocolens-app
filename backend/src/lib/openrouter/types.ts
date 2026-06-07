@@ -1,12 +1,12 @@
 /**
- * OpenRouter Types & Constants — Claude 3.7 Sonnet
+ * OpenRouter Types & Constants — Claude Sonnet 4
  * Single model for all text analysis (Deepgram transcribes; Claude analyses text only).
  */
 
 export const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
-/** Claude 3.7 Sonnet — single model for all text analysis */
-export const MODEL = "anthropic/claude-3.7-sonnet";
+/** Claude Sonnet 4 — single model for all text analysis */
+export const MODEL = "anthropic/claude-sonnet-4";
 /** @deprecated kept for callers that reference old names */
 export const AUDIO_MODEL = MODEL;
 export const TEXT_FALLBACK_MODEL = MODEL;

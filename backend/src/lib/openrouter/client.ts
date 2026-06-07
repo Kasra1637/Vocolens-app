@@ -1,5 +1,5 @@
 /**
- * OpenRouter API Client — Claude 3.7 Sonnet
+ * OpenRouter API Client — Claude Sonnet 4
  * Simplified text-only pipeline: Deepgram transcribes; Claude analyses.
  */
 
@@ -28,7 +28,7 @@ function buildHeaders(apiKey: string): Record<string, string> {
   };
 }
 
-/** Text-only analysis via Claude 3.7 Sonnet (Deepgram handles transcription) */
+/** Text-only analysis via Claude Sonnet 4 (Deepgram handles transcription) */
 export async function analyzeTranscript(transcript: string): Promise<AnalysisResult> {
   const apiKey = getApiKey();
 
