@@ -22,26 +22,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import {
-  Palette,
-  Bell,
-  LogOut,
-  Check,
-  X,
-  Shield,
-  ChevronRight,
-  Brain,
-  BarChart3,
-  AlertTriangle,
-  Trash2,
-  Download,
-  Globe,
-  Crown,
-  RefreshCw,
-  ExternalLink,
-  KeyRound,
-  Settings,
-} from "lucide-react-native";
+import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Settings } from "lucide-react-native";
 import Animated from "react-native-reanimated";
 import {
   TAB_ENTER_1 as ENTER_1,
@@ -317,7 +298,8 @@ export default function SettingsScreen() {
     confirmHaptic();
     setChangePinStep('setup');
     // onShow won't fire again since modal is already open — focus explicitly
-    setTimeout(() => changePinSetupRef.current?.focusKeyboard(), 100);
+    // Use longer delay to ensure the new PinEntryScreen has mounted and rendered
+    setTimeout(() => changePinSetupRef.current?.focusKeyboard(), 350);
   };
 
   const handleChangePinNewSaved = async () => {
