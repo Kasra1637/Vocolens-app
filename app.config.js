@@ -57,9 +57,7 @@ export default ({ config }) => ({
     // react-native-purchases has no Expo config plugin — native linking only
   ],
   owner: 'kasra1637',
-  runtimeVersion: {
-    policy: 'fingerprint',
-  },
+  runtimeVersion: '1.0.0',
   updates: {
     url: 'https://u.expo.dev/743d876a-6e89-4b1f-9e42-816a67b84a35',
   },
