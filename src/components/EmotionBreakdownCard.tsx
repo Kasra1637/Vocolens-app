@@ -1,6 +1,6 @@
 /**
  * EmotionBreakdownCard
- * Displays the Claude 3.5 Sonnet Plutchik deep analysis:
+ * Displays the Claude 3.7 Sonnet Plutchik deep analysis:
  *   - Top-3 ranked emotions with intensity badges (Ecstasy / Joy / Serenity…)
  *   - Blended emotion badges (Love, Awe, Remorse…)
  *   - Ambivalence flags (Joy↔Sadness…)
@@ -119,7 +119,7 @@ export default function EmotionBreakdownCard({
       <View style={styles.header}>
         <View style={[styles.headerDot, { backgroundColor: themeColor }]} />
         <Text style={styles.headerTitle}>Emotion Breakdown</Text>
-        <Text style={styles.headerSub}>Claude 3.5 Sonnet analysis</Text>
+        <Text style={styles.headerSub}>Claude 3.7 Sonnet analysis</Text>
       </View>
 
       {/* Top 3 ranked emotions */}

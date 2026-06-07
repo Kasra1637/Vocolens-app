@@ -1,5 +1,5 @@
 /**
- * OpenRouter System Prompt — Claude 3.5 Sonnet
+ * OpenRouter System Prompt — Claude 3.7 Sonnet
  * Unified prompt (text-only; Deepgram transcribes, Claude analyses).
  * Requests full Plutchik 3-tier breakdown + blended dyads + ambivalence flags.
  *

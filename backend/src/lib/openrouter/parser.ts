@@ -1,5 +1,5 @@
 /**
- * OpenRouter Response Parser — Claude 3.5 Sonnet
+ * OpenRouter Response Parser — Claude 3.7 Sonnet
  * Parses Claude's JSON, with server-side fallbacks for
  * topThreeEmotions, blendedEmotions, and ambivalenceFlags.
  */

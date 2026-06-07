@@ -456,7 +456,7 @@ export function useWeeklyReflection(weekOffset: number = 0) {
   return useQuery({
     queryKey: [...queryKeys.weeklyReflection(weekStartStr), weekLabel],
     queryFn: async (): Promise<WeeklyReflectionResult & { isDemo?: boolean }> => {
-      // Direct OpenRouter (Claude 3.5 Sonnet) call — no backend required.
+      // Direct OpenRouter (Claude 3.7 Sonnet) call — no backend required.
       // The backend path was removed so the Insights tab works in production
       // without a deployed server. If the direct call fails for any reason,
       // we fall back to DEMO_REFLECTION so the UI never breaks.

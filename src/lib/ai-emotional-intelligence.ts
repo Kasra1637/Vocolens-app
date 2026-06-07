@@ -5,7 +5,7 @@
 //
 // Originally this called a backend endpoint (/api/journal/ai-completion).
 // To make Deep AI Insights work without deploying the backend, the call has
-// been switched to a direct OpenRouter (Claude 3.5 Sonnet) request using
+// been switched to a direct OpenRouter (Claude 3.7 Sonnet) request using
 // the same EXPO_PUBLIC_OPENROUTER_API_KEY that powers per-entry analysis.
 //
 // All other behavior (caching, validation, default fallback, prompt) is

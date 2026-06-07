@@ -118,7 +118,7 @@ export type BodySensation =
   | "breathlessness"
   | "none";
 
-// ── Plutchik deep breakdown types (Claude 3.5 Sonnet migration) ──────────────
+// ── Plutchik deep breakdown types (Claude 3.7 Sonnet migration) ──────────────
 
 /** A single emotion ranked by score in the top-3 */
 export interface RankedEmotion {
@@ -214,7 +214,7 @@ export interface JournalEntry {
   userOverrideLabels?: Partial<Record<EmotionType, string>>; // user-edited intensity labels
   userValidated?: boolean; // user confirmed the analysis is correct
   aiCorrected?: boolean; // user corrected the AI's analysis
-  // AI deep breakdown — Claude 3.5 Sonnet (never touched by user corrections)
+  // AI deep breakdown — Claude 3.7 Sonnet (never touched by user corrections)
   aiTopThreeEmotions?: RankedEmotion[];
   aiBlendedEmotions?: BlendedEmotionType[];
   aiAmbivalenceFlags?: string[]; // e.g. ["happiness↔sadness"]

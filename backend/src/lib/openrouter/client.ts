@@ -28,7 +28,7 @@ function buildHeaders(apiKey: string): Record<string, string> {
   };
 }
 
-/** Text-only analysis via Claude 3.5 Sonnet (Deepgram handles transcription) */
+/** Text-only analysis via Claude 3.7 Sonnet (Deepgram handles transcription) */
 export async function analyzeTranscript(transcript: string): Promise<AnalysisResult> {
   const apiKey = getApiKey();
 

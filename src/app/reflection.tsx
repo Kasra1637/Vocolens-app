@@ -125,25 +125,10 @@ export default function ReflectionScreen() {
   const stepIdx = effectiveSteps.indexOf(step);
   const isLast = stepIdx === effectiveSteps.length - 1;
 
-  const nextStep = useCallback(() => {
-    tapHaptic();
-    const next = effectiveSteps[stepIdx + 1];
-    if (next) setStep(next);
-    else handleSave();
-  }, [stepIdx, effectiveSteps]);
-
-  const skipStep = useCallback(() => {
-    tapHaptic();
-    nextStep();
-  }, [nextStep]);
-
-  const toggleEmotion = useCallback((e: EmotionType) => {
-    tapHaptic();
-    setEmotions((prev) =>
-      prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e],
-    );
-  }, []);
-
+  // ⚠️ handleSave is defined BEFORE nextStep so nextStep can include it in
+  // its dependency array. Without this, nextStep captures a stale handleSave
+  // closure with bodyRegions = [], and the user's body-region selections are
+  // lost when they tap Save on the final body step.
   const handleSave = useCallback(async () => {
     if (!pending || saving) return;
     setSaving(true);
@@ -186,6 +171,25 @@ export default function ReflectionScreen() {
     groundingUsed,
     distress,
   ]);
+
+  const nextStep = useCallback(() => {
+    tapHaptic();
+    const next = effectiveSteps[stepIdx + 1];
+    if (next) setStep(next);
+    else handleSave();
+  }, [stepIdx, effectiveSteps, handleSave]);
+
+  const skipStep = useCallback(() => {
+    tapHaptic();
+    nextStep();
+  }, [nextStep]);
+
+  const toggleEmotion = useCallback((e: EmotionType) => {
+    tapHaptic();
+    setEmotions((prev) =>
+      prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e],
+    );
+  }, []);
 
   const handleDismiss = useCallback(() => {
     tapHaptic();

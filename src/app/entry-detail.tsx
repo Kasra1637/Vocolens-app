@@ -565,7 +565,7 @@ export default function EntryDetailScreen() {
         )}
 
 
-        {/* ── EmotionBreakdownCard (Claude 3.5 Sonnet deep analysis) ─────── */}
+        {/* ── EmotionBreakdownCard (Claude 3.7 Sonnet deep analysis) ─────── */}
         {(entry.aiTopThreeEmotions?.length || entry.aiBlendedEmotions?.length || entry.aiAmbivalenceFlags?.length) ? (
           <View style={{ marginBottom: 4 }}>
             <EmotionBreakdownCard
