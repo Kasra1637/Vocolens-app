@@ -614,17 +614,21 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
       <Pressable onPress={onPress}>
         <View
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            backgroundColor: badge.unlocked
+              ? hexToRgba(Colors.primary, 0.08)
+              : "rgba(255, 255, 255, 0.12)",
             borderWidth: 2,
-            borderColor: "rgba(255, 255, 255, 0.20)",
+            borderColor: badge.unlocked
+              ? hexToRgba(Colors.primary, 0.35)
+              : "rgba(255, 255, 255, 0.20)",
             borderRadius: BorderRadius.xlarge,
             padding: 16,
             opacity: 1,
             overflow: "hidden",
-            shadowColor: "#000",
+            shadowColor: badge.unlocked ? Colors.primary : "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 8,
+            shadowOpacity: badge.unlocked ? 0.2 : 0.08,
+            shadowRadius: badge.unlocked ? 12 : 8,
           }}
         >
           {/* Badge Icon */}
@@ -644,10 +648,16 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
-                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                  backgroundColor: badge.unlocked
+                    ? hexToRgba(Colors.primary, 0.2)
+                    : "rgba(255, 255, 255, 0.15)",
                 }}
               >
-                <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                <Icon
+                  size={22}
+                  color={badge.unlocked ? Colors.primary : "#FFFFFF"}
+                  strokeWidth={2}
+                />
               </View>
 
               {/* Lock/Unlock Indicator */}
@@ -680,11 +690,11 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
             </View>
           </View>
 
-          {/* Badge Title */}
+          {/* Badge Title — theme color when unlocked */}
           <Text
             style={{
               fontFamily: "Inter_600SemiBold",
-              color: "#FFFFFF",
+              color: badge.unlocked ? Colors.primary : "#FFFFFF",
               textAlign: "center",
               fontSize: 14,
               marginBottom: 4,
@@ -694,11 +704,13 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
             {badge.title}
           </Text>
 
-          {/* Badge Rarity */}
+          {/* Badge Rarity — theme color */}
           <Text
             style={{
               fontFamily: "Inter_500Medium",
-              color: "rgba(255, 255, 255, 0.8)",
+              color: badge.unlocked
+                ? hexToRgba(Colors.primary, 0.85)
+                : "rgba(255, 255, 255, 0.6)",
               textAlign: "center",
               fontSize: 10,
               marginBottom: 8,
@@ -828,6 +840,12 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
   const Icon = BADGE_ICONS[badge.icon] || Award;
   const rc = MODAL_RARITY_CONFIG[badge.rarity];
 
+  // Use the active theme color for all badge accents instead of per-rarity colors
+  const themeGlow = Colors.primary;
+  const themeChipBg = hexToRgba(Colors.primary, 0.18);
+  const themeChipBorder = hexToRgba(Colors.primary, 0.50);
+  const themeChipText = Colors.primary;
+
   const formatUnlockDate = (dateString?: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -868,8 +886,8 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
             borderRadius: BorderRadius.xxlarge,
             overflow: "hidden",
             borderWidth: 1.5,
-            borderColor: rc.glow + "55",
-            shadowColor: rc.glow,
+            borderColor: themeGlow + "55",
+            shadowColor: themeGlow,
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.5,
             shadowRadius: 28,
@@ -884,9 +902,9 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
             style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
           />
 
-          {/* Top accent bar — rarity gradient */}
+          {/* Top accent bar — theme color gradient */}
           <LinearGradient
-            colors={rc.gradient}
+            colors={[Colors.primary, hexToRgba(Colors.primary, 0.7)]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{ height: 5, width: "100%" }}
@@ -919,16 +937,16 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                   paddingHorizontal: 14,
                   paddingVertical: 5,
                   borderRadius: 20,
-                  backgroundColor: rc.chipBg,
+                  backgroundColor: themeChipBg,
                   borderWidth: 1,
-                  borderColor: rc.chipBorder,
+                  borderColor: themeChipBorder,
                 }}
               >
                 <Text
                   style={{
                     fontFamily: "Inter_700Bold",
                     fontSize: 10,
-                    color: rc.chipText,
+                    color: themeChipText,
                     textTransform: "uppercase",
                     letterSpacing: 1.4,
                   }}
@@ -948,7 +966,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                   overflow: "hidden",
                   alignItems: "center",
                   justifyContent: "center",
-                  shadowColor: rc.glow,
+                  shadowColor: themeGlow,
                   shadowOffset: { width: 0, height: 0 },
                   shadowOpacity: 0.55,
                   shadowRadius: 18,
@@ -956,7 +974,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                 }}
               >
                 <LinearGradient
-                  colors={rc.gradient}
+                  colors={[Colors.primary, hexToRgba(Colors.primary, 0.7)]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{
@@ -1040,7 +1058,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                 padding: 14,
                 marginBottom: 20,
                 borderLeftWidth: 4,
-                borderLeftColor: rc.glow,
+                borderLeftColor: themeGlow,
                 borderWidth: 1,
                 borderColor: "rgba(255,255,255,0.12)",
               }}
@@ -1048,7 +1066,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
               <Text
                 style={{
                   fontFamily: "Inter_600SemiBold",
-                  color: rc.chipText,
+                  color: themeChipText,
                   fontSize: 10,
                   letterSpacing: 0.8,
                   marginBottom: 6,
