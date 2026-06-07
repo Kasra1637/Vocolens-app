@@ -15,5 +15,5 @@ Access is controlled by an optional PIN code set during onboarding.
 - EXPO_PUBLIC_DEEPGRAM_API_KEY: 40cbada19a2c8c19771ef3fcbeb9ff7b48b1a3dd
 
 ## App URL
-- Production: https://486cce79-9f32-4661-b20c-0a03390aa836.preview.emergentagent.com
-- Backend API: https://486cce79-9f32-4661-b20c-0a03390aa836.preview.emergentagent.com/api/
+- Production: https://gpt54-debug.preview.emergentagent.com
+- Backend API: https://gpt54-debug.preview.emergentagent.com/api/

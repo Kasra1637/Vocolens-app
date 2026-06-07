@@ -40,7 +40,7 @@ app.use("*", async (c, next) => {
 
 app.use("*", cors({ origin: "*", credentials: true }));
 app.use("*", logger());
-app.get("/health", (c) => c.json({ status: "ok", model: "anthropic/claude-sonnet-4" }));
+app.get("/health", (c) => c.json({ status: "ok", model: "openai/gpt-5.4-mini" }));
 
 app.route("/api/sample", sampleRouter);
 app.route("/api/journal", journalRouter);

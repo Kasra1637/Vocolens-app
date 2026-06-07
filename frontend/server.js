@@ -5,11 +5,17 @@
  */
 const http = require('http');
 
+// ── Configuration ─────────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT) || 3000;
+const NGROK_API_PORT = 4040;
+const NGROK_API_PATH = '/api/tunnels';
+const NGROK_API_TIMEOUT_MS = 2000;
+const HTTP_OK = 200;
 
 // ── HTML component builders ───────────────────────────────────────────────────
 
-function buildStyles() {
+// Layout & global page chrome
+function buildBaseStyles() {
   return `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -32,7 +38,12 @@ function buildStyles() {
       backdrop-filter: blur(12px);
     }
     h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
-    .subtitle { opacity: 0.75; font-size: 15px; margin-bottom: 28px; }
+    .subtitle { opacity: 0.75; font-size: 15px; margin-bottom: 28px; }`;
+}
+
+// QR card + status pill
+function buildQRStyles() {
+  return `
     #qr-wrap {
       background: white;
       border-radius: 16px;
@@ -50,6 +61,21 @@ function buildStyles() {
     }
     .status.ready { background: rgba(74,222,128,0.2); color: #86efac; }
     .status.loading { color: rgba(255,255,255,0.7); }
+    .url-box {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+      margin-top: 8px;
+      opacity: 0.85;
+    }`;
+}
+
+// Numbered onboarding steps
+function buildStepStyles() {
+  return `
     .steps { text-align: left; margin-top: 16px; }
     .step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
     .step-num {
@@ -60,17 +86,12 @@ function buildStyles() {
       font-size: 13px; font-weight: 600;
     }
     .step-text { font-size: 14px; line-height: 1.4; opacity: 0.9; }
-    .step-text a { color: #c4b5fd; }
-    .url-box {
-      background: rgba(0,0,0,0.3);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-family: monospace;
-      font-size: 12px;
-      word-break: break-all;
-      margin-top: 8px;
-      opacity: 0.85;
-    }
+    .step-text a { color: #c4b5fd; }`;
+}
+
+// Loading spinner
+function buildSpinnerStyles() {
+  return `
     .spinner {
       display: inline-block;
       width: 200px; height: 200px;
@@ -80,6 +101,10 @@ function buildStyles() {
       animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }`;
+}
+
+function buildStyles() {
+  return buildBaseStyles() + buildQRStyles() + buildStepStyles() + buildSpinnerStyles();
 }
 
 function buildQRSection(isReady) {
@@ -121,11 +146,8 @@ function buildSteps() {
     </div>`;
 }
 
-function buildClientScript(expoUrl) {
+function buildScriptQRHelpers() {
   return `
-  <script>
-    var EXPO_URL = ${JSON.stringify(expoUrl || null)};
-
     function renderQR(url) {
       var wrap = document.getElementById('qr-wrap');
       // Safe DOM clearing — no innerHTML
@@ -157,8 +179,11 @@ function buildClientScript(expoUrl) {
         document.querySelector('.card').insertBefore(existing, document.querySelector('.steps'));
       }
       existing.textContent = url;
-    }
+    }`;
+}
 
+function buildScriptPoller() {
+  return `
     function checkTunnel() {
       fetch('/tunnel-url')
         .then(function(r) { return r.json(); })
@@ -171,14 +196,26 @@ function buildClientScript(expoUrl) {
           }
         })
         .catch(function() {});
-    }
+    }`;
+}
 
+function buildScriptBootstrap() {
+  return `
     if (EXPO_URL) {
       renderQR(EXPO_URL);
     } else {
       setInterval(checkTunnel, 3000);
       checkTunnel();
-    }
+    }`;
+}
+
+function buildClientScript(expoUrl) {
+  return `
+  <script>
+    var EXPO_URL = ${JSON.stringify(expoUrl || null)};
+    ${buildScriptQRHelpers()}
+    ${buildScriptPoller()}
+    ${buildScriptBootstrap()}
   </script>`;
 }
 
@@ -211,7 +248,12 @@ function getHTML(tunnelUrl, expoUrl) {
 // ── Tunnel info fetcher ───────────────────────────────────────────────────────
 
 function getTunnelInfo(cb) {
-  const opts = { hostname: '127.0.0.1', port: 4040, path: '/api/tunnels', timeout: 2000 };
+  const opts = {
+    hostname: '127.0.0.1',
+    port: NGROK_API_PORT,
+    path: NGROK_API_PATH,
+    timeout: NGROK_API_TIMEOUT_MS,
+  };
   const req = http.get(opts, (res) => {
     let data = '';
     res.on('data', (c) => { data += c; });
@@ -244,18 +286,18 @@ const server = http.createServer((req, res) => {
     getTunnelInfo((err, info) => {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.writeHead(200);
+      res.writeHead(HTTP_OK);
       res.end(JSON.stringify(info ? { ready: true, ...info } : { ready: false }));
     });
   } else {
     getTunnelInfo((err, info) => {
       res.setHeader('Content-Type', 'text/html');
-      res.writeHead(200);
+      res.writeHead(HTTP_OK);
       res.end(getHTML(info ? info.tunnelUrl : null, info ? info.expoUrl : null));
     });
   }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log('[VocoLens] Landing page running on port', PORT);
-});
+// Supervisor + container runtime already record process startup; no need to
+// emit our own log line here.
+server.listen(PORT, '0.0.0.0');

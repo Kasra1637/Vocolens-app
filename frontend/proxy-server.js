@@ -11,13 +11,24 @@
 const http = require('http');
 const net = require('net');
 
+// ── Configuration ─────────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT) || 3000;
 const METRO_PORT = 3001;
+const NGROK_API_PORT = 4040;
+const NGROK_API_PATH = '/api/tunnels';
+const NGROK_API_TIMEOUT_MS = 2000;
+const HTTP_OK = 200;
+const BAD_GATEWAY = 502;
 
 // ── Fetch current ngrok tunnel info ──────────────────────────────────────────
 function getTunnelInfo(cb) {
   const req = http.get(
-    { hostname: '127.0.0.1', port: 4040, path: '/api/tunnels', timeout: 2000 },
+    {
+      hostname: '127.0.0.1',
+      port: NGROK_API_PORT,
+      path: NGROK_API_PATH,
+      timeout: NGROK_API_TIMEOUT_MS,
+    },
     (res) => {
       let data = '';
       res.on('data', (c) => (data += c));
@@ -43,7 +54,8 @@ function getTunnelInfo(cb) {
 
 // ── HTML component builders ───────────────────────────────────────────────────
 
-function buildPageStyles() {
+// Reset + page chrome (body, layout)
+function buildResetStyles() {
   return `
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -53,7 +65,12 @@ function buildPageStyles() {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       color: white; overflow: hidden;
     }
-    .layout { display: flex; align-items: center; justify-content: center; gap: 48px; height: 100%; padding: 24px; }
+    .layout { display: flex; align-items: center; justify-content: center; gap: 48px; height: 100%; padding: 24px; }`;
+}
+
+// iPhone-style mockup frame + screen + loading overlay
+function buildPhoneFrameStyles() {
+  return `
     .phone {
       position: relative; width: 393px; height: 852px;
       background: #1c1c1e; border-radius: 54px;
@@ -81,7 +98,12 @@ function buildPageStyles() {
     #loading.gone { opacity: 0; pointer-events: none; }
     .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.15); border-top-color: #a78bfa; border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-label { color: rgba(255,255,255,0.6); font-size: 14px; }
+    .loading-label { color: rgba(255,255,255,0.6); font-size: 14px; }`;
+}
+
+// Right-hand panel: title, QR card, expo URL
+function buildPanelStyles() {
+  return `
     .panel { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px; }
     .app-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
     .app-sub { font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 4px; line-height: 1.5; }
@@ -93,13 +115,23 @@ function buildPageStyles() {
     .qr-status.ready { color: #86efac; }
     .qr-status.loading { color: rgba(255,255,255,0.45); }
     .expo-url { font-family: 'SF Mono', 'Menlo', monospace; font-size: 11px; color: rgba(255,255,255,0.35); text-align: center; word-break: break-all; line-height: 1.4; display: none; }
-    .expo-url.show { display: block; }
+    .expo-url.show { display: block; }`;
+}
+
+// Numbered onboarding steps
+function buildStepsStyles() {
+  return `
     .steps { display: flex; flex-direction: column; gap: 12px; }
     .step { display: flex; gap: 12px; align-items: flex-start; }
     .step-n { background: rgba(167,139,250,0.2); color: #c4b5fd; border-radius: 50%; width: 24px; height: 24px; min-width: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
     .step-t { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.7); }
     .step-t a { color: #a78bfa; text-decoration: none; }
-    .step-t a:hover { text-decoration: underline; }
+    .step-t a:hover { text-decoration: underline; }`;
+}
+
+// Responsive breakpoints for phone scaling and small viewports
+function buildResponsiveStyles() {
+  return `
     @media (max-height: 920px) { .phone { transform: scale(0.88); transform-origin: center; } .layout { gap: 32px; } }
     @media (max-height: 800px) { .phone { transform: scale(0.76); transform-origin: center; } }
     @media (max-width: 800px) { .layout { flex-direction: column; overflow-y: auto; } .phone { transform: scale(0.7); transform-origin: top center; } .panel { width: 340px; } }
@@ -109,6 +141,16 @@ function buildPageStyles() {
       .screen, .screen iframe, #loading { border-radius: 0; }
       .panel { display: none; }
     }`;
+}
+
+function buildPageStyles() {
+  return (
+    buildResetStyles() +
+    buildPhoneFrameStyles() +
+    buildPanelStyles() +
+    buildStepsStyles() +
+    buildResponsiveStyles()
+  );
 }
 
 function buildPhoneMockup() {
@@ -258,7 +300,7 @@ function proxyReq(req, res, metroPath) {
     proxyRes.pipe(res, { end: true });
   });
   pr.on('error', (err) => {
-    if (!res.headersSent) res.writeHead(502);
+    if (!res.headersSent) res.writeHead(BAD_GATEWAY);
     res.end('Metro not ready: ' + err.message);
   });
   req.pipe(pr, { end: true });
@@ -272,7 +314,7 @@ const server = http.createServer((req, res) => {
   if (url === '/tunnel-url') {
     getTunnelInfo((err, info) => {
       res.setHeader('Content-Type', 'application/json');
-      res.writeHead(200);
+      res.writeHead(HTTP_OK);
       res.end(JSON.stringify(info ? { ready: true, ...info } : { ready: false }));
     });
     return;
@@ -282,7 +324,7 @@ const server = http.createServer((req, res) => {
   if (url === '/' || url === '') {
     getTunnelInfo((err, info) => {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.writeHead(200);
+      res.writeHead(HTTP_OK);
       res.end(buildPage(info || null));
     });
     return;
@@ -312,6 +354,6 @@ server.on('upgrade', (req, socket, head) => {
   socket.on('error', () => target.destroy());
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log('[VocoLens] Proxy + mockup server on port', PORT);
-});
+// Supervisor + container runtime already record process startup; no need to
+// emit our own log line here.
+server.listen(PORT, '0.0.0.0');
