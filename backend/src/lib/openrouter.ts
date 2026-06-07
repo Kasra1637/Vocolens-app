@@ -1,12 +1,8 @@
 /**
  * OpenRouter Service — Vocolens Emotion Analysis
  *
- * PRIMARY:  openai/gpt-4o-audio-preview  (audio + transcript → prosody + content analysis)
- * FALLBACK: openai/gpt-4o               (transcript only → text analysis)
- *
- * NOTE: openai/gpt-4o-audio-preview REQUIRES audio input — it cannot be used for
- * text-only requests (OpenAI enforces this at the API level). The fallback therefore
- * uses standard gpt-4o which accepts text only.
+ * PRIMARY:  openai/gpt-5.4-mini  (text analysis)
+ * FALLBACK: openai/gpt-5.4-mini  (text analysis)
  *
  * API key: OPENROUTER_API_KEY env var (must start with "sk-or-")
  * Endpoint: https://openrouter.ai/api/v1/chat/completions
@@ -15,10 +11,10 @@
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 // ── Model IDs — explicit strings, never inferred ─────────────────────────────
-// Primary: full audio+text multimodal model. Requires audio input in the request.
-const AUDIO_MODEL = "openai/gpt-4o-audio-preview";
-// Fallback: latest stable GPT-4o text model. Used only when no audio is provided.
-const TEXT_FALLBACK_MODEL = "openai/gpt-4o";
+// Primary: GPT 5.4 Mini for all analysis.
+const AUDIO_MODEL = "openai/gpt-5.4-mini";
+// Fallback: same model for text-only analysis.
+const TEXT_FALLBACK_MODEL = "openai/gpt-5.4-mini";
 
 // ── API key loader ───────────────────────────────────────────
 function getApiKey(): string | undefined {
@@ -157,6 +153,7 @@ Rules:
 - emotionIntensity: 0-100 overall intensity from both voice energy and content
 - reflection: warm, second-person ("you"), suitable for TTS
 - Only valid emotions: happiness, sadness, anger, disgust, fear, surprise, trust, anticipation`;
+}
 
 function buildTextSystemPrompt(personalizationContext?: string): string {
   const personalization = personalizationContext ? `\n\n${personalizationContext}` : '';
@@ -190,6 +187,7 @@ Rules:
 - emotionIntensity: 0-100 overall intensity
 - reflection: warm, second-person ("you"), suitable for TTS
 - Only valid emotions: happiness, sadness, anger, disgust, fear, surprise, trust, anticipation`;
+}
 
 // ── JSON parser ───────────────────────────────────────────────────────────────
 function parseAnalysisJson(content: string, audioAnalyzed: boolean, modelUsed: string): AnalysisResult {

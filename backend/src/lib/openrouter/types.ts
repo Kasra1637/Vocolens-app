@@ -1,12 +1,12 @@
 /**
- * OpenRouter Types & Constants — Claude Sonnet 4
- * Single model for all text analysis (Deepgram transcribes; Claude analyses text only).
+ * OpenRouter Types & Constants — GPT 5.4 Mini
+ * Single model for all text analysis (Deepgram transcribes; GPT analyses text only).
  */
 
 export const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
-/** Claude Sonnet 4 — single model for all text analysis */
-export const MODEL = "anthropic/claude-sonnet-4";
+/** GPT 5.4 Mini — single model for all text analysis */
+export const MODEL = "openai/gpt-5.4-mini";
 /** @deprecated kept for callers that reference old names */
 export const AUDIO_MODEL = MODEL;
 export const TEXT_FALLBACK_MODEL = MODEL;
