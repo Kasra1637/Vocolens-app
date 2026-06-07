@@ -613,20 +613,48 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
   return (
     <View style={[{ width: CARD_WIDTH }]}>
       <Pressable onPress={onPress}>
+        {/* Outer wrapper: no overflow so shadow isn't clipped */}
         <View
           style={{
             backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 2,
             borderColor: "rgba(255, 255, 255, 0.20)",
             borderRadius: BorderRadius.xlarge,
-            padding: 16,
-            shadowColor: badge.unlocked ? "#FFFFFF" : "#000",
-            shadowOffset: { width: 0, height: badge.unlocked ? 0 : 4 },
-            shadowOpacity: badge.unlocked ? 0.35 : 0.08,
-            shadowRadius: badge.unlocked ? 14 : 8,
-            elevation: badge.unlocked ? 8 : 2,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+            elevation: 2,
           }}
         >
+          {/* Inner wrapper: clips content to rounded corners */}
+          <View
+            style={{
+              borderRadius: BorderRadius.xlarge - 2,
+              overflow: "hidden",
+              padding: 16,
+            }}
+          >
+          {/* Checkmark overlay — top-right corner for unlocked badges */}
+          {badge.unlocked && (
+            <View
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: Colors.primary,
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10,
+              }}
+            >
+              <Check size={12} color="#FFFFFF" strokeWidth={3} />
+            </View>
+          )}
+
           {/* Badge Icon */}
           <View className="items-center mb-3">
             <View
@@ -668,11 +696,6 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                   justifyContent: "center",
                   borderWidth: 2,
                   borderColor: "#FFFFFF",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 2,
-                  elevation: Platform.OS === "android" ? 0 : 3,
                 }}
               >
                 {badge.unlocked ? (
@@ -761,7 +784,8 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
           ) : (
             <View style={{ height: 6 }} />
           )}
-        </View>
+          </View>{/* end inner overflow wrapper */}
+        </View>{/* end outer shadow wrapper */}
       </Pressable>
     </View>
   );

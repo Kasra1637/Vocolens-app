@@ -809,8 +809,14 @@ export async function createJournalEntry(
     weeksWithFullCoverage: countWeeksWithMinEntries(allEntries, 7),
   });
 
-  // Queue a celebration for each newly unlocked badge
-  newlyUnlocked.forEach((id) => badgesStore.queueCelebration(id));
+  // Queue celebrations after a short delay so navigation to entry-detail
+  // completes before the modal attempts to mount. Without the delay the modal
+  // fires while the router transition is still in-flight and never renders.
+  if (newlyUnlocked.length > 0) {
+    setTimeout(() => {
+      newlyUnlocked.forEach((id) => badgesStore.queueCelebration(id));
+    }, 1200);
+  }
 
   return entry;
 }
