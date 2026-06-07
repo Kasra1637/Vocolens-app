@@ -126,7 +126,7 @@ Be empathetic, non-judgmental, and focus on emotional growth and self-awareness.
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Cost-effective and fast
+        model: 'gpt-5.4-mini',
         messages,
         temperature: 0.7, // Balanced creativity and consistency
         max_tokens: 1000,
@@ -258,7 +258,7 @@ Provide your analysis as JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5.4-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           {
@@ -363,7 +363,7 @@ Respond with valid JSON only:
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5.4-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         {

@@ -1,6 +1,6 @@
 /**
  * Journal Analysis Routes
- * POST /api/journal/analyze - Analyze transcript (+ optional audio) with GPT-4o
+ * POST /api/journal/analyze - Analyze transcript with GPT 5.4 Mini
  * GET  /api/journal/status  - Check OpenRouter auth status
  */
 
@@ -21,7 +21,7 @@ journalRouter.get("/status", (c) => {
   const configured = isOpenRouterConfigured();
   return c.json({
     openrouter: configured ? "connected" : "not_configured",
-    model: "anthropic/claude-3.7-sonnet",
+    model: "openai/gpt-5.4-mini",
     baseUrl: "https://openrouter.ai",
     status: configured ? "ok" : "missing_api_key",
   });
