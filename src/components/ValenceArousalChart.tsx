@@ -452,22 +452,23 @@ export default function ValenceArousalChart({
                 }}
                 primaryColor={primaryColor}
               />
-              {/* Emoji overlay — rendered as native Text so they never clip */}
+              {/* Emoji overlay — centred on each dot, rendered as native Text so they never clip */}
               {points.map((p, i) => {
                 const isSelected = selectedPoint?.entryId === p.entryId;
-                const r = isSelected ? 16 : 13;
-                // Pin emoji to the right edge of the dot, vertically centred
+                const fontSize = isSelected ? 18 : 15;
+                const halfEmoji = fontSize * 0.6; // approximate half-height for centering
                 return (
                   <Text
                     key={`emoji-${p.entryId}-${i}`}
                     style={{
                       position: "absolute",
-                      // left edge of emoji = centre of dot + radius + 2px gap
-                      left: p.x + r + 2,
-                      // vertically centre on the dot (emoji height ≈ 16px)
-                      top: p.y - 9,
-                      fontSize: 14,
-                      lineHeight: 18,
+                      // Centre emoji on dot: shift left by half the emoji width (~fontSize * 0.6)
+                      left: p.x - halfEmoji,
+                      // Centre emoji on dot: shift up by half the emoji height
+                      top: p.y - halfEmoji,
+                      fontSize,
+                      lineHeight: fontSize * 1.2,
+                      textAlign: "center",
                     }}
                     pointerEvents="none"
                   >
@@ -784,48 +785,54 @@ function ChartSvg({
         </G>
       ))}
 
-      {/* Data points */}
+      {/* Data points — emoji centred inside a lightweight coloured ring */}
       {points.map((p, i) => {
         const isSelected = selectedPoint?.entryId === p.entryId;
-        const r = isSelected ? 16 : 13;
+        const r = 15; // fixed dot radius (30px diameter) — consistent for all points
 
         return (
           <G key={p.entryId + i}>
-            {/* Glow ring for selected */}
+            {/* Outer glow pulse when selected */}
             {isSelected && (
               <Circle
                 cx={p.x}
                 cy={p.y}
-                r={r + 6}
-                fill={`${p.color}25`}
+                r={r + 7}
+                fill={`${p.color}18`}
                 stroke={p.color}
-                strokeWidth={1.5}
-                strokeOpacity={0.5}
+                strokeWidth={1}
+                strokeOpacity={0.4}
               />
             )}
-            {/* Outer glow */}
-            <Circle cx={p.x} cy={p.y} r={r + 2} fill={`${p.color}18`} />
-            {/* Main circle */}
+            {/* Emotion-coloured fill — very low opacity so grid shows through */}
             <Circle
               cx={p.x}
               cy={p.y}
               r={r}
-              fill="rgba(20,20,40,0.85)"
-              stroke={isSelected ? "#FFFFFF" : p.color}
-              strokeWidth={isSelected ? 2.5 : 1.5}
+              fill={`${p.color}1A`}
             />
-            {/* "Edited by you" star indicator */}
+            {/* Emotion-coloured ring — thicker + brighter when selected */}
+            <Circle
+              cx={p.x}
+              cy={p.y}
+              r={r}
+              fill="transparent"
+              stroke={p.color}
+              strokeWidth={isSelected ? 2.5 : 1.5}
+              strokeOpacity={isSelected ? 1 : 0.75}
+            />
+            {/* "Edited by you" indicator — small dot at top-right of ring */}
             {p.isUserCorrected && (
               <Circle
                 cx={p.x + r - 3}
                 cy={p.y - r + 3}
                 r={4}
                 fill={primaryColor}
-                stroke="rgba(0,0,0,0.5)"
+                stroke="rgba(0,0,0,0.4)"
                 strokeWidth={1}
               />
             )}
-            {/* Tap target (transparent, larger) */}
+            {/* Transparent tap target — slightly larger than the ring */}
             <Circle
               cx={p.x}
               cy={p.y}
