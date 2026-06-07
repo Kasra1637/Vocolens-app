@@ -37,7 +37,7 @@ export interface AIAnalysisResponse {
 // ============================================================================
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-const MODEL = 'anthropic/claude-3.5-sonnet-20241022';
+const MODEL = 'anthropic/claude-3-7-sonnet';
 
 // Read lazily via a function so Constants.expoConfig is fully populated.
 // Module-load-time reads fire before the Expo config is hydrated on device,

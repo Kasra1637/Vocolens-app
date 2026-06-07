@@ -503,7 +503,7 @@ Respond with ONLY a valid JSON object — no markdown fences, no commentary:
             'X-Title': 'Vocolens',
           },
           body: JSON.stringify({
-            model: 'anthropic/claude-3.5-sonnet-20241022',
+            model: 'anthropic/claude-3-7-sonnet',
             messages: [
               { role: 'system', content: systemPrompt },
               {

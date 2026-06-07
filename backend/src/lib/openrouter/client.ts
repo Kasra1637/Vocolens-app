@@ -6,6 +6,7 @@
 import {
   OPENROUTER_BASE_URL,
   MODEL,
+  TEXT_FALLBACK_MODEL,
   getApiKey,
 } from "./types.ts";
 import type {
@@ -22,7 +23,7 @@ function buildHeaders(apiKey: string): Record<string, string> {
   return {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
-    "HTTP-Referer": "https://blink.new",
+    "HTTP-Referer": "https://vocolens-api.kasrammarvel.workers.dev",
     "X-Title": "Vocolens",
   };
 }
