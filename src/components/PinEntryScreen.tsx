@@ -30,7 +30,6 @@ import {
   TextInput,
   Keyboard,
   Platform,
-  InteractionManager,
   StyleSheet,
 } from 'react-native';
 
@@ -118,10 +117,8 @@ function PinEntryScreen({
   // ── focus helpers ────────────────────────────────────────────────────────
   const focusInput = useCallback(() => {
     if (isLocked || busy || matched) return;
-    InteractionManager.runAfterInteractions(() => {
-      const delay = Platform.OS === 'android' ? 150 + androidFocusDelay : 50;
-      setTimeout(() => inputRef.current?.focus(), delay);
-    });
+    const delay = Platform.OS === 'android' ? 150 + androidFocusDelay : 50;
+    setTimeout(() => inputRef.current?.focus(), delay);
   }, [isLocked, busy, matched, androidFocusDelay]);
 
   // Expose focusKeyboard so a parent Modal can call it from onShow —
@@ -396,14 +393,10 @@ function PinEntryScreen({
 });
 
 const styles = StyleSheet.create({
-  // 1×1 pixel, transparent — large enough for Android focus system
-  // to reach it, invisible to the user. position:'absolute' removed
-  // so it stays in the layout tree and is always focusable.
   hiddenInput: {
     width: 1,
     height: 1,
     opacity: 0,
-    position: 'absolute',
   },
   content: {
     flex: 1,
