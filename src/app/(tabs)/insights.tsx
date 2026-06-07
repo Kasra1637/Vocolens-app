@@ -905,7 +905,7 @@ function InsightsContent({
           </View>
         </Animated.View>
 
-        {/* Mood Story Timeline */}
+        {/* Mood Story Timeline — always shown; handles its own empty state */}
         <Animated.View entering={ENTER_3}>
           <MoodStoryTimeline entries={entries} primaryColor={Colors.primary} />
         </Animated.View>
@@ -927,15 +927,13 @@ function InsightsContent({
           />
         </Animated.View>
 
-        {/* Body Sensation Heatmap — shows region patterns from body scans */}
-        {entries.length >= 1 && (
-          <Animated.View entering={ENTER_3} className="mb-6">
-            <BodyHeatmapCard
-              entries={entries}
-              primaryColor={Colors.primary}
-            />
-          </Animated.View>
-        )}
+        {/* Body Sensation Heatmap — always shown; handles its own empty state */}
+        <Animated.View entering={ENTER_3} className="mb-6">
+          <BodyHeatmapCard
+            entries={entries}
+            primaryColor={Colors.primary}
+          />
+        </Animated.View>
 
         {/* Where You Feel Things — Body Frequency Card */}
         {entries.length >= 3 &&
@@ -956,7 +954,7 @@ function InsightsContent({
                   const key = br.region;
                   if (!freq[key]) freq[key] = { count: 0, totalIntensity: 0 };
                   freq[key].count++;
-                  freq[key].totalIntensity += br.intensity;
+                  freq[key].totalIntensity += br.intensity ?? 0;
                 });
               }
             });

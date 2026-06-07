@@ -627,18 +627,29 @@ export async function createJournalEntry(
   if (reflectionOverride && preTranscribedText) {
     transcript = preTranscribedText;
 
-    // Generate a 3-word personalized title from emotion + time context
-    const primaryEmotion = reflectionOverride.primaryEmotion || reflectionOverride.emotions[0] || "trust";
-    const hour = new Date().getHours();
-    const timeWord =
-      hour >= 5 && hour < 12 ? "Morning" :
-      hour >= 12 && hour < 17 ? "Afternoon" :
-      hour >= 17 && hour < 21 ? "Evening" : "Night";
-    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-    const valenceWord =
-      reflectionOverride.valence > 20 ? "Bright" :
-      reflectionOverride.valence < -20 ? "Heavy" : "Quiet";
-    const generatedTitle = `${valenceWord} ${timeWord} ${capitalize(primaryEmotion)}`;
+    // Derive a unique title from the transcript via AI.
+    // We run a lightweight title-only fetch in the background so it doesn't
+    // block saving. For the synchronous path we extract a 3-6 word phrase
+    // directly from the transcript content so the title is always specific.
+    const deriveLocalTitle = (text: string): string => {
+      const clean = text.replace(/\s+/g, " ").trim();
+      // Take the first meaningful sentence fragment (≥3 words) as the title
+      const sentences = clean.split(/[.!?\n]+/).map((s) => s.trim()).filter(Boolean);
+      for (const sentence of sentences) {
+        const words = sentence.split(/\s+/).filter(Boolean);
+        if (words.length >= 3) {
+          // Capitalise first letter of each word, cap at 6 words
+          return words
+            .slice(0, 6)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(" ");
+        }
+      }
+      // Last resort: first 6 words of raw text
+      const fallbackWords = clean.split(/\s+/).slice(0, 6);
+      return fallbackWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+    };
+    const generatedTitle = deriveLocalTitle(transcript);
 
     analysis = {
       emotions: reflectionOverride.emotions,
@@ -752,16 +763,28 @@ export async function createJournalEntry(
     conversationPrompt,
   });
 
-  // Fire-and-forget: populate aiReflection after entry is saved (visible in entry-detail reactively)
-  if (reflectionOverride && preTranscribedText && transcript.trim().length > 0 && !analysis.reflection) {
+  // Fire-and-forget: after saving, fetch AI title + reflection to replace the local-derived ones
+  if (reflectionOverride && preTranscribedText && transcript.trim().length > 0) {
     analyzeWithOpenRouter(transcript)
       .then((orResult) => {
+        const updates: Partial<JournalEntry> = {};
+        // Only replace title if AI returned a non-generic, non-empty one
+        if (
+          orResult.title &&
+          orResult.title.trim().length > 0 &&
+          !/^(journal entry|untitled|entry|new entry)$/i.test(orResult.title.trim())
+        ) {
+          updates.title = orResult.title.trim();
+        }
         if (orResult.reflection && orResult.reflection.trim().length > 0) {
-          journalStore.updateEntry(entry.id, { aiReflection: orResult.reflection });
+          updates.aiReflection = orResult.reflection;
+        }
+        if (Object.keys(updates).length > 0) {
+          journalStore.updateEntry(entry.id, updates);
         }
       })
       .catch((err) => {
-        console.warn("[createJournalEntry] background reflection fetch failed:", err);
+        console.warn("[createJournalEntry] background AI update failed:", err);
       });
   }
 

@@ -214,7 +214,13 @@ function WeekView({
       const dayLabel = d
         .toLocaleDateString("en-US", { weekday: "short" })
         .slice(0, 2);
-      const dayEntries = entries.filter((e) => e.createdAt.startsWith(dateStr));
+      // Convert each entry's UTC ISO createdAt to local date string for comparison,
+      // so entries saved near midnight don't silently fall on the wrong day.
+      const localEntryDate = (iso: string) => {
+        const d = new Date(iso);
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      };
+      const dayEntries = entries.filter((e) => localEntryDate(e.createdAt) === dateStr);
 
       if (dayEntries.length > 0) {
         const avg = Math.round(
@@ -923,13 +929,15 @@ function EmotionsView({
       const pad = (n: number) => String(n).padStart(2, "0");
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     };
+    // Convert an entry's stored UTC ISO createdAt to its local date string
+    const entryLocalDate = (iso: string) => localDateStr(new Date(iso));
 
     // Build 7-day overall mood intensity sparkline (all emotions, for "This Week's Story")
     const weeklyIntensitySparkline = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(now);
       d.setDate(d.getDate() - (6 - i));
       const dateStr = localDateStr(d);
-      const dayEntries = entries.filter((e) => e.createdAt.startsWith(dateStr));
+      const dayEntries = entries.filter((e) => entryLocalDate(e.createdAt) === dateStr);
       if (dayEntries.length === 0) return null;
       return Math.round(
         dayEntries.reduce((s, e) => s + e.emotionIntensity, 0) /
@@ -942,7 +950,7 @@ function EmotionsView({
       const d = new Date(now);
       d.setDate(d.getDate() - (6 - i));
       const dateStr = localDateStr(d);
-      const dayEntries = recent.filter((e) => e.createdAt.startsWith(dateStr));
+      const dayEntries = recent.filter((e) => entryLocalDate(e.createdAt) === dateStr);
       if (dayEntries.length === 0) return null;
       const scored = dayEntries.filter((e) => e.emotionScores);
       if (scored.length > 0) {
@@ -987,7 +995,7 @@ function EmotionsView({
           d.setDate(d.getDate() - (13 - i));
           const dateStr = localDateStr(d);
           const dayEntries = entries.filter((e) =>
-            e.createdAt.startsWith(dateStr),
+            entryLocalDate(e.createdAt) === dateStr,
           );
           if (dayEntries.length === 0) return null;
           const scored = dayEntries.filter((e) => e.emotionScores);

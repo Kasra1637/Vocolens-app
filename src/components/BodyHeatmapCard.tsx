@@ -230,7 +230,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
         <View style={s.empty}>
           <Text style={{ fontSize: 36 }}>🧘</Text>
           <Text style={s.emptyTxt}>
-            Use the body scan during journaling and your sensation patterns will appear here.
+            After journaling, tap the body regions where you feel this emotion in the reflection step. Your patterns will appear here.
           </Text>
         </View>
       ) : (
