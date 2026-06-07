@@ -644,14 +644,12 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
-                  backgroundColor: badge.unlocked
-                    ? hexToRgba(Colors.primary, 0.2)
-                    : "rgba(255, 255, 255, 0.15)",
+                  backgroundColor: "rgba(255, 255, 255, 0.15)",
                 }}
               >
                 <Icon
                   size={22}
-                  color={badge.unlocked ? Colors.primary : "#FFFFFF"}
+                  color="#FFFFFF"
                   strokeWidth={2}
                 />
               </View>
@@ -686,11 +684,11 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
             </View>
           </View>
 
-          {/* Badge Title — theme color when unlocked */}
+          {/* Badge Title */}
           <Text
             style={{
               fontFamily: "Inter_600SemiBold",
-              color: badge.unlocked ? Colors.primary : "#FFFFFF",
+              color: "#FFFFFF",
               textAlign: "center",
               fontSize: 14,
               marginBottom: 4,
