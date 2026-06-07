@@ -57,3 +57,12 @@ Cleanup removes:
 ## Backlog
 - P1: EAS Build setup for App Store / Google Play distribution
 - P2: MongoDB persistence for usage data
+
+### Bugfix 2026-01: PIN change flow — native keypad would not open
+- **Root cause:** `PinEntryScreen` used a hidden `TextInput` with `opacity: 0` (iOS skips the soft-keyboard for fully transparent inputs) and a single `focus()` call on `Modal.onShow` that raced the modal's enter animation.
+- **Fix in `/app/src/components/PinEntryScreen.tsx`:**
+  - `opacity: 0` → `opacity: 0.01` on the hidden input (iOS keyboard manager now treats it as visible).
+  - Replaced single `focus()` with `forceFocus()` — blur+focus on an escalating schedule (0/60/200/450 ms on iOS; 0/150/350/650 ms +`androidFocusDelay` on Android). Cleans up timers on unmount.
+  - Added `Keyboard.addListener('keyboardDidHide')` so if the user dismisses the keypad, it re-arms focus automatically while PIN entry is still incomplete.
+  - Added a full-screen invisible `Pressable` (`absoluteFill` + `pointerEvents="box-only"`) so tapping anywhere — not just the dot row — re-opens the keypad.
+  - Same logic applies to Enter Current PIN, Create New PIN, and Confirm New PIN since all three use the same component.

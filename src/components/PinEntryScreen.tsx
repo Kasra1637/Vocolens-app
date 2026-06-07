@@ -115,36 +115,89 @@ function PinEntryScreen({
   }, [shakeX]);
 
   // ── focus helpers ────────────────────────────────────────────────────────
-  const focusInput = useCallback(() => {
-    if (isLocked || busy || matched) return;
-    const delay = Platform.OS === 'android' ? 150 + androidFocusDelay : 50;
-    setTimeout(() => inputRef.current?.focus(), delay);
-  }, [isLocked, busy, matched, androidFocusDelay]);
+  // Robust focus: a single focus() call is unreliable inside a Modal because
+  // it races the modal's present animation (iOS) and the activity transition
+  // (Android). We blur first to clear any stale focus state, then attempt
+  // focus on a short escalating schedule. Works across iOS / Android and
+  // re-tries until either the keyboard opens or we run out of attempts.
+  const focusAttemptsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Expose focusKeyboard so a parent Modal can call it from onShow —
-  // the only reliable signal that the modal is fully visible on screen.
-  // No guard conditions and no InteractionManager — by onShow time the
-  // native view is fully on screen and focus() succeeds immediately.
+  const clearFocusAttempts = useCallback(() => {
+    focusAttemptsRef.current.forEach((t) => clearTimeout(t));
+    focusAttemptsRef.current = [];
+  }, []);
+
+  const forceFocus = useCallback(() => {
+    if (isLocked || busy || matched) return;
+    clearFocusAttempts();
+
+    const tryFocus = () => {
+      const node = inputRef.current;
+      if (!node) return;
+      // Blur briefly so iOS re-evaluates the focus & shows the keyboard
+      // even if React thinks the input is already focused.
+      try { node.blur(); } catch {}
+      try { node.focus(); } catch {}
+    };
+
+    // Schedule on the next frame plus a few fallback attempts. Android's
+    // input-method service typically attaches between 200–400 ms after a
+    // modal opens; iOS is usually <100 ms but can drift on slow devices.
+    const schedule = Platform.OS === 'android'
+      ? [0, 150 + androidFocusDelay, 350 + androidFocusDelay, 650 + androidFocusDelay]
+      : [0, 60, 200, 450];
+
+    schedule.forEach((d) => {
+      focusAttemptsRef.current.push(setTimeout(tryFocus, d));
+    });
+  }, [isLocked, busy, matched, androidFocusDelay, clearFocusAttempts]);
+
+  // Exposed to the parent Modal — called from onShow as the most reliable
+  // signal that the modal is fully on screen.
   useImperativeHandle(ref, () => ({
     focusKeyboard: () => {
-      inputRef.current?.focus();
+      forceFocus();
     },
-  }), []);
+  }), [forceFocus]);
 
   // Focus on mount and whenever the setup phase changes
   useEffect(() => {
     if (isLocked) {
       Keyboard.dismiss();
     } else {
-      focusInput();
+      forceFocus();
     }
+    return clearFocusAttempts;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLocked, setupPhase]);
 
   // Dismiss keyboard once matched/saved
   useEffect(() => {
-    if (matched) Keyboard.dismiss();
-  }, [matched]);
+    if (matched) {
+      clearFocusAttempts();
+      Keyboard.dismiss();
+    }
+  }, [matched, clearFocusAttempts]);
+
+  // If the user swipes / closes the keyboard while still in an entry state,
+  // re-open it on the next tap by listening for keyboardDidHide and
+  // re-arming focus. This makes "tap anywhere to reopen" work even after
+  // the user explicitly dismissed the keypad.
+  useEffect(() => {
+    if (isLocked || matched || busy) return;
+    const sub = Keyboard.addListener('keyboardDidHide', () => {
+      // Re-focus only if the user has not yet finished entering 4 digits
+      // (avoids fighting the modal close transition after success).
+      if (!isLocked && !matched && !busy && currentPin.length < 4) {
+        // Slight delay lets the OS finish the hide animation before we
+        // ask it to show the keypad again.
+        focusAttemptsRef.current.push(setTimeout(() => {
+          inputRef.current?.focus();
+        }, 120));
+      }
+    });
+    return () => sub.remove();
+  }, [isLocked, matched, busy, currentPin.length]);
 
   // ── text input handler ───────────────────────────────────────────────────
   const handleChange = useCallback(
@@ -367,7 +420,7 @@ function PinEntryScreen({
               </Animated.View>
             ) : (
               <Pressable
-                onPress={focusInput}
+                onPress={() => { tapHaptic(); forceFocus(); }}
                 accessibilityRole="button"
                 accessibilityLabel="Tap to open keypad"
                 style={styles.dotArea}
@@ -386,6 +439,27 @@ function PinEntryScreen({
             <View style={styles.bottomSpacer} />
 
           </View>
+
+          {/*
+            Full-screen invisible tap target rendered ON TOP of the content
+            layer with pointerEvents="box-only" so any tap anywhere on the
+            screen re-focuses the hidden TextInput and re-opens the native
+            numeric keypad. Required by the PIN-change UX spec:
+            "tapping anywhere on the PIN input area should immediately
+            reopen the native numeric keypad."
+
+            This sits above the inner dot Pressable, but both do the same
+            thing (forceFocus + haptic) so no interaction is lost.
+          */}
+          {!isLocked && !matched && (
+            <Pressable
+              onPress={() => { tapHaptic(); forceFocus(); }}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={StyleSheet.absoluteFill}
+              pointerEvents="box-only"
+            />
+          )}
         </SafeAreaView>
       </LinearGradient>
     </View>
@@ -393,10 +467,19 @@ function PinEntryScreen({
 });
 
 const styles = StyleSheet.create({
+  // iOS skips the soft-keyboard for a TextInput with opacity:0 because it
+  // treats the field as invisible. opacity:0.01 keeps it focusable while
+  // remaining imperceptible to the user. The 1x1 size also matters — Android
+  // can refuse to attach the IME to a zero-sized input.
   hiddenInput: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
     width: 1,
     height: 1,
-    opacity: 0,
+    opacity: 0.01,
+    color: 'transparent',
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
