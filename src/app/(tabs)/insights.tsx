@@ -2,7 +2,9 @@ import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import * as FileSystem from "expo-file-system";
+// Use legacy subpath — expo-file-system v55 top-level no longer exports
+// writeAsStringAsync, causing the "deprecated" crash on the share button.
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "expo-router";
@@ -179,141 +181,228 @@ async function generateInsightsPDF({
 
   const col = primaryColor;
 
-  const emotionRows = topEmotions.map(([name, count]) => `
-    <tr>
-      <td style="padding:8px 12px;text-transform:capitalize;font-weight:600">${name}</td>
-      <td style="padding:8px 12px;">${count} ${count === 1 ? "entry" : "entries"}</td>
-      <td style="padding:8px 12px;">
-        <div style="background:#eee;border-radius:4px;height:8px;width:100%">
-          <div style="background:${col};border-radius:4px;height:8px;width:${Math.round((count / entries.length) * 100)}%"></div>
-        </div>
-      </td>
-    </tr>`).join("");
-
-  const timeRows = Object.entries(timeSlots).map(([slot, count]) => `
-    <tr>
-      <td style="padding:8px 12px;font-weight:600">${slot}</td>
-      <td style="padding:8px 12px;">${count} ${count === 1 ? "entry" : "entries"}</td>
-    </tr>`).join("");
-
   const recentRows = recentEntries.map((e) => {
     const d = new Date(e.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
     const dur = Math.round(e.duration / 60);
     return `
     <tr>
-      <td style="padding:8px 12px;">${d}</td>
-      <td style="padding:8px 12px;text-transform:capitalize">${e.primaryEmotion || "—"}</td>
-      <td style="padding:8px 12px;">${dur} min</td>
-      <td style="padding:8px 12px;font-size:12px;color:#555;max-width:200px;overflow:hidden">${(e.title || "").slice(0, 60)}${(e.title || "").length > 60 ? "…" : ""}</td>
+      <td>${d}</td>
+      <td style="text-transform:capitalize">${e.primaryEmotion || "—"}</td>
+      <td>${dur} min</td>
+      <td style="font-size:12px;color:#555">${(e.title || "").slice(0, 60)}${(e.title || "").length > 60 ? "…" : ""}</td>
     </tr>`;
   }).join("");
 
-  const insightCards = insights.map((ins: any) => `
-    <div style="border-left:3px solid ${col};padding:10px 14px;margin-bottom:12px;background:#fafafa;border-radius:0 8px 8px 0">
-      <div style="font-weight:700;font-size:14px;margin-bottom:4px">${ins.emoji || "💡"} ${ins.title || ""}</div>
-      <div style="font-size:13px;color:#444;line-height:1.5">${ins.message || ""}</div>
-    </div>`).join("");
-
-  const triggerItems = triggers.map((t: any) => `
-    <li style="margin-bottom:6px"><strong>${t.topic || t.id || "Pattern"}</strong> — ${t.frequency || t.count || ""} occurrences</li>`).join("");
-
   const html = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Vocolens Insights — ${userName}</title>
   <style>
+    @media print {
+      body { padding: 20px; font-size: 12px; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      h2 { page-break-after: avoid; }
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #1a1a1a; background: #fff; padding: 40px; font-size: 14px; line-height: 1.6; }
-    h1 { font-size: 26px; font-weight: 800; color: ${col}; margin-bottom: 2px; }
-    h2 { font-size: 16px; font-weight: 700; color: ${col}; margin: 28px 0 12px; border-bottom: 2px solid ${col}22; padding-bottom: 6px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 3px solid ${col}; padding-bottom: 20px; }
-    .header-left h1 { margin-bottom: 4px; }
-    .header-left p { color: #666; font-size: 13px; }
-    .header-right { text-align: right; font-size: 12px; color: #888; }
-    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 8px; }
-    .stat-card { background: ${col}11; border: 1.5px solid ${col}33; border-radius: 12px; padding: 16px; text-align: center; }
-    .stat-card .value { font-size: 28px; font-weight: 800; color: ${col}; }
-    .stat-card .label { font-size: 11px; color: #666; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .mood-row { display: flex; gap: 16px; margin-bottom: 8px; }
-    .mood-chip { background: ${col}11; border: 1.5px solid ${col}33; border-radius: 8px; padding: 10px 16px; font-size: 13px; }
-    .mood-chip strong { color: ${col}; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      color: #1a1a2e; background: #f8f9ff;
+      padding: 32px; font-size: 14px; line-height: 1.65;
+      max-width: 820px; margin: 0 auto;
+    }
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, ${col} 0%, ${col}cc 100%);
+      border-radius: 20px; padding: 28px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 28px; color: #fff;
+    }
+    .header-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .header-sub { font-size: 13px; opacity: 0.85; }
+    .header-meta { text-align: right; font-size: 12px; opacity: 0.8; line-height: 1.8; }
+    .header-logo { font-size: 20px; font-weight: 800; margin-bottom: 2px; }
+    /* ── Section ── */
+    .section {
+      background: #fff; border-radius: 16px;
+      padding: 24px; margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 1px solid #eef0f8;
+    }
+    h2 {
+      font-size: 15px; font-weight: 700; color: ${col};
+      margin-bottom: 16px; padding-bottom: 8px;
+      border-bottom: 2px solid ${col}22;
+      display: flex; align-items: center; gap: 8px;
+    }
+    h2 .icon { font-size: 16px; }
+    /* ── Stat grid ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .stat-card {
+      background: ${col}0d; border: 1.5px solid ${col}30;
+      border-radius: 12px; padding: 16px; text-align: center;
+    }
+    .stat-val { font-size: 26px; font-weight: 800; color: ${col}; }
+    .stat-lbl { font-size: 10px; color: #888; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+    /* ── Mood chips ── */
+    .chip-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .chip {
+      background: ${col}0d; border: 1.5px solid ${col}30;
+      border-radius: 10px; padding: 10px 16px; font-size: 13px; flex: 1; min-width: 160px;
+    }
+    .chip strong { color: ${col}; }
+    .chip .sub { color: #999; font-size: 11px; }
+    /* ── Table ── */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background: ${col}; color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-    tr:nth-child(even) { background: #f9f9f9; }
-    td { border-bottom: 1px solid #eee; }
-    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 11px; color: #aaa; text-align: center; }
-    .badge { display: inline-block; background: ${col}22; color: ${col}; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; }
-    .section { margin-bottom: 32px; }
+    thead tr { background: ${col}; }
+    th { color: #fff; padding: 10px 14px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
+    td { padding: 9px 14px; border-bottom: 1px solid #f0f0f8; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafbff; }
+    .bar-bg { background: #eef; border-radius: 4px; height: 7px; width: 100%; overflow: hidden; }
+    .bar-fill { background: ${col}; border-radius: 4px; height: 7px; }
+    /* ── Insight cards ── */
+    .insight {
+      border-left: 3px solid ${col}; padding: 12px 16px;
+      margin-bottom: 12px; background: #fafbff;
+      border-radius: 0 12px 12px 0;
+    }
+    .insight:last-child { margin-bottom: 0; }
+    .insight-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #1a1a2e; }
+    .insight-body { font-size: 13px; color: #555; line-height: 1.55; }
+    /* ── Triggers ── */
+    .trigger-list { list-style: none; padding: 0; }
+    .trigger-list li {
+      padding: 9px 0; border-bottom: 1px solid #f0f0f8;
+      font-size: 13px; display: flex; align-items: center; gap: 8px;
+    }
+    .trigger-list li:last-child { border-bottom: none; }
+    .trigger-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: ${col}; flex-shrink: 0;
+    }
+    /* ── Alert banner ── */
+    .alert {
+      background: #fff8e1; border: 1.5px solid #ffcc02;
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 13px; margin-top: 12px; color: #7a5c00;
+    }
+    /* ── Footer ── */
+    .footer {
+      margin-top: 28px; padding-top: 16px;
+      border-top: 1px solid #e8eaf0;
+      font-size: 11px; color: #aaa; text-align: center; line-height: 1.8;
+    }
+    .print-hint {
+      background: ${col}0d; border: 1px dashed ${col}55;
+      border-radius: 10px; padding: 10px 16px;
+      font-size: 12px; color: ${col}; text-align: center;
+      margin-bottom: 20px; font-weight: 600;
+    }
   </style>
 </head>
 <body>
+
+  <div class="print-hint no-print">
+    💡 To save as PDF: tap the share icon in your browser → "Print" → Save as PDF
+  </div>
+
+  <!-- Header -->
   <div class="header">
-    <div class="header-left">
-      <h1>Vocolens Insights Report</h1>
-      <p>Prepared for <strong>${userName}</strong> · ${reportDate} at ${reportTime}</p>
-      <p style="margin-top:4px;font-size:12px;color:#999">This report is intended to support conversations with healthcare professionals.</p>
+    <div>
+      <div class="header-title">Vocolens Insights Report</div>
+      <div class="header-sub">Prepared for <strong>${userName}</strong></div>
+      <div class="header-sub" style="margin-top:4px;opacity:0.7;font-size:11px">
+        Confidential · For personal health tracking &amp; professional consultation
+      </div>
     </div>
-    <div class="header-right">
-      <div style="font-size:22px;font-weight:800;color:${col}">Vocolens</div>
-      <div>Voice Journaling &amp; Emotional Wellness</div>
+    <div class="header-meta">
+      <div class="header-logo">Vocolens</div>
+      <div>${reportDate}</div>
+      <div>${reportTime}</div>
     </div>
   </div>
 
+  <!-- Overview -->
   <div class="section">
-    <h2>Overview</h2>
+    <h2><span class="icon">📊</span> Overview</h2>
     <div class="stat-grid">
-      <div class="stat-card"><div class="value">${stats.totalEntries}</div><div class="label">Total Entries</div></div>
-      <div class="stat-card"><div class="value">${stats.currentStreak}</div><div class="label">Current Streak (days)</div></div>
-      <div class="stat-card"><div class="value">${stats.longestStreak}</div><div class="label">Longest Streak (days)</div></div>
-      <div class="stat-card"><div class="value">${stats.weeklyEntries}</div><div class="label">This Week</div></div>
-      <div class="stat-card"><div class="value">${stats.monthlyEntries}</div><div class="label">This Month</div></div>
-      <div class="stat-card"><div class="value">${Math.round(stats.totalDuration / 60)}</div><div class="label">Total Minutes</div></div>
+      <div class="stat-card"><div class="stat-val">${stats.totalEntries}</div><div class="stat-lbl">Total Entries</div></div>
+      <div class="stat-card"><div class="stat-val">${stats.currentStreak}</div><div class="stat-lbl">Current Streak (days)</div></div>
+      <div class="stat-card"><div class="stat-val">${stats.longestStreak}</div><div class="stat-lbl">Best Streak (days)</div></div>
+      <div class="stat-card"><div class="stat-val">${stats.weeklyEntries}</div><div class="stat-lbl">This Week</div></div>
+      <div class="stat-card"><div class="stat-val">${stats.monthlyEntries}</div><div class="stat-lbl">This Month</div></div>
+      <div class="stat-card"><div class="stat-val">${Math.round(stats.totalDuration / 60)}</div><div class="stat-lbl">Total Minutes</div></div>
     </div>
   </div>
 
+  <!-- Emotional Tone -->
   <div class="section">
-    <h2>Emotional Tone</h2>
-    <div class="mood-row">
-      <div class="mood-chip">Valence: <strong>${valenceLabel}</strong> <span style="color:#888">(avg ${avgValence > 0 ? "+" : ""}${avgValence})</span></div>
-      <div class="mood-chip">Energy: <strong>${arousalLabel}</strong> <span style="color:#888">(avg ${avgArousal}%)</span></div>
-      <div class="mood-chip">Avg Mood: <strong>${stats.averageMood}/100</strong></div>
+    <h2><span class="icon">🎭</span> Emotional Tone</h2>
+    <div class="chip-row">
+      <div class="chip">Valence: <strong>${valenceLabel}</strong><br><span class="sub">avg ${avgValence > 0 ? "+" : ""}${avgValence} (−100 unpleasant → +100 pleasant)</span></div>
+      <div class="chip">Energy: <strong>${arousalLabel}</strong><br><span class="sub">avg arousal ${avgArousal}/100</span></div>
+      <div class="chip">Avg Mood: <strong>${stats.averageMood}/100</strong><br><span class="sub">overall emotional intensity</span></div>
     </div>
-    ${highDistress > 0 ? `<div class="mood-chip" style="margin-top:8px;display:inline-block">⚠️ High distress recorded in <strong>${highDistress}</strong> ${highDistress === 1 ? "entry" : "entries"}${groundingUsed > 0 ? ` · Grounding used <strong>${groundingUsed}</strong> times` : ""}</div>` : ""}
+    ${highDistress > 0 ? `<div class="alert">⚠️ High distress recorded in <strong>${highDistress}</strong> ${highDistress === 1 ? "entry" : "entries"}${groundingUsed > 0 ? ` · Grounding exercises used <strong>${groundingUsed}</strong> times` : ""}</div>` : ""}
   </div>
 
   ${topEmotions.length > 0 ? `
+  <!-- Top Emotions -->
   <div class="section">
-    <h2>Top Emotions</h2>
+    <h2><span class="icon">💜</span> Top Emotions</h2>
     <table>
       <thead><tr><th>Emotion</th><th>Frequency</th><th style="width:35%">Prevalence</th></tr></thead>
-      <tbody>${emotionRows}</tbody>
+      <tbody>
+        ${topEmotions.map(([name, count]) => `
+        <tr>
+          <td style="text-transform:capitalize;font-weight:600">${name}</td>
+          <td>${count} ${count === 1 ? "entry" : "entries"}</td>
+          <td><div class="bar-bg"><div class="bar-fill" style="width:${Math.round((count / entries.length) * 100)}%"></div></div></td>
+        </tr>`).join("")}
+      </tbody>
     </table>
   </div>` : ""}
 
+  <!-- Time of Day -->
   <div class="section">
-    <h2>Journaling by Time of Day</h2>
+    <h2><span class="icon">🕐</span> Journaling by Time of Day</h2>
     <table>
       <thead><tr><th>Time of Day</th><th>Entries</th></tr></thead>
-      <tbody>${timeRows}</tbody>
+      <tbody>
+        ${Object.entries(timeSlots).map(([slot, count]) => `
+        <tr><td style="font-weight:600">${slot}</td><td>${count} ${count === 1 ? "entry" : "entries"}</td></tr>`).join("")}
+      </tbody>
     </table>
   </div>
 
   ${insights.length > 0 ? `
-  <div class="section">
-    <h2>AI-Generated Insights</h2>
-    ${insightCards}
+  <!-- AI Insights -->
+  <div class="section page-break">
+    <h2><span class="icon">💡</span> AI-Generated Insights</h2>
+    ${insights.map((ins: any) => `
+    <div class="insight">
+      <div class="insight-title">${ins.emoji || "💡"} ${ins.title || ""}</div>
+      <div class="insight-body">${ins.message || ""}</div>
+    </div>`).join("")}
   </div>` : ""}
 
   ${triggers.length > 0 ? `
+  <!-- Patterns & Triggers -->
   <div class="section">
-    <h2>Identified Patterns &amp; Triggers</h2>
-    <ul style="padding-left:20px;font-size:13px">${triggerItems}</ul>
+    <h2><span class="icon">🔍</span> Identified Patterns &amp; Triggers</h2>
+    <ul class="trigger-list">
+      ${triggers.map((t: any) => `
+      <li><span class="trigger-dot"></span><strong>${t.trigger || t.topic || t.id || "Pattern"}</strong> — ${t.frequency || t.count || ""} occurrences · ${t.type || ""}</li>`).join("")}
+    </ul>
   </div>` : ""}
 
   ${recentEntries.length > 0 ? `
+  <!-- Recent Entries -->
   <div class="section">
-    <h2>Recent Journal Entries</h2>
+    <h2><span class="icon">📝</span> Recent Journal Entries</h2>
     <table>
       <thead><tr><th>Date</th><th>Primary Emotion</th><th>Duration</th><th>Title</th></tr></thead>
       <tbody>${recentRows}</tbody>
@@ -321,14 +410,17 @@ async function generateInsightsPDF({
   </div>` : ""}
 
   <div class="footer">
-    Generated by Vocolens on ${reportDate} · This document is confidential and intended for personal health tracking and professional consultation only.
+    Generated by <strong>Vocolens</strong> on ${reportDate} at ${reportTime}<br>
+    This report is confidential and intended for personal health tracking and professional consultation only.<br>
+    To save as PDF: open in browser → File → Print → Save as PDF
   </div>
+
 </body>
 </html>`;
 
   const cacheDir = FileSystem.cacheDirectory ?? "file:///tmp/";
   const fileUri = cacheDir + `vocolens-insights-${Date.now()}.html`;
-  await FileSystem.writeAsStringAsync(fileUri, html, { encoding: "utf8" as any });
+  await FileSystem.writeAsStringAsync(fileUri, html, { encoding: FileSystem.EncodingType.UTF8 });
   return fileUri;
 }
 
@@ -694,9 +786,15 @@ function InsightsContent({
     }, 100);
   };
 
+  const [shareToast, setShareToast] = useState(false);
+
   const handleSharePDF = async () => {
     try {
       tapHaptic();
+      // Show therapist notification toast first
+      setShareToast(true);
+      await new Promise((resolve) => setTimeout(resolve, 2200));
+      setShareToast(false);
       setIsGeneratingPDF(true);
       const uri = await generateInsightsPDF({
         userName: user.name,
@@ -708,7 +806,7 @@ function InsightsContent({
       });
       await Sharing.shareAsync(uri, {
         mimeType: "text/html",
-        dialogTitle: "Share Insights Report",
+        dialogTitle: "Share Insights Report with Therapist",
         UTI: "public.html",
       });
     } catch (err: any) {
@@ -718,6 +816,7 @@ function InsightsContent({
       );
     } finally {
       setIsGeneratingPDF(false);
+      setShareToast(false);
     }
   };
 
@@ -1012,7 +1111,7 @@ function InsightsContent({
       {/* Share button — rendered AFTER ScrollView so it sits on top and receives touches */}
       <Pressable
         onPress={handleSharePDF}
-        disabled={isGeneratingPDF}
+        disabled={isGeneratingPDF || shareToast}
         style={{
           position: "absolute",
           top: insets.top + 10,
@@ -1033,6 +1132,58 @@ function InsightsContent({
           <Share2 size={17} color="#FFFFFF" strokeWidth={2} />
         )}
       </Pressable>
+
+      {/* Therapist share toast notification */}
+      {shareToast && (
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          exiting={FadeOut.duration(300)}
+          style={{
+            position: "absolute",
+            bottom: insets.bottom + 40,
+            left: 24,
+            right: 24,
+            backgroundColor: "rgba(20,20,32,0.97)",
+            borderRadius: 18,
+            borderWidth: 1.5,
+            borderColor: hexToRgba(Colors.primary, 0.45),
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.35,
+            shadowRadius: 16,
+            elevation: 12,
+          }}
+        >
+          <Text style={{ fontSize: 28 }}>🩺</Text>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontFamily: "Inter_700Bold",
+                fontSize: 14,
+                color: "#FFFFFF",
+                marginBottom: 3,
+              }}
+            >
+              Share with your therapist
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 12,
+                color: "rgba(255,255,255,0.65)",
+                lineHeight: 18,
+              }}
+            >
+              A full insights report is being prepared — you can send it directly to your therapist or save it as a PDF.
+            </Text>
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
