@@ -470,7 +470,7 @@ export default function ReflectionScreen() {
         {step === "body" && (
           <Animated.View entering={FadeInUp}>
             <Text style={s.sectionLabel}>Where do you feel it?</Text>
-            <Text style={s.bodySub}>Tap a region, then rate intensity 1–5</Text>
+            <Text style={s.bodySub}>Tap the regions where you feel this emotion</Text>
             <BodyRegionMap selected={bodyRegions} onChange={setBodyRegions} />
             <Pressable
               onPress={nextStep}

@@ -296,22 +296,9 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
                 </View>
                 <View style={s.statDivider} />
                 <View style={s.statBox}>
-                  <Text style={s.statVal}>{selectedStat.avgIntensity > 0 ? `${selectedStat.avgIntensity}/5` : "—"}</Text>
-                  <Text style={s.statLbl}>Avg intensity</Text>
-                </View>
-                <View style={s.statDivider} />
-                <View style={s.statBox}>
                   <Text style={s.statVal}>{Math.round(selectedStat.heat * 100)}%</Text>
                   <Text style={s.statLbl}>Relative heat</Text>
                 </View>
-              </View>
-              {/* Intensity bar */}
-              <View style={s.intBg}>
-                <View style={[s.intFill, {
-                  width: `${Math.max((selectedStat.avgIntensity / 5) * 100, selectedStat.avgIntensity > 0 ? 0 : 0)}%` as any,
-                  backgroundColor: heatFill(selectedStat.heat, primaryColor),
-                  minWidth: selectedStat.avgIntensity > 0 ? undefined : 0,
-                }]} />
               </View>
             </Animated.View>
           )}
