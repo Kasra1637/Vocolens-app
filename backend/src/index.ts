@@ -40,7 +40,7 @@ app.use("*", async (c, next) => {
 
 app.use("*", cors({ origin: "*", credentials: true }));
 app.use("*", logger());
-app.get("/health", (c) => c.json({ status: "ok", model: "anthropic/claude-3-7-sonnet" }));
+app.get("/health", (c) => c.json({ status: "ok", model: "anthropic/claude-3.7-sonnet" }));
 
 app.route("/api/sample", sampleRouter);
 app.route("/api/journal", journalRouter);

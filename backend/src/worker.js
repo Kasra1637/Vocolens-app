@@ -15,10 +15,7 @@
  */
 
 // ─── Model ───────────────────────────────────────────────────────────────────
-// IMPORTANT: OpenRouter uses hyphens in Claude model IDs, NOT dots.
-// "anthropic/claude-3.7-sonnet" is INVALID and will fail silently.
-// "anthropic/claude-3-7-sonnet" is the correct identifier.
-const MODEL = "anthropic/claude-3-7-sonnet";
+const MODEL = "anthropic/claude-3.7-sonnet";
 
 // ─── CORS headers ─────────────────────────────────────────────────────────────
 const CORS = {
@@ -194,7 +191,7 @@ async function handleAnalyze(request, env) {
     method: "POST",
     headers: orHeaders(apiKey),
     body: JSON.stringify({
-      model: MODEL,    // ✅ "anthropic/claude-3-7-sonnet" — hyphens, not dots
+      model: MODEL,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user",   content: `Analyse this journal entry:\n\n"${transcript}"` },
