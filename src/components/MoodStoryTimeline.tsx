@@ -205,7 +205,10 @@ function WeekView({
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
+      // Use local date parts to avoid UTC offset shifting the date (e.g. UTC-8 users
+      // seeing toISOString() return yesterday's date for today's entries)
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       const dayLabel = d
         .toLocaleDateString("en-US", { weekday: "short" })
         .slice(0, 2);
