@@ -614,21 +614,17 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
       <Pressable onPress={onPress}>
         <View
           style={{
-            backgroundColor: badge.unlocked
-              ? hexToRgba(Colors.primary, 0.08)
-              : "rgba(255, 255, 255, 0.12)",
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 2,
-            borderColor: badge.unlocked
-              ? hexToRgba(Colors.primary, 0.35)
-              : "rgba(255, 255, 255, 0.20)",
+            borderColor: "rgba(255, 255, 255, 0.20)",
             borderRadius: BorderRadius.xlarge,
             padding: 16,
             opacity: 1,
             overflow: "hidden",
-            shadowColor: badge.unlocked ? Colors.primary : "#000",
+            shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: badge.unlocked ? 0.2 : 0.08,
-            shadowRadius: badge.unlocked ? 12 : 8,
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
           }}
         >
           {/* Badge Icon */}
