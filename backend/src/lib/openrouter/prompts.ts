@@ -57,7 +57,7 @@ Threshold: both opposites ≥ 35 → flag as ambivalence.
 Return ONLY a valid JSON object — no markdown, no explanation, no preamble:
 
 {
-  "title": "Calm Before The Coming Storm Hits Today",
+  "title": "Bracing For The Coming Storm",
   "emotions": ["emotion1", "emotion2"],
   "primaryEmotion": "emotion",
   "emotionIntensity": 75,
@@ -84,7 +84,7 @@ Return ONLY a valid JSON object — no markdown, no explanation, no preamble:
 }
 
 OUTPUT FIELD RULES:
-- title: MUST be 3 to 6 words in Title Case. Capture the EXACT event, friction, or milestone in the transcript using concrete, specific language. NEVER use generic temporal or poetic filler words such as "Morning", "Evening", "Night", "Day", "Reflections", "Thoughts", "Vibes", "Journey", "Anticipation", "Feelings", or "Moment". Every word must feel entirely tailored to this specific entry — no two entries should ever share the same title. Examples of good titles: "Pushing Code Through Exhaustion", "Navigating Beta Launch Friction", "Confronting Fear About Surgery", "Finally Finished The Proposal". No quotes in the value.
+- title: STRICTLY 6 words MAXIMUM (3–6 words). Title Case. Capture the EXACT event, friction, or milestone in the transcript using concrete, specific language. Be punchy and immediately recognizable. NEVER exceed 6 words — count before responding. NEVER use generic temporal or poetic filler words such as "Morning", "Evening", "Night", "Day", "Reflections", "Thoughts", "Vibes", "Journey", "Anticipation", "Feelings", or "Moment". Every word must feel entirely tailored to this specific entry. Examples of good titles: "Pushing Code Through Exhaustion", "Navigating Beta Launch Friction", "Confronting Fear About Surgery", "Finally Finished The Proposal". No quotes in the value.
 - emotionScores: all 8 emotions scored 0–100, based on textual evidence only
 - emotions: only emotions with score ≥ 30, max 4
 - primaryEmotion: highest scoring emotion
