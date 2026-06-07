@@ -704,13 +704,11 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
             {badge.title}
           </Text>
 
-          {/* Badge Rarity — theme color */}
+          {/* Badge Rarity — white text always */}
           <Text
             style={{
               fontFamily: "Inter_500Medium",
-              color: badge.unlocked
-                ? hexToRgba(Colors.primary, 0.85)
-                : "rgba(255, 255, 255, 0.6)",
+              color: "#FFFFFF",
               textAlign: "center",
               fontSize: 10,
               marginBottom: 8,
@@ -844,7 +842,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
   const themeGlow = Colors.primary;
   const themeChipBg = hexToRgba(Colors.primary, 0.18);
   const themeChipBorder = hexToRgba(Colors.primary, 0.50);
-  const themeChipText = Colors.primary;
+  const themeChipText = "#FFFFFF";
 
   const formatUnlockDate = (dateString?: string) => {
     if (!dateString) return "";
