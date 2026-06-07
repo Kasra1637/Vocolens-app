@@ -33,11 +33,12 @@ function hexToRgba(hex: string, alpha: number): string {
 }
 
 function heatFill(heat: number, primary: string): string {
-  return hexToRgba(primary, 0.15 + heat * 0.75);
+  // Minimum 0.10 opacity so even heat=0 (selected but no intensity) is visible
+  return hexToRgba(primary, 0.10 + Math.max(heat, 0.05) * 0.75);
 }
 
 function heatStroke(heat: number, primary: string): string {
-  return hexToRgba(primary, 0.3 + heat * 0.6);
+  return hexToRgba(primary, 0.25 + Math.max(heat, 0.05) * 0.6);
 }
 
 function filterByDays(entries: JournalEntry[], days: number): JournalEntry[] {
@@ -162,14 +163,16 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
   const days = range === "7D" ? 7 : range === "14D" ? 14 : 30;
   const filtered = useMemo(() => filterByDays(entries, days), [entries, days]);
 
-  // Aggregate per-region
+  // Aggregate per-region — intensity 0 is valid (region selected, no intensity set)
   const stats: RegionStats = useMemo(() => {
     const raw: Record<string, { count: number; total: number }> = {};
     filtered.forEach((e) => {
+      // Include entries where bodyRegions exist (any region selected counts)
       (e.bodyRegions ?? []).forEach((br) => {
         if (!raw[br.region]) raw[br.region] = { count: 0, total: 0 };
         raw[br.region].count++;
-        raw[br.region].total += br.intensity;
+        // intensity may be 0 if user selected the region without setting intensity
+        raw[br.region].total += br.intensity ?? 0;
       });
     });
     const maxCount = Math.max(1, ...Object.values(raw).map((v) => v.count));
@@ -185,6 +188,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
     return result;
   }, [filtered]);
 
+  // hasData: any entry that has at least one body region selected (intensity optional)
   const hasData = Object.keys(stats).length > 0;
   const totalScans = filtered.filter((e) => (e.bodyRegions ?? []).length > 0).length;
   const selectedStat = selected ? stats[selected] : null;
@@ -200,7 +204,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
       {/* ── Header ── */}
       <View style={s.header}>
         <View style={{ flex: 1 }}>
-          <Text style={s.title}>🫀 Body Sensation Map</Text>
+          <Text style={s.title}>Body Sensation Map</Text>
           <Text style={s.subtitle}>
             {hasData
               ? `${totalScans} body scan${totalScans !== 1 ? "s" : ""} · tap a region to explore`
