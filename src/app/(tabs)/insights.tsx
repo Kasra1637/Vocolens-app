@@ -756,6 +756,8 @@ function InsightsContent({
     Inter_700Bold,
   });
 
+  const [shareToast, setShareToast] = useState(false);
+
   if (!fontsLoaded) {
     return (
       <View className="flex-1" style={{ backgroundColor: Gradients.background[2] }}>
@@ -785,8 +787,6 @@ function InsightsContent({
       // The UI will auto-update via React Query
     }, 100);
   };
-
-  const [shareToast, setShareToast] = useState(false);
 
   const handleSharePDF = async () => {
     try {
