@@ -348,9 +348,6 @@ function WeekView({
 
   const TrendIcon = trendConfig.Icon;
 
-  // Y-axis grid labels
-  const Y_LABELS = [100, 75, 50, 25, 0];
-
   return (
     <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
       {/* Trend badge */}
@@ -486,14 +483,6 @@ function WeekView({
                     }
                     stroke="rgba(0,0,0,0.25)"
                     strokeWidth={1.5}
-                  />
-                  {/* Value label above dot */}
-                  <Circle
-                    key={`lbl-bg-${i}`}
-                    cx={cx}
-                    cy={cy - 14}
-                    r={0}
-                    fill="none"
                   />
                 </React.Fragment>
               );
@@ -927,11 +916,17 @@ function EmotionsView({
     );
     const dominantScore = recentScores[dominantEmotion];
 
+    // Local date helper — avoids UTC offset shifting date for negative-timezone users
+    const localDateStr = (d: Date) => {
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+
     // Build 7-day overall mood intensity sparkline (all emotions, for "This Week's Story")
     const weeklyIntensitySparkline = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(now);
       d.setDate(d.getDate() - (6 - i));
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = localDateStr(d);
       const dayEntries = entries.filter((e) => e.createdAt.startsWith(dateStr));
       if (dayEntries.length === 0) return null;
       return Math.round(
@@ -944,7 +939,7 @@ function EmotionsView({
     const sparkline = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(now);
       d.setDate(d.getDate() - (6 - i));
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = localDateStr(d);
       const dayEntries = recent.filter((e) => e.createdAt.startsWith(dateStr));
       if (dayEntries.length === 0) return null;
       const scored = dayEntries.filter((e) => e.emotionScores);
@@ -988,7 +983,7 @@ function EmotionsView({
         const shiftedSparkline = Array.from({ length: 14 }, (_, i) => {
           const d = new Date(now);
           d.setDate(d.getDate() - (13 - i));
-          const dateStr = d.toISOString().split("T")[0];
+          const dateStr = localDateStr(d);
           const dayEntries = entries.filter((e) =>
             e.createdAt.startsWith(dateStr),
           );
