@@ -411,7 +411,9 @@ export function useWeeklyReflection(weekOffset: number = 0) {
   // Calculate the week start (Sunday) for the given offset
   const weekStart = (() => {
     const now = new Date();
-    const dayOfWeek = now.getDay();
+    // Monday-start week (consistent with StreakCalendar)
+    // getDay() returns 0=Sun..6=Sat; convert to Mon-start: Mon=0..Sun=6
+    const dayOfWeek = (now.getDay() + 6) % 7; // 0=Mon, 6=Sun
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - dayOfWeek - weekOffset * 7);
     startOfWeek.setHours(0, 0, 0, 0);
@@ -497,7 +499,7 @@ Respond with ONLY a valid JSON object — no markdown fences, no commentary:
           headers: {
             Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://blink.new',
+            'HTTP-Referer': 'https://vocolens-api.kasrammarvel.workers.dev',
             'X-Title': 'Vocolens',
           },
           body: JSON.stringify({

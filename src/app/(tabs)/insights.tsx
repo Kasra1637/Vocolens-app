@@ -899,7 +899,7 @@ function InsightsContent({
                       Where You Feel Things
                     </Text>
                   </View>
-                  {sorted.map(([label, data]) => {
+                  {sorted.map(([label, data], idx) => {
                     const avgIntensity = Math.round(
                       data.totalIntensity / data.count,
                     );
@@ -917,11 +917,7 @@ function InsightsContent({
                           alignItems: "center",
                           justifyContent: "space-between",
                           paddingVertical: 8,
-                          borderBottomWidth:
-                            sorted.indexOf([label, data] as any) <
-                            sorted.length - 1
-                              ? 1
-                              : 0,
+                          borderBottomWidth: idx < sorted.length - 1 ? 1 : 0,
                           borderBottomColor: hexToRgba(Colors.primary, 0.08),
                         }}
                       >
