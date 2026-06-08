@@ -71,6 +71,7 @@ import {
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
 import { hexToRgba } from "@/lib/glass";
+import { useEntrySavedSound } from "@/lib/hooks/useEntrySavedSound";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -208,6 +209,9 @@ export default function SpeakScreen() {
 
   // Mutation hook for creating entries
   const createEntryMutation = useCreateEntry();
+
+  // Soft chime played when an entry is successfully committed
+  const playEntrySavedChime = useEntrySavedSound();
 
   // Voice recording hook with real-time transcription
   const [voiceState, voiceActions] = useRealtimeVoiceRecording();
@@ -393,6 +397,7 @@ export default function SpeakScreen() {
               },
             });
             successHaptic();
+            playEntrySavedChime();
             voiceActions.reset();
             if (entry?.id) router.push(`/entry-detail?id=${entry.id}`);
           } else {
@@ -451,6 +456,7 @@ export default function SpeakScreen() {
       });
 
       successHaptic();
+      playEntrySavedChime();
       voiceActions.reset();
 
       if (entry && entry.id) {
@@ -1132,18 +1138,44 @@ export default function SpeakScreen() {
           </View>
         ) : null}
 
-        {/* Processing Indicator */}
+        {/* Processing Indicator — animated dots + status text */}
         {isProcessing ? (
-          <View className="items-center">
-            <View className="flex-row items-center justify-center">
-              {[0, 1, 2].map((i) => (
-                <View key={i} style={{ marginHorizontal: 4 }}>
+          <View className="items-center" style={{ gap: 14 }}>
+            <View
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                borderWidth: 1,
+                borderColor: "rgba(255, 255, 255, 0.15)",
+                borderRadius: 20,
+                paddingHorizontal: 24,
+                paddingVertical: 16,
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              {/* Animated pulsing dots */}
+              <View className="flex-row items-center justify-center" style={{ gap: 8 }}>
+                {[0, 1, 2].map((i) => (
                   <ProcessingDot
-                    delay={i * 200}
+                    key={i}
+                    delay={i * 180}
                     primaryColor={Colors.primary}
                   />
-                </View>
-              ))}
+                ))}
+              </View>
+              {/* Status text */}
+              <Text
+                style={{
+                  fontFamily: "Inter_500Medium",
+                  color: "rgba(255, 255, 255, 0.7)",
+                  fontSize: 13,
+                  textAlign: "center",
+                }}
+              >
+                {voiceState.isTranscribing
+                  ? "Transcribing your voice..."
+                  : "Analyzing emotions..."}
+              </Text>
             </View>
           </View>
         ) : null}
@@ -1337,13 +1369,35 @@ interface ProcessingDotProps {
 }
 
 function ProcessingDot({ delay, primaryColor }: ProcessingDotProps) {
+  const opacity = useSharedValue(0.3);
+
+  useEffect(() => {
+    // Stagger start by `delay` ms then pulse indefinitely
+    const t = setTimeout(() => {
+      opacity.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 450, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.3, { duration: 450, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+        false,
+      );
+    }, delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
   return (
-    <View
+    <Animated.View
       style={[
+        animStyle,
         {
-          width: 12,
-          height: 12,
-          borderRadius: 6,
+          width: 10,
+          height: 10,
+          borderRadius: 5,
           backgroundColor: primaryColor,
         },
       ]}
