@@ -29,6 +29,8 @@ import {
   Sparkles,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import useOnboardingStore from "@/lib/state/onboarding-store";
+import { hexToRgba } from "@/lib/glass";
 import {
   JournalEntry,
   EMOTION_COLORS,
@@ -69,6 +71,8 @@ export function MoodStoryTimeline({
   primaryColor,
 }: MoodStoryTimelineProps) {
   const [activeTab, setActiveTab] = useState<TabId>("patterns");
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const isDarkMode = selectedTheme === "darkMode";
 
   const handleTabPress = (id: TabId) => {
     tapHaptic();
@@ -116,29 +120,36 @@ export function MoodStoryTimeline({
               <Pressable
                 key={tab.id}
                 onPress={() => handleTabPress(tab.id)}
-                style={{ flex: 1, borderRadius: 11, overflow: "hidden" }}
+                style={{
+                  flex: 1,
+                  borderRadius: 11,
+                  overflow: "hidden",
+                  paddingVertical: 8,
+                  alignItems: "center",
+                  backgroundColor: isActive
+                    ? isDarkMode
+                      ? hexToRgba(primaryColor, 0.25)
+                      : "rgba(255,255,255,0.15)"
+                    : "transparent",
+                  borderWidth: isActive ? 1 : 0,
+                  borderColor: isActive
+                    ? isDarkMode
+                      ? hexToRgba(primaryColor, 0.6)
+                      : "rgba(255,255,255,0.25)"
+                    : "transparent",
+                }}
               >
-                {isActive && (
-                  <LinearGradient
-                    colors={[primaryColor, `${primaryColor}BB`]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{ position: "absolute", inset: 0, borderRadius: 11 }}
-                  />
-                )}
-                <View style={{ paddingVertical: 8, alignItems: "center" }}>
-                  <Text
-                    style={{
-                      fontFamily: isActive
-                        ? "Inter_600SemiBold"
-                        : "Inter_400Regular",
-                      fontSize: 12,
-                      color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.5)",
-                    }}
-                  >
-                    {tab.label}
-                  </Text>
-                </View>
+                <Text
+                  style={{
+                    fontFamily: isActive
+                      ? "Inter_600SemiBold"
+                      : "Inter_400Regular",
+                    fontSize: 12,
+                    color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  {tab.label}
+                </Text>
               </Pressable>
             );
           })}

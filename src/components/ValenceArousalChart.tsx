@@ -42,6 +42,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
+import useOnboardingStore from "@/lib/state/onboarding-store";
+import { hexToRgba } from "@/lib/glass";
 import {
   JournalEntry,
   EMOTION_COLORS,
@@ -145,6 +147,8 @@ export default function ValenceArousalChart({
   const [range, setRange] = useState<TimeRange>("30D");
   const [selectedPoint, setSelectedPoint] = useState<ChartPoint | null>(null);
   const [chartWidth, setChartWidth] = useState(280);
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const isDarkModeTheme = selectedTheme === "darkMode";
 
   const CHART_H = chartWidth; // square
   const PAD = 0; // SVG padding — labels drawn outside chart area
@@ -394,33 +398,37 @@ export default function ValenceArousalChart({
               <Pressable
                 key={opt.id}
                 onPress={() => handleRangePress(opt.id)}
-                style={{ flex: 1, borderRadius: 9, overflow: "hidden" }}
+                style={{
+                  flex: 1,
+                  borderRadius: 9,
+                  overflow: "hidden",
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  alignItems: "center",
+                  backgroundColor: isActive
+                    ? isDarkModeTheme
+                      ? hexToRgba(primaryColor, 0.25)
+                      : "rgba(255,255,255,0.15)"
+                    : "transparent",
+                  borderWidth: isActive ? 1 : 0,
+                  borderColor: isActive
+                    ? isDarkModeTheme
+                      ? hexToRgba(primaryColor, 0.6)
+                      : "rgba(255,255,255,0.25)"
+                    : "transparent",
+                }}
               >
-                {isActive && (
-                  <LinearGradient
-                    colors={[primaryColor, `${primaryColor}BB`]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: 9,
-                    }}
-                  />
-                )}
-                <View style={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: "center" }}>
-                  <Text
-                    style={{
-                      fontFamily: isActive
-                        ? "Inter_600SemiBold"
-                        : "Inter_400Regular",
-                      fontSize: 13,
-                      color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.45)",
-                    }}
-                  >
-                    {opt.label}
-                  </Text>
-                </View>
+                <Text
+                  style={{
+                    fontFamily: isActive
+                      ? "Inter_600SemiBold"
+                      : "Inter_400Regular",
+                    fontSize: 13,
+                    color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.45)",
+                  }}
+                >
+                  {opt.label}
+                </Text>
               </Pressable>
             );
           })}

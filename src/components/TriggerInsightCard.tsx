@@ -10,6 +10,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { tapHaptic } from '@/lib/haptics';
+import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 import {
   Briefcase,
   Heart,
@@ -317,6 +318,16 @@ interface TriggerSectionHeaderProps {
 
 export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: TriggerSectionHeaderProps) {
   const timeWindows: Array<'7D' | '14D' | '30D'> = ['7D', '14D', '30D'];
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const isDarkModeTheme = selectedTheme === "darkMode";
+  const primaryColor = THEME_COLORS[selectedTheme]?.primary ?? "#9370DB";
+
+  function hexToRgba(hex: string, alpha: number): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
 
   const getLabel = (tw: string) => {
     switch (tw) {
@@ -366,9 +377,17 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
               flex: 1,
               paddingVertical: 8,
               borderRadius: 12,
-              backgroundColor: timeWindow === tw ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              backgroundColor: timeWindow === tw
+                ? isDarkModeTheme
+                  ? hexToRgba(primaryColor, 0.25)
+                  : 'rgba(255, 255, 255, 0.15)'
+                : 'rgba(255, 255, 255, 0.05)',
               borderWidth: 1,
-              borderColor: timeWindow === tw ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+              borderColor: timeWindow === tw
+                ? isDarkModeTheme
+                  ? hexToRgba(primaryColor, 0.6)
+                  : 'rgba(255, 255, 255, 0.25)'
+                : 'rgba(255, 255, 255, 0.1)',
               alignItems: 'center',
             }}
           >

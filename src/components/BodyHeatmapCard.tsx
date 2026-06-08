@@ -16,6 +16,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, { Ellipse, Rect, G, Circle, Line } from "react-native-svg";
 import Animated, { FadeIn } from "react-native-reanimated";
+import useOnboardingStore from "@/lib/state/onboarding-store";
 import {
   JournalEntry,
   BodyRegion,
@@ -159,6 +160,8 @@ interface Props {
 export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
   const [range, setRange] = useState<TimeRange>("30D");
   const [selected, setSelected] = useState<BodyRegion | null>(null);
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const isDarkModeTheme = selectedTheme === "darkMode";
 
   const days = range === "7D" ? 7 : range === "14D" ? 14 : 30;
   const filtered = useMemo(() => filterByDays(entries, days), [entries, days]);
@@ -224,7 +227,10 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
           <Pressable
             key={r}
             onPress={() => { setRange(r); setSelected(null); }}
-            style={[s.rangeBtn, range === r && { backgroundColor: hexToRgba(primaryColor, 0.25), borderColor: hexToRgba(primaryColor, 0.6) }]}
+            style={[s.rangeBtn, range === r && {
+              backgroundColor: isDarkModeTheme ? hexToRgba(primaryColor, 0.25) : "rgba(255,255,255,0.15)",
+              borderColor: isDarkModeTheme ? hexToRgba(primaryColor, 0.6) : "rgba(255,255,255,0.25)",
+            }]}
           >
             <Text style={[s.rangeTxt, range === r && { color: "#FFFFFF" }]}>{r}</Text>
           </Pressable>
