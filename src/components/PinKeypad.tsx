@@ -205,6 +205,8 @@ function KeypadButton({
 const styles = StyleSheet.create({
   wrap: {
     width: '100%',
+    maxWidth: 320,
+    alignSelf: 'center',
     gap: 14,
     paddingHorizontal: 8,
     paddingBottom: 4,
@@ -212,7 +214,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: 14,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   btnAnimWrap: {
     flex: 1,
