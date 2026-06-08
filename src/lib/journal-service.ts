@@ -28,7 +28,7 @@ import {
   transcribeAudioWithRetry,
   isDeepgramConfigured,
 } from "./api/deepgram-service";
-import { analyzeWithOpenRouter } from "./api/openrouter-service";
+import { analyzeWithOpenRouter, generateRecommendation } from "./api/openrouter-service";
 // Use legacy subpath — v55's top-level export no longer includes
 // `EncodingType.Base64`, so the audio-to-base64 conversion crashes without this.
 import * as FileSystem from "expo-file-system/legacy";
@@ -798,6 +798,21 @@ export async function createJournalEntry(
     setTimeout(() => {
       newlyUnlocked.forEach((id) => badgesStore.queueCelebration(id));
     }, 1200);
+  }
+
+  // Fire-and-forget: fetch the personalised recommendation card text.
+  // Called exactly ONCE here — no other component calls /api/recommend.
+  // Runs after navigation has started so it never blocks the UI.
+  if (transcript.trim().length > 0) {
+    setTimeout(() => {
+      generateRecommendation(transcript, entry.primaryEmotion)
+        .then((result) => {
+          if (result.advice && result.advice.trim().length >= 30) {
+            journalStore.updateEntry(entry.id, { aiReflection: result.advice.trim() });
+          }
+        })
+        .catch(() => {/* no-op — recommendation is non-critical */});
+    }, 1500);
   }
 
   return entry;
