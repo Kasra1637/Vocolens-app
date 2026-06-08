@@ -588,6 +588,8 @@ export interface ReflectionOverride {
   distressLevel: "low" | "moderate" | "high";
   emotionScores?: EmotionScores;
   emotionIntensityLabels?: EmotionIntensityLabels;
+  /** AI-generated title from the Worker /api/analyze response */
+  aiTitle?: string;
 }
 
 export async function createJournalEntry(
@@ -627,9 +629,8 @@ export async function createJournalEntry(
   if (reflectionOverride && preTranscribedText) {
     transcript = preTranscribedText;
 
-    // Derive title locally from transcript content — no additional API call.
-    // The analysis endpoint was already called by the recording screen to get
-    // emotion suggestions; calling it again here doubles the billing.
+    // Use the Worker-generated title if available (passed from index.tsx after
+    // /api/analyze returns). Fall back to deriving it locally from the transcript.
     const deriveLocalTitle = (text: string): string => {
       const clean = text.replace(/\s+/g, " ").trim();
       const sentences = clean.split(/[.!?\n]+/).map((s) => s.trim()).filter(Boolean);
@@ -645,7 +646,13 @@ export async function createJournalEntry(
       const fallbackWords = clean.split(/\s+/).slice(0, 6);
       return fallbackWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
     };
-    const generatedTitle = deriveLocalTitle(transcript);
+
+    const workerTitle = reflectionOverride.aiTitle?.trim();
+    const generatedTitle =
+      workerTitle && workerTitle.length > 0 &&
+      !/^(journal entry|untitled|entry|new entry)$/i.test(workerTitle)
+        ? workerTitle
+        : deriveLocalTitle(transcript);
 
     analysis = {
       emotions: reflectionOverride.emotions,

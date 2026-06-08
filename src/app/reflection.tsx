@@ -149,6 +149,7 @@ export default function ReflectionScreen() {
           groundingUsed,
           alexithymiaFlag: emotions.length === 0,
           distressLevel: distress,
+          aiTitle: pending.aiTitle,
         },
       });
       clearReflection();

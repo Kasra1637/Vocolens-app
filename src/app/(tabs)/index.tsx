@@ -399,6 +399,7 @@ export default function SpeakScreen() {
                 arousal: analysis.arousal,
                 alexithymiaFlag: false,
                 distressLevel: analysis.distressLevel,
+                aiTitle: analysis.title,
               },
             });
             successHaptic();
@@ -418,6 +419,7 @@ export default function SpeakScreen() {
               initialDistress: analysis.distressLevel,
               conversationTopic: selectedTopic,
               conversationPrompt: currentQuestion,
+              aiTitle: analysis.title,
             });
             router.push("/reflection");
           }

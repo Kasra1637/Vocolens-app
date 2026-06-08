@@ -12,6 +12,8 @@ export interface PendingReflection {
   initialDistress: DistressLevel;
   conversationTopic?: TopicCategory;
   conversationPrompt?: string;
+  /** AI-generated title from /api/analyze — passed through so the entry gets the Worker title */
+  aiTitle?: string;
 }
 
 interface ReflectionState {
