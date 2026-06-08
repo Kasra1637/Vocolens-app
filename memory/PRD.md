@@ -58,11 +58,11 @@ Cleanup removes:
 - P1: EAS Build setup for App Store / Google Play distribution
 - P2: MongoDB persistence for usage data
 
-### Bugfix 2026-01: PIN change flow — native keypad would not open
-- **Root cause:** `PinEntryScreen` used a hidden `TextInput` with `opacity: 0` (iOS skips the soft-keyboard for fully transparent inputs) and a single `focus()` call on `Modal.onShow` that raced the modal's enter animation.
-- **Fix in `/app/src/components/PinEntryScreen.tsx`:**
-  - `opacity: 0` → `opacity: 0.01` on the hidden input (iOS keyboard manager now treats it as visible).
-  - Replaced single `focus()` with `forceFocus()` — blur+focus on an escalating schedule (0/60/200/450 ms on iOS; 0/150/350/650 ms +`androidFocusDelay` on Android). Cleans up timers on unmount.
-  - Added `Keyboard.addListener('keyboardDidHide')` so if the user dismisses the keypad, it re-arms focus automatically while PIN entry is still incomplete.
-  - Added a full-screen invisible `Pressable` (`absoluteFill` + `pointerEvents="box-only"`) so tapping anywhere — not just the dot row — re-opens the keypad.
-  - Same logic applies to Enter Current PIN, Create New PIN, and Confirm New PIN since all three use the same component.
+### Bugfix 2026-01: PIN change flow — replaced native keypad with in-app keypad
+- **Root cause:** the device's native soft-keyboard was unreliable inside the Change PIN modal (especially after the verify→setup step transition). Tapping the PIN input only produced haptic feedback; no keypad appeared. Additionally the PIN was stored in two places (encrypted SecureStore via auth-service + zustand `usePinStore` mirror) and only one was being updated on change, risking stale references.
+- **Solution:**
+  - New component `/app/src/components/PinKeypad.tsx` — themed in-app numeric keypad (1–9, ⌫, 0, OK) using the active onboarding theme primary colour. Press feedback via Reanimated scale animation + haptics. OK is enabled only when `value.length === maxLength`.
+  - Rewrote `/app/src/components/PinEntryScreen.tsx` — removed the hidden `TextInput`, all focus retries, the `keyboardDidHide` listener, and the full-screen Pressable overlay. Input is now driven 100% by `PinKeypad`. Public API (props + `PinEntryScreenHandle.focusKeyboard`) unchanged; `focusKeyboard` is now a no-op for backward compat, so `settings.tsx` works without modification.
+  - PIN sync — `auth-service.setPin()` and `auth-service.removePin()` now also mirror to the zustand `usePinStore` via a lazy require, so no consumer of either store can ever see a stale PIN. SecureStore is authoritative; mirror failures are logged but non-fatal.
+  - Tagged logging — every PIN op now logs `[auth] …` to aid future debugging without leaking the PIN value itself.
+- **Behavioural change for users:** auto-submit at 4 digits is replaced by an explicit OK tap, exactly as specified.

@@ -294,12 +294,10 @@ export default function SettingsScreen() {
   };
 
   const handleChangePinCurrentVerified = () => {
-    // Current PIN confirmed — advance to new-PIN creation step
+    // Current PIN confirmed — advance to new-PIN creation step.
+    // The in-app PinKeypad is always visible, so no focus management needed.
     confirmHaptic();
     setChangePinStep('setup');
-    // onShow won't fire again since modal is already open — focus explicitly
-    // Use longer delay to ensure the new PinEntryScreen has mounted and rendered
-    setTimeout(() => changePinSetupRef.current?.focusKeyboard(), 350);
   };
 
   const handleChangePinNewSaved = async () => {
