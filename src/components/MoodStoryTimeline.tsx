@@ -226,7 +226,7 @@ function PatternsView({
       if (bestDay !== worstDay) {
         const bestName = WEEKDAYS[bestDay];
         const worstName = WEEKDAYS[worstDay];
-        insight = `You tend to feel most intense on ${bestName}s and calmest on ${worstName}s over the last 30 days.`;
+        insight = `Your emotions reach ecstasy-level intensity on ${bestName}s and settle into serenity on ${worstName}s.`;
       } else if (mostActiveDay >= 0) {
         insight = `You journal most consistently on ${WEEKDAYS[mostActiveDay]}s.`;
       }
@@ -368,7 +368,7 @@ function PatternsView({
             })}
           </View>
 
-          {/* Intensity legend — explains the numbers */}
+          {/* Plutchik intensity scale labels */}
           <View
             style={{
               flexDirection: "row",
@@ -379,21 +379,21 @@ function PatternsView({
           >
             <Text
               style={{
-                fontFamily: "Inter_400Regular",
+                fontFamily: "Inter_500Medium",
                 fontSize: 10,
-                color: "rgba(255,255,255,0.4)",
+                color: "rgba(255,255,255,0.5)",
               }}
             >
-              0 = calm, minimal feeling
+              Serenity
             </Text>
             <Text
               style={{
-                fontFamily: "Inter_400Regular",
+                fontFamily: "Inter_500Medium",
                 fontSize: 10,
-                color: "rgba(255,255,255,0.4)",
+                color: "rgba(255,255,255,0.5)",
               }}
             >
-              100 = strongest emotions
+              Ecstasy
             </Text>
           </View>
 
@@ -401,13 +401,13 @@ function PatternsView({
             style={{
               fontFamily: "Inter_400Regular",
               fontSize: 11,
-              color: "rgba(255,255,255,0.5)",
+              color: "rgba(255,255,255,0.45)",
               textAlign: "center",
-              marginTop: 8,
+              marginTop: 6,
               lineHeight: 16,
             }}
           >
-            Higher = stronger emotions felt · Lower = calmer state
+            Gentle feelings on the left · Intense feelings on the right
           </Text>
 
           {/* Insight callout */}
