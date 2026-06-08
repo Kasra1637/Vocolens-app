@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Pressable,
-  ActivityIndicator,
 } from "react-native";
 import Animated, {
   FadeIn,
@@ -16,10 +15,9 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
-import { selectHaptic, tapHaptic } from "@/lib/haptics";
+import { tapHaptic } from "@/lib/haptics";
 import {
   BookOpen,
-  RefreshCw,
   ChevronDown,
   ChevronUp,
   Leaf,
@@ -70,8 +68,6 @@ export function WeeklyReflectionCard({
     data: reflection,
     isLoading,
     error,
-    refetch,
-    isFetching,
   } = useWeeklyReflection(0);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -83,11 +79,6 @@ export function WeeklyReflectionCard({
   };
   const handlePressOut = () => {
     scale.value = withSpring(1);
-  };
-
-  const handleRefresh = () => {
-    selectHaptic();
-    refetch();
   };
 
   const handleToggle = () => {
@@ -167,23 +158,6 @@ export function WeeklyReflectionCard({
               </View>
 
               <View className="flex-row items-center" style={{ gap: 12 }}>
-                <Pressable
-                  onPress={handleRefresh}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  {isFetching ? (
-                    <ActivityIndicator
-                      size="small"
-                      color="rgba(255,255,255,0.7)"
-                    />
-                  ) : (
-                    <RefreshCw
-                      size={16}
-                      color="rgba(255,255,255,0.6)"
-                      strokeWidth={2}
-                    />
-                  )}
-                </Pressable>
                 {expanded ? (
                   <ChevronUp
                     size={18}
@@ -232,19 +206,8 @@ export function WeeklyReflectionCard({
                     textAlign: "center",
                   }}
                 >
-                  Couldn't generate your reflection.
+                  Your reflection will appear after more journaling this week.
                 </Text>
-                <Pressable onPress={handleRefresh} className="mt-2">
-                  <Text
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 13,
-                      color: dominantColor,
-                    }}
-                  >
-                    Try again
-                  </Text>
-                </Pressable>
               </Animated.View>
             ) : reflection ? (
               <Animated.View entering={FadeIn.duration(500)}>

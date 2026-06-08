@@ -463,7 +463,9 @@ export function useWeeklyReflection(weekOffset: number = 0) {
   };
 
   return useQuery({
-    queryKey: [...queryKeys.weeklyReflection(weekStartStr), weekLabel],
+    // Include weekEntries.length in the cache key so the reflection auto-updates
+    // when the user adds more entries during the week (no manual refresh needed).
+    queryKey: [...queryKeys.weeklyReflection(weekStartStr), weekLabel, weekEntries.length],
     queryFn: async (): Promise<WeeklyReflectionResult & { isDemo?: boolean }> => {
       // Route through the Cloudflare Worker backend so all activity appears
       // in the OpenRouter dashboard under the server-side API key.
