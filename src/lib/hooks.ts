@@ -278,23 +278,24 @@ export function useEmotionData(emotion: EmotionType, days: number = 7) {
 // Hook to get comprehensive deep insights using GPT-3.5
 export function useDeepInsights() {
   const entries = useJournalStore((s) => s.entries);
+  // Use entry count + latest timestamp as cache key instead of the full array.
+  // The full array reference changes on every store update (e.g. aiReflection save),
+  // which would invalidate the cache every few seconds and cause duplicate LLM calls.
+  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
 
   return useQuery({
-    queryKey: ['deepInsights', entries],
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: ['deepInsights', cacheKey],
     queryFn: async () => {
-      // Try AI analysis first, fall back to local analysis
       try {
         const aiAnalysis = await getAIAnalysis(entries);
-        if (aiAnalysis.insights.length > 0) {
-          return aiAnalysis;
-        }
+        if (aiAnalysis.insights.length > 0) return aiAnalysis;
       } catch (error) {
         console.log('AI analysis unavailable, using local analysis');
       }
-      // Fallback to local analysis
       return generateDeepInsights(entries);
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: Infinity, // Never auto-refetch — cache key changes only when entry count changes
     enabled: entries.length >= 5,
   });
 }
@@ -302,22 +303,21 @@ export function useDeepInsights() {
 // Hook to get emotional triggers using AI
 export function useEmotionalTriggers() {
   const entries = useJournalStore((s) => s.entries);
+  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
 
   return useQuery({
-    queryKey: ['emotionalTriggers', entries],
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: ['emotionalTriggers', cacheKey],
     queryFn: async () => {
       try {
         const aiAnalysis = await getAIAnalysis(entries);
-        if (aiAnalysis.triggers.length > 0) {
-          return aiAnalysis.triggers;
-        }
+        if (aiAnalysis.triggers.length > 0) return aiAnalysis.triggers;
       } catch (error) {
         console.log('AI triggers unavailable, using local analysis');
       }
-      const insights = generateDeepInsights(entries);
-      return insights.triggers;
+      return generateDeepInsights(entries).triggers;
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: Infinity,
     enabled: entries.length >= 10,
   });
 }
@@ -325,22 +325,21 @@ export function useEmotionalTriggers() {
 // Hook to get mood cycles using AI
 export function useMoodCycles() {
   const entries = useJournalStore((s) => s.entries);
+  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
 
   return useQuery({
-    queryKey: ['moodCycles', entries],
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: ['moodCycles', cacheKey],
     queryFn: async () => {
       try {
         const aiAnalysis = await getAIAnalysis(entries);
-        if (aiAnalysis.cycles.length > 0) {
-          return aiAnalysis.cycles;
-        }
+        if (aiAnalysis.cycles.length > 0) return aiAnalysis.cycles;
       } catch (error) {
         console.log('AI cycles unavailable, using local analysis');
       }
-      const insights = generateDeepInsights(entries);
-      return insights.cycles;
+      return generateDeepInsights(entries).cycles;
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: Infinity,
     enabled: entries.length >= 14,
   });
 }
@@ -348,22 +347,21 @@ export function useMoodCycles() {
 // Hook to get emotional shifts using AI
 export function useEmotionalShifts() {
   const entries = useJournalStore((s) => s.entries);
+  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
 
   return useQuery({
-    queryKey: ['emotionalShifts', entries],
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: ['emotionalShifts', cacheKey],
     queryFn: async () => {
       try {
         const aiAnalysis = await getAIAnalysis(entries);
-        if (aiAnalysis.shifts.length > 0) {
-          return aiAnalysis.shifts;
-        }
+        if (aiAnalysis.shifts.length > 0) return aiAnalysis.shifts;
       } catch (error) {
         console.log('AI shifts unavailable, using local analysis');
       }
-      const insights = generateDeepInsights(entries);
-      return insights.shifts;
+      return generateDeepInsights(entries).shifts;
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: Infinity,
     enabled: entries.length >= 7,
   });
 }
@@ -371,30 +369,25 @@ export function useEmotionalShifts() {
 // Hook to get priority insights for display using AI
 export function usePriorityInsights() {
   const entries = useJournalStore((s) => s.entries);
+  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
 
   return useQuery({
-    queryKey: ['priorityInsights', entries],
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: ['priorityInsights', cacheKey],
     queryFn: async () => {
+      const sortByPriority = (arr: any[]) => arr.sort((a, b) => {
+        const order = { high: 0, medium: 1, low: 2 };
+        return order[a.priority] - order[b.priority];
+      });
       try {
         const aiAnalysis = await getAIAnalysis(entries);
-        if (aiAnalysis.insights.length > 0) {
-          // Return high priority insights first
-          return aiAnalysis.insights.sort((a, b) => {
-            const priorityOrder = { high: 0, medium: 1, low: 2 };
-            return priorityOrder[a.priority] - priorityOrder[b.priority];
-          });
-        }
+        if (aiAnalysis.insights.length > 0) return sortByPriority(aiAnalysis.insights);
       } catch (error) {
         console.log('AI insights unavailable, using local analysis');
       }
-      // Fallback to local analysis
-      const deepInsights = generateDeepInsights(entries);
-      return deepInsights.insights.sort((a, b) => {
-        const priorityOrder = { high: 0, medium: 1, low: 2 };
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      });
+      return sortByPriority(generateDeepInsights(entries).insights);
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: Infinity,
     enabled: entries.length >= 5,
   });
 }
