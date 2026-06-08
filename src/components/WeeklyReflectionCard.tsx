@@ -109,15 +109,25 @@ export function WeeklyReflectionCard({
             {/* Header Row */}
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center" style={{ gap: 10 }}>
-                <BookOpen size={18} color="#FFFFFF" strokeWidth={2} />
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <BookOpen size={22} color="#FFFFFF" strokeWidth={2} />
+                </View>
                 <View>
                   <View className="flex-row items-center" style={{ gap: 6 }}>
                     <Text
                       style={{
-                        fontFamily: "Inter_700Bold",
-                        fontSize: 15,
+                        fontFamily: "Inter_600SemiBold",
+                        fontSize: 16,
                         color: "#FFFFFF",
-                        letterSpacing: 0.2,
                       }}
                     >
                       Weekly Reflection

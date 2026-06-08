@@ -41,6 +41,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { Activity } from "lucide-react-native";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import { hexToRgba } from "@/lib/glass";
@@ -360,16 +361,30 @@ export default function ValenceArousalChart({
     >
       {/* Header */}
       <View style={{ padding: 20, paddingBottom: 0 }}>
-        <Text
-          style={{
-            fontFamily: "Inter_600SemiBold",
-            fontSize: 17,
-            color: "#FFFFFF",
-            marginBottom: 4,
-          }}
-        >
-          Emotional Landscape
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <Activity size={22} color="#FFFFFF" strokeWidth={2} />
+          </View>
+          <Text
+            style={{
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 16,
+              color: "#FFFFFF",
+            }}
+          >
+            Emotional Landscape
+          </Text>
+        </View>
 
         <Text
           style={{

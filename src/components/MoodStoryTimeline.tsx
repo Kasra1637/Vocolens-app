@@ -93,12 +93,24 @@ export function MoodStoryTimeline({
     >
       {/* Header */}
       <View style={{ padding: 20, paddingBottom: 0 }}>
-        <View className="flex-row items-center mb-4" style={{ gap: 8 }}>
-          <BookOpen size={18} color="#FFFFFF" strokeWidth={2} />
+        <View className="flex-row items-center mb-4">
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <BookOpen size={22} color="#FFFFFF" strokeWidth={2} />
+          </View>
           <Text
             style={{
               fontFamily: "Inter_600SemiBold",
-              fontSize: 17,
+              fontSize: 16,
               color: "#FFFFFF",
             }}
           >

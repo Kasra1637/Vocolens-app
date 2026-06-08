@@ -342,6 +342,19 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
   return (
     <View style={{ marginBottom: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 12,
+          }}
+        >
+          <Zap size={22} color="#FFFFFF" strokeWidth={2} />
+        </View>
         <Text
           style={{
             fontFamily: 'Inter_600SemiBold',

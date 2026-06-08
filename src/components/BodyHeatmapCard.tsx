@@ -214,13 +214,28 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
     <View style={s.card}>
       {/* ── Header ── */}
       <View style={s.header}>
-        <View style={{ flex: 1 }}>
-          <Text style={s.title}>Body Sensation Map</Text>
-          <Text style={s.subtitle}>
-            {hasData
-              ? `${totalScans} body scan${totalScans !== 1 ? "s" : ""} · tap a region to explore`
-              : "Select body regions in the reflection step after journaling"}
-          </Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <Text style={{ fontSize: 20 }}>🧘</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.title}>Body Sensation Map</Text>
+            <Text style={s.subtitle}>
+              {hasData
+                ? `${totalScans} body scan${totalScans !== 1 ? "s" : ""} · tap a region to explore`
+                : "Select body regions in the reflection step after journaling"}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -393,7 +408,7 @@ const s = StyleSheet.create({
     marginBottom: 24,
   },
   header: { marginBottom: 12 },
-  title: { fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 15 },
+  title: { fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 },
   subtitle: { fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.50)", fontSize: 12, marginTop: 3, lineHeight: 17 },
   rangeRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
   rangeBtn: {
