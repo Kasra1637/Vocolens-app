@@ -16,6 +16,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, { Ellipse, Rect, G, Circle, Line } from "react-native-svg";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import {
   JournalEntry,
@@ -204,6 +205,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
   const REGIONS: BodyRegion[] = ["head", "face", "neck", "chest", "stomach", "arms", "hands", "legs"];
 
   const handleRegionPress = (region: BodyRegion) => {
+    tapHaptic();
     setSelected((prev) => (prev === region ? null : region));
   };
 
@@ -226,11 +228,11 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
         {(["7D", "14D", "30D"] as TimeRange[]).map((r) => (
           <Pressable
             key={r}
-            onPress={() => { setRange(r); setSelected(null); }}
-            style={[s.rangeBtn, range === r && {
+            onPress={() => { tapHaptic(); setRange(r); setSelected(null); }}
+            style={({ pressed }) => [s.rangeBtn, range === r && {
               backgroundColor: isDarkModeTheme ? hexToRgba(primaryColor, 0.25) : "rgba(255,255,255,0.15)",
               borderColor: isDarkModeTheme ? hexToRgba(primaryColor, 0.6) : "rgba(255,255,255,0.25)",
-            }]}
+            }, pressed && { opacity: 0.7, transform: [{ scale: 0.96 }] }]}
           >
             <Text style={[s.rangeTxt, range === r && { color: "#FFFFFF" }]}>{r}</Text>
           </Pressable>

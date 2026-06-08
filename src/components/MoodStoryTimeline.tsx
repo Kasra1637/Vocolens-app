@@ -120,12 +120,14 @@ export function MoodStoryTimeline({
               <Pressable
                 key={tab.id}
                 onPress={() => handleTabPress(tab.id)}
-                style={{
+                style={({ pressed }) => ({
                   flex: 1,
                   borderRadius: 11,
                   overflow: "hidden",
                   paddingVertical: 8,
                   alignItems: "center",
+                  opacity: pressed ? 0.7 : 1,
+                  transform: [{ scale: pressed ? 0.96 : 1 }],
                   backgroundColor: isActive
                     ? isDarkMode
                       ? hexToRgba(primaryColor, 0.25)
@@ -137,7 +139,7 @@ export function MoodStoryTimeline({
                       ? hexToRgba(primaryColor, 0.6)
                       : "rgba(255,255,255,0.25)"
                     : "transparent",
-                }}
+                })}
               >
                 <Text
                   style={{

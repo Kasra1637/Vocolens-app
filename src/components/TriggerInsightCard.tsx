@@ -373,10 +373,12 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
               tapHaptic();
               onTimeWindowChange?.(tw);
             }}
-            style={{
+            style={({ pressed }) => ({
               flex: 1,
               paddingVertical: 8,
               borderRadius: 12,
+              opacity: pressed ? 0.7 : 1,
+              transform: [{ scale: pressed ? 0.96 : 1 }],
               backgroundColor: timeWindow === tw
                 ? isDarkModeTheme
                   ? hexToRgba(primaryColor, 0.25)
@@ -389,7 +391,7 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
                   : 'rgba(255, 255, 255, 0.25)'
                 : 'rgba(255, 255, 255, 0.1)',
               alignItems: 'center',
-            }}
+            })}
           >
             <Text
               style={{
