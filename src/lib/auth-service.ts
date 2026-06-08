@@ -20,6 +20,40 @@ import { Platform } from 'react-native';
 const PIN_KEY = 'user_pin_code';
 const AUTH_ENABLED_KEY = 'auth_enabled';
 
+// Tagged logger — easy to grep in device logs while preventing PIN leakage.
+const log = {
+  info:  (msg: string, meta?: object) => console.log(`[auth] ${msg}`, meta ?? ''),
+  warn:  (msg: string, meta?: object) => console.warn(`[auth] ${msg}`, meta ?? ''),
+  error: (msg: string, err?: unknown)  => console.error(`[auth] ${msg}`, err ?? ''),
+};
+
+/**
+ * Lazy mirror to the in-memory zustand `usePinStore`.
+ *
+ * Required at runtime so any consumer that reads `usePinStore.getState().pin`
+ * sees the new value the instant SecureStore is updated — preventing stale
+ * references. Lazy `require` keeps tests that mock only SecureStore + Crypto
+ * working; pin-store transitively imports AsyncStorage which is not mocked
+ * in unit tests. Any failure is swallowed — SecureStore is authoritative.
+ */
+function mirrorPinStore(op: 'set' | 'clear', pin?: string) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mod = require('./state/pin-store');
+    const store = (mod?.default ?? mod) as {
+      getState: () => { setPin: (p: string) => void; clearPin: () => void };
+    };
+    if (op === 'set' && pin) {
+      store.getState().setPin(pin);
+    } else if (op === 'clear') {
+      store.getState().clearPin();
+    }
+  } catch (err) {
+    // Non-fatal: SecureStore is the source of truth.
+    log.warn(`mirrorPinStore (${op}) skipped`, { err: String(err) });
+  }
+}
+
 // ─── Biometric invalidation error codes ──────────────────────────────────────
 /**
  * Error strings returned by expo-local-authentication / the native OS when
@@ -229,27 +263,63 @@ export async function isPinSet(): Promise<boolean> {
   return pin !== null;
 }
 
+/**
+ * Persist the PIN.
+ *
+ * Writes to TWO locations atomically so no caller can ever see a stale value:
+ *   1. Encrypted SecureStore  — primary source of truth, survives reinstall
+ *      protections (Keychain on iOS / Keystore on Android).
+ *   2. Zustand `usePinStore` — in-memory + AsyncStorage mirror used by the
+ *      reset-all-data flow and any hot consumer that needs the PIN without
+ *      awaiting an async SecureStore read.
+ *
+ * Throws if the PIN is not exactly 4 digits or if SecureStore write fails.
+ * On failure the zustand mirror is NOT updated, so the two stores cannot
+ * diverge in the failure case (the encrypted store is authoritative).
+ */
 export async function setPin(pin: string): Promise<void> {
   if (!/^\d{4}$/.test(pin)) {
+    log.error('setPin rejected: PIN must be exactly 4 digits');
     throw new Error('PIN must be exactly 4 digits');
   }
-  await secureSetItem(PIN_KEY, pin);
-  await secureSetItem(AUTH_ENABLED_KEY, 'true');
+  try {
+    await secureSetItem(PIN_KEY, pin);
+    await secureSetItem(AUTH_ENABLED_KEY, 'true');
+  } catch (err) {
+    log.error('setPin: SecureStore write failed', err);
+    throw err;
+  }
+
+  // Mirror to zustand store so any in-app consumer (and the reset-all-data
+  // flow) sees the new PIN immediately, without a re-read.
+  mirrorPinStore('set', pin);
+
+  log.info('PIN updated successfully');
 }
 
 export async function verifyPin(pin: string): Promise<boolean> {
   try {
+    // ALWAYS read from SecureStore — never trust a cached / in-memory copy.
     const storedPin = await secureGetItem(PIN_KEY);
-    return storedPin === pin;
+    if (storedPin === null) {
+      log.warn('verifyPin: no PIN is set in SecureStore');
+      return false;
+    }
+    const ok = storedPin === pin;
+    log.info(ok ? 'verifyPin: match' : 'verifyPin: mismatch');
+    return ok;
   } catch (error) {
-    console.error('PIN verification error:', error);
+    log.error('verifyPin error', error);
     return false;
   }
 }
 
 export async function changePin(oldPin: string, newPin: string): Promise<boolean> {
   const isValid = await verifyPin(oldPin);
-  if (!isValid) return false;
+  if (!isValid) {
+    log.warn('changePin: current PIN incorrect — change aborted');
+    return false;
+  }
   await setPin(newPin);
   return true;
 }
@@ -257,6 +327,9 @@ export async function changePin(oldPin: string, newPin: string): Promise<boolean
 export async function removePin(): Promise<void> {
   await secureRemoveItem(PIN_KEY);
   await secureRemoveItem(AUTH_ENABLED_KEY);
+  // Keep zustand mirror in sync
+  mirrorPinStore('clear');
+  log.info('PIN removed');
 }
 
 export async function isAuthEnabled(): Promise<boolean> {

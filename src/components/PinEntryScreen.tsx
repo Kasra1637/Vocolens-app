@@ -2,38 +2,41 @@
  * PinEntryScreen
  *
  * Unified PIN creation (setup) and PIN verification (verify) screen.
- * Input is driven entirely by the native device number-pad keyboard via a
- * hidden zero-size TextInput — no custom numpad tiles rendered at all.
+ * Input is driven 100% by the in-app PinKeypad — NO native soft-keyboard,
+ * number-pad or system dialog is ever shown. This guarantees identical UX
+ * on iOS and Android and removes a class of "keyboard never opens" bugs.
  *
- * mode="setup"  — first-time creation
- *   Screen 1 "Enter Your PIN":    user types 4 digits on the native keypad.
- *   Screen 2 "Confirm Your PIN":  user re-enters the same 4 digits.
+ * mode="setup"  — first-time creation or change-PIN new-PIN step
+ *   Phase 1 "Enter Your New PIN":   user types 4 digits + taps OK.
+ *   Phase 2 "Confirm Your New PIN": user re-enters the same 4 digits + OK.
  *     · Each dot turns green ✓ (position matches) or red ✗ (mismatch) as
- *       each key is pressed, giving live per-digit feedback.
- *     · Full match → setPin() → onComplete().
- *     · Full mismatch → shake + error, clear and retry.
+ *       digits land, giving live per-digit feedback.
+ *     · OK on a full match → setPin() → onComplete().
+ *     · OK on a full mismatch → shake + error, clear and retry.
  *
- * mode="verify" (default) — unlock
- *   User types 4 digits → verifyPin() → onSuccess() on match.
+ * mode="verify" (default) — unlock or change-PIN current-PIN step
+ *   User types 4 digits + OK → verifyPin() → onSuccess() on match.
  *   Shake + remaining-attempts warning on mismatch.
  *   Locks out after maxAttempts.
- *
- * Tapping anywhere on the dot row re-focuses the hidden input so the
- * keyboard re-opens if the user dismissed it.
  */
 
-import React, { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
-  Keyboard,
-  Platform,
-  StyleSheet,
-} from 'react-native';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
-/** Imperative handle — lets a parent (e.g. a Modal's onShow) force keyboard open */
+/**
+ * Imperative handle.
+ *
+ * `focusKeyboard()` is kept for backward compatibility with existing call
+ * sites (e.g. settings.tsx's <Modal onShow>). The in-app keypad is always
+ * visible, so the method is a no-op — but keeping the surface unchanged
+ * means we don't have to touch parents.
+ */
 export interface PinEntryScreenHandle {
   focusKeyboard: () => void;
 }
@@ -48,9 +51,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Lock, Check, X } from 'lucide-react-native';
-import { successHaptic, confirmHaptic, errorHaptic, tapHaptic } from '@/lib/haptics';
+import { successHaptic, confirmHaptic, errorHaptic } from '@/lib/haptics';
 import { setPin, verifyPin } from '@/lib/auth-service';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
+import { PinKeypad } from './PinKeypad';
 
 type SetupPhase = 'create' | 'confirm';
 
@@ -63,9 +67,13 @@ interface PinEntryScreenProps {
   title?: string;
   subtitle?: string;
   maxAttempts?: number;
-  /** Extra ms added to the Android focus delay — use when mounted inside a Modal */
+  /** Kept for API compatibility; no longer used (no native keyboard). */
   androidFocusDelay?: number;
+  /** PIN length. Existing app standard is 4. */
+  maxLength?: number;
 }
+
+const DEFAULT_PIN_LENGTH = 4;
 
 export const PinEntryScreen = forwardRef<PinEntryScreenHandle, PinEntryScreenProps>(
 function PinEntryScreen({
@@ -75,12 +83,10 @@ function PinEntryScreen({
   title,
   subtitle,
   maxAttempts = 5,
-  androidFocusDelay = 0,
+  maxLength = DEFAULT_PIN_LENGTH,
 }: PinEntryScreenProps, ref) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors   = THEME_COLORS[selectedTheme];
-
-  const inputRef = useRef<TextInput>(null);
 
   // shared state
   const [currentPin, setCurrentPin] = useState('');
@@ -114,177 +120,116 @@ function PinEntryScreen({
     );
   }, [shakeX]);
 
-  // ── focus helpers ────────────────────────────────────────────────────────
-  // Robust focus: a single focus() call is unreliable inside a Modal because
-  // it races the modal's present animation (iOS) and the activity transition
-  // (Android). We blur first to clear any stale focus state, then attempt
-  // focus on a short escalating schedule. Works across iOS / Android and
-  // re-tries until either the keyboard opens or we run out of attempts.
-  const focusAttemptsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // No-op imperative handle (the in-app keypad is always visible)
+  useImperativeHandle(ref, () => ({ focusKeyboard: () => {} }), []);
 
-  const clearFocusAttempts = useCallback(() => {
-    focusAttemptsRef.current.forEach((t) => clearTimeout(t));
-    focusAttemptsRef.current = [];
-  }, []);
-
-  const forceFocus = useCallback(() => {
-    if (isLocked || busy || matched) return;
-    clearFocusAttempts();
-
-    const tryFocus = () => {
-      const node = inputRef.current;
-      if (!node) return;
-      // Blur briefly so iOS re-evaluates the focus & shows the keyboard
-      // even if React thinks the input is already focused.
-      try { node.blur(); } catch {}
-      try { node.focus(); } catch {}
-    };
-
-    // Schedule on the next frame plus a few fallback attempts. Android's
-    // input-method service typically attaches between 200–400 ms after a
-    // modal opens; iOS is usually <100 ms but can drift on slow devices.
-    const schedule = Platform.OS === 'android'
-      ? [0, 150 + androidFocusDelay, 350 + androidFocusDelay, 650 + androidFocusDelay]
-      : [0, 60, 200, 450];
-
-    schedule.forEach((d) => {
-      focusAttemptsRef.current.push(setTimeout(tryFocus, d));
-    });
-  }, [isLocked, busy, matched, androidFocusDelay, clearFocusAttempts]);
-
-  // Exposed to the parent Modal — called from onShow as the most reliable
-  // signal that the modal is fully on screen.
-  useImperativeHandle(ref, () => ({
-    focusKeyboard: () => {
-      forceFocus();
-    },
-  }), [forceFocus]);
-
-  // Focus on mount and whenever the setup phase changes
+  // Reset input when switching setup phase
   useEffect(() => {
-    if (isLocked) {
-      Keyboard.dismiss();
-    } else {
-      forceFocus();
-    }
-    return clearFocusAttempts;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLocked, setupPhase]);
+    setCurrentPin('');
+    setErrorMsg('');
+  }, [setupPhase]);
 
-  // Dismiss keyboard once matched/saved
-  useEffect(() => {
-    if (matched) {
-      clearFocusAttempts();
-      Keyboard.dismiss();
-    }
-  }, [matched, clearFocusAttempts]);
-
-  // If the user swipes / closes the keyboard while still in an entry state,
-  // re-open it on the next tap by listening for keyboardDidHide and
-  // re-arming focus. This makes "tap anywhere to reopen" work even after
-  // the user explicitly dismissed the keypad.
-  useEffect(() => {
-    if (isLocked || matched || busy) return;
-    const sub = Keyboard.addListener('keyboardDidHide', () => {
-      // Re-focus only if the user has not yet finished entering 4 digits
-      // (avoids fighting the modal close transition after success).
-      if (!isLocked && !matched && !busy && currentPin.length < 4) {
-        // Slight delay lets the OS finish the hide animation before we
-        // ask it to show the keypad again.
-        focusAttemptsRef.current.push(setTimeout(() => {
-          inputRef.current?.focus();
-        }, 120));
-      }
-    });
-    return () => sub.remove();
-  }, [isLocked, matched, busy, currentPin.length]);
-
-  // ── text input handler ───────────────────────────────────────────────────
-  const handleChange = useCallback(
-    async (text: string) => {
+  // ── keypad handlers ──────────────────────────────────────────────────────
+  const handleDigit = useCallback(
+    (digit: string) => {
       if (busy || matched || isLocked) return;
-
-      // Strip non-digits, cap at 4
-      const digits = text.replace(/[^\d]/g, '').slice(0, 4);
-      setCurrentPin(digits);
+      setCurrentPin((prev) => {
+        if (prev.length >= maxLength) return prev;
+        return prev + digit;
+      });
       if (errorMsg) setErrorMsg('');
-
-      if (digits.length < 4) return;
-
-      // ── 4 digits entered ────────────────────────────────────────────────
-      if (mode === 'setup') {
-        if (setupPhase === 'create') {
-          confirmHaptic();
-          setFirstPin(digits);
-          setTimeout(() => {
-            setCurrentPin('');
-            setSetupPhase('confirm');
-          }, 300);
-          return;
-        }
-
-        // confirm phase
-        if (digits !== firstPin) {
-          triggerShake();
-          setErrorMsg("PINs don't match — try again");
-          setTimeout(() => setCurrentPin(''), 500);
-          return;
-        }
-
-        // match — save
-        confirmHaptic();
-        setMatched(true);
-        setBusy(true);
-        try {
-          await setPin(digits);
-          successHaptic();
-          setTimeout(() => onComplete?.(), 600);
-        } catch {
-          setErrorMsg('Could not save PIN. Please try again.');
-          triggerShake();
-          setBusy(false);
-          setMatched(false);
-          setCurrentPin('');
-        }
-        return;
-      }
-
-      // verify mode
-      setBusy(true);
-      const valid = await verifyPin(digits);
-      setBusy(false);
-
-      if (valid) {
-        successHaptic();
-        Keyboard.dismiss();
-        onSuccess?.();
-        return;
-      }
-
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      triggerShake();
-
-      if (newAttempts >= maxAttempts) {
-        setErrorMsg('Too many incorrect attempts. Please wait and try again.');
-        Keyboard.dismiss();
-      } else {
-        const remaining = maxAttempts - newAttempts;
-        setErrorMsg(
-          remaining === 1
-            ? 'Incorrect PIN — 1 attempt remaining.'
-            : `Incorrect PIN — ${remaining} attempts remaining.`,
-        );
-      }
-      setTimeout(() => setCurrentPin(''), 500);
     },
-    [
-      busy, matched, isLocked, errorMsg,
-      mode, setupPhase, firstPin,
-      attempts, maxAttempts,
-      triggerShake, onComplete, onSuccess,
-    ],
+    [busy, matched, isLocked, maxLength, errorMsg],
   );
+
+  const handleBackspace = useCallback(() => {
+    if (busy || matched || isLocked) return;
+    setCurrentPin((prev) => prev.slice(0, -1));
+    if (errorMsg) setErrorMsg('');
+  }, [busy, matched, isLocked, errorMsg]);
+
+  const handleSubmit = useCallback(async () => {
+    if (busy || matched || isLocked) return;
+    if (currentPin.length !== maxLength) return;
+
+    // ── setup mode ────────────────────────────────────────────────────────
+    if (mode === 'setup') {
+      if (setupPhase === 'create') {
+        confirmHaptic();
+        setFirstPin(currentPin);
+        // brief pause so the user sees their 4 dots before the phase swap
+        setTimeout(() => setSetupPhase('confirm'), 220);
+        return;
+      }
+
+      // confirm phase
+      if (currentPin !== firstPin) {
+        triggerShake();
+        setErrorMsg("PINs don't match — try again");
+        setTimeout(() => setCurrentPin(''), 500);
+        return;
+      }
+
+      // match — persist
+      confirmHaptic();
+      setMatched(true);
+      setBusy(true);
+      try {
+        await setPin(currentPin);
+        successHaptic();
+        // Slight delay so the user sees the four green ✓ dots before the
+        // parent navigates away.
+        setTimeout(() => onComplete?.(), 600);
+      } catch (err) {
+        console.error('[PinEntryScreen] setPin failed:', err);
+        setErrorMsg('Could not save PIN. Please try again.');
+        triggerShake();
+        setBusy(false);
+        setMatched(false);
+        setCurrentPin('');
+      }
+      return;
+    }
+
+    // ── verify mode ───────────────────────────────────────────────────────
+    setBusy(true);
+    let valid = false;
+    try {
+      valid = await verifyPin(currentPin);
+    } catch (err) {
+      console.error('[PinEntryScreen] verifyPin error:', err);
+      valid = false;
+    }
+    setBusy(false);
+
+    if (valid) {
+      successHaptic();
+      onSuccess?.();
+      return;
+    }
+
+    const newAttempts = attempts + 1;
+    setAttempts(newAttempts);
+    triggerShake();
+
+    if (newAttempts >= maxAttempts) {
+      setErrorMsg('Too many incorrect attempts. Please wait and try again.');
+    } else {
+      const remaining = maxAttempts - newAttempts;
+      setErrorMsg(
+        remaining === 1
+          ? 'Incorrect PIN — 1 attempt remaining.'
+          : `Incorrect PIN — ${remaining} attempts remaining.`,
+      );
+    }
+    setTimeout(() => setCurrentPin(''), 500);
+  }, [
+    busy, matched, isLocked,
+    currentPin, maxLength,
+    mode, setupPhase, firstPin,
+    attempts, maxAttempts,
+    triggerShake, onComplete, onSuccess,
+  ]);
 
   // ── heading / subtitle ───────────────────────────────────────────────────
   const headingText = (): string => {
@@ -300,15 +245,12 @@ function PinEntryScreen({
   };
 
   // ── dot row ──────────────────────────────────────────────────────────────
-  // confirm step: green ✓ if digit matches first PIN at that index, red ✗ if not.
-  // matched state: all four dots green ✓.
-  // create / verify: filled circle per digit typed, empty otherwise.
   const renderDots = () => {
     const isConfirmStep = mode === 'setup' && setupPhase === 'confirm';
 
     return (
       <Animated.View style={[styles.dotRow, dotAnimStyle]}>
-        {[0, 1, 2, 3].map((i) => {
+        {Array.from({ length: maxLength }).map((_, i) => {
           const isTyped = currentPin.length > i;
 
           if (matched && isTyped) {
@@ -359,28 +301,7 @@ function PinEntryScreen({
         end={{ x: 0, y: 1 }}
         style={{ flex: 1 }}
       >
-        <SafeAreaView style={{ flex: 1 }}>
-          {/*
-            Hidden zero-size TextInput — the sole source of input.
-            Placed inside layout bounds (not absolute off-screen) so Android's
-            focus system can always reach it.
-          */}
-          <TextInput
-            ref={inputRef}
-            value={currentPin}
-            onChangeText={handleChange}
-            keyboardType="number-pad"
-            inputMode="numeric"
-            textContentType="oneTimeCode"
-            maxLength={4}
-            autoFocus
-            caretHidden
-            secureTextEntry
-            showSoftInputOnFocus
-            editable={!busy && !matched && !isLocked}
-            style={styles.hiddenInput}
-            accessibilityLabel="PIN entry"
-          />
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
 
           <View style={styles.content}>
 
@@ -399,7 +320,6 @@ function PinEntryScreen({
               </View>
               <View style={{ alignItems: 'center', gap: 8 }}>
                 <Text style={styles.heading}>{headingText()}</Text>
-                {/* key cross-fades subtitle when phase changes */}
                 <Animated.Text
                   key={setupPhase}
                   entering={FadeIn.duration(220)}
@@ -410,7 +330,7 @@ function PinEntryScreen({
               </View>
             </Animated.View>
 
-            {/* Dots — tap to re-open keyboard if dismissed */}
+            {/* Dots + error message */}
             {isLocked ? (
               <Animated.View entering={FadeIn.duration(300)} style={styles.lockedArea}>
                 <Text style={styles.lockedText}>
@@ -419,47 +339,30 @@ function PinEntryScreen({
                 </Text>
               </Animated.View>
             ) : (
-              <Pressable
-                onPress={() => { tapHaptic(); forceFocus(); }}
-                accessibilityRole="button"
-                accessibilityLabel="Tap to open keypad"
-                style={styles.dotArea}
-              >
+              <View style={styles.dotArea}>
                 {errorMsg !== '' && (
                   <Animated.Text entering={FadeIn.duration(200)} style={styles.errorText}>
                     {errorMsg}
                   </Animated.Text>
                 )}
                 {renderDots()}
-                <Text style={styles.tapHint}>Tap to open keypad</Text>
-              </Pressable>
+              </View>
             )}
 
-            {/* Bottom spacer keeps layout stable when keyboard is open */}
-            <View style={styles.bottomSpacer} />
+            {/* In-app numeric keypad — always visible, no native keyboard */}
+            {!isLocked && (
+              <PinKeypad
+                value={currentPin}
+                maxLength={maxLength}
+                disabled={busy || matched}
+                onDigit={handleDigit}
+                onBackspace={handleBackspace}
+                onSubmit={handleSubmit}
+                style={styles.keypad}
+              />
+            )}
 
           </View>
-
-          {/*
-            Full-screen invisible tap target rendered ON TOP of the content
-            layer with pointerEvents="box-only" so any tap anywhere on the
-            screen re-focuses the hidden TextInput and re-opens the native
-            numeric keypad. Required by the PIN-change UX spec:
-            "tapping anywhere on the PIN input area should immediately
-            reopen the native numeric keypad."
-
-            This sits above the inner dot Pressable, but both do the same
-            thing (forceFocus + haptic) so no interaction is lost.
-          */}
-          {!isLocked && !matched && (
-            <Pressable
-              onPress={() => { tapHaptic(); forceFocus(); }}
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-              style={StyleSheet.absoluteFill}
-              pointerEvents="box-only"
-            />
-          )}
         </SafeAreaView>
       </LinearGradient>
     </View>
@@ -467,32 +370,18 @@ function PinEntryScreen({
 });
 
 const styles = StyleSheet.create({
-  // iOS skips the soft-keyboard for a TextInput with opacity:0 because it
-  // treats the field as invisible. opacity:0.01 keeps it focusable while
-  // remaining imperceptible to the user. The 1x1 size also matters — Android
-  // can refuse to attach the IME to a zero-sized input.
-  hiddenInput: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 1,
-    height: 1,
-    opacity: 0.01,
-    color: 'transparent',
-    backgroundColor: 'transparent',
-  },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 32,
+    paddingBottom: 12,
   },
   topArea: {
     alignItems: 'center',
     gap: 16,
-    marginTop: 24,
+    marginTop: 16,
   },
   lockBadge: {
     width: 82,
@@ -520,8 +409,8 @@ const styles = StyleSheet.create({
   dotArea: {
     width: '100%',
     alignItems: 'center',
-    gap: 18,
-    paddingVertical: 16,
+    gap: 14,
+    paddingVertical: 8,
   },
   dotRow: {
     flexDirection: 'row',
@@ -544,12 +433,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,99,99,0.85)',
     borderColor: 'rgba(255,99,99,1)',
   },
-  tapHint: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.45)',
-    textAlign: 'center',
-  },
   errorText: {
     fontFamily: 'Inter_500Medium',
     fontSize: 13,
@@ -567,7 +450,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  bottomSpacer: {
-    height: 40,
+  keypad: {
+    width: '100%',
+    marginTop: 8,
   },
 });
