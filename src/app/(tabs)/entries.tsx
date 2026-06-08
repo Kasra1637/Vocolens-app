@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -67,7 +67,7 @@ import {
 } from "@/lib/types";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { RecommendationCard } from "@/components/RecommendationCard";
-import { generateRecommendation } from "@/lib/api/openrouter-service";
+// generateRecommendation removed — recommendation comes from /api/analyze response
 
 // Display types for UI (capitalized versions)
 type DisplayEmotion =

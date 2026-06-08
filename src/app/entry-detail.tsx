@@ -71,7 +71,7 @@ import EmotionBreakdownCard from "@/components/EmotionBreakdownCard";
 import EmotionCorrectionModal from "@/components/EmotionCorrectionModal";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { queryKeys } from "@/lib/hooks";
-import { analyzeWithOpenRouter, generateRecommendation } from "@/lib/api/openrouter-service";
+import { analyzeWithOpenRouter } from "@/lib/api/openrouter-service";
 import { useQueryClient } from "@tanstack/react-query";
 
 const ALL_EMOTIONS: EmotionType[] = [
@@ -113,7 +113,7 @@ export default function EntryDetailScreen() {
   const onBarContainerLayout = useCallback((e: LayoutChangeEvent) => {
     setBarContainerWidth(e.nativeEvent.layout.width);
   }, []);
-  const [isGeneratingRecommendation, setIsGeneratingRecommendation] = useState(false);
+  // isGeneratingRecommendation declared below (always false — no separate API call)
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   // Time is always displayed in the device's local 12-hour format.
