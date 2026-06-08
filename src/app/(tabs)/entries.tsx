@@ -668,43 +668,14 @@ function EntryCard({
   isDarkMode = false,
 }: EntryCardProps) {
   // ── Recommendation state ───────────────────────────────────────────────────
-  // One generation per entry. Seed immediately from persisted aiReflection.
-  const [recommendationText, setRecommendationText] = useState<string | null>(
+  // Recommendation text is always populated from the /api/analyze response's
+  // recommendation field at save time — no separate /api/recommend call needed.
+  const [recommendationText] = useState<string | null>(
     entry.aiReflection?.trim() || null,
   );
-  const [isGenerating, setIsGenerating] = useState(false);
-  const hasFetched = useRef(false);
+  const isGenerating = false;
 
   const updateEntry = useJournalStore((s) => s.updateEntry);
-
-  const fetchRecommendation = useCallback(async () => {
-    if (!entry.transcript?.trim() || isGenerating) return;
-    setIsGenerating(true);
-    try {
-      const result = await generateRecommendation(
-        entry.transcript,
-        entry.primaryEmotion,
-      );
-      const text = result.advice;
-      setRecommendationText(text);
-      // Persist to store so entry-detail sees the same text without re-fetching
-      updateEntry(entry.id, { aiReflection: text });
-    } catch (err) {
-      // generateRecommendation never throws — this is just a safety net
-      console.warn("[EntryCard] recommendation error:", err);
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [entry.transcript, entry.primaryEmotion, entry.id, updateEntry]);
-
-  // Auto-generate once per entry — only when no persisted recommendation exists
-  useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-    if (!recommendationText && entry.transcript?.trim()) {
-      fetchRecommendation();
-    }
-  }, []);
 
   // ── Title display ──────────────────────────────────────────────────────────
   // Display the AI-generated title stored on the entry.

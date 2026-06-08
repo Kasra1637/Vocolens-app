@@ -192,32 +192,9 @@ export default function EntryDetailScreen() {
     if (section === "reflection") setSectionReflection((v) => !v);
   };
 
-  // Generate recommendation once — only when entry has no persisted aiReflection
-  const handleGenerateRecommendation = async () => {
-    if (!entry || !entry.transcript || isGeneratingRecommendation) return;
-    setIsGeneratingRecommendation(true);
-    try {
-      // generateRecommendation never throws — 3-path cascade always returns a result
-      const result = await generateRecommendation(
-        entry.transcript,
-        entry.primaryEmotion,
-      );
-      if (result.advice && result.advice.trim().length > 0) {
-        updateEntry(entry.id, { aiReflection: result.advice });
-      }
-    } finally {
-      setIsGeneratingRecommendation(false);
-    }
-  };
-
-  // Auto-generate once per entry — fires only when aiReflection is absent
-  React.useEffect(() => {
-    if (!entry) return;
-    const hasReflection = entry.aiReflection && entry.aiReflection.trim().length > 0;
-    if (!hasReflection && entry.transcript && entry.transcript.trim().length > 0) {
-      handleGenerateRecommendation();
-    }
-  }, [entry?.id]);
+  // Recommendation is always populated from the /api/analyze response's
+  // recommendation field — no separate /api/recommend call needed.
+  const isGeneratingRecommendation = false;
 
   if (!fontsLoaded) return null;
 

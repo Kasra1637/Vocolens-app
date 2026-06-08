@@ -526,7 +526,7 @@ export function useWeeklyReflection(weekOffset: number = 0) {
         return DEMO_REFLECTION;
       }
     },
-    staleTime: 1000 * 60 * 30,
+    staleTime: Infinity, // Never auto-refetch — manual refetch only via pull-to-refresh
     enabled: weekEntries.length >= 1,
   });
 }
