@@ -477,6 +477,7 @@ const styles = StyleSheet.create({
   },
   keypad: {
     width: '100%',
+    alignSelf: 'center',
     marginTop: 8,
   },
 });

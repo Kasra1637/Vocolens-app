@@ -207,14 +207,15 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
     alignSelf: 'center',
+    alignItems: 'center',
     gap: 14,
-    paddingHorizontal: 8,
     paddingBottom: 4,
   },
   row: {
     flexDirection: 'row',
     gap: 14,
     justifyContent: 'center',
+    width: '100%',
   },
   btnAnimWrap: {
     flex: 1,
