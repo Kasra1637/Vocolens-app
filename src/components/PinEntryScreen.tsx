@@ -123,6 +123,20 @@ function PinEntryScreen({
   // No-op imperative handle (the in-app keypad is always visible)
   useImperativeHandle(ref, () => ({ focusKeyboard: () => {} }), []);
 
+  // Hard-reset all state whenever the mode changes (e.g. verify→setup inside
+  // the same modal session) or on first mount. Prevents stale digits / phase
+  // from a previous session leaking into the new screen.
+  useEffect(() => {
+    setCurrentPin('');
+    setErrorMsg('');
+    setSetupPhase('create');
+    setFirstPin('');
+    setMatched(false);
+    setBusy(false);
+    setAttempts(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
   // Reset input when switching setup phase
   useEffect(() => {
     setCurrentPin('');
@@ -233,13 +247,19 @@ function PinEntryScreen({
 
   // ── heading / subtitle ───────────────────────────────────────────────────
   const headingText = (): string => {
+    if (mode === 'setup') {
+      return setupPhase === 'create' ? 'Create New PIN' : 'Confirm New PIN';
+    }
     if (title) return title;
-    if (mode === 'setup' && setupPhase === 'confirm') return 'Confirm Your PIN';
     return 'Enter Your PIN';
   };
 
   const subtitleText = (): string => {
-    if (mode === 'setup' && setupPhase === 'confirm') return 'Re-enter your PIN to confirm.';
+    if (mode === 'setup') {
+      return setupPhase === 'create'
+        ? 'Choose a 4-digit PIN for Vocolens.'
+        : 'Re-enter your new PIN to confirm it.';
+    }
     if (subtitle) return subtitle;
     return 'Use your 4-digit PIN to unlock Vocolens.';
   };
@@ -317,9 +337,15 @@ function PinEntryScreen({
                 <Lock size={38} color="#FFFFFF" strokeWidth={1.8} />
               </View>
               <View style={{ alignItems: 'center', gap: 8 }}>
-                <Text style={styles.heading}>{headingText()}</Text>
                 <Animated.Text
-                  key={setupPhase}
+                  key={`heading-${setupPhase}`}
+                  entering={FadeIn.duration(200)}
+                  style={styles.heading}
+                >
+                  {headingText()}
+                </Animated.Text>
+                <Animated.Text
+                  key={`subtitle-${setupPhase}`}
                   entering={FadeIn.duration(220)}
                   style={styles.subtitle}
                 >
