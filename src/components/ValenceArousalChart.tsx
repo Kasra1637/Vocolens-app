@@ -361,7 +361,7 @@ export default function ValenceArousalChart({
     >
       {/* Header */}
       <View style={{ padding: 20, paddingBottom: 0 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
           <View
             style={{
               width: 40,
@@ -375,28 +375,27 @@ export default function ValenceArousalChart({
           >
             <Activity size={22} color="#FFFFFF" strokeWidth={2} />
           </View>
-          <Text
-            style={{
-              fontFamily: "Inter_600SemiBold",
-              fontSize: 16,
-              color: "#FFFFFF",
-            }}
-          >
-            Emotional Landscape
-          </Text>
+          <View>
+            <Text
+              style={{
+                fontFamily: "Inter_600SemiBold",
+                fontSize: 16,
+                color: "#FFFFFF",
+              }}
+            >
+              Emotional Landscape
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 11,
+                color: "rgba(255,255,255,0.6)",
+              }}
+            >
+              Calm–activated × pleasant–unpleasant grid
+            </Text>
+          </View>
         </View>
-
-        <Text
-          style={{
-            fontFamily: "Inter_400Regular",
-            fontSize: 12,
-            color: "rgba(255,255,255,0.45)",
-            marginBottom: 14,
-          }}
-        >
-          Where your emotions fall on the calm/activated × pleasant/unpleasant
-          grid
-        </Text>
 
         {/* Range Selector — placed under the subtitle */}
         <View

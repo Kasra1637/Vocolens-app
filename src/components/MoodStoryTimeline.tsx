@@ -107,15 +107,26 @@ export function MoodStoryTimeline({
           >
             <BookOpen size={22} color="#FFFFFF" strokeWidth={2} />
           </View>
-          <Text
-            style={{
-              fontFamily: "Inter_600SemiBold",
-              fontSize: 16,
-              color: "#FFFFFF",
-            }}
-          >
-            Mood Story
-          </Text>
+          <View>
+            <Text
+              style={{
+                fontFamily: "Inter_600SemiBold",
+                fontSize: 16,
+                color: "#FFFFFF",
+              }}
+            >
+              Mood Story
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 11,
+                color: "rgba(255,255,255,0.6)",
+              }}
+            >
+              Your emotional rhythm over time
+            </Text>
+          </View>
         </View>
 
         {/* Tab Pills */}

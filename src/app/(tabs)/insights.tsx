@@ -2074,11 +2074,22 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
           >
             <Sparkles size={22} color="#FFFFFF" strokeWidth={2} />
           </View>
-          <Text
-            style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
-          >
-            Emotional Themes
-          </Text>
+          <View>
+            <Text
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
+            >
+              Emotional Themes
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 11,
+                color: "rgba(255,255,255,0.6)",
+              }}
+            >
+              Recurring topics in your journal
+            </Text>
+          </View>
         </View>
 
         <View className="flex-row flex-wrap" style={{ gap: 10 }}>
@@ -2215,11 +2226,22 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
           >
             <Clock size={22} color="#FFFFFF" strokeWidth={2} />
           </View>
-          <Text
-            style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
-          >
-            Time of Day Patterns
-          </Text>
+          <View>
+            <Text
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
+            >
+              Time of Day Patterns
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 11,
+                color: "rgba(255,255,255,0.6)",
+              }}
+            >
+              When your emotions peak and settle
+            </Text>
+          </View>
         </View>
 
         <View className="flex-row flex-wrap" style={{ gap: 12 }}>
@@ -2407,7 +2429,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
       <View className="p-5">
         {/* Header */}
         <View style={{ marginBottom: 16 }}>
-          <View className="flex-row items-center mb-4">
+          <View className="flex-row items-center mb-2">
             <View
               style={{
                 width: 40,
@@ -2421,22 +2443,23 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
             >
               <Brain size={22} color="#FFFFFF" strokeWidth={2} />
             </View>
-            <Text
-              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
-            >
-              Deep Insights
-            </Text>
+            <View>
+              <Text
+                style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
+              >
+                Deep Insights
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.6)",
+                }}
+              >
+                AI-powered patterns and growth signals
+              </Text>
+            </View>
           </View>
-          <Text
-            style={{
-              fontFamily: "Inter_400Regular",
-              color: "rgba(255, 255, 255, 0.7)",
-              fontSize: 12,
-              lineHeight: 22,
-            }}
-          >
-            AI-powered analysis of your emotional patterns and growth
-          </Text>
         </View>
 
         {/* Insight Cards */}

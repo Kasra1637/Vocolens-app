@@ -406,22 +406,10 @@ export function StreakCalendar({
         style={{
           flexDirection: "row",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           marginBottom: 16,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Calendar size={18} color="#FFFFFF" strokeWidth={2} />
-          <Text
-            style={{
-              fontFamily: "Inter_600SemiBold",
-              fontSize: 16,
-              color: "#FFFFFF",
-            }}
-          >
-            Journal Calendar
-          </Text>
-        </View>
         <Animated.View
           style={[
             pillAnimStyle,

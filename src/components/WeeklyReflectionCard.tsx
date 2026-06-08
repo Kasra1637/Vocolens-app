@@ -18,7 +18,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
 import {
-  BookOpen,
+  CalendarDays,
   ChevronDown,
   ChevronUp,
   Leaf,
@@ -119,7 +119,7 @@ export function WeeklyReflectionCard({
                     justifyContent: "center",
                   }}
                 >
-                  <BookOpen size={22} color="#FFFFFF" strokeWidth={2} />
+                  <CalendarDays size={22} color="#FFFFFF" strokeWidth={2} />
                 </View>
                 <View>
                   <View className="flex-row items-center" style={{ gap: 6 }}>

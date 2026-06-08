@@ -341,7 +341,7 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
 
   return (
     <View style={{ marginBottom: 16 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
         <View
           style={{
             width: 40,
@@ -355,28 +355,27 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
         >
           <Zap size={22} color="#FFFFFF" strokeWidth={2} />
         </View>
-        <Text
-          style={{
-            fontFamily: 'Inter_600SemiBold',
-            fontSize: 16,
-            color: '#FFFFFF',
-          }}
-        >
-          Emotional Triggers
-        </Text>
+        <View>
+          <Text
+            style={{
+              fontFamily: 'Inter_600SemiBold',
+              fontSize: 16,
+              color: '#FFFFFF',
+            }}
+          >
+            Emotional Triggers
+          </Text>
+          <Text
+            style={{
+              fontFamily: 'Inter_400Regular',
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.6)',
+            }}
+          >
+            Topics that shift your emotional state
+          </Text>
+        </View>
       </View>
-
-      <Text
-        style={{
-          fontFamily: 'Inter_400Regular',
-          fontSize: 12,
-          color: 'rgba(255, 255, 255, 0.7)',
-          marginBottom: 14,
-          lineHeight: 22,
-        }}
-      >
-        Recurring topics and situations that correlate with your emotional states.
-      </Text>
 
       {/* Time window selector */}
       <View style={{ flexDirection: 'row', gap: 8 }}>
