@@ -2103,6 +2103,31 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
             </View>
           ))}
         </View>
+
+        {/* Actionable takeaway — one concrete sentence for the dominant theme */}
+        {themes.length > 0 && (
+          <View
+            style={{
+              marginTop: 14,
+              padding: 12,
+              borderRadius: 14,
+              backgroundColor: "rgba(255,255,255,0.06)",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.12)",
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Inter_500Medium",
+                fontSize: 12,
+                color: "rgba(255,255,255,0.8)",
+                lineHeight: 18,
+              }}
+            >
+              💡 "{themes[0].label}" appeared {themes[0].count} time{themes[0].count !== 1 ? "s" : ""} — next time it comes up, pause and name the feeling before reacting.
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -2411,8 +2436,11 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
     }
   };
 
-  // Show top 3 insights
-  const topInsights = insights.slice(0, 3);
+  // Show only 1 insight by default to reduce cognitive load.
+  // Users can expand to see more.
+  const [expanded, setExpanded] = useState(false);
+  const visibleInsights = expanded ? insights.slice(0, 5) : insights.slice(0, 1);
+  const hasMore = insights.length > 1;
 
   return (
     <View
@@ -2462,7 +2490,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
         </View>
 
         {/* Insight Cards */}
-        {topInsights.map((insight, index) => {
+        {visibleInsights.map((insight, index) => {
           return (
             <View key={`${insight.category}-${index}`} className="mb-4">
               <Pressable onPress={() => tapHaptic()}>
@@ -2603,14 +2631,14 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
           );
         })}
 
-        {/* View All Insights */}
-        {insights.length > 3 && (
+        {/* Expand / Collapse toggle */}
+        {hasMore && (
           <Pressable
-            onPress={() => tapHaptic()}
+            onPress={() => { tapHaptic(); setExpanded((v) => !v); }}
             style={{
-              backgroundColor: hexToRgba(Colors.primary, 0.15),
-              borderWidth: 2,
-              borderColor: "rgba(255, 255, 255, 0.20)",
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+              borderWidth: 1,
+              borderColor: "rgba(255, 255, 255, 0.15)",
               borderRadius: BorderRadius.large,
               padding: 12,
               alignItems: "center",
@@ -2624,7 +2652,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                 color: "#FFFFFF",
               }}
             >
-              View {insights.length - 3} more insights
+              {expanded ? "Show less" : `See ${insights.length - 1} more insight${insights.length - 1 !== 1 ? "s" : ""}`}
             </Text>
           </Pressable>
         )}

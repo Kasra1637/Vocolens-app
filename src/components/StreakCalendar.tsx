@@ -302,7 +302,7 @@ export function StreakCalendar({
   }, [entries]);
 
   // Stats across all time
-  const { totalDaysJournaled, longestStreak } = useMemo(() => {
+  const { totalDaysJournaled, longestStreak, daysThisMonth } = useMemo(() => {
     const sorted = Object.keys(entryMap).sort();
     const total = sorted.length;
     let longest = 0;
@@ -319,7 +319,15 @@ export function StreakCalendar({
       if (run > longest) longest = run;
       prev = dateStr;
     });
-    return { totalDaysJournaled: total, longestStreak: longest };
+
+    // Count days with entries in the current calendar month
+    const nowYear = today.getFullYear();
+    const nowMonth = today.getMonth();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const monthPrefix = `${nowYear}-${pad(nowMonth + 1)}`;
+    const thisMonth = sorted.filter((d) => d.startsWith(monthPrefix)).length;
+
+    return { totalDaysJournaled: total, longestStreak: longest, daysThisMonth: thisMonth };
   }, [entryMap]);
 
   const grid = useMemo(
@@ -521,23 +529,23 @@ export function StreakCalendar({
         </Text>
       </View>
 
-      {/* ── Stats Row ── */}
+      {/* ── Stats Row — celebrates consistency, not perfection ── */}
       <View style={{ flexDirection: "row", marginTop: 14, gap: 10 }}>
         <StatPill
-          label="Days Journaled"
+          label="This Month"
+          value={String(daysThisMonth)}
+          primaryColor={primaryColor}
+          highlight={daysThisMonth > 0}
+        />
+        <StatPill
+          label="Total Days"
           value={String(totalDaysJournaled)}
           primaryColor={primaryColor}
         />
         <StatPill
-          label="Best Streak"
+          label="Longest Run"
           value={`${longestStreak}d`}
           primaryColor={primaryColor}
-        />
-        <StatPill
-          label="Current"
-          value={`${currentStreak}d`}
-          primaryColor={primaryColor}
-          highlight={currentStreak > 0}
         />
       </View>
 
