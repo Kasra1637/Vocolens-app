@@ -26,7 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
-import { Check, ChevronRight, FlaskConical, X, Settings } from "lucide-react-native";
+import { Check, ChevronRight, FlaskConical, X, Settings, MessageCircle, Shield, Eye, TrendingUp } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -318,13 +318,15 @@ export function PaywallScreen() {
             <Animated.View entering={FadeIn.delay(120).duration(700).easing(SOFT)} style={{ marginTop: 14, marginBottom: 14 }}>
               <View style={{ backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", paddingHorizontal: 16, paddingVertical: 14, gap: 11 }}>
                 {[
-                  { emoji: "🗣️", text: "Put words to feelings you couldn't name before — no blank page, just talk" },
-                  { emoji: "🌊", text: "Catch overwhelm before it builds, instead of after it hits" },
-                  { emoji: "🔁", text: "See looping thoughts and triggers for what they really are" },
-                  { emoji: "📈", text: "Watch patterns become clearer, week after week — privately, on your device" },
+                  { Icon: MessageCircle, text: "Put words to feelings you couldn't name before — no blank page, just talk" },
+                  { Icon: Shield, text: "Catch overwhelm before it builds, instead of after it hits" },
+                  { Icon: Eye, text: "See looping thoughts and triggers for what they really are" },
+                  { Icon: TrendingUp, text: "Watch patterns become clearer, week after week — privately, on your device" },
                 ].map((item, idx) => (
                   <View key={idx} style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Text style={{ fontSize: 16, marginRight: 12, lineHeight: 20 }}>{item.emoji}</Text>
+                    <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+                      <item.Icon size={16} color="#FFFFFF" strokeWidth={2.2} />
+                    </View>
                     <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.88)", fontSize: 13, lineHeight: 19, flex: 1 }}>{item.text}</Text>
                   </View>
                 ))}
