@@ -26,7 +26,6 @@ import {
 } from "./analytics";
 import {
   transcribeAudioWithRetry,
-  isDeepgramConfigured,
 } from "./api/deepgram-service";
 import { analyzeWithOpenRouter, generateRecommendation } from "./api/openrouter-service";
 // Use legacy subpath — v55's top-level export no longer includes

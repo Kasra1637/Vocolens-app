@@ -98,7 +98,6 @@ export default function SettingsScreen() {
   const [changePinVisible, setChangePinVisible] = useState(false);
   // 'verify' = enter current PIN, 'setup' = enter new PIN
   const [changePinStep, setChangePinStep] = useState<'verify' | 'setup'>('verify');
-  const [pendingOldPin, setPendingOldPin] = useState('');
   const changePinVerifyRef = useRef<PinEntryScreenHandle>(null);
   const changePinSetupRef  = useRef<PinEntryScreenHandle>(null);
   // Onboarding Store (for theme and notification time)
@@ -288,7 +287,6 @@ export default function SettingsScreen() {
   // ── Change PIN handlers ────────────────────────────────────────────────────
   const handleOpenChangePinModal = () => {
     tapHaptic();
-    setPendingOldPin('');
     setChangePinStep('verify');
     setChangePinVisible(true);
   };

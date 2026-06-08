@@ -29,7 +29,19 @@ import {
   TopicCategory,
   InsightData,
 } from './types';
-import { WeeklyReflectionResult } from './api/openai-service';
+// WeeklyReflectionResult was previously imported from the now-deleted
+// openai-service.ts. Defined here as the single source of truth.
+export interface WeeklyReflectionResult {
+  narrativeSummary: string;
+  emotionalJourney: string;
+  keyThemes: string[];
+  growthMoment: string;
+  weekAhead: string;
+  dominantEmotion: EmotionType;
+  emotionalRange: string;
+  entryCount: number;
+  weekLabel: string;
+}
 
 // Query Keys
 export const queryKeys = {

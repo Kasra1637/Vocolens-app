@@ -170,7 +170,7 @@ export default function EmotionCorrectionModal({
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(null);
   const [valence, setValence] = useState(aiValence);
   const [arousal, setArousal] = useState(aiArousal);
-  const [correctionMode, setCorrectionMode] = useState<CorrectionMode>("slider");
+  const correctionMode: CorrectionMode = "slider"; // always slider — mode switching was removed
   const [reason, setReason] = useState("");
   const [correctionType, setCorrectionType] = useState<CorrectionType>("intensity");
 

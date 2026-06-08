@@ -224,17 +224,4 @@ export function detectTriggers(
   };
 }
 
-/**
- * Get trigger analysis for all time windows
- */
-export function getComprehensiveTriggerAnalysis(entries: JournalEntry[]): {
-  '7D': TriggerAnalysisResult;
-  '14D': TriggerAnalysisResult;
-  '30D': TriggerAnalysisResult;
-} {
-  return {
-    '7D': detectTriggers(entries, '7D'),
-    '14D': detectTriggers(entries, '14D'),
-    '30D': detectTriggers(entries, '30D'),
-  };
-}
+

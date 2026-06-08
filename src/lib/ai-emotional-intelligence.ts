@@ -43,7 +43,7 @@ interface CachedAnalysis {
 let cachedAnalysis: CachedAnalysis | null = null;
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
-export function clearAICache(): void {
+function clearAICache(): void {
   cachedAnalysis = null;
 }
 
@@ -222,7 +222,7 @@ function validatePriority(priority: string): 'high' | 'medium' | 'low' {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-export async function analyzeWithAI(entries: JournalEntry[]): Promise<AIAnalysisResponse> {
+async function analyzeWithAI(entries: JournalEntry[]): Promise<AIAnalysisResponse> {
   if (entries.length < 5) return getDefaultAnalysis();
 
   try {

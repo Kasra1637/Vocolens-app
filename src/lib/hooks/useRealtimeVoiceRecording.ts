@@ -22,7 +22,7 @@ import {
   TranscriptResult,
 } from '../services/deepgram-realtime-service';
 import { webAudioStreamingService } from '../services/web-audio-streaming-service';
-import { transcribeAudioFile, isDeepgramConfigured } from '../deepgram-transcription-service';
+import { transcribeAudioFile } from '../deepgram-transcription-service';
 import useOnboardingStore from '../state/onboarding-store';
 
 export type PermissionState = 'granted' | 'denied' | 'undetermined';

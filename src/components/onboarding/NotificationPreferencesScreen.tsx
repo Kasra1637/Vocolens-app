@@ -298,9 +298,6 @@ export function NotificationPreferencesScreen() {
   const [selectedDays, setSelectedDays] = useState<Set<DayOfWeek>>(
     new Set(EVERYDAY),
   );
-  const [permissionStatus, setPermissionStatus] = useState<
-    "granted" | "denied" | "undetermined"
-  >("undetermined");
   const [timezone] = useState(getNotificationService().getLocalTimezone());
 
   useEffect(() => {
@@ -309,11 +306,9 @@ export function NotificationPreferencesScreen() {
 
   const checkPermissions = async () => {
     try {
-      const status = await getNotificationService().checkPermissions();
-      setPermissionStatus(status.status);
+      await getNotificationService().checkPermissions();
     } catch (e) {
       console.warn('[NotificationPreferences] checkPermissions error (Expo Go):', (e as Error)?.message);
-      setPermissionStatus('denied');
     }
   };
 
@@ -404,7 +399,6 @@ export function NotificationPreferencesScreen() {
 
     if (!enableNotifications) {
       const status = await getNotificationService().requestPermissions();
-      setPermissionStatus(status.status);
       if (status.granted) {
         setEnableNotifications(true);
       } else {
