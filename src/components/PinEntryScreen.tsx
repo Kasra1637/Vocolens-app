@@ -279,10 +279,8 @@ function PinEntryScreen({
               style={[
                 styles.dot,
                 {
-                  backgroundColor: isTyped ? themeColors.primary : 'transparent',
-                  borderColor: isTyped
-                    ? themeColors.primary
-                    : 'rgba(255,255,255,0.45)',
+                  backgroundColor: isTyped ? '#FFFFFF' : 'transparent',
+                  borderColor: 'rgba(255,255,255,0.45)',
                 },
               ]}
             />
@@ -382,6 +380,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
     marginTop: 16,
+    width: '100%',
   },
   lockBadge: {
     width: 82,
