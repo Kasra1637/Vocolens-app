@@ -887,13 +887,6 @@ function InsightsContent({
           <WelcomeSection user={user} totalEntries={stats.totalEntries} />
         </Animated.View>
 
-        {/* Weekly Reflection Summary */}
-        {entries.length >= 1 && (
-          <Animated.View entering={ENTER_2}>
-            <WeeklyReflectionCard primaryColor={Colors.primary} />
-          </Animated.View>
-        )}
-
         {/* Journal Streak Calendar */}
         <Animated.View entering={ENTER_2}>
           <View className="mb-6">
@@ -904,6 +897,13 @@ function InsightsContent({
             />
           </View>
         </Animated.View>
+
+        {/* Weekly Reflection Summary */}
+        {entries.length >= 1 && (
+          <Animated.View entering={ENTER_2}>
+            <WeeklyReflectionCard primaryColor={Colors.primary} />
+          </Animated.View>
+        )}
 
         {/* Mood Story Timeline — always shown; handles its own empty state */}
         <Animated.View entering={ENTER_3}>
