@@ -46,6 +46,7 @@ import {
   Heart as HeartFace,
   Clock,
   Share2,
+  Brain,
 } from "lucide-react-native";
 import Animated, {
   FadeOut,
@@ -2074,8 +2075,7 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
             <Sparkles size={22} color="#FFFFFF" strokeWidth={2} />
           </View>
           <Text
-            style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
-            className="text-lg"
+            style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
           >
             Emotional Themes
           </Text>
@@ -2216,8 +2216,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
             <Clock size={22} color="#FFFFFF" strokeWidth={2} />
           </View>
           <Text
-            style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
-            className="text-lg"
+            style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
           >
             Time of Day Patterns
           </Text>
@@ -2409,9 +2408,21 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
         {/* Header */}
         <View style={{ marginBottom: 16 }}>
           <View className="flex-row items-center mb-4">
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: "rgba(255, 255, 255, 0.15)",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 12,
+              }}
+            >
+              <Brain size={22} color="#FFFFFF" strokeWidth={2} />
+            </View>
             <Text
-              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
-              className="text-lg"
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
             >
               Deep Insights
             </Text>

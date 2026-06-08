@@ -17,6 +17,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, { Ellipse, Rect, G, Circle, Line } from "react-native-svg";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
+import { Scan } from "lucide-react-native";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import { AnimatedPill } from "@/components/AnimatedPill";
 import {
@@ -226,7 +227,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
               marginRight: 12,
             }}
           >
-            <Text style={{ fontSize: 20 }}>🧘</Text>
+            <Scan size={22} color="#FFFFFF" strokeWidth={2} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.title}>Body Sensation Map</Text>
