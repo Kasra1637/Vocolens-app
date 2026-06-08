@@ -174,6 +174,8 @@ export default function SpeakScreen() {
     null,
   );
   const recordingDurationRef = useRef(0);
+  // Lock to prevent double-tap on stop button triggering duplicate API calls
+  const isAnalyzingRef = useRef(false);
 
   // Emotion reflection state
   const [showReflection, setShowReflection] = useState(false);
@@ -340,6 +342,9 @@ export default function SpeakScreen() {
   };
 
   const stopRecording = async () => {
+    // Prevent duplicate calls if user double-taps or timeout retries fire
+    if (isAnalyzingRef.current) return;
+    isAnalyzingRef.current = true;
     try {
       heavyHaptic();
       setRecordingState("processing");
@@ -430,6 +435,8 @@ export default function SpeakScreen() {
       console.error("Failed to stop recording:", error);
       setRecordingState("idle");
       errorHaptic();
+    } finally {
+      isAnalyzingRef.current = false;
     }
   };
 

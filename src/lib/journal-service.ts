@@ -627,27 +627,9 @@ export async function createJournalEntry(
   if (reflectionOverride && preTranscribedText) {
     transcript = preTranscribedText;
 
-    // Fetch the AI title (and reflection) upfront so the entry is stored with
-    // its final title from the very first write — no follow-up update needed.
-    let aiTitle: string | undefined;
-    let aiReflectionText: string | undefined;
-    try {
-      const orResult = await analyzeWithOpenRouter(transcript);
-      if (
-        orResult.title &&
-        orResult.title.trim().length > 0 &&
-        !/^(journal entry|untitled|entry|new entry)$/i.test(orResult.title.trim())
-      ) {
-        aiTitle = orResult.title.trim();
-      }
-      if (orResult.reflection && orResult.reflection.trim().length > 0) {
-        aiReflectionText = orResult.reflection;
-      }
-    } catch (err) {
-      console.warn("[createJournalEntry] AI title fetch failed, using local fallback:", err);
-    }
-
-    // Local title fallback: first meaningful sentence fragment (3-6 words)
+    // Derive title locally from transcript content — no additional API call.
+    // The analysis endpoint was already called by the recording screen to get
+    // emotion suggestions; calling it again here doubles the billing.
     const deriveLocalTitle = (text: string): string => {
       const clean = text.replace(/\s+/g, " ").trim();
       const sentences = clean.split(/[.!?\n]+/).map((s) => s.trim()).filter(Boolean);
@@ -663,7 +645,7 @@ export async function createJournalEntry(
       const fallbackWords = clean.split(/\s+/).slice(0, 6);
       return fallbackWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
     };
-    const generatedTitle = aiTitle ?? deriveLocalTitle(transcript);
+    const generatedTitle = deriveLocalTitle(transcript);
 
     analysis = {
       emotions: reflectionOverride.emotions,
@@ -698,7 +680,7 @@ export async function createJournalEntry(
       topics: ["reflection"],
       title: generatedTitle,
       analysis: "Journal entry recorded with user reflection.",
-      reflection: aiReflectionText,
+      reflection: undefined,
       valence: reflectionOverride.valence,
       arousal: reflectionOverride.arousal,
       suggestedBodySensations: [],
