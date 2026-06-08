@@ -205,18 +205,17 @@ function PatternsView({
   entries: JournalEntry[];
   primaryColor: string;
 }) {
-  const { weekdayStats, bestDay, worstDay, insight, mostActiveDay } =
+  const { weekdayStats, bestDay, worstDay, insight, mostActiveDay, dominantEmotions } =
     useMemo(() => {
       // Count last 30 days
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - 30);
 
       const stats: { total: number; count: number; entryCount: number }[] =
-        Array.from({ length: 7 }, () => ({
-          total: 0,
-          count: 0,
-          entryCount: 0,
-        }));
+        Array.from({ length: 7 }, () => ({ total: 0, count: 0, entryCount: 0 }));
+
+      // Track dominant emotion per weekday
+      const emotionCounts: Record<string, number>[] = Array.from({ length: 7 }, () => ({}));
 
       entries.forEach((e) => {
         if (new Date(e.createdAt) < cutoff) return;
@@ -224,6 +223,14 @@ function PatternsView({
         stats[dow].total += e.emotionIntensity;
         stats[dow].count++;
         stats[dow].entryCount++;
+        const pe = e.primaryEmotion ?? "happiness";
+        emotionCounts[dow][pe] = (emotionCounts[dow][pe] || 0) + 1;
+      });
+
+      const dominantEmotions: (string | null)[] = emotionCounts.map((counts) => {
+        const ents = Object.entries(counts);
+        if (ents.length === 0) return null;
+        return ents.sort((a, b) => b[1] - a[1])[0][0];
       });
 
       const avgs = stats.map((s) =>
@@ -258,7 +265,7 @@ function PatternsView({
         insight = `You journal most consistently on ${WEEKDAYS[mostActiveDay]}s.`;
       }
 
-      return { weekdayStats: avgs, bestDay, worstDay, insight, mostActiveDay };
+      return { weekdayStats: avgs, bestDay, worstDay, insight, mostActiveDay, dominantEmotions };
     }, [entries]);
 
   const hasData = weekdayStats.some((v) => v !== null);
@@ -347,9 +354,10 @@ function PatternsView({
                           fontFamily: "Inter_600SemiBold",
                           fontSize: 11,
                           color: "rgba(255,255,255,0.9)",
+                          textTransform: "capitalize",
                         }}
                       >
-                        {val}
+                        {dominantEmotions[i] ?? val}
                       </Text>
                     )}
                     {val === null && (

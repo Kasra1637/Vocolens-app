@@ -404,56 +404,9 @@ export function StreakCalendar({
       {/* ── Header ── */}
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-end",
           marginBottom: 16,
         }}
       >
-        <Animated.View
-          style={[
-            pillAnimStyle,
-            {
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 4,
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 20,
-              backgroundColor: "rgba(255,255,255,0.12)",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.25)",
-            },
-          ]}
-        >
-          {/* Celebratory glow ring */}
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              pillGlowStyle,
-              {
-                position: "absolute",
-                top: -3,
-                left: -3,
-                right: -3,
-                bottom: -3,
-                borderRadius: 22,
-                borderWidth: 2,
-                borderColor: "rgba(255,255,255,0.85)",
-              },
-            ]}
-          />
-          <Flame size={13} color="#FFFFFF" strokeWidth={2.5} />
-          <Text
-            style={{
-              fontFamily: "Inter_700Bold",
-              fontSize: 13,
-              color: "#FFFFFF",
-            }}
-          >
-            {currentStreak}
-          </Text>
-        </Animated.View>
       </View>
 
       {/* ── Month Navigation ── */}

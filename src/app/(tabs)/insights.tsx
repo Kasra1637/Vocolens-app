@@ -2171,7 +2171,6 @@ function ThemeChip({ label, count, index }: ThemeChipProps) {
             paddingHorizontal: 8,
             paddingVertical: 2,
             borderRadius: BorderRadius.round,
-            backgroundColor: hexToRgba(Colors.primary, 0.15),
           }}
         >
           <Text
@@ -2230,7 +2229,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
             <Text
               style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
             >
-              Time of Day Patterns
+              Time of Day
             </Text>
             <Text
               style={{
