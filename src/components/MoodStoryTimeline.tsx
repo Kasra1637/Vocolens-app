@@ -375,74 +375,23 @@ function PatternsView({
                     )}
                   </View>
 
-                  {/* Badge */}
-                  {(isBest || isWorst) && (
-                    <View
-                      style={{
-                        paddingHorizontal: 7,
-                        paddingVertical: 3,
-                        borderRadius: 8,
-                        backgroundColor: `${primaryColor}25`,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          fontSize: 9,
-                          color: "#FFFFFF",
-                          textTransform: "uppercase",
-                          letterSpacing: 0.5,
-                        }}
-                      >
-                        {isBest ? "Peak" : "Calm"}
-                      </Text>
-                    </View>
-                  )}
                 </Animated.View>
               );
             })}
           </View>
 
-          {/* Plutchik intensity scale labels */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginTop: 14,
-              paddingHorizontal: 4,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "Inter_500Medium",
-                fontSize: 10,
-                color: "rgba(255,255,255,0.5)",
-              }}
-            >
-              Serenity
-            </Text>
-            <Text
-              style={{
-                fontFamily: "Inter_500Medium",
-                fontSize: 10,
-                color: "rgba(255,255,255,0.5)",
-              }}
-            >
-              Ecstasy
-            </Text>
-          </View>
-
+          {/* Legend — explains what the bars represent */}
           <Text
             style={{
               fontFamily: "Inter_400Regular",
               fontSize: 11,
               color: "rgba(255,255,255,0.45)",
               textAlign: "center",
-              marginTop: 6,
+              marginTop: 14,
               lineHeight: 16,
             }}
           >
-            Gentle feelings on the left · Intense feelings on the right
+            Each bar shows your most frequent emotion that day · Longer bar = higher intensity
           </Text>
 
           {/* Insight callout */}
