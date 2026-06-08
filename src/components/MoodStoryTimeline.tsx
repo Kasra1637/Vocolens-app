@@ -394,31 +394,6 @@ function PatternsView({
             Each bar shows your most frequent emotion that day · Longer bar = higher intensity
           </Text>
 
-          {/* Insight callout */}
-          {insight !== "" && (
-            <Animated.View
-              entering={FadeInDown.delay(350).duration(500)}
-              style={{
-                marginTop: 16,
-                padding: 14,
-                borderRadius: 14,
-                backgroundColor: `${primaryColor}18`,
-                borderWidth: 1,
-                borderColor: `${primaryColor}35`,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "Inter_500Medium",
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.88)",
-                  lineHeight: 22,
-                }}
-              >
-                {insight}
-              </Text>
-            </Animated.View>
-          )}
         </>
       )}
     </View>
