@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Headphones, Leaf, MessageCircle, Waves } from "lucide-react-native";
+import { Headphones, Leaf, MessageCircle, Dumbbell } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   SelfAwarenessType,
@@ -31,7 +31,7 @@ const OPTIONS: Option[] = [
   { id: "deep-focus",      label: "Lost in what I love",  icon: Headphones },
   { id: "no-demands",      label: "No one needs me",      icon: Leaf },
   { id: "talking-aloud",   label: "Thinking out loud",    icon: MessageCircle },
-  { id: "after-movement",  label: "After I move",         icon: Waves },
+  { id: "after-movement",  label: "I exercise",            icon: Dumbbell },
 ];
 
 export function SelfAwarenessScreen() {
