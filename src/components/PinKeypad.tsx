@@ -205,15 +205,15 @@ function KeypadButton({
 const styles = StyleSheet.create({
   wrap: {
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 340,
     alignSelf: 'center',
     alignItems: 'center',
-    gap: 14,
+    gap: 16,
     paddingBottom: 4,
   },
   row: {
     flexDirection: 'row',
-    gap: 14,
+    gap: 16,
     justifyContent: 'center',
     width: '100%',
   },
@@ -221,23 +221,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   btn: {
-    height: 66,
-    borderRadius: 18,
+    height: 72,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.16)',
+    borderColor: 'rgba(255,255,255,0.18)',
+    // Subtle elevation / shadow for depth
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   digitBtn: {
     backgroundColor: 'rgba(255,255,255,0.10)',
+    // Soft inner-glow effect via top border highlight
+    borderTopColor: 'rgba(255,255,255,0.25)',
   },
   backBtn: {
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderColor: 'rgba(255,255,255,0.10)',
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
   },
   okBtn: {
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderColor: 'rgba(255,255,255,0.10)',
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
   },
   btnDisabled: {
     opacity: 0.35,

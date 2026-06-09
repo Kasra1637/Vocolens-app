@@ -397,15 +397,15 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 12,
+    paddingTop: 16,
+    paddingBottom: 24,
+    gap: 32,
   },
   topArea: {
     alignItems: 'center',
     gap: 16,
-    marginTop: 16,
     width: '100%',
   },
   lockBadge: {
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     gap: 14,
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
   dotRow: {
     flexDirection: 'row',
@@ -478,6 +478,5 @@ const styles = StyleSheet.create({
   keypad: {
     width: '100%',
     alignSelf: 'center',
-    marginTop: 8,
   },
 });
