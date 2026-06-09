@@ -54,10 +54,10 @@ export default ({ config }) => ({
       },
     ],
     'expo-updates',
-    // RevenueCat — Expo config plugins auto-link native iOS/Android modules
-    // during `npx expo prebuild`. Required for development builds & EAS Build.
-    'react-native-purchases',
-    'react-native-purchases-ui',
+    // react-native-purchases does NOT ship an Expo config plugin.
+    // Native linking happens automatically via autolinking during `expo prebuild`.
+    // No plugin entry is needed — just include the package in dependencies and
+    // build a development client with EAS Build.
   ],
   owner: 'kasra1637',
   runtimeVersion: '1.0.0',
