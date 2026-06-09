@@ -37,7 +37,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   };
 
   // Derive the darkest colour from the theme's background gradient for seamless merge
-  const barBg = theme.backgroundGradient[2];
+  const barBg = theme.backgroundGradient[1];
 
   const renderIcon = (index: number, isFocused: boolean) => {
     const color = isFocused ? "#FFFFFF" : "rgba(255,255,255,0.45)";
@@ -179,7 +179,7 @@ export default function TabLayout() {
 
   // Re-read on every render so sceneContainerStyle stays in sync when
   // the user changes their theme — never reads a stale cached colour.
-  const sceneBg = THEME_COLORS[selectedTheme].backgroundGradient[2];
+  const sceneBg = THEME_COLORS[selectedTheme].backgroundGradient[1];
 
   return (
     <Tabs

@@ -377,7 +377,7 @@ export default function SettingsScreen() {
 
   if (!fontsLoaded) {
     return (
-      <View className="flex-1" style={{ backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[2] }}>
+      <View className="flex-1" style={{ backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[1] }}>
         <LinearGradient
           colors={THEME_COLORS[selectedTheme].backgroundGradient}
           start={{ x: 0, y: 0 }}
@@ -1475,7 +1475,7 @@ export default function SettingsScreen() {
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
           <View
             style={{
-              backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[2],
+              backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[1],
               borderRadius: 24,
               padding: 24,
               width: "100%",

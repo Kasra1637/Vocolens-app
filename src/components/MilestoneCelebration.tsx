@@ -565,7 +565,7 @@ export function MilestoneCelebration() {
         >
           {/* Card background — theme gradient */}
           <LinearGradient
-            colors={[theme.backgroundGradient[0], theme.backgroundGradient[1], theme.backgroundGradient[2]]}
+            colors={[theme.backgroundGradient[0], theme.backgroundGradient[1]]}
             start={{ x: 0.3, y: 0 }}
             end={{ x: 0.7, y: 1 }}
             style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}

@@ -105,7 +105,7 @@ export default function RootLayout() {
   // Read the user's chosen theme so every background colour adapts —
   // never hardcoded to Midnight Glow's darkest stop.
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const themeBg = THEME_COLORS[selectedTheme].backgroundGradient[2];
+  const themeBg = THEME_COLORS[selectedTheme].backgroundGradient[1];
 
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,

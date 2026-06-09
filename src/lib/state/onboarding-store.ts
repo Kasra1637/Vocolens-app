@@ -99,8 +99,8 @@ export interface ThemeColors {
   gradientStart: string;
   gradientEnd: string;
   accent: string;
-  /** 3-stop screen background gradient, safe for all themes including dark mode */
-  backgroundGradient: [string, string, string];
+  /** 2-stop screen background gradient (top → bottom) */
+  backgroundGradient: [string, string];
   /** 2-stop button gradient */
   buttonGradient: [string, string];
   /** 3-stop mic button gradient for idle state (outer, middle, inner) */
@@ -121,7 +121,7 @@ export const THEME_COLORS: Record<
     gradientStart: "#181624",
     gradientEnd: "#0F0E1A",
     accent: "#A78BFA",
-    backgroundGradient: ["#181624", "#14121F", "#0F0E1A"],
+    backgroundGradient: ["#181624", "#0F0E1A"],
     buttonGradient: ["#9370DB", "#6A3FC0"],
     micButtonGradient: ["#A78BFA", "#9370DB", "#6A3FC0"],
     buttonGlowColor: "rgba(167, 139, 250, 0.5)",
@@ -134,7 +134,7 @@ export const THEME_COLORS: Record<
     gradientStart: "#7B52C8",
     gradientEnd: "#4A2A8F",
     accent: "#9E84EF",
-    backgroundGradient: ["#7B52C8", "#633EAC", "#4A2A8F"],
+    backgroundGradient: ["#7B52C8", "#4A2A8F"],
     buttonGradient: ["#9370DB", "#7A50C0"],
     micButtonGradient: ["#A79BD8", "#9370DB", "#7A50C0"],
     buttonGlowColor: "rgba(167, 155, 216, 0.5)",
@@ -147,7 +147,7 @@ export const THEME_COLORS: Record<
     gradientStart: "#527A55",
     gradientEnd: "#243A26",
     accent: "#9AAC99",
-    backgroundGradient: ["#527A55", "#3B5A3E", "#243A26"],
+    backgroundGradient: ["#527A55", "#243A26"],
     buttonGradient: ["#6D9B6A", "#4A6E47"],
     micButtonGradient: ["#9AAC99", "#6D9B6A", "#4A6E47"],
     buttonGlowColor: "rgba(154, 172, 153, 0.5)",
@@ -160,7 +160,7 @@ export const THEME_COLORS: Record<
     gradientStart: "#7A40B0",
     gradientEnd: "#461878",
     accent: "#9370DB",
-    backgroundGradient: ["#7A40B0", "#602C94", "#461878"],
+    backgroundGradient: ["#7A40B0", "#461878"],
     buttonGradient: ["#7A48B0", "#572E90"],
     micButtonGradient: ["#B784D9", "#7A48B0", "#572E90"],
     buttonGlowColor: "rgba(183, 132, 217, 0.5)",
@@ -173,7 +173,7 @@ export const THEME_COLORS: Record<
     gradientStart: "#A83870",
     gradientEnd: "#6A1040",
     accent: "#9370DB",
-    backgroundGradient: ["#A83870", "#892458", "#6A1040"],
+    backgroundGradient: ["#A83870", "#6A1040"],
     buttonGradient: ["#D44E92", "#A32E6A"],
     micButtonGradient: ["#E87AB4", "#D44E92", "#A32E6A"],
     buttonGlowColor: "rgba(218, 90, 154, 0.5)",
@@ -186,7 +186,7 @@ export const THEME_COLORS: Record<
     gradientStart: "#3A68A8",
     gradientEnd: "#152848",
     accent: "#9370DB",
-    backgroundGradient: ["#3A68A8", "#284878", "#152848"],
+    backgroundGradient: ["#3A68A8", "#152848"],
     buttonGradient: ["#3A75B5", "#1A5090"],
     micButtonGradient: ["#5A8FCC", "#3A75B5", "#1A5090"],
     buttonGlowColor: "rgba(90, 143, 204, 0.5)",
