@@ -28,7 +28,7 @@ const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 
 const HEADLINE_ANIM = FadeIn.duration(900).delay(100).easing(SOFT);
 const SUBHEAD_ANIM  = FadeIn.duration(900).delay(250).easing(SOFT);
-const BUTTON_ANIM   = FadeIn.duration(800).delay(150).easing(SOFT);
+const BUTTON_ANIM   = FadeIn.duration(900).delay(100).easing(SOFT);
 
 export function WelcomeScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -96,11 +96,11 @@ export function WelcomeScreen() {
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 32,
+                  fontSize: 36,
                   textAlign: "center",
                   opacity: 0.92,
                   letterSpacing: 0.2,
-                  lineHeight: 40,
+                  lineHeight: 44,
                 }}
               >
                 Welcome to Vocolens
@@ -124,22 +124,22 @@ export function WelcomeScreen() {
                 Turn your thoughts into clear insights
               </Text>
             </Animated.View>
-
-            {/* CTA button */}
-            {currentPhase === "ready" && (
-              <Animated.View
-                entering={BUTTON_ANIM}
-                style={{ marginTop: 16, width: "100%" }}
-              >
-                <OnboardingCTAButton
-                  label="Start Journaling Free"
-                  onPress={handleGetStarted}
-                  paddingVertical={18}
-                  fontSize={18}
-                />
-              </Animated.View>
-            )}
           </View>
+
+          {/* CTA button — positioned outside the centered area so it never shifts the title */}
+          {currentPhase === "ready" && (
+            <Animated.View
+              entering={BUTTON_ANIM}
+              style={{ paddingHorizontal: 24, paddingBottom: 32 }}
+            >
+              <OnboardingCTAButton
+                label="Start Journaling Free"
+                onPress={handleGetStarted}
+                paddingVertical={18}
+                fontSize={18}
+              />
+            </Animated.View>
+          )}
         </SafeAreaView>
       </LinearGradient>
     </View>
