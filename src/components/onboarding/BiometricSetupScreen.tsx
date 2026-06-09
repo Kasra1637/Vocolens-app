@@ -56,9 +56,9 @@ const BIOMETRIC_POINTS = [
 
 // Privacy points shown when only PIN is available
 const PIN_ONLY_POINTS = [
-  { icon: ShieldCheck,  text: 'Only you can open your journal' },
-  { icon: ShieldCheck,  text: 'A PIN keeps your entries private' },
-  { icon: ShieldCheck,  text: 'Change your PIN anytime in Settings' },
+  { icon: Lock,         text: 'Only you can open your journal' },
+  { icon: Lock,         text: 'A PIN keeps your entries private' },
+  { icon: Lock,         text: 'Change your PIN anytime in Settings' },
 ];
 
 export function BiometricSetupScreen() {
