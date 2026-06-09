@@ -3,21 +3,10 @@
  *
  * Unified PIN creation (setup) and PIN verification (verify) screen.
  * Input is driven 100% by the in-app PinKeypad — NO native soft-keyboard,
- * number-pad or system dialog is ever shown. This guarantees identical UX
- * on iOS and Android and removes a class of "keyboard never opens" bugs.
+ * number-pad or system dialog is ever shown.
  *
  * mode="setup"  — first-time creation or change-PIN new-PIN step
- *   Phase 1 "Enter Your New PIN":   user types 4 digits + taps OK.
- *   Phase 2 "Confirm Your New PIN": user re-enters the same 4 digits + OK.
- *     · Each dot turns green ✓ (position matches) or red ✗ (mismatch) as
- *       digits land, giving live per-digit feedback.
- *     · OK on a full match → setPin() → onComplete().
- *     · OK on a full mismatch → shake + error, clear and retry.
- *
  * mode="verify" (default) — unlock or change-PIN current-PIN step
- *   User types 4 digits + OK → verifyPin() → onSuccess() on match.
- *   Shake + remaining-attempts warning on mismatch.
- *   Locks out after maxAttempts.
  */
 
 import React, {
@@ -29,14 +18,6 @@ import React, {
 } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-/**
- * Imperative handle.
- *
- * `focusKeyboard()` is kept for backward compatibility with existing call
- * sites (e.g. settings.tsx's <Modal onShow>). The in-app keypad is always
- * visible, so the method is a no-op — but keeping the surface unchanged
- * means we don't have to touch parents.
- */
 export interface PinEntryScreenHandle {
   focusKeyboard: () => void;
 }
@@ -60,16 +41,14 @@ type SetupPhase = 'create' | 'confirm';
 
 interface PinEntryScreenProps {
   mode?: 'setup' | 'verify';
-  onComplete?: () => void;   // setup: called after PIN saved
-  onSuccess?: () => void;    // verify: called after PIN verified
-  onCancel?: () => void;     // kept for API compatibility
-  onBack?: () => void;       // kept for API compatibility
+  onComplete?: () => void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  onBack?: () => void;
   title?: string;
   subtitle?: string;
   maxAttempts?: number;
-  /** Kept for API compatibility; no longer used (no native keyboard). */
   androidFocusDelay?: number;
-  /** PIN length. Existing app standard is 4. */
   maxLength?: number;
 }
 
@@ -88,17 +67,14 @@ function PinEntryScreen({
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors   = THEME_COLORS[selectedTheme];
 
-  // shared state
   const [currentPin, setCurrentPin] = useState('');
   const [errorMsg,   setErrorMsg]   = useState('');
   const [busy,       setBusy]       = useState(false);
 
-  // setup-mode state
   const [setupPhase, setSetupPhase] = useState<SetupPhase>('create');
   const [firstPin,   setFirstPin]   = useState('');
   const [matched,    setMatched]    = useState(false);
 
-  // verify-mode state
   const [attempts, setAttempts] = useState(0);
   const isLocked = mode === 'verify' && attempts >= maxAttempts;
 
@@ -120,12 +96,8 @@ function PinEntryScreen({
     );
   }, [shakeX]);
 
-  // No-op imperative handle (the in-app keypad is always visible)
   useImperativeHandle(ref, () => ({ focusKeyboard: () => {} }), []);
 
-  // Hard-reset all state whenever the mode changes (e.g. verify→setup inside
-  // the same modal session) or on first mount. Prevents stale digits / phase
-  // from a previous session leaking into the new screen.
   useEffect(() => {
     setCurrentPin('');
     setErrorMsg('');
@@ -137,7 +109,6 @@ function PinEntryScreen({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
-  // Reset input when switching setup phase
   useEffect(() => {
     setCurrentPin('');
     setErrorMsg('');
@@ -166,17 +137,14 @@ function PinEntryScreen({
     if (busy || matched || isLocked) return;
     if (currentPin.length !== maxLength) return;
 
-    // ── setup mode ────────────────────────────────────────────────────────
     if (mode === 'setup') {
       if (setupPhase === 'create') {
         confirmHaptic();
         setFirstPin(currentPin);
-        // brief pause so the user sees their 4 dots before the phase swap
         setTimeout(() => setSetupPhase('confirm'), 220);
         return;
       }
 
-      // confirm phase
       if (currentPin !== firstPin) {
         triggerShake();
         setErrorMsg("PINs don't match — try again");
@@ -184,15 +152,12 @@ function PinEntryScreen({
         return;
       }
 
-      // match — persist
       confirmHaptic();
       setMatched(true);
       setBusy(true);
       try {
         await setPin(currentPin);
         successHaptic();
-        // Slight delay so the user sees the four green ✓ dots before the
-        // parent navigates away.
         setTimeout(() => onComplete?.(), 600);
       } catch (err) {
         console.error('[PinEntryScreen] setPin failed:', err);
@@ -205,7 +170,6 @@ function PinEntryScreen({
       return;
     }
 
-    // ── verify mode ───────────────────────────────────────────────────────
     setBusy(true);
     let valid = false;
     try {
@@ -248,7 +212,7 @@ function PinEntryScreen({
   // ── heading / subtitle ───────────────────────────────────────────────────
   const headingText = (): string => {
     if (mode === 'setup') {
-      return setupPhase === 'create' ? 'Create New PIN' : 'Confirm New PIN';
+      return setupPhase === 'create' ? 'Create Your PIN' : 'Confirm Your PIN';
     }
     if (title) return title;
     return 'Enter Your PIN';
@@ -258,10 +222,10 @@ function PinEntryScreen({
     if (mode === 'setup') {
       return setupPhase === 'create'
         ? 'Choose a 4-digit PIN for Vocolens.'
-        : 'Re-enter your new PIN to confirm it.';
+        : 'Re-enter your PIN to confirm.';
     }
     if (subtitle) return subtitle;
-    return 'Use your 4-digit PIN to unlock Vocolens.';
+    return 'Use your 4-digit PIN to unlock.';
   };
 
   // ── dot row ──────────────────────────────────────────────────────────────
@@ -275,8 +239,8 @@ function PinEntryScreen({
 
           if (matched && isTyped) {
             return (
-              <View key={i} style={[styles.dot, styles.dotGreen]}>
-                <Check size={11} color="#FFFFFF" strokeWidth={3} />
+              <View key={i} style={[styles.dot, styles.dotFilled, styles.dotGreen]}>
+                <Check size={10} color="#FFFFFF" strokeWidth={3} />
               </View>
             );
           }
@@ -284,10 +248,10 @@ function PinEntryScreen({
           if (isConfirmStep && isTyped) {
             const ok = currentPin[i] === firstPin[i];
             return (
-              <View key={i} style={[styles.dot, ok ? styles.dotGreen : styles.dotRed]}>
+              <View key={i} style={[styles.dot, styles.dotFilled, ok ? styles.dotGreen : styles.dotRed]}>
                 {ok
-                  ? <Check size={11} color="#FFFFFF" strokeWidth={3} />
-                  : <X     size={11} color="#FFFFFF" strokeWidth={3} />
+                  ? <Check size={10} color="#FFFFFF" strokeWidth={3} />
+                  : <X     size={10} color="#FFFFFF" strokeWidth={3} />
                 }
               </View>
             );
@@ -298,10 +262,7 @@ function PinEntryScreen({
               key={i}
               style={[
                 styles.dot,
-                {
-                  backgroundColor: isTyped ? '#FFFFFF' : 'transparent',
-                  borderColor: 'rgba(255,255,255,0.45)',
-                },
+                isTyped && styles.dotFilled,
               ]}
             />
           );
@@ -320,60 +281,48 @@ function PinEntryScreen({
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-
           <View style={styles.content}>
 
-            {/* Lock badge + heading — animated once on mount */}
-            <Animated.View entering={FadeInDown.duration(380)} style={styles.topArea}>
-              <View
-                style={[
-                  styles.lockBadge,
-                  {
-                    borderColor: `${themeColors.primary}60`,
-                    backgroundColor: `${themeColors.primary}22`,
-                  },
-                ]}
+            {/* Header area — icon + text */}
+            <Animated.View entering={FadeInDown.duration(400)} style={styles.headerArea}>
+              <View style={styles.iconCircle}>
+                <Lock size={28} color="#FFFFFF" strokeWidth={1.6} />
+              </View>
+              <Animated.Text
+                key={`heading-${setupPhase}`}
+                entering={FadeIn.duration(200)}
+                style={styles.heading}
               >
-                <Lock size={38} color="#FFFFFF" strokeWidth={1.8} />
-              </View>
-              <View style={{ alignItems: 'center', gap: 8 }}>
-                <Animated.Text
-                  key={`heading-${setupPhase}`}
-                  entering={FadeIn.duration(200)}
-                  style={styles.heading}
-                >
-                  {headingText()}
-                </Animated.Text>
-                <Animated.Text
-                  key={`subtitle-${setupPhase}`}
-                  entering={FadeIn.duration(220)}
-                  style={styles.subtitle}
-                >
-                  {subtitleText()}
-                </Animated.Text>
-              </View>
+                {headingText()}
+              </Animated.Text>
+              <Animated.Text
+                key={`subtitle-${setupPhase}`}
+                entering={FadeIn.duration(220)}
+                style={styles.subtitle}
+              >
+                {subtitleText()}
+              </Animated.Text>
             </Animated.View>
 
-            {/* Dots + error message */}
+            {/* Dots + error */}
             {isLocked ? (
               <Animated.View entering={FadeIn.duration(300)} style={styles.lockedArea}>
                 <Text style={styles.lockedText}>
-                  Too many failed attempts. Please restart the app or wait a
-                  moment and try again.
+                  Too many failed attempts. Please restart the app or wait a moment and try again.
                 </Text>
               </Animated.View>
             ) : (
               <View style={styles.dotArea}>
+                {renderDots()}
                 {errorMsg !== '' && (
                   <Animated.Text entering={FadeIn.duration(200)} style={styles.errorText}>
                     {errorMsg}
                   </Animated.Text>
                 )}
-                {renderDots()}
               </View>
             )}
 
-            {/* In-app numeric keypad — always visible, no native keyboard */}
+            {/* Keypad */}
             {!isLocked && (
               <PinKeypad
                 value={currentPin}
@@ -382,7 +331,6 @@ function PinEntryScreen({
                 onDigit={handleDigit}
                 onBackspace={handleBackspace}
                 onSubmit={handleSubmit}
-                style={styles.keypad}
               />
             )}
 
@@ -397,86 +345,79 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
-    gap: 32,
+    justifyContent: 'space-between',
+    paddingHorizontal: 32,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
-  topArea: {
+  headerArea: {
     alignItems: 'center',
-    gap: 16,
-    width: '100%',
+    gap: 10,
   },
-  lockBadge: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    borderWidth: 1.5,
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
   },
   heading: {
     fontFamily: 'Fraunces_700Bold',
-    fontSize: 28,
+    fontSize: 24,
     color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: 0.2,
   },
   subtitle: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.75)',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.55)',
     textAlign: 'center',
-    lineHeight: 22,
-    maxWidth: '88%',
+    lineHeight: 20,
   },
   dotArea: {
-    width: '100%',
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 12,
+    gap: 16,
   },
   dotRow: {
     flexDirection: 'row',
-    gap: 22,
+    gap: 20,
     justifyContent: 'center',
   },
   dot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  dotFilled: {
+    backgroundColor: '#FFFFFF',
+  },
   dotGreen: {
-    backgroundColor: 'rgba(72,199,142,0.85)',
-    borderColor: 'rgba(72,199,142,1)',
+    backgroundColor: 'rgba(72,199,142,0.9)',
   },
   dotRed: {
-    backgroundColor: 'rgba(255,99,99,0.85)',
-    borderColor: 'rgba(255,99,99,1)',
+    backgroundColor: 'rgba(255,99,99,0.9)',
   },
   errorText: {
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,120,120,1)',
+    color: 'rgba(255,120,120,0.9)',
     textAlign: 'center',
   },
   lockedArea: {
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   lockedText: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 15,
-    color: 'rgba(255,200,100,1)',
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    color: 'rgba(255,200,100,0.9)',
     textAlign: 'center',
-    lineHeight: 22,
-  },
-  keypad: {
-    width: '100%',
-    alignSelf: 'center',
+    lineHeight: 21,
   },
 });

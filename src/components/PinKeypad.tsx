@@ -1,9 +1,8 @@
 /**
  * PinKeypad
  *
- * Fully in-app numeric keypad for PIN entry. Replaces the device's native
- * soft-keyboard so PIN flows work identically on iOS and Android without
- * relying on any system dialog or IME.
+ * Elegant minimal numeric keypad for PIN entry.
+ * Clean, borderless design with generous tap targets and subtle feedback.
  *
  * Layout — classic dial pad:
  *   ┌─────┬─────┬─────┐
@@ -15,10 +14,6 @@
  *   ├─────┼─────┼─────┤
  *   │  ⌫  │  0  │ OK  │
  *   └─────┴─────┴─────┘
- *
- * • Themed via the active onboarding theme (primary colour, etc.).
- * • OK is only enabled when `value.length === maxLength`.
- * • Smooth press feedback via Animated.Pressable scale-down and haptics.
  */
 
 import React, { useCallback, useMemo } from 'react';
@@ -76,12 +71,9 @@ export function PinKeypad({
 
   const canSubmit = value.length === maxLength && !disabled;
 
-  // OK key is themed in the active primary colour; digit keys are
-  // translucent white that adopts the primary tint on press.
   const okEnabledStyle = useMemo(
     () => ({
-      backgroundColor: themeColors.primary,
-      borderColor: themeColors.primary,
+      backgroundColor: `${themeColors.primary}40`,
     }),
     [themeColors.primary],
   );
@@ -109,7 +101,7 @@ export function PinKeypad({
   );
 
   return (
-    <View style={[styles.wrap, style]} accessibilityRole="keyboardkey">
+    <View style={[styles.wrap, style]}>
       {ROWS.map((row, rIdx) => (
         <View key={rIdx} style={styles.row}>
           {row.map((key) => (
@@ -133,7 +125,7 @@ export function PinKeypad({
   );
 }
 
-// ── Individual key — its own component so the press animation is isolated ──
+// ── Individual key ──────────────────────────────────────────────────────────
 interface KeypadButtonProps {
   label: string;
   disabled: boolean;
@@ -156,20 +148,19 @@ function KeypadButton({
 
   const handlePressIn = () => {
     if (disabled) return;
-    scale.value = withTiming(0.92, { duration: 70 });
+    scale.value = withTiming(0.9, { duration: 80 });
   };
   const handlePressOut = () => {
-    scale.value = withTiming(1, { duration: 120 });
+    scale.value = withTiming(1, { duration: 150 });
   };
 
   const isBack = label === 'BACK';
   const isOk = label === 'OK';
   const isDigit = !isBack && !isOk;
 
-  // Build the visual content for the key
   const content = (() => {
-    if (isBack) return <Delete size={26} color="#FFFFFF" strokeWidth={2} />;
-    if (isOk)   return <Check  size={26} color="#FFFFFF" strokeWidth={2.5} />;
+    if (isBack) return <Delete size={24} color="rgba(255,255,255,0.6)" strokeWidth={1.8} />;
+    if (isOk)   return <Check  size={24} color="#FFFFFF" strokeWidth={2.2} />;
     return <Text style={styles.digitText}>{label}</Text>;
   })();
 
@@ -188,12 +179,11 @@ function KeypadButton({
         style={({ pressed }) => [
           styles.btn,
           isDigit && styles.digitBtn,
-          isBack && styles.backBtn,
-          isOk && styles.okBtn,
+          isBack && styles.actionBtn,
+          isOk && styles.actionBtn,
           okEnabledStyle ?? null,
           disabled && styles.btnDisabled,
-          // subtle tint on press for digit keys
-          pressed && isDigit && !disabled && { backgroundColor: `${primaryColor}33` },
+          pressed && !disabled && styles.btnPressed,
         ]}
       >
         {content}
@@ -205,56 +195,41 @@ function KeypadButton({
 const styles = StyleSheet.create({
   wrap: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 300,
     alignSelf: 'center',
-    alignItems: 'center',
-    gap: 16,
-    paddingBottom: 4,
+    gap: 12,
   },
   row: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
     justifyContent: 'center',
-    width: '100%',
   },
   btnAnimWrap: {
     flex: 1,
+    aspectRatio: 1.4,
+    maxHeight: 64,
   },
   btn: {
-    height: 72,
-    borderRadius: 20,
+    flex: 1,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    // Subtle elevation / shadow for depth
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
   },
   digitBtn: {
-    backgroundColor: 'rgba(255,255,255,0.10)',
-    // Soft inner-glow effect via top border highlight
-    borderTopColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
   },
-  backBtn: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderTopColor: 'rgba(255,255,255,0.18)',
+  actionBtn: {
+    backgroundColor: 'transparent',
   },
-  okBtn: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderTopColor: 'rgba(255,255,255,0.18)',
+  btnPressed: {
+    backgroundColor: 'rgba(255,255,255,0.14)',
   },
   btnDisabled: {
-    opacity: 0.35,
+    opacity: 0.3,
   },
   digitText: {
     fontFamily: 'Fraunces_700Bold',
-    fontSize: 28,
+    fontSize: 30,
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
