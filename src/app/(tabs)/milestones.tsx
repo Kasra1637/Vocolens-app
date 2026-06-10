@@ -383,9 +383,9 @@ function StatsOverview({ stats, isDarkMode = false }: StatsOverviewProps) {
     <View
       className="mb-6"
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.12)",
+        backgroundColor: "rgba(255, 255, 255, 0.14)",
         borderWidth: 2,
-        borderColor: "rgba(255, 255, 255, 0.20)",
+        borderColor: "rgba(255, 255, 255, 0.25)",
         borderRadius: BorderRadius.xxlarge,
         overflow: "hidden",
         shadowColor: "#000",
@@ -449,7 +449,7 @@ function StatItem({
           width: 40,
           height: 40,
           borderRadius: 12,
-          backgroundColor: "rgba(255, 255, 255, 0.15)",
+          backgroundColor: "rgba(255, 255, 255, 0.18)",
           alignItems: "center",
           justifyContent: "center",
           marginBottom: 8,
@@ -505,9 +505,9 @@ function CategoryDropdown({
       <Pressable
         onPress={onToggle}
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.12)",
+          backgroundColor: "rgba(255, 255, 255, 0.14)",
           borderWidth: 2,
-          borderColor: "rgba(255, 255, 255, 0.20)",
+          borderColor: "rgba(255, 255, 255, 0.25)",
           borderRadius: BorderRadius.large,
           padding: 14,
           flexDirection: "row",
@@ -541,9 +541,9 @@ function CategoryDropdown({
         <View
           className="mt-2 rounded-2xl overflow-hidden"
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            backgroundColor: "rgba(255, 255, 255, 0.14)",
             borderWidth: 2,
-            borderColor: "rgba(255, 255, 255, 0.20)",
+            borderColor: "rgba(255, 255, 255, 0.25)",
           }}
         >
           {options.map((option) => {
@@ -556,7 +556,7 @@ function CategoryDropdown({
                 className="px-3 py-3"
                 style={{
                   backgroundColor: isSelected
-                    ? "rgba(255, 255, 255, 0.15)"
+                    ? "rgba(255, 255, 255, 0.18)"
                     : "transparent",
                   borderBottomWidth: 1,
                   borderBottomColor: "rgba(255, 255, 255, 0.10)",
@@ -616,9 +616,9 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
         {/* Outer wrapper */}
         <View
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            backgroundColor: "rgba(255, 255, 255, 0.14)",
             borderWidth: 2,
-            borderColor: "rgba(255, 255, 255, 0.20)",
+            borderColor: "rgba(255, 255, 255, 0.25)",
             borderRadius: BorderRadius.xlarge,
           }}
         >
@@ -667,7 +667,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
-                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                  backgroundColor: "rgba(255, 255, 255, 0.18)",
                 }}
               >
                 <Icon
@@ -752,7 +752,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 style={{
                   height: 6,
                   borderRadius: 3,
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
+                  backgroundColor: "rgba(255, 255, 255, 0.16)",
                   overflow: "hidden",
                 }}
               >

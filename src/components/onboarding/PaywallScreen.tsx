@@ -316,7 +316,7 @@ export function PaywallScreen() {
 
             {/* Benefits */}
             <Animated.View entering={FadeIn.delay(120).duration(700).easing(SOFT)} style={{ marginTop: 14, marginBottom: 14 }}>
-              <View style={{ backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", paddingHorizontal: 16, paddingVertical: 14, gap: 11 }}>
+              <View style={{ backgroundColor: "rgba(255,255,255,0.10)", borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", paddingHorizontal: 16, paddingVertical: 14, gap: 11 }}>
                 {[
                   { Icon: MessageCircle, text: "Put words to feelings you couldn't name before — no blank page, just talk" },
                   { Icon: Shield, text: "Catch overwhelm before it builds, instead of after it hits" },
@@ -338,7 +338,7 @@ export function PaywallScreen() {
               {/* Three-month */}
               <Pressable
                 onPress={() => { selectHaptic(); setSelectedPlan("three_month"); trackEvent("plan_selected", { plan: "three_month" }); }}
-                style={{ flex: 1, borderRadius: 18, borderWidth: selectedPlan === "three_month" ? 2.5 : 1.5, borderColor: selectedPlan === "three_month" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "three_month" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)", padding: 14, minHeight: 148 }}
+                style={{ flex: 1, borderRadius: 18, borderWidth: selectedPlan === "three_month" ? 2.5 : 1.5, borderColor: selectedPlan === "three_month" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "three_month" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14, minHeight: 148 }}
               >
                 <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 14, marginBottom: 8, letterSpacing: 0.2 }}>Quarterly</Text>
                 <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{threeMonthPrice}</Text>
@@ -351,7 +351,7 @@ export function PaywallScreen() {
               {/* Annual */}
               <Pressable
                 onPress={() => { selectHaptic(); setSelectedPlan("yearly"); trackEvent("plan_selected", { plan: "yearly" }); }}
-                style={{ flex: 1, borderRadius: 18, borderWidth: selectedPlan === "yearly" ? 2.5 : 1.5, borderColor: selectedPlan === "yearly" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "yearly" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)", padding: 14, minHeight: 148, position: "relative", overflow: "hidden" }}
+                style={{ flex: 1, borderRadius: 18, borderWidth: selectedPlan === "yearly" ? 2.5 : 1.5, borderColor: selectedPlan === "yearly" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "yearly" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14, minHeight: 148, position: "relative", overflow: "hidden" }}
               >
                 <View style={{ position: "absolute", top: 0, right: 0, backgroundColor: "#FFFFFF", borderBottomLeftRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
                   <Text style={{ fontFamily: "Inter_700Bold", fontSize: 9, color: themeColors.primary, letterSpacing: 0.5 }}>3-DAY FREE TRIAL</Text>

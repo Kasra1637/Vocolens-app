@@ -152,8 +152,8 @@ export default function SettingsScreen() {
   }, [isFocused]);
 
   // Glassmorphic style — exact match to onboarding selection cards (white opacity, theme-adaptive)
-  const surfaceBg = "rgba(255, 255, 255, 0.12)";
-  const borderColor = "rgba(255, 255, 255, 0.20)";
+  const surfaceBg = "rgba(255, 255, 255, 0.14)";
+  const borderColor = "rgba(255, 255, 255, 0.25)";
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,

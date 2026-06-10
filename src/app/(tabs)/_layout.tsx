@@ -66,13 +66,13 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill} />
 
       {/* Darkened overlay to ensure readability */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.45)" }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.30)" }]} />
 
       {/* Subtle theme tint wash */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: hexToRgba(primaryColor, 0.12) }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: hexToRgba(primaryColor, 0.18) }]} />
 
       {/* Thin top separator line */}
-      <View style={[styles.topLine, { backgroundColor: hexToRgba(primaryColor, 0.20) }]} />
+      <View style={[styles.topLine, { backgroundColor: hexToRgba(primaryColor, 0.30) }]} />
 
       {/* Tab row — paddingBottom handles safe area inside the bar */}
       <View style={[styles.tabRow, { paddingBottom: insets.bottom }]}>

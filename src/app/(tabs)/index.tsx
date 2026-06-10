@@ -1102,7 +1102,7 @@ export default function SpeakScreen() {
               <View style={{
                 height: 6,
                 borderRadius: 3,
-                backgroundColor: "rgba(255,255,255,0.12)",
+                backgroundColor: "rgba(255,255,255,0.16)",
                 overflow: "hidden",
               }}>
                 <View style={{
