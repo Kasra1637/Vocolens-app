@@ -348,11 +348,6 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
                   <Text style={s.statVal}>{selectedStat.count}</Text>
                   <Text style={s.statLbl}>Sessions</Text>
                 </View>
-                <View style={s.statDivider} />
-                <View style={s.statBox}>
-                  <Text style={s.statVal}>{Math.round(selectedStat.heat * 100)}%</Text>
-                  <Text style={s.statLbl}>Relative heat</Text>
-                </View>
               </View>
             </Animated.View>
           )}
@@ -379,17 +374,6 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
                   <Text style={s.listCount}>{stat.count}×</Text>
                 </Pressable>
               ))}
-          </View>
-
-          {/* ── Legend ── */}
-          <View style={s.legend}>
-            <Text style={s.legendLbl}>Low</Text>
-            <View style={s.legendBar}>
-              {[0.15, 0.35, 0.55, 0.75, 0.95].map((h, i) => (
-                <View key={i} style={[s.legendSeg, { backgroundColor: heatFill(h, primaryColor) }]} />
-              ))}
-            </View>
-            <Text style={s.legendLbl}>High</Text>
           </View>
         </>
       )}
@@ -448,8 +432,4 @@ const s = StyleSheet.create({
   miniBarBg: { width: 60, height: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.10)", overflow: "hidden" },
   miniBarFill: { height: "100%", borderRadius: 3 },
   listCount: { fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.45)", fontSize: 11, width: 24, textAlign: "right" },
-  legend: { flexDirection: "row", alignItems: "center", gap: 8 },
-  legendLbl: { fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.30)", fontSize: 10 },
-  legendBar: { flex: 1, flexDirection: "row", height: 5, borderRadius: 3, overflow: "hidden" },
-  legendSeg: { flex: 1, height: "100%" },
 });

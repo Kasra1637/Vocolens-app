@@ -391,7 +391,7 @@ function PatternsView({
               lineHeight: 16,
             }}
           >
-            Each bar shows your most frequent emotion that day · Longer bar = higher intensity
+            Each bar shows your main emotion that day
           </Text>
 
         </>
