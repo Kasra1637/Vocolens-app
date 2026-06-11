@@ -418,8 +418,11 @@ async function generateInsightsPDF({
 </body>
 </html>`;
 
-  const cacheDir = FileSystem.cacheDirectory ?? "file:///tmp/";
-  const fileUri = cacheDir + `vocolens-insights-${Date.now()}.html`;
+  const cacheDir = FileSystem.cacheDirectory;
+  if (!cacheDir) {
+    throw new Error("File system not available on this device.");
+  }
+  const fileUri = `${cacheDir}vocolens-insights-${Date.now()}.html`;
   await FileSystem.writeAsStringAsync(fileUri, html, { encoding: FileSystem.EncodingType.UTF8 });
   return fileUri;
 }
@@ -780,36 +783,47 @@ function InsightsContent({
     remainingMinutes,
   };
 
-  const handleSharePDF = async () => {
-    try {
-      tapHaptic();
-      // Show therapist notification toast first
-      setShareToast(true);
-      await new Promise((resolve) => setTimeout(resolve, 2200));
-      setShareToast(false);
-      setIsGeneratingPDF(true);
-      const uri = await generateInsightsPDF({
-        userName: user.name,
-        stats,
-        entries,
-        primaryColor: Colors.primary,
-        priorityInsights,
-        triggerData,
-      });
-      await Sharing.shareAsync(uri, {
-        mimeType: "text/html",
-        dialogTitle: "Share Insights Report with Therapist",
-        UTI: "public.html",
-      });
-    } catch (err: any) {
-      Alert.alert(
-        "Could not share report",
-        err?.message || "An unexpected error occurred. Please try again.",
-      );
-    } finally {
-      setIsGeneratingPDF(false);
-      setShareToast(false);
-    }
+  const handleSharePDF = () => {
+    tapHaptic();
+    Alert.alert(
+      "Share Insights Report",
+      "Generate a personalized emotional wellness report to share with your doctor, counselor, or therapist.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Share Report",
+          onPress: async () => {
+            try {
+              setIsGeneratingPDF(true);
+              const uri = await generateInsightsPDF({
+                userName: user.name,
+                stats,
+                entries,
+                primaryColor: Colors.primary,
+                priorityInsights,
+                triggerData,
+              });
+              if (!uri) {
+                Alert.alert("Error", "Could not generate report. Please try again.");
+                return;
+              }
+              await Sharing.shareAsync(uri, {
+                mimeType: "text/html",
+                dialogTitle: "Share Vocolens Insights Report",
+                UTI: "public.html",
+              });
+            } catch (err: any) {
+              Alert.alert(
+                "Could not share report",
+                err?.message || "An unexpected error occurred. Please try again.",
+              );
+            } finally {
+              setIsGeneratingPDF(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
