@@ -68,15 +68,27 @@ export function PrivacyPermissionsScreen() {
     },
     {
       icon: ShieldCheck,
+      title: "No cloud, no servers",
+      description:
+        "Your journal lives only on this device. There's no server-side database of your thoughts.",
+    },
+    {
+      icon: ShieldCheck,
       title: "Locked to you alone",
       description:
         "Face ID, fingerprint, or PIN. Set it up once and keep your journal private.",
     },
     {
       icon: ShieldCheck,
-      title: "Just you & your thoughts",
+      title: "Hardware-encrypted security",
       description:
-        "Your space, your words, your rules. Nobody else gets in.",
+        "Your PIN is encrypted in the device's secure keystore — protected even if someone accesses the filesystem.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Delete means delete",
+      description:
+        "Remove the app and your data is gone forever. No cloud copies, no backups we keep.",
     },
   ];
 
