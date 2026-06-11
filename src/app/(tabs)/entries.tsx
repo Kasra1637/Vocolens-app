@@ -30,6 +30,8 @@ import {
   Activity,
   Mic,
   ChevronUp,
+  Tag,
+  Timer,
 } from "lucide-react-native";
 import Animated, {
   FadeOut,
@@ -95,6 +97,14 @@ const SORT_OPTIONS = ["Newest First", "Oldest First"] as const;
 
 type SortOption = (typeof SORT_OPTIONS)[number];
 
+type DurationFilter = "Any" | "Short" | "Medium" | "Long";
+const DURATION_FILTERS: { label: string; value: DurationFilter }[] = [
+  { label: "Any Length", value: "Any" },
+  { label: "Short (<1 min)", value: "Short" },
+  { label: "Medium (1–3 min)", value: "Medium" },
+  { label: "Long (3+ min)", value: "Long" },
+];
+
 // Helper to convert stored emotion to display emotion
 const toDisplayEmotion = (emotion: EmotionType): DisplayEmotion => {
   return (emotion.charAt(0).toUpperCase() + emotion.slice(1)) as DisplayEmotion;
@@ -118,6 +128,10 @@ export default function EntriesScreen() {
   );
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showEmotionDropdown, setShowEmotionDropdown] = useState(false);
+  const [showTopicDropdown, setShowTopicDropdown] = useState(false);
+  const [showDurationDropdown, setShowDurationDropdown] = useState(false);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [selectedDuration, setSelectedDuration] = useState<DurationFilter>("Any");
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
 
@@ -144,16 +158,28 @@ export default function EntriesScreen() {
     Inter_700Bold,
   });
 
+  // Derive available topics from all entries
+  const availableTopics = useMemo(() => {
+    const topicSet = new Set<string>();
+    entries.forEach((e) => {
+      (e.topics ?? []).forEach((t) => {
+        if (t && t.trim().length > 0) topicSet.add(t.trim().toLowerCase());
+      });
+    });
+    return Array.from(topicSet).sort();
+  }, [entries]);
+
   const filteredEntries = useMemo(() => {
     let filtered = [...entries];
 
-    // Filter by search query
+    // Filter by search query (searches transcript, title, AND topics)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (entry) =>
           entry.transcript.toLowerCase().includes(query) ||
-          entry.title.toLowerCase().includes(query),
+          entry.title.toLowerCase().includes(query) ||
+          (entry.topics ?? []).some((t) => t.toLowerCase().includes(query)),
       );
     }
 
@@ -163,6 +189,25 @@ export default function EntriesScreen() {
       filtered = filtered.filter((entry) =>
         emotionFilters.some((emotion) => entry.emotions.includes(emotion)),
       );
+    }
+
+    // Filter by topics
+    if (selectedTopics.length > 0) {
+      filtered = filtered.filter((entry) =>
+        selectedTopics.some((topic) =>
+          (entry.topics ?? []).some((t) => t.toLowerCase() === topic),
+        ),
+      );
+    }
+
+    // Filter by duration
+    if (selectedDuration !== "Any") {
+      filtered = filtered.filter((entry) => {
+        const dur = entry.duration ?? 0;
+        if (selectedDuration === "Short") return dur < 60;
+        if (selectedDuration === "Medium") return dur >= 60 && dur < 180;
+        return dur >= 180; // Long
+      });
     }
 
     // Sort
@@ -179,7 +224,7 @@ export default function EntriesScreen() {
     }
 
     return filtered;
-  }, [entries, searchQuery, selectedSort, selectedEmotions]);
+  }, [entries, searchQuery, selectedSort, selectedEmotions, selectedTopics, selectedDuration]);
 
   const toggleEmotion = useCallback((emotion: DisplayEmotion) => {
     tapHaptic();
@@ -187,6 +232,15 @@ export default function EntriesScreen() {
       prev.includes(emotion)
         ? prev.filter((e) => e !== emotion)
         : [...prev, emotion],
+    );
+  }, []);
+
+  const toggleTopic = useCallback((topic: string) => {
+    tapHaptic();
+    setSelectedTopics((prev) =>
+      prev.includes(topic)
+        ? prev.filter((t) => t !== topic)
+        : [...prev, topic],
     );
   }, []);
 
@@ -224,7 +278,7 @@ export default function EntriesScreen() {
 
   if (!fontsLoaded) {
     return (
-      <View className="flex-1" style={{ backgroundColor: Gradients.background[2] }}>
+      <View className="flex-1" style={{ backgroundColor: Gradients.background[1] }}>
         <LinearGradient
           colors={Gradients.background}
           style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -362,7 +416,7 @@ export default function EntriesScreen() {
                 )}
               </View>
 
-              {/* Filter Dropdowns */}
+              {/* Filter Dropdowns — row 1 */}
               <View className="flex-row" style={{ gap: 8 }}>
                 {/* Sort Filter */}
                 <Pressable
@@ -370,6 +424,8 @@ export default function EntriesScreen() {
                     tapHaptic();
                     setShowSortDropdown(!showSortDropdown);
                     setShowEmotionDropdown(false);
+                    setShowTopicDropdown(false);
+                    setShowDurationDropdown(false);
                   }}
                   className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-3"
                   style={{
@@ -393,12 +449,14 @@ export default function EntriesScreen() {
                     tapHaptic();
                     setShowEmotionDropdown(!showEmotionDropdown);
                     setShowSortDropdown(false);
+                    setShowTopicDropdown(false);
+                    setShowDurationDropdown(false);
                   }}
                   className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-3"
                   style={{
                     backgroundColor: "rgba(255, 255, 255, 0.10)",
                     borderWidth: 1,
-                    borderColor: "rgba(255, 255, 255, 0.15)",
+                    borderColor: selectedEmotions.length > 0 ? "rgba(255, 255, 255, 0.35)" : "rgba(255, 255, 255, 0.15)",
                   }}
                 >
                   <Text
@@ -406,8 +464,63 @@ export default function EntriesScreen() {
                     className="text-xs"
                   >
                     {selectedEmotions.length > 0
-                      ? `${selectedEmotions.length} Selected`
+                      ? `${selectedEmotions.length} Emotion${selectedEmotions.length > 1 ? "s" : ""}`
                       : "Emotions"}
+                  </Text>
+                  <ChevronDown size={14} color="#FFFFFF" strokeWidth={2} />
+                </Pressable>
+              </View>
+
+              {/* Filter Dropdowns — row 2 */}
+              <View className="flex-row mt-2" style={{ gap: 8 }}>
+                {/* Topics Filter */}
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    setShowTopicDropdown(!showTopicDropdown);
+                    setShowSortDropdown(false);
+                    setShowEmotionDropdown(false);
+                    setShowDurationDropdown(false);
+                  }}
+                  className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-3"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.10)",
+                    borderWidth: 1,
+                    borderColor: selectedTopics.length > 0 ? "rgba(255, 255, 255, 0.35)" : "rgba(255, 255, 255, 0.15)",
+                  }}
+                >
+                  <Text
+                    style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF" }}
+                    className="text-xs"
+                  >
+                    {selectedTopics.length > 0
+                      ? `${selectedTopics.length} Topic${selectedTopics.length > 1 ? "s" : ""}`
+                      : "Topics"}
+                  </Text>
+                  <ChevronDown size={14} color="#FFFFFF" strokeWidth={2} />
+                </Pressable>
+
+                {/* Duration Filter */}
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    setShowDurationDropdown(!showDurationDropdown);
+                    setShowSortDropdown(false);
+                    setShowEmotionDropdown(false);
+                    setShowTopicDropdown(false);
+                  }}
+                  className="flex-1 flex-row items-center justify-between rounded-xl px-3 py-3"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.10)",
+                    borderWidth: 1,
+                    borderColor: selectedDuration !== "Any" ? "rgba(255, 255, 255, 0.35)" : "rgba(255, 255, 255, 0.15)",
+                  }}
+                >
+                  <Text
+                    style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF" }}
+                    className="text-xs"
+                  >
+                    {selectedDuration === "Any" ? "Duration" : DURATION_FILTERS.find(d => d.value === selectedDuration)?.label}
                   </Text>
                   <ChevronDown size={14} color="#FFFFFF" strokeWidth={2} />
                 </Pressable>
@@ -500,6 +613,105 @@ export default function EntriesScreen() {
                       </Pressable>
                     ))}
                   </View>
+                </View>
+              )}
+
+              {/* Topics Dropdown */}
+              {showTopicDropdown && (
+                <View
+                  className="mt-2 rounded-2xl overflow-hidden"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderWidth: 2,
+                    borderColor: "rgba(255, 255, 255, 0.20)",
+                  }}
+                >
+                  {availableTopics.length > 0 ? (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        padding: 12,
+                        gap: 8,
+                      }}
+                    >
+                      {availableTopics.map((topic) => (
+                        <Pressable
+                          key={topic}
+                          onPress={() => toggleTopic(topic)}
+                          className="px-3 py-2 rounded-full"
+                          style={{
+                            backgroundColor: selectedTopics.includes(topic)
+                              ? "rgba(255, 255, 255, 0.22)"
+                              : "rgba(255, 255, 255, 0.08)",
+                            borderWidth: 1,
+                            borderColor: selectedTopics.includes(topic)
+                              ? "rgba(255, 255, 255, 0.35)"
+                              : "rgba(255, 255, 255, 0.15)",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: "Inter_500Medium",
+                              fontSize: 13,
+                              color: "#FFFFFF",
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {topic}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={{ padding: 16, alignItems: "center" }}>
+                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
+                        Topics will appear here after you record entries
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* Duration Dropdown */}
+              {showDurationDropdown && (
+                <View
+                  className="mt-2 rounded-2xl overflow-hidden"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderWidth: 2,
+                    borderColor: "rgba(255, 255, 255, 0.20)",
+                  }}
+                >
+                  {DURATION_FILTERS.map((dur) => (
+                    <Pressable
+                      key={dur.value}
+                      onPress={() => {
+                        tapHaptic();
+                        setSelectedDuration(dur.value);
+                        setShowDurationDropdown(false);
+                      }}
+                      className="px-3 py-3"
+                      style={{
+                        backgroundColor:
+                          selectedDuration === dur.value
+                            ? "rgba(255, 255, 255, 0.15)"
+                            : "transparent",
+                        borderBottomWidth: 1,
+                        borderBottomColor: "rgba(255, 255, 255, 0.10)",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "Inter_500Medium",
+                          fontSize: 14,
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        {dur.label}
+                      </Text>
+                    </Pressable>
+                  ))}
                 </View>
               )}
             </View>
