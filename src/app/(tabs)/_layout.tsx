@@ -17,6 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useClientOnlyValue } from "@/lib/useClientOnlyValue";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
+import { useAuthGuard } from "@/lib/hooks/useAuthGuard";
 
 const ICON_SIZE = 24;
 
@@ -170,6 +171,15 @@ const styles = StyleSheet.create({
 
 export default function TabLayout() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+
+  // ── SECURITY: Defence-in-depth guard ─────────────────────────────────────
+  // If the session is locked (e.g. app just returned from background and
+  // AppState listener revoked isUnlocked), render nothing. AuthGate will
+  // unmount this tree shortly, but this prevents any content flash.
+  const { isLocked } = useAuthGuard();
+  if (isLocked) {
+    return <View style={{ flex: 1, backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[1] }} />;
+  }
 
   const TabBarComponent = React.useMemo(() => {
     const Bar = (props: BottomTabBarProps) => <CustomTabBar {...props} />;

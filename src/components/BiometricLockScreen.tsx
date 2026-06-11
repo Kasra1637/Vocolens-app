@@ -22,7 +22,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, BackHandler, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -62,6 +62,20 @@ export function BiometricLockScreen() {
   const [authenticating,  setAuthenticating]  = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [pinContext,      setPinContext]       = useState<{ title: string; subtitle: string } | null>(null);
+
+  // ─── SECURITY: Block hardware back button on Android ──────────────────────
+  // The back button must NEVER dismiss the lock screen. Returning `true` from
+  // the handler tells Android that the event has been consumed — the OS will
+  // not propagate it further (no Activity.finish(), no navigation pop).
+  // This guard is active for the entire lifetime of the lock screen component.
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      // Consume the event unconditionally — the lock screen is non-dismissible.
+      return true;
+    });
+    return () => subscription.remove();
+  }, []);
 
   // ─── Biometric auth ───────────────────────────────────────────────────────
   const runBiometricAuth = useCallback(async () => {

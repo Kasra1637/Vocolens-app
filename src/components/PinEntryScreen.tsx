@@ -16,7 +16,7 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, BackHandler, Platform } from 'react-native';
 
 export interface PinEntryScreenHandle {
   focusKeyboard: () => void;
@@ -59,6 +59,7 @@ function PinEntryScreen({
   mode = 'verify',
   onComplete,
   onSuccess,
+  onBack,
   title,
   subtitle,
   maxAttempts = 5,
@@ -97,6 +98,20 @@ function PinEntryScreen({
   }, [shakeX]);
 
   useImperativeHandle(ref, () => ({ focusKeyboard: () => {} }), []);
+
+  // ─── SECURITY: Block hardware back button when used as an auth gate ───────
+  // When onBack is undefined (lock-screen context), the back button is consumed
+  // entirely so Android cannot dismiss the PIN screen and bypass authentication.
+  // When onBack IS provided (e.g. settings change-PIN), normal back behavior applies.
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    if (onBack !== undefined) return; // Allow back when an explicit handler is provided
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      // Consume the event — PIN screen is non-dismissible in auth-gate mode.
+      return true;
+    });
+    return () => subscription.remove();
+  }, [onBack]);
 
   useEffect(() => {
     setCurrentPin('');
