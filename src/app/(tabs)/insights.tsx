@@ -64,7 +64,7 @@ import {
   TAB_ENTER_4 as ENTER_4,
   TAB_ENTER_5 as ENTER_5,
 } from "@/lib/tabAnimations";
-import { selectHaptic, tapHaptic, selectionHaptic } from "@/lib/haptics";
+import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 import {
   BorderRadius,
   getThemeColors,
@@ -90,7 +90,6 @@ import {
   useTriggerDetection,
 } from "@/lib/hooks";
 import { EmotionType } from "@/lib/types";
-import { populateDummyData } from "@/lib/populate-dummy-data";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { hexToRgba } from "@/lib/glass";
 import {
@@ -762,7 +761,7 @@ function InsightsContent({
 
   if (!fontsLoaded) {
     return (
-      <View className="flex-1" style={{ backgroundColor: Gradients.background[2] }}>
+      <View className="flex-1" style={{ backgroundColor: Gradients.background[1] }}>
         <LinearGradient
           colors={Gradients.background}
           style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -779,15 +778,6 @@ function InsightsContent({
     nextBadge,
     usageMinutes,
     remainingMinutes,
-  };
-
-  const handlePopulateDummyData = () => {
-    selectHaptic();
-    populateDummyData();
-    // Force a small delay to let stores update
-    setTimeout(() => {
-      // The UI will auto-update via React Query
-    }, 100);
   };
 
   const handleSharePDF = async () => {
@@ -841,49 +831,6 @@ function InsightsContent({
         showsVerticalScrollIndicator={false}
         key={`insights-${animationKey}`}
       >
-        {/* Demo Data Button - Remove in production */}
-        {entries.length === 0 && (
-          <Animated.View entering={ENTER_1} className="mb-4">
-            <Pressable
-              onPress={handlePopulateDummyData}
-              style={{
-                backgroundColor: Colors.surface,
-                borderRadius: BorderRadius.large,
-                padding: 16,
-                ...Shadows.medium,
-                borderWidth: 2,
-                borderColor: Colors.primary,
-                borderStyle: "dashed",
-              }}
-            >
-              <View className="flex-row items-center justify-center">
-                <Sparkles size={20} color="#FFFFFF" strokeWidth={2} />
-                <Text
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "#FFFFFF",
-                    fontSize: 15,
-                    marginLeft: 8,
-                  }}
-                >
-                  Load Demo Data
-                </Text>
-              </View>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255, 255, 255, 0.8)",
-                  fontSize: 12,
-                  textAlign: "center",
-                  marginTop: 6,
-                }}
-              >
-                Populate with sample journal entries to preview features
-              </Text>
-            </Pressable>
-          </Animated.View>
-        )}
-
         {/* Welcome Section */}
         <Animated.View entering={ENTER_1}>
           <WelcomeSection user={user} totalEntries={stats.totalEntries} />
