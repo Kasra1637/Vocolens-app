@@ -72,6 +72,16 @@ export function AuthGate({ children }: AuthGateProps) {
   // Track AppState to re-lock when returning from background
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
+  // Timestamp of the most recent successful unlock. Used to suppress the
+  // spurious background/inactive AppState event that the OS biometric prompt
+  // (fingerprint / Face ID) emits AFTER authentication succeeds. That trailing
+  // lifecycle event races with the unlock success callback and, without this
+  // guard, would immediately re-lock the session — sending the user back to
+  // the lock screen even though they authenticated correctly.
+  const lastUnlockedAtRef = useRef<number>(0);
+  // Grace window (ms) after an unlock during which background events are ignored.
+  const RELOCK_GRACE_MS = 2500;
+
   // ── Configure SDK once on mount ────────────────────────────────────────────
   useEffect(() => {
     configureRevenueCat();
@@ -87,7 +97,11 @@ export function AuthGate({ children }: AuthGateProps) {
     const isCurrentlyLocked = lockEnabled && !isUnlocked;
 
     if (wasLockedRef.current && !isCurrentlyLocked && lockEnabled) {
-      // Transition: was locked → now unlocked. Show celebration.
+      // Transition: was locked → now unlocked.
+      // Record the unlock time so the AppState listener can ignore the
+      // biometric prompt's trailing background event (see RELOCK_GRACE_MS).
+      lastUnlockedAtRef.current = Date.now();
+      // Show the celebration as a cosmetic overlay over the now-visible app.
       setShowUnlockCelebration(true);
     }
 
@@ -95,25 +109,32 @@ export function AuthGate({ children }: AuthGateProps) {
   }, [isUnlocked, isBiometricEnabled, isPinEnabled]);
 
   // ── SECURITY: Re-lock session when app goes to background ──────────────────
-  // This prevents an attacker from using task-switcher manipulation or developer
-  // tools to bypass the lock screen by killing/resuming the process.
+  // This prevents bypassing the lock screen via task-switcher manipulation or
+  // by resuming a backgrounded process.
   //
-  // IMPORTANT: We only re-lock on `active → background` (NOT `inactive`).
-  // On both iOS and Android, the OS biometric prompt (fingerprint sheet,
-  // Face ID overlay) causes a brief transition to `inactive` while the system
-  // UI is displayed. If we re-locked on `inactive`, the biometric prompt itself
-  // would immediately revoke the unlock — causing the "sent back to lock screen"
-  // bug. The `background` state is only reached when the app is truly sent to
-  // the background (home button, task switcher, screen off).
+  // CRITICAL: The OS biometric prompt (fingerprint sheet / Face ID overlay)
+  // emits a background/inactive AppState event that can be delivered to JS
+  // AFTER the authentication success callback resolves. Re-locking on that
+  // trailing event was sending users back to the lock screen immediately after
+  // a successful unlock. To prevent this, we:
+  //   1. Ignore `inactive` entirely (only act on a true `background`).
+  //   2. Suppress any re-lock that arrives within RELOCK_GRACE_MS of the last
+  //      successful unlock — the spurious prompt event always lands inside this
+  //      window, whereas a genuine "user left the app" happens much later.
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       const wasActive = appStateRef.current === 'active';
       const isNowBackground = nextAppState === 'background';
 
       if (wasActive && isNowBackground) {
-        const store = useBiometricStore.getState();
-        if (store.isBiometricEnabled || store.isPinEnabled) {
-          setUnlocked(false);
+        const sinceUnlock = Date.now() - lastUnlockedAtRef.current;
+        const withinGrace = sinceUnlock < RELOCK_GRACE_MS;
+
+        if (!withinGrace) {
+          const store = useBiometricStore.getState();
+          if (store.isBiometricEnabled || store.isPinEnabled) {
+            setUnlocked(false);
+          }
         }
       }
 
