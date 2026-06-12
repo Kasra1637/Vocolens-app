@@ -96,17 +96,21 @@ export function AuthGate({ children }: AuthGateProps) {
 
   // ── SECURITY: Re-lock session when app goes to background ──────────────────
   // This prevents an attacker from using task-switcher manipulation or developer
-  // tools to bypass the lock screen by killing/resuming the process. When the
-  // app transitions from "active" to "background" (or "inactive" on iOS), we
-  // revoke the unlocked state so re-authentication is required on return.
+  // tools to bypass the lock screen by killing/resuming the process.
+  //
+  // IMPORTANT: We only re-lock on `active → background` (NOT `inactive`).
+  // On both iOS and Android, the OS biometric prompt (fingerprint sheet,
+  // Face ID overlay) causes a brief transition to `inactive` while the system
+  // UI is displayed. If we re-locked on `inactive`, the biometric prompt itself
+  // would immediately revoke the unlock — causing the "sent back to lock screen"
+  // bug. The `background` state is only reached when the app is truly sent to
+  // the background (home button, task switcher, screen off).
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       const wasActive = appStateRef.current === 'active';
-      const isNowBackground = nextAppState === 'background' || nextAppState === 'inactive';
+      const isNowBackground = nextAppState === 'background';
 
       if (wasActive && isNowBackground) {
-        // Only re-lock if a lock method is configured. If neither biometric nor
-        // PIN is enabled, there's nothing to re-lock.
         const store = useBiometricStore.getState();
         if (store.isBiometricEnabled || store.isPinEnabled) {
           setUnlocked(false);
