@@ -153,7 +153,7 @@ export function PrivacyPermissionsScreen() {
                   lineHeight: 38,
                 }}
               >
-                Your privacy
+                You own your data
               </Text>
             </Animated.View>
 
@@ -171,7 +171,7 @@ export function PrivacyPermissionsScreen() {
                   lineHeight: 23,
                 }}
               >
-                Your local-first app—your privacy, always with you.
+                Your local-first voice journaling app—your privacy, always with you.
               </Text>
             </Animated.View>
 
