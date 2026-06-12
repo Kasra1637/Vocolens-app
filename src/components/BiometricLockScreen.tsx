@@ -48,8 +48,8 @@ export function BiometricLockScreen() {
   const isBiometricEnabled         = useBiometricStore((s) => s.isBiometricEnabled);
   const needsPinReAuth             = useBiometricStore((s) => s.needsPinReAuth);
   const markBiometricInvalidated   = useBiometricStore((s) => s.markBiometricInvalidated);
-  const clearBiometricInvalidation = useBiometricStore((s) => s.clearBiometricInvalidation);
-  const enableBiometric            = useBiometricStore((s) => s.enableBiometric);
+  const unlockWithBiometric        = useBiometricStore((s) => s.unlockWithBiometric);
+  const unlockAfterReregistration  = useBiometricStore((s) => s.unlockAfterReregistration);
 
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors   = THEME_COLORS[selectedTheme];
@@ -82,9 +82,8 @@ export function BiometricLockScreen() {
     setAuthenticating(false);
 
     if (result.success) {
-      enableBiometric();
       successHaptic();
-      setUnlocked(true);
+      unlockWithBiometric();
       return;
     }
 
@@ -119,7 +118,7 @@ export function BiometricLockScreen() {
       errorHaptic();
       setUnlocked(true); // failsafe — no PIN set, shouldn't reach here post-onboarding
     }
-  }, [authenticating, enableBiometric, markBiometricInvalidated, setUnlocked]);
+  }, [authenticating, unlockWithBiometric, markBiometricInvalidated, setUnlocked]);
 
   // ─── Mount: resolve path immediately, no settling delay ──────────────────
   useEffect(() => {
@@ -185,26 +184,24 @@ export function BiometricLockScreen() {
     }
 
     // Biometric invalidation recovery — re-register fingerprint
-    clearBiometricInvalidation();
     setView('reregistering');
     const result = await authenticateWithBiometrics(
       'Scan your fingerprint to restore biometric unlock',
     );
-    enableBiometric();
     successHaptic();
-    setUnlocked(true);
-  }, [isBiometricEnabled, clearBiometricInvalidation, enableBiometric, setUnlocked]);
+    // Atomic: clears invalidation + enables biometric + unlocks in one update
+    unlockAfterReregistration();
+  }, [isBiometricEnabled, unlockAfterReregistration, setUnlocked]);
 
   const handlePinSetupComplete = useCallback(async () => {
-    clearBiometricInvalidation();
     setView('reregistering');
     const result = await authenticateWithBiometrics(
       'Scan your fingerprint to restore biometric unlock',
     );
-    enableBiometric();
     successHaptic();
-    setUnlocked(true);
-  }, [clearBiometricInvalidation, enableBiometric, setUnlocked]);
+    // Atomic: clears invalidation + enables biometric + unlocks in one update
+    unlockAfterReregistration();
+  }, [unlockAfterReregistration]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (

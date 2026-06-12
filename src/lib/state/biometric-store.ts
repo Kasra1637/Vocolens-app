@@ -47,6 +47,18 @@ interface BiometricState {
   /** Called when the PIN is removed (e.g. account deletion). */
   disablePin: () => void;
   setUnlocked: (unlocked: boolean) => void;
+  /**
+   * Atomically confirms biometric is enabled AND unlocks the session in a single
+   * store update. This prevents a render frame where isBiometricEnabled=true but
+   * isUnlocked=false (which would keep the lock screen mounted).
+   */
+  unlockWithBiometric: () => void;
+  /**
+   * Atomically clears the invalidation flag, confirms biometric enabled, and
+   * unlocks the session. Used after successful re-registration following a
+   * biometric invalidation event.
+   */
+  unlockAfterReregistration: () => void;
   /** Called when the OS signals that enrolled biometrics have changed. */
   markBiometricInvalidated: () => void;
   /**
@@ -74,6 +86,10 @@ const useBiometricStore = create<BiometricState>()(
       enablePin: () => set({ isPinEnabled: true }),
       disablePin: () => set({ isPinEnabled: false }),
       setUnlocked: (unlocked) => set({ isUnlocked: unlocked }),
+      unlockWithBiometric: () =>
+        set({ isBiometricEnabled: true, isUnlocked: true }),
+      unlockAfterReregistration: () =>
+        set({ isBiometricEnabled: true, needsPinReAuth: false, isUnlocked: true }),
       markBiometricInvalidated: () =>
         set({ needsPinReAuth: true, isUnlocked: false }),
       clearBiometricInvalidation: () =>
