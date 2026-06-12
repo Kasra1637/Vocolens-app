@@ -140,7 +140,7 @@ export function PrivacyPermissionsScreen() {
             {/* Title */}
             <Animated.View
               entering={FadeIn.duration(900).delay(120).easing(SOFT)}
-              style={{ alignItems: "center", marginBottom: 6 }}
+              style={{ alignItems: "center", marginBottom: 24 }}
             >
               <Text
                 style={{
@@ -154,24 +154,6 @@ export function PrivacyPermissionsScreen() {
                 }}
               >
                 Your privacy
-              </Text>
-            </Animated.View>
-
-            {/* Subtitle */}
-            <Animated.View
-              entering={FadeIn.duration(900).delay(220).easing(SOFT)}
-              style={{ alignItems: "center", marginBottom: 24 }}
-            >
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.72)",
-                  fontSize: 15,
-                  textAlign: "center",
-                  lineHeight: 23,
-                }}
-              >
-                Nothing leaves your phone without you knowing
               </Text>
             </Animated.View>
 
