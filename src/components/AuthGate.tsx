@@ -22,6 +22,7 @@ import { View, ActivityIndicator, AppState, AppStateStatus } from 'react-native'
 import { useAuthStore } from '@/lib/state/auth-store';
 import useOnboardingStore from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
+import useRecordingStore from '@/lib/state/recording-store';
 import useSubscriptionStore from '@/lib/state/subscription-store';
 import { OnboardingFlow } from './onboarding';
 import { BiometricLockScreen } from './BiometricLockScreen';
@@ -130,7 +131,12 @@ export function AuthGate({ children }: AuthGateProps) {
         const sinceUnlock = Date.now() - lastUnlockedAtRef.current;
         const withinGrace = sinceUnlock < RELOCK_GRACE_MS;
 
-        if (!withinGrace) {
+        // Never re-lock while a voice recording is in progress — the OS may
+        // briefly background the app for audio focus changes, notification
+        // panels, or system overlays during an active recording session.
+        const isRecording = useRecordingStore.getState().isRecordingActive;
+
+        if (!withinGrace && !isRecording) {
           const store = useBiometricStore.getState();
           if (store.isBiometricEnabled || store.isPinEnabled) {
             setUnlocked(false);

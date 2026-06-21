@@ -62,6 +62,7 @@ import GroundingToolsModal from "@/components/GroundingToolsModal";
 import { analyzeTranscript } from "@/lib/journal-service";
 import { buildPersonalizationPrompt } from "@/lib/personalization";
 import useReflectionStore from "@/lib/state/reflection-store";
+import useRecordingStore from "@/lib/state/recording-store";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import {
@@ -264,6 +265,7 @@ export default function SpeakScreen() {
   useEffect(() => {
     if (!isFocused) {
       voiceActions.reset();
+      useRecordingStore.getState().setRecordingActive(false);
     }
   }, [isFocused]);
 
@@ -326,6 +328,9 @@ export default function SpeakScreen() {
         return;
       }
 
+      // Signal that a recording session is active (suppresses AuthGate re-lock)
+      useRecordingStore.getState().setRecordingActive(true);
+
       // Start recording
       await voiceActions.startRecording();
 
@@ -336,6 +341,7 @@ export default function SpeakScreen() {
       }, 500);
     } catch (error) {
       console.error("Failed to start recording:", error);
+      useRecordingStore.getState().setRecordingActive(false);
       setRecordingState("idle");
       errorHaptic();
     }
@@ -348,6 +354,9 @@ export default function SpeakScreen() {
     try {
       heavyHaptic();
       setRecordingState("processing");
+
+      // Clear recording-active flag so AuthGate can re-lock normally again
+      useRecordingStore.getState().setRecordingActive(false);
 
       const finalDuration = recordingDurationRef.current;
 
