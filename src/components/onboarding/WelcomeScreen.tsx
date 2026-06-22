@@ -14,7 +14,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeIn, Easing } from "react-native-reanimated";
+import Animated, { FadeIn, Easing, useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
@@ -28,7 +28,6 @@ const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 
 const HEADLINE_ANIM = FadeIn.duration(900).delay(100).easing(SOFT);
 const SUBHEAD_ANIM  = FadeIn.duration(900).delay(250).easing(SOFT);
-const BUTTON_ANIM   = FadeIn.duration(900).delay(100).easing(SOFT);
 
 export function WelcomeScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -65,6 +64,17 @@ export function WelcomeScreen() {
       return () => clearTimeout(t2);
     }
   }, [currentPhase]);
+
+  // Animate button opacity when phase becomes "ready"
+  const buttonOpacity = useSharedValue(0);
+  useEffect(() => {
+    if (currentPhase === "ready") {
+      buttonOpacity.value = withTiming(1, { duration: 900, easing: SOFT });
+    }
+  }, [currentPhase]);
+  const buttonAnimStyle = useAnimatedStyle(() => ({
+    opacity: buttonOpacity.value,
+  }));
 
   return (
     <View style={{ flex: 1 }}>
@@ -126,20 +136,18 @@ export function WelcomeScreen() {
             </Animated.View>
           </View>
 
-          {/* CTA button — positioned outside the centered area so it never shifts the title */}
-          {currentPhase === "ready" && (
-            <Animated.View
-              entering={BUTTON_ANIM}
-              style={{ paddingHorizontal: 24, paddingBottom: 32 }}
-            >
-              <OnboardingCTAButton
-                label="Start Journaling Free"
-                onPress={handleGetStarted}
-                paddingVertical={18}
-                fontSize={18}
-              />
-            </Animated.View>
-          )}
+          {/* CTA button — always rendered to reserve layout space; animated opacity controls visibility */}
+          <Animated.View
+            style={[{ paddingHorizontal: 24, paddingBottom: 32 }, buttonAnimStyle]}
+            pointerEvents={currentPhase === "ready" ? "auto" : "none"}
+          >
+            <OnboardingCTAButton
+              label="Start Journaling Free"
+              onPress={handleGetStarted}
+              paddingVertical={18}
+              fontSize={18}
+            />
+          </Animated.View>
         </SafeAreaView>
       </LinearGradient>
     </View>
