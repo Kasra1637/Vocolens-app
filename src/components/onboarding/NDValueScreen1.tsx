@@ -122,7 +122,7 @@ export function NDValueScreen1() {
                   lineHeight: 23,
                 }}
               >
-                As a neurodivergent person, your mind works differently — and that's never a problem
+                These might feel familiar
               </Text>
             </Animated.View>
 
