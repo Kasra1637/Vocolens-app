@@ -25,7 +25,7 @@ const PAIN_POINTS = [
   {
     icon: HelpCircle,
     headline: "Feelings are hard to name",
-    body: "You feel it, but can't say it — just speak and Vocolens finds the words for you",
+    body: "Just speak — the app tracks what you feel and names the emotion",
   },
   {
     icon: Meh,

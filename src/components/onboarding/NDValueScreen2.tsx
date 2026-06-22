@@ -130,7 +130,7 @@ export function NDValueScreen2() {
                   lineHeight: 23,
                 }}
               >
-                No writing. No pressure. No judgment. Just speak — and watch the clarity follow
+                No writing. No pressure. Just speak — and watch clarity follow
               </Text>
             </Animated.View>
 
