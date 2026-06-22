@@ -60,7 +60,6 @@ import { LanguageSelectionScreen } from './LanguageSelectionScreen';
 import { PrivacyPermissionsScreen } from './PrivacyPermissionsScreen';
 import { AccountPreparationScreen } from './AccountPreparationScreen';
 import { FreeTrialPreviewScreen } from './FreeTrialPreviewScreen';
-import { ReminderScreen } from './ReminderScreen';
 import { PaywallScreen } from './PaywallScreen';
 import { BiometricSetupScreen } from './BiometricSetupScreen';
 
@@ -93,9 +92,8 @@ export function OnboardingFlow() {
       case 19: return <PrivacyPermissionsScreen />;
       case 20: return <AccountPreparationScreen />;
       case 21: return <FreeTrialPreviewScreen />;
-      case 22: return <ReminderScreen />;
-      case 23: return <PaywallScreen />;
-      case 24: return <BiometricSetupScreen />;
+      case 22: return <PaywallScreen />;
+      case 23: return <BiometricSetupScreen />;
       default: return <WelcomeScreen />;
     }
   };

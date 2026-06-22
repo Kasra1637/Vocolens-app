@@ -119,7 +119,7 @@ export function AccountPreparationScreen() {
         style={{ flex: 1 }}
       >
         {/* Progress Bar at Top */}
-        <ProgressBar currentStep={currentStep} totalSteps={23} />
+        <ProgressBar currentStep={currentStep} totalSteps={22} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />

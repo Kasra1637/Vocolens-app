@@ -441,7 +441,7 @@ export function FreeTrialPreviewScreen() {
         end={{ x: 0.3, y: 1 }}
         style={{ flex: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={23} />
+        <ProgressBar currentStep={currentStep} totalSteps={22} />
 
         <SafeAreaView style={{ flex: 1 }}>
           <BackButton onPress={handleBack} show={currentStep > 0} />
@@ -471,7 +471,7 @@ export function FreeTrialPreviewScreen() {
                   letterSpacing: 0.2,
                 }}
               >
-                We want you to{"\n"}try Vocolens for free.
+                We want you to{"\n"}try Vocolens for free
               </Text>
             </Animated.View>
 
@@ -1085,7 +1085,7 @@ export function FreeTrialPreviewScreen() {
                     letterSpacing: 0.2,
                   }}
                 >
-                  No Payment Due Now.
+                  No Payment Due Now
                 </Text>
               </View>
 

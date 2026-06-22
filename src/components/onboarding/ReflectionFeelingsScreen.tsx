@@ -80,7 +80,7 @@ export function ReflectionFeelingsScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={23} />
+        <ProgressBar currentStep={currentStep} totalSteps={22} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />

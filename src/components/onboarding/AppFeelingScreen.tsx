@@ -115,7 +115,7 @@ export function AppFeelingScreen() {
                   lineHeight: 20,
                 }}
               >
-                Pick the energy you want when you open this app.
+                Pick the energy you want when you open this app
               </Text>
             </Animated.View>
 

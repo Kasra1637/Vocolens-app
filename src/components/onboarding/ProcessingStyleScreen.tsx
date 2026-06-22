@@ -116,7 +116,7 @@ export function ProcessingStyleScreen() {
                   lineHeight: 20,
                 }}
               >
-                Everyone's brain organises differently.
+                Everyone's brain organises differently
               </Text>
             </Animated.View>
 
