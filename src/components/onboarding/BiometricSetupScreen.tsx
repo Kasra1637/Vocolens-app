@@ -50,17 +50,17 @@ type Phase = 'intro' | 'pin_setup';
 // Privacy points shown when biometric IS available
 const BIOMETRIC_POINTS = [
   { icon: ShieldCheck,  text: 'Only you can open your journal' },
-  { icon: ShieldCheck,  text: 'Your fingerprint unlocks it instantly — PIN is always there as a backup' },
-  { icon: ShieldCheck,  text: 'If your biometric ever changes, your PIN keeps you in' },
-  { icon: ShieldCheck,  text: 'Your PIN is encrypted in your device\'s hardware keystore — not stored as plain text' },
+  { icon: ShieldCheck,  text: 'Fingerprint unlocks instantly' },
+  { icon: ShieldCheck,  text: 'PIN backup if biometric changes' },
+  { icon: ShieldCheck,  text: 'PIN is hardware-encrypted' },
 ];
 
 // Privacy points shown when only PIN is available
 const PIN_ONLY_POINTS = [
   { icon: Lock,         text: 'Only you can open your journal' },
-  { icon: Lock,         text: 'A PIN keeps your entries private' },
-  { icon: Lock,         text: 'Your PIN is encrypted in your device\'s hardware keystore — protected even if someone accesses the filesystem' },
-  { icon: Lock,         text: 'Change your PIN anytime in Settings' },
+  { icon: Lock,         text: 'A PIN keeps entries private' },
+  { icon: Lock,         text: 'PIN is hardware-encrypted' },
+  { icon: Lock,         text: 'Change PIN anytime in Settings' },
 ];
 
 export function BiometricSetupScreen() {
