@@ -281,7 +281,9 @@ export function BiometricSetupScreen() {
                           fontFamily: 'Inter_400Regular',
                           fontSize: 14,
                           color: 'rgba(255,255,255,0.85)',
-                          lineHeight: 19,
+                          lineHeight: 34,
+                          includeFontPadding: false,
+                          textAlignVertical: 'center',
                         }}
                       >
                         {p.text}
