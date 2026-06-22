@@ -116,6 +116,18 @@ export function ReflectionFeelingsScreen() {
               >
                 How often do you journal per week?
               </Text>
+              <Text
+                style={{
+                  fontFamily: "Inter_400Regular",
+                  color: "rgba(255,255,255,0.70)",
+                  fontSize: 14,
+                  textAlign: "center",
+                  marginTop: 8,
+                  lineHeight: 20,
+                }}
+              >
+                We'll tailor reminders to your rhythm
+              </Text>
             </Animated.View>
 
             {/* Options */}

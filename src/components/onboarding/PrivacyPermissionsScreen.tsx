@@ -63,7 +63,7 @@ export function PrivacyPermissionsScreen() {
     {
       icon: ShieldCheck,
       title: "No cloud, no servers",
-      description: "Lives on this device only",
+      description: "Lives on your device only",
     },
     {
       icon: ShieldCheck,
