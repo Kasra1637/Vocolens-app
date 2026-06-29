@@ -15,6 +15,7 @@
  */
 
 import { secureGetItem, secureSetItem, secureRemoveItem } from './secure-storage';
+import { hashPin, verifyPinHash, clearPinSalt } from './pin-hash';
 import { Platform } from 'react-native';
 
 const PIN_KEY = 'user_pin_code';
@@ -30,7 +31,7 @@ const log = {
 /**
  * Lazy mirror to the in-memory zustand `usePinStore`.
  *
- * Required at runtime so any consumer that reads `usePinStore.getState().pin`
+ * Required at runtime so any consumer that reads `usePinStore.getState().isPinSet`
  * sees the new value the instant SecureStore is updated — preventing stale
  * references. Lazy `require` keeps tests that mock only SecureStore + Crypto
  * working; pin-store transitively imports AsyncStorage which is not mocked
@@ -283,30 +284,33 @@ export async function setPin(pin: string): Promise<void> {
     throw new Error('PIN must be exactly 4 digits');
   }
   try {
-    await secureSetItem(PIN_KEY, pin);
+    // Hash the PIN with SHA-256 + device salt before storing
+    const pinHash = await hashPin(pin);
+    await secureSetItem(PIN_KEY, pinHash);
     await secureSetItem(AUTH_ENABLED_KEY, 'true');
   } catch (err) {
     log.error('setPin: SecureStore write failed', err);
     throw err;
   }
 
-  // Mirror to zustand store so any in-app consumer (and the reset-all-data
-  // flow) sees the new PIN immediately, without a re-read.
+  // Mirror the HASH (not plaintext) to zustand store so any in-app consumer
+  // sees the new value immediately, without a re-read.
   mirrorPinStore('set', pin);
 
-  log.info('PIN updated successfully');
+  log.info('PIN hash stored successfully');
 }
 
 export async function verifyPin(pin: string): Promise<boolean> {
   try {
     // ALWAYS read from SecureStore — never trust a cached / in-memory copy.
-    const storedPin = await secureGetItem(PIN_KEY);
-    if (storedPin === null) {
+    const storedHash = await secureGetItem(PIN_KEY);
+    if (storedHash === null) {
       log.warn('verifyPin: no PIN is set in SecureStore');
       return false;
     }
-    const ok = storedPin === pin;
-    log.info(ok ? 'verifyPin: match' : 'verifyPin: mismatch');
+    // Compare the hash of the entered PIN against the stored hash
+    const ok = await verifyPinHash(pin, storedHash);
+    log.info(ok ? 'verifyPin: hash match' : 'verifyPin: hash mismatch');
     return ok;
   } catch (error) {
     log.error('verifyPin error', error);
@@ -327,6 +331,7 @@ export async function changePin(oldPin: string, newPin: string): Promise<boolean
 export async function removePin(): Promise<void> {
   await secureRemoveItem(PIN_KEY);
   await secureRemoveItem(AUTH_ENABLED_KEY);
+  await clearPinSalt();
   // Keep zustand mirror in sync
   mirrorPinStore('clear');
   log.info('PIN removed');

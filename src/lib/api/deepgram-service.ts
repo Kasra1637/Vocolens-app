@@ -1,19 +1,11 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
-import Constants from 'expo-constants';
+import { apiFetch } from './client';
 
 export interface TranscriptionResult {
   transcript: string;
   confidence: number;
   duration: number;
-}
-
-function getBackendUrl(): string {
-  const url =
-    Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL ||
-    process.env.EXPO_PUBLIC_BACKEND_URL ||
-    'https://vocolens-api.kasrammarvel.workers.dev';
-  return String(url).replace(/\/$/, '');
 }
 
 export async function transcribeAudio(
@@ -27,10 +19,8 @@ export async function transcribeAudio(
   const audioBase64 = await FileSystem.readAsStringAsync(audioUri, {
     encoding: FileSystem.EncodingType.Base64,
   });
-  const backendUrl = getBackendUrl();
-  const response = await fetch(`${backendUrl}/api/transcribe`, {
+  const response = await apiFetch('/api/transcribe', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ audioBase64, language: options.language || 'en', mimeType }),
   });
   if (!response.ok) {

@@ -43,7 +43,7 @@ export default ({ config }) => ({
       'expo-build-properties',
       {
         ios: { useFrameworks: 'static' },
-        android: { usesCleartextTraffic: true },
+        android: { usesCleartextTraffic: false },
       },
     ],
     [
@@ -83,5 +83,7 @@ export default ({ config }) => ({
       process.env.EXPO_PUBLIC_OPENROUTER_API_KEY || undefined,
     EXPO_PUBLIC_BACKEND_URL:
       process.env.EXPO_PUBLIC_BACKEND_URL || undefined,
+    EXPO_PUBLIC_VOCOLENS_API_KEY:
+      process.env.EXPO_PUBLIC_VOCOLENS_API_KEY || undefined,
   },
 });

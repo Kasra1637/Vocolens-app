@@ -1,6 +1,5 @@
 import { EmotionType, EmotionScores, EmotionIntensityLabels, RankedEmotion, BlendedEmotionType, BLENDED_EMOTION_LABELS, OPPOSITE_EMOTION_PAIRS, buildIntensityLabels, getIntensityLabel } from "../types";
-
-function getBackendUrl() { return (process.env.EXPO_PUBLIC_BACKEND_URL || "https://vocolens-api.kasrammarvel.workers.dev").trim(); }
+import { apiFetch } from "./client";
 
 // Internal helpers — not exported (only used by parseResponse)
 function computeTopThreeEmotions(scores) { return Object.entries(scores).sort(([,a],[,b])=>(b as number)-(a as number)).slice(0,3).map(([emotion,score],i)=>({emotion,score,rank:i+1,intensityLabel:getIntensityLabel(emotion as EmotionType,score as number)})); }
@@ -61,7 +60,7 @@ export async function analyzeWithOpenRouter(transcript, _a?, personalizationCont
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),60000);
   try {
-    const r=await fetch(`${getBackendUrl()}/api/analyze`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcript,personalizationContext}),signal:controller.signal});
+    const r=await apiFetch('/api/analyze',{method:"POST",body:JSON.stringify({transcript,personalizationContext}),signal:controller.signal});
     clearTimeout(timeout);
     if(!r.ok){const e=await r.text();throw new Error(`Analysis error (${r.status}): ${e}`);}
     const j=await r.json();
@@ -76,7 +75,7 @@ export async function analyzeWithOpenRouter(transcript, _a?, personalizationCont
 export async function generateRecommendation(transcript, primaryEmotion="happiness") {
   if(!transcript||transcript.trim().length===0) return {advice:"Taking time to check in with yourself is meaningful.",audioAdvice:"Showing up here is already an act of self-care."};
   try {
-    const r=await fetch(`${getBackendUrl()}/api/recommend`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcript,primaryEmotion})});
+    const r=await apiFetch('/api/recommend',{method:"POST",body:JSON.stringify({transcript,primaryEmotion})});
     if(r.ok){
       const j=await r.json();
       if(j.success&&j.data?.advice&&typeof j.data.advice==="string"&&j.data.advice.trim().length>=60) return j.data;

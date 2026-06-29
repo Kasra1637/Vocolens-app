@@ -21,14 +21,30 @@
 // dashboard. Do NOT add fallbacks to other providers.
 const MODEL = "openai/gpt-5.4-mini";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+const ALLOWED_ORIGINS = [
+  "https://vocolens.com",
+  "https://www.vocolens.com",
+  "https://vocolens-api.kasrammarvel.workers.dev",
+];
 
-function json(data, status = 200) {
-  return Response.json(data, { status, headers: CORS });
+function getCorsHeaders(request) {
+  const origin = request.headers.get("Origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Device-Id, X-Api-Key",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
+
+function json(data, status = 200, request = null) {
+  const headers = request ? getCorsHeaders(request) : {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Device-Id, X-Api-Key",
+  };
+  return Response.json(data, { status, headers });
 }
 
 function orHeaders(apiKey) {
@@ -412,12 +428,14 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // CORS preflight
     if (request.method === "OPTIONS") {
-      return new Response(null, { headers: CORS });
+      return new Response(null, { headers: getCorsHeaders(request) });
     }
 
+    // Health endpoints — no auth required
     if (path === "/" || path === "/health") {
-      return json({ status: "ok", model: MODEL });
+      return json({ status: "ok", model: MODEL }, 200, request);
     }
 
     if (path === "/api/journal/status" && request.method === "GET") {
@@ -426,11 +444,22 @@ export default {
         openrouter: configured ? "connected" : "not_configured",
         model: MODEL,
         status: configured ? "ok" : "missing_api_key",
-      });
+      }, 200, request);
+    }
+
+    // ── Authentication ──────────────────────────────────────────────────────
+    // All POST endpoints require a valid API key in the X-Api-Key header.
+    // The key is set as a Cloudflare Worker secret (VOCOLENS_API_KEY).
+    if (request.method === "POST") {
+      const clientKey = request.headers.get("X-Api-Key") || "";
+      const serverKey = env.VOCOLENS_API_KEY || "";
+      if (!serverKey || clientKey !== serverKey) {
+        return json({ error: "Unauthorized" }, 401, request);
+      }
     }
 
     if (request.method !== "POST") {
-      return json({ error: "Not found" }, 404);
+      return json({ error: "Not found" }, 404, request);
     }
 
     try {
@@ -449,10 +478,10 @@ export default {
       if (path === "/api/journal/ai-completion") {
         return await handleAICompletion(request, env);
       }
-      return json({ error: "Not found" }, 404);
+      return json({ error: "Not found" }, 404, request);
     } catch (err) {
       console.error("[Worker] Unhandled error:", err.message);
-      return json({ error: err.message }, 500);
+      return json({ error: err.message }, 500, request);
     }
   },
 };

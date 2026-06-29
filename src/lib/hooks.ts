@@ -469,15 +469,11 @@ export function useWeeklyReflection(weekOffset: number = 0) {
     queryFn: async (): Promise<WeeklyReflectionResult & { isDemo?: boolean }> => {
       // Route through the Cloudflare Worker backend so all activity appears
       // in the OpenRouter dashboard under the server-side API key.
-      const backendUrl = (
-        process.env.EXPO_PUBLIC_BACKEND_URL ||
-        'https://vocolens-api.kasrammarvel.workers.dev'
-      ).trim();
 
       try {
-        const response = await fetch(`${backendUrl}/api/journal/weekly-reflection`, {
+        const { apiFetch } = await import('./api/client');
+        const response = await apiFetch('/api/journal/weekly-reflection', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             entries: weekEntries.map((e) => ({
               transcript: e.transcript ?? '',

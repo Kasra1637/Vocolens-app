@@ -2,14 +2,10 @@
  * Usage Service — syncs session minutes to backend and local store
  */
 
-import Constants from 'expo-constants';
 import * as Application from 'expo-application';
+import Constants from 'expo-constants';
 import useUserStatsStore from '../state/user-stats-store';
-
-const BACKEND_URL =
-  Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL ||
-  process.env.EXPO_PUBLIC_BACKEND_URL ||
-  'http://localhost:3000';
+import { apiFetch } from './client';
 
 export interface UsageStatus {
   monthlyMinutesUsed: number;
@@ -40,12 +36,9 @@ export async function recordSessionUsage(seconds: number): Promise<UsageStatus |
 
   try {
     const deviceId = getDeviceId();
-    const response = await fetch(`${BACKEND_URL}/api/usage/record`, {
+    const response = await apiFetch('/api/usage/record', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Device-Id': deviceId,
-      },
+      headers: { 'X-Device-Id': deviceId },
       body: JSON.stringify({ seconds }),
     });
 
@@ -70,7 +63,7 @@ export async function recordSessionUsage(seconds: number): Promise<UsageStatus |
 export async function syncUsageFromBackend(): Promise<UsageStatus | null> {
   try {
     const deviceId = getDeviceId();
-    const response = await fetch(`${BACKEND_URL}/api/usage/status`, {
+    const response = await apiFetch('/api/usage/status', {
       headers: { 'X-Device-Id': deviceId },
     });
 

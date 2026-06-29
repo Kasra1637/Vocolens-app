@@ -17,6 +17,7 @@ import {
 type WorkerEnv = {
   OPENROUTER_API_KEY?: string;
   DEEPGRAM_API_KEY?: string;
+  VOCOLENS_API_KEY?: string;
 };
 
 // Hono generic carries WorkerEnv so c.env is typed everywhere in this file
@@ -38,8 +39,33 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-app.use("*", cors({ origin: "*", credentials: true }));
+app.use("*", cors({
+  origin: [
+    'https://vocolens.com',
+    'https://www.vocolens.com',
+    'https://vocolens-api.kasrammarvel.workers.dev',
+  ],
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Device-Id', 'X-Api-Key'],
+}));
 app.use("*", logger());
+
+// ── API Key authentication middleware ─────────────────────────────────────────
+// All POST endpoints require a valid X-Api-Key header.
+// Health and status GET endpoints are exempt.
+app.use("/api/*", async (c, next) => {
+  if (c.req.method === "OPTIONS" || c.req.method === "GET") {
+    return next();
+  }
+  const clientKey = c.req.header("X-Api-Key") ?? "";
+  const serverKey = c.env?.VOCOLENS_API_KEY ?? process.env.VOCOLENS_API_KEY ?? "";
+  if (!serverKey || clientKey !== serverKey) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  await next();
+});
+
 app.get("/health", (c) => c.json({ status: "ok", model: "openai/gpt-5.4-mini" }));
 
 app.route("/api/sample", sampleRouter);

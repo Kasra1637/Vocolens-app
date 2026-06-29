@@ -25,12 +25,7 @@ export interface AIAnalysisResponse {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-function getBackendUrl(): string {
-  return (
-    process.env.EXPO_PUBLIC_BACKEND_URL ||
-    'https://vocolens-api.kasrammarvel.workers.dev'
-  ).trim();
-}
+import { apiFetch } from './api/client';
 
 // ── Cache ─────────────────────────────────────────────────────────────────────
 
@@ -156,9 +151,8 @@ Limit to 2-3 items per category. Respond with ONLY a valid JSON object — no ma
 
   const userPrompt = `Analyze these journal entries and provide emotional intelligence insights:\n\n${entriesText}\n\nRespond with valid JSON only.`;
 
-  const response = await fetch(`${getBackendUrl()}/api/journal/ai-completion`, {
+  const response = await apiFetch('/api/journal/ai-completion', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       systemPrompt,
       userPrompt,
