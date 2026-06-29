@@ -485,3 +485,4 @@ export default {
     }
   },
 };
+# Auto-deploy trigger
