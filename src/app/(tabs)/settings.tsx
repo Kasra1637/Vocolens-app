@@ -13,6 +13,7 @@ import {
   Alert,
   Platform,
   Linking,
+  Share,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,7 +23,8 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Settings } from "lucide-react-native";
+import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Settings, Heart } from "lucide-react-native";
+import * as Clipboard from "expo-clipboard";
 import { ExportJournalModal } from "@/components/ExportJournalModal";
 import Animated from "react-native-reanimated";
 import {
@@ -309,6 +311,40 @@ export default function SettingsScreen() {
     warningHaptic();
     setResetStep(1);
     setResetModalVisible(true);
+  };
+
+  // ── Share App handlers ──────────────────────────────────────────────────────
+  const [shareUnavailable, setShareUnavailable] = useState(false);
+
+  const APP_LINK = "https://vocolens.com";
+  const SHARE_MESSAGE = `I've been using Vocolens to track and understand my emotions — it's actually helped me a lot. Thought you might like it too: ${APP_LINK}`;
+
+  const handleShareApp = async () => {
+    tapHaptic();
+    try {
+      await Share.share(
+        {
+          message: SHARE_MESSAGE,
+          url: APP_LINK,
+          title: "Check out Vocolens",
+        },
+        { dialogTitle: "Share Vocolens" },
+      );
+    } catch {
+      // Share API unavailable on this device — switch to copy-link fallback
+      setShareUnavailable(true);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    tapHaptic();
+    try {
+      await Clipboard.setStringAsync(APP_LINK);
+      successHaptic();
+      showAlert("success", "Link Copied", "The link has been copied to your clipboard.");
+    } catch {
+      // silent
+    }
   };
 
   const handleResetStep1Confirm = () => {
@@ -1281,6 +1317,99 @@ export default function SettingsScreen() {
                   </Pressable>
                 </View>
               </View>
+            </Animated.View>
+
+            {/* ── Share / Spread the Word ── */}
+            <Animated.View key={`s-share-${animationKey}`} entering={ENTER_6} className="mb-6">
+              <Pressable
+                data-testid="share-app-card"
+                onPress={shareUnavailable ? handleCopyLink : handleShareApp}
+                className="active:opacity-75"
+              >
+                <View
+                  className="rounded-3xl overflow-hidden"
+                  style={{
+                    backgroundColor: surfaceBg,
+                    borderWidth: 2,
+                    borderColor: borderColor,
+                  }}
+                >
+                  {/* Section header */}
+                  <View
+                    className="flex-row items-center px-5 pt-5 pb-4"
+                    style={{
+                      borderBottomWidth: 1,
+                      borderBottomColor: "rgba(255, 255, 255, 0.12)",
+                    }}
+                  >
+                    <View
+                      className="items-center justify-center mr-3"
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 12,
+                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                      }}
+                    >
+                      <Heart size={22} color="#FFFFFF" strokeWidth={2} />
+                    </View>
+                    <Text
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                        fontSize: 20,
+                        flex: 1,
+                      }}
+                    >
+                      Help someone else feel understood
+                    </Text>
+                  </View>
+
+                  {/* Body */}
+                  <View className="p-5">
+                    <Text
+                      style={{
+                        fontFamily: "Inter_400Regular",
+                        color: "rgba(255, 255, 255, 0.75)",
+                        fontSize: 14,
+                        lineHeight: 22,
+                        marginBottom: shareUnavailable ? 16 : 0,
+                      }}
+                    >
+                      Someone you know probably feels what you feel — but doesn't have the
+                      words for it yet. Vocolens was built by one person who's lived it, not
+                      a company. Share it to help them find their words, and help an indie
+                      developer keep building.
+                    </Text>
+
+                    {shareUnavailable && (
+                      <Pressable
+                        data-testid="copy-link-button"
+                        onPress={handleCopyLink}
+                        className="active:opacity-80"
+                        style={{
+                          borderRadius: 18,
+                          borderWidth: 1.5,
+                          borderColor: "rgba(255, 255, 255, 0.35)",
+                          backgroundColor: "rgba(255, 255, 255, 0.12)",
+                          paddingVertical: 14,
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "Inter_600SemiBold",
+                            color: "#FFFFFF",
+                            fontSize: 15,
+                          }}
+                        >
+                          Copy link
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
+                </View>
+              </Pressable>
             </Animated.View>
           </ScrollView>
         </SafeAreaView>
