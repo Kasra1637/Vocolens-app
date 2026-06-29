@@ -112,16 +112,11 @@ function downloadBlobOnWeb(blob: Blob, filename: string) {
 }
 
 async function generatePdfForNative(html: string): Promise<{ uri: string; isPdf: boolean }> {
-  try {
-    const Print = await import('expo-print');
-    const { uri } = await Print.printToFileAsync({ html, base64: false });
-    return { uri, isPdf: true };
-  } catch {
-    // expo-print native module unavailable — fall back to saving raw HTML
-    const htmlPath = `${FileSystem.cacheDirectory}journal-entries.html`;
-    await FileSystem.writeAsStringAsync(htmlPath, html, { encoding: FileSystem.EncodingType.UTF8 });
-    return { uri: htmlPath, isPdf: false };
-  }
+  // Save as HTML file — avoids expo-print native module dependency
+  // which is unavailable in Expo Go / dev clients not built with it.
+  const htmlPath = `${FileSystem.cacheDirectory}journal-entries.html`;
+  await FileSystem.writeAsStringAsync(htmlPath, html, { encoding: FileSystem.EncodingType.UTF8 });
+  return { uri: htmlPath, isPdf: false };
 }
 
 export async function exportJournalArchive(options: ExportJournalOptions): Promise<ExportResult> {
