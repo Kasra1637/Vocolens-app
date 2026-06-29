@@ -23,6 +23,7 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Settings } from "lucide-react-native";
+import { ExportJournalModal } from "@/components/ExportJournalModal";
 import Animated from "react-native-reanimated";
 import {
   TAB_ENTER_1 as ENTER_1,
@@ -75,7 +76,6 @@ import {
 } from "@/lib/revenueCatClient";
 import { useCustomerCenter } from "@/lib/hooks/useCustomerCenter";
 import { removePin, changePin } from "@/lib/auth-service";
-import { exportAllDataAsCsv } from "@/lib/export-data";
 import { hexToRgba } from "@/lib/glass";
 import { PinEntryScreen, type PinEntryScreenHandle } from "@/components/PinEntryScreen";
 
@@ -90,7 +90,7 @@ export default function SettingsScreen() {
   const [alertMessage, setAlertMessage] = useState("");
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetStep, setResetStep] = useState<1 | 2>(1);
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportModalVisible, setExportModalVisible] = useState(false);
   const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
   const [isRestoringInSettings, setIsRestoringInSettings] = useState(false);
   const { openCustomerCenter, isOpen: isCustomerCenterOpen } = useCustomerCenter();
@@ -303,22 +303,6 @@ export default function SettingsScreen() {
   const handleChangePinCancel = () => {
     tapHaptic();
     setChangePinVisible(false);
-  };
-
-  const handleExportData = async () => {
-    tapHaptic();
-    setIsExporting(true);
-    try {
-      await exportAllDataAsCsv();
-    } catch {
-      showAlert(
-        "error",
-        "Export Failed",
-        "Could not export your data. Please try again.",
-      );
-    } finally {
-      setIsExporting(false);
-    }
   };
 
   const handleResetAllData = () => {
@@ -1178,62 +1162,49 @@ export default function SettingsScreen() {
                     }}
                   />
 
-                  {/* Export Data */}
-                  <Text
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      color: "#FFFFFF",
-                      fontSize: 15,
-                      marginBottom: 4,
-                    }}
-                  >
-                    Export All Data
-                  </Text>
-                  <Text
-                    style={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      fontSize: 13,
-                      marginBottom: 14,
-                      lineHeight: 19,
-                    }}
-                  >
-                    Download a CSV backup of your journal entries, stats,
-                    badges, and settings.
-                  </Text>
+                  {/* Export Journals */}
                   <Pressable
-                    data-testid="export-data-button"
-                    onPress={handleExportData}
-                    disabled={isExporting}
-                    className="rounded-3xl overflow-hidden active:opacity-80 mb-5"
-                    style={{ opacity: isExporting ? 0.6 : 1 }}
+                    onPress={() => { tapHaptic(); setExportModalVisible(true); }}
+                    className="active:opacity-70"
+                    style={{ marginBottom: 20 }}
                   >
-                    <View
-                      style={{
-                        paddingVertical: 14,
-                        paddingHorizontal: 24,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: hexToRgba(Colors.primary, 0.15),
-                        borderWidth: 2,
-                        borderColor: "rgba(255, 255, 255, 0.20)",
-                        borderRadius: 24,
-                      }}
-                    >
-                      <Download
-                        size={18}
-                        color="#FFFFFF"
-                        style={{ marginRight: 8 }}
-                      />
-                      <Text
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View
                         style={{
-                          fontFamily: "Inter_700Bold",
-                          color: "#FFFFFF",
-                          fontSize: 15,
+                          width: 40,
+                          height: 40,
+                          borderRadius: 12,
+                          backgroundColor: "rgba(255, 255, 255, 0.15)",
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 14,
                         }}
                       >
-                        {isExporting ? "Exporting..." : "Export as CSV"}
-                      </Text>
+                        <Download size={20} color="#FFFFFF" strokeWidth={2} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontFamily: 'Inter_600SemiBold',
+                            color: '#FFFFFF',
+                            fontSize: 15,
+                            marginBottom: 2,
+                          }}
+                        >
+                          Export your journals
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: 'Inter_400Regular',
+                            color: 'rgba(255,255,255,0.55)',
+                            fontSize: 13,
+                            lineHeight: 18,
+                          }}
+                        >
+                          Get your journal entries as a PDF archive with audio files organized by date
+                        </Text>
+                      </View>
+                      <ChevronRight size={18} color="rgba(255,255,255,0.35)" strokeWidth={2} />
                     </View>
                   </Pressable>
 
@@ -1827,6 +1798,14 @@ export default function SettingsScreen() {
           )}
         </View>
       </Modal>
+
+      {/* Export Journal Modal */}
+      <ExportJournalModal
+        visible={exportModalVisible}
+        onClose={() => setExportModalVisible(false)}
+        onSuccess={() => showAlert('success', 'Export Downloaded', 'Your journal archive has been saved.')}
+        onError={(msg) => showAlert('error', 'Export Failed', msg)}
+      />
 
       {/* Branded Alert */}
       <BrandedAlert
