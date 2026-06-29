@@ -1,5 +1,5 @@
+import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
-import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import JSZip from 'jszip';
 import { format } from 'date-fns';
@@ -46,6 +46,7 @@ function buildPdfHtml(entries: JournalEntry[]): string {
     <head>
       <meta charset="utf-8"/>
       <style>
+        @media print { .page-break { page-break-after: always; } }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a2e; padding: 40px; line-height: 1.6; }
         .header { text-align: center; margin-bottom: 48px; padding-bottom: 24px; border-bottom: 2px solid #e8e0f5; }
@@ -58,7 +59,7 @@ function buildPdfHtml(entries: JournalEntry[]): string {
         .meta { font-size: 12px; color: #999; margin-bottom: 16px; }
         .transcript { font-size: 15px; line-height: 1.7; color: #333; }
         .audio-note { margin-top: 12px; font-size: 12px; color: #7c5cbf; font-style: italic; }
-        .page-break { page-break-after: always; margin: 0; padding: 0; }
+        .page-break { margin: 0; padding: 0; }
         .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #aaa; }
       </style>
     </head>
@@ -99,6 +100,23 @@ export function getEntriesInRange(startDate: Date, endDate: Date): JournalEntry[
   });
 }
 
+function downloadBlobOnWeb(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function generatePdfForNative(html: string): Promise<string> {
+  const Print = await import('expo-print');
+  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  return uri;
+}
+
 export async function exportJournalArchive(options: ExportJournalOptions): Promise<ExportResult> {
   const { startDate, endDate, onProgress } = options;
 
@@ -111,63 +129,70 @@ export async function exportJournalArchive(options: ExportJournalOptions): Promi
 
   onProgress?.(`Generating PDF for ${entries.length} entries...`);
   const html = buildPdfHtml(entries);
-  const { uri: pdfUri } = await Print.printToFileAsync({ html, base64: false });
 
-  onProgress?.('Building archive...');
   const zip = new JSZip();
 
-  const pdfContent = await FileSystem.readAsStringAsync(pdfUri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
-  zip.file('journal-entries.pdf', pdfContent, { base64: true });
-
-  let audioCount = 0;
-  for (const entry of entries) {
-    if (!entry.audioUri) continue;
-
-    const fileInfo = await FileSystem.getInfoAsync(entry.audioUri);
-    if (!fileInfo.exists) continue;
-
-    const dateFolder = format(new Date(entry.createdAt), 'yyyy-MM-dd');
-    const time = format(new Date(entry.createdAt), 'HHmmss');
-    const ext = entry.audioUri.split('.').pop() || 'mp3';
-    const audioFileName = `audio/${dateFolder}/${time}.${ext}`;
-
+  if (Platform.OS === 'web') {
+    zip.file('journal-entries.html', html);
+  } else {
+    const pdfUri = await generatePdfForNative(html);
+    const pdfContent = await FileSystem.readAsStringAsync(pdfUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    zip.file('journal-entries.pdf', pdfContent, { base64: true });
     try {
-      const audioBase64 = await FileSystem.readAsStringAsync(entry.audioUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      zip.file(audioFileName, audioBase64, { base64: true });
-      audioCount++;
-    } catch {
-      // Skip inaccessible audio files
+      await FileSystem.deleteAsync(pdfUri, { idempotent: true });
+    } catch {}
+  }
+
+  onProgress?.('Building archive...');
+
+  if (Platform.OS !== 'web') {
+    for (const entry of entries) {
+      if (!entry.audioUri) continue;
+
+      const fileInfo = await FileSystem.getInfoAsync(entry.audioUri);
+      if (!fileInfo.exists) continue;
+
+      const dateFolder = format(new Date(entry.createdAt), 'yyyy-MM-dd');
+      const time = format(new Date(entry.createdAt), 'HHmmss');
+      const ext = entry.audioUri.split('.').pop() || 'mp3';
+      const audioFileName = `audio/${dateFolder}/${time}.${ext}`;
+
+      try {
+        const audioBase64 = await FileSystem.readAsStringAsync(entry.audioUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        zip.file(audioFileName, audioBase64, { base64: true });
+      } catch {
+        // Skip inaccessible audio files
+      }
     }
   }
 
   onProgress?.('Compressing archive...');
-  const zipBase64 = await zip.generateAsync({ type: 'base64' });
-
   const dateStr = format(new Date(), 'yyyy-MM-dd');
   const zipFileName = `vocolens-journal-${dateStr}.zip`;
-  const zipPath = `${FileSystem.cacheDirectory}${zipFileName}`;
 
-  await FileSystem.writeAsStringAsync(zipPath, zipBase64, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+  if (Platform.OS === 'web') {
+    const blob = await zip.generateAsync({ type: 'blob' });
+    downloadBlobOnWeb(blob, zipFileName);
+  } else {
+    const zipBase64 = await zip.generateAsync({ type: 'base64' });
+    const zipPath = `${FileSystem.cacheDirectory}${zipFileName}`;
 
-  onProgress?.('Saving...');
-  const canShare = await Sharing.isAvailableAsync();
-  if (canShare) {
-    await Sharing.shareAsync(zipPath, {
-      mimeType: 'application/zip',
-      dialogTitle: 'Save Journal Export',
+    await FileSystem.writeAsStringAsync(zipPath, zipBase64, {
+      encoding: FileSystem.EncodingType.Base64,
     });
-  }
 
-  // Clean up temp PDF
-  try {
-    await FileSystem.deleteAsync(pdfUri, { idempotent: true });
-  } catch {}
+    const canShare = await Sharing.isAvailableAsync();
+    if (canShare) {
+      await Sharing.shareAsync(zipPath, {
+        mimeType: 'application/zip',
+        dialogTitle: 'Save Journal Export',
+      });
+    }
+  }
 
   return { success: true, entryCount: entries.length };
 }
