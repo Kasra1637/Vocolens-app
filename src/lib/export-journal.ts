@@ -111,10 +111,17 @@ function downloadBlobOnWeb(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-async function generatePdfForNative(html: string): Promise<string> {
-  const Print = await import('expo-print');
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
-  return uri;
+async function generatePdfForNative(html: string): Promise<{ uri: string; isPdf: boolean }> {
+  try {
+    const Print = await import('expo-print');
+    const { uri } = await Print.printToFileAsync({ html, base64: false });
+    return { uri, isPdf: true };
+  } catch {
+    // expo-print native module unavailable — fall back to saving raw HTML
+    const htmlPath = `${FileSystem.cacheDirectory}journal-entries.html`;
+    await FileSystem.writeAsStringAsync(htmlPath, html, { encoding: FileSystem.EncodingType.UTF8 });
+    return { uri: htmlPath, isPdf: false };
+  }
 }
 
 export async function exportJournalArchive(options: ExportJournalOptions): Promise<ExportResult> {
@@ -135,13 +142,13 @@ export async function exportJournalArchive(options: ExportJournalOptions): Promi
   if (Platform.OS === 'web') {
     zip.file('journal-entries.html', html);
   } else {
-    const pdfUri = await generatePdfForNative(html);
-    const pdfContent = await FileSystem.readAsStringAsync(pdfUri, {
+    const { uri: fileUri, isPdf } = await generatePdfForNative(html);
+    const fileContent = await FileSystem.readAsStringAsync(fileUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
-    zip.file('journal-entries.pdf', pdfContent, { base64: true });
+    zip.file(isPdf ? 'journal-entries.pdf' : 'journal-entries.html', fileContent, { base64: true });
     try {
-      await FileSystem.deleteAsync(pdfUri, { idempotent: true });
+      await FileSystem.deleteAsync(fileUri, { idempotent: true });
     } catch {}
   }
 
