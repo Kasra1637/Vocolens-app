@@ -613,7 +613,7 @@ export default function SettingsScreen() {
               >
                 <View className="p-5">
                   {/* Header row */}
-                  <View className="flex-row items-center justify-between mb-4">
+                  <View className="flex-row items-center mb-4">
                     <View className="flex-row items-center">
                       <View
                         className="items-center justify-center mr-3"
@@ -650,58 +650,29 @@ export default function SettingsScreen() {
                         </Text>
                       </View>
                     </View>
-                    <View
-                      className="px-3 py-1 rounded-full"
-                      style={{
-                        backgroundColor: isAtLimit
-                          ? "rgba(255, 100, 100, 0.35)"
-                          : isNearLimit
-                            ? "rgba(255, 200, 80, 0.3)"
-                            : hexToRgba(Colors.primary, 0.15),
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_700Bold",
-                          color: "#FFFFFF",
-                          fontSize: 12,
-                        }}
-                      >
-                        {usageMinutesDisplay} / {USAGE_LIMIT_MINUTES} min
-                      </Text>
-                    </View>
                   </View>
 
-                  {/* Progress bar */}
+                  {/* Usage display */}
                   <View
-                    className="h-3 rounded-full mb-3"
-                    style={{ backgroundColor: hexToRgba(Colors.primary, 0.12) }}
-                  >
-                    <View
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${Math.min(100, usagePct * 100)}%`,
-                        backgroundColor: "#FFFFFF",
-                      }}
-                    />
-                  </View>
-
-                  {/* Status text */}
-                  <Text
+                    className="rounded-full self-center px-4 py-2"
                     style={{
-                      fontFamily: "Inter_400Regular",
-                      color: isAtLimit
-                        ? "rgba(255,180,180,0.95)"
+                      backgroundColor: isAtLimit
+                        ? "rgba(255, 100, 100, 0.35)"
                         : isNearLimit
-                          ? "rgba(255,230,150,0.95)"
-                          : "rgba(255,255,255,0.7)",
-                      fontSize: 12,
+                          ? "rgba(255, 200, 80, 0.3)"
+                          : hexToRgba(Colors.primary, 0.15),
                     }}
                   >
-                    {isAtLimit
-                      ? "Monthly limit reached. Usage resets at the start of next month."
-                      : `${remainingMinutesDisplay} minutes remaining this month`}
-                  </Text>
+                    <Text
+                      style={{
+                        fontFamily: "Inter_700Bold",
+                        color: "#FFFFFF",
+                        fontSize: 14,
+                      }}
+                    >
+                      {usageMinutesDisplay} / {USAGE_LIMIT_MINUTES} min
+                    </Text>
+                  </View>
                 </View>
               </View>
             </Animated.View>

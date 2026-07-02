@@ -4,14 +4,12 @@
  * Full-screen paywall shown when a user's subscription has expired.
  * Completely blocks app access until the user re-subscribes.
  *
- * Design: value-focused — shows the user's personal stats (streak, entries,
- * badges, minutes) so they can see what they've built and what they'll lose
- * access to. Matches the design system of onboarding/PaywallScreen.tsx
- * (glassmorphic cards, Fraunces headings, Inter body, FadeIn animations,
- * themed LinearGradient background).
+ * Design: urgency-focused — centered messaging that creates a sense of
+ * loss and time pressure, making the user feel what they're missing out on.
+ * Matches the design system of onboarding/PaywallScreen.tsx (Fraunces
+ * headings, Inter body, FadeIn animations, themed LinearGradient).
  *
- * Offers yearly / quarterly plan selection (same as onboarding paywall),
- * with a monthly downgrade option via an exit-intent modal.
+ * Offers yearly / quarterly plan selection with monthly downgrade option.
  */
 
 import React, { useState, useEffect } from "react";
@@ -30,23 +28,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
-import {
-  ChevronRight,
-  X,
-  Flame,
-  BookOpen,
-  Award,
-  Clock,
-  type LucideIcon,
-} from "lucide-react-native";
+import { ChevronRight, X } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
-import useUserStatsStore, {
-  useCurrentStreak,
-  useTotalEntries,
-  useLongestStreak,
-} from "@/lib/state/user-stats-store";
-import { useUnlockedBadgesCount } from "@/lib/state/badges-store";
 import {
   configureAdapty,
   getPaywallProducts,
@@ -71,52 +55,7 @@ const THREE_MONTH_PER_MONTH = "$8.33";
 
 type PlanKey = "yearly" | "three_month" | "monthly";
 
-// ── Stat card helper ──────────────────────────────────────────────────────────
-function StatCard({ icon: Icon, value, label }: { icon: LucideIcon; value: string | number; label: string }) {
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "rgba(255,255,255,0.10)",
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.18)",
-        paddingVertical: 14,
-        paddingHorizontal: 10,
-        alignItems: "center",
-        gap: 6,
-      }}
-    >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 12,
-          backgroundColor: "rgba(255,255,255,0.14)",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon size={18} color="#FFFFFF" strokeWidth={2} />
-      </View>
-      <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 20 }}>
-        {value}
-      </Text>
-      <Text
-        style={{
-          fontFamily: "Inter_400Regular",
-          color: "rgba(255,255,255,0.65)",
-          fontSize: 11,
-          textAlign: "center",
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-// ── Monthly exit-offer modal ──────────────────────────────────────────────────
+// ── Monthly downgrade modal ───────────────────────────────────────────────────
 function MonthlyExitModal({
   visible,
   themeColors,
@@ -149,7 +88,7 @@ function MonthlyExitModal({
           </View>
 
           <Text style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 21, marginBottom: 20 }}>
-            Keep your journal and progress accessible — no long-term commitment, cancel anytime.
+            Keep access to your journal and all your progress — cancel anytime.
           </Text>
 
           <View
@@ -217,15 +156,6 @@ export function SubscriptionLapsedPaywall() {
   const themeColors = THEME_COLORS[selectedTheme];
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
 
-  // User stats for value display
-  const currentStreak = useCurrentStreak();
-  const totalEntries = useTotalEntries();
-  const longestStreak = useLongestStreak();
-  const totalDuration = useUserStatsStore((s) => s.stats.totalDuration);
-  const unlockedBadges = useUnlockedBadgesCount();
-
-  const totalMinutes = Math.floor(totalDuration / 60);
-
   // Adapty products
   const [monthlyPkg, setMonthlyPkg] = useState<AdaptyPaywallProduct | null>(null);
   const [threeMonthPkg, setThreeMonthPkg] = useState<AdaptyPaywallProduct | null>(null);
@@ -262,11 +192,7 @@ export function SubscriptionLapsedPaywall() {
   const handleCTA = async () => {
     tapHaptic();
     const pkg = selectedPlan === "yearly" ? yearlyPkg : threeMonthPkg;
-
-    if (!pkg) {
-      grantAccess(selectedPlan);
-      return;
-    }
+    if (!pkg) { grantAccess(selectedPlan); return; }
 
     setIsPurchasing(true);
     const result = await makePurchase(pkg);
@@ -284,10 +210,7 @@ export function SubscriptionLapsedPaywall() {
 
   const handleMonthlyAccept = async () => {
     tapHaptic();
-    if (!monthlyPkg) {
-      grantAccess("monthly");
-      return;
-    }
+    if (!monthlyPkg) { grantAccess("monthly"); return; }
 
     setIsPurchasingMonthly(true);
     const result = await makePurchase(monthlyPkg);
@@ -335,8 +258,9 @@ export function SubscriptionLapsedPaywall() {
       <LinearGradient colors={themeColors.backgroundGradient} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }}>
         <SafeAreaView style={{ flex: 1 }}>
           <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: "flex-end", paddingTop: 24, paddingBottom: 24 }}>
-            {/* Hero */}
-            <Animated.View entering={FadeIn.delay(50).duration(700).easing(SOFT)} style={{ alignItems: "center", marginBottom: 16 }}>
+
+            {/* Urgency hero — all text centered */}
+            <Animated.View entering={FadeIn.delay(50).duration(700).easing(SOFT)} style={{ alignItems: "center", marginBottom: 20 }}>
               <Text
                 style={{
                   fontFamily: "Fraunces_700Bold",
@@ -348,33 +272,46 @@ export function SubscriptionLapsedPaywall() {
                   letterSpacing: 0.2,
                 }}
               >
-                Your progress is{"\n"}waiting for you.
+                Your subscription{"\n"}has ended.
               </Text>
               <Text
                 style={{
                   fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.60)",
-                  fontSize: 14,
+                  color: "rgba(255,255,255,0.70)",
+                  fontSize: 15,
                   textAlign: "center",
-                  marginTop: 8,
-                  lineHeight: 20,
-                  maxWidth: "85%",
+                  marginTop: 12,
+                  lineHeight: 22,
+                  maxWidth: "90%",
                 }}
               >
-                Resubscribe to keep your journal, insights, and growth accessible.
+                Your journal entries, streaks, and insights are locked. Reactivate now to pick up right where you left off — every day without it, your progress fades.
               </Text>
             </Animated.View>
 
-            {/* Stats grid — what you've built */}
-            <Animated.View entering={FadeIn.delay(120).duration(700).easing(SOFT)} style={{ marginBottom: 16 }}>
-              <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.5, marginBottom: 10, opacity: 0.7 }}>
-                WHAT YOU HAVE BUILT
-              </Text>
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                <StatCard icon={Flame} value={currentStreak > 0 ? currentStreak : longestStreak} label={currentStreak > 0 ? "Day streak" : "Best streak"} />
-                <StatCard icon={BookOpen} value={totalEntries} label="Entries" />
-                <StatCard icon={Award} value={unlockedBadges} label="Badges" />
-                <StatCard icon={Clock} value={totalMinutes} label="Minutes" />
+            {/* Urgency nudge */}
+            <Animated.View entering={FadeIn.delay(120).duration(700).easing(SOFT)} style={{ alignItems: "center", marginBottom: 20 }}>
+              <View
+                style={{
+                  backgroundColor: "rgba(239,68,68,0.12)",
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: "rgba(239,68,68,0.30)",
+                  paddingHorizontal: 18,
+                  paddingVertical: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#F87171",
+                    fontSize: 13,
+                    textAlign: "center",
+                    lineHeight: 19,
+                  }}
+                >
+                  Your streak will reset to zero if you don't reactivate today.
+                </Text>
               </View>
             </Animated.View>
 
@@ -465,7 +402,7 @@ export function SubscriptionLapsedPaywall() {
                   ) : (
                     <>
                       <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 18 }}>
-                        Continue with {selectedPlan === "yearly" ? "Annual" : "Quarterly"}
+                        Reactivate Now
                       </Text>
                       <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
                     </>
@@ -475,7 +412,7 @@ export function SubscriptionLapsedPaywall() {
 
               {/* Downgrade option */}
               <Pressable onPress={() => setShowExitModal(true)} style={{ marginTop: 12 }}>
-                <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.50)", fontSize: 13 }}>
+                <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.50)", fontSize: 13, textAlign: "center" }}>
                   Or switch to monthly ({monthlyPrice}/mo)
                 </Text>
               </Pressable>
