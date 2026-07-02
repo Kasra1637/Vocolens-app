@@ -1,5 +1,5 @@
 /**
- * Auth Gate — RevenueCat v10
+ * Auth Gate — Adapty
  *
  * Flow:
  *  1. Show splash on every launch
@@ -31,12 +31,11 @@ import { StandalonePaywall } from './StandalonePaywall';
 import { FirstLaunchCelebration } from './FirstLaunchCelebration';
 import { SplashScreen } from './onboarding/SplashScreen';
 import {
-  configureRevenueCat,
-  getCustomerInfo,
-  hasEntitlement,
-  isRevenueCatEnabled,
-  addCustomerInfoListener,
-} from '@/lib/revenueCatClient';
+  configureAdapty,
+  getProfile,
+  hasAccessLevel,
+  addProfileListener,
+} from '@/lib/adaptyClient';
 import { NotificationService } from '@/lib/services/notification-service';
 
 interface AuthGateProps {
@@ -85,7 +84,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
   // ── Configure SDK once on mount ────────────────────────────────────────────
   useEffect(() => {
-    configureRevenueCat();
+    configureAdapty();
   }, []);
 
   // ── Detect unlock transition → trigger celebration overlay ─────────────────
@@ -158,8 +157,8 @@ export function AuthGate({ children }: AuthGateProps) {
 
   // ── Listen for real-time subscription changes (e.g. renewal, cancellation) ─
   useEffect(() => {
-    const removeListener = addCustomerInfoListener((info) => {
-      const active = hasEntitlement(info);
+    const removeListener = addProfileListener((profile) => {
+      const active = hasAccessLevel(profile);
       if (active) setSubscription(true);
       else clearSubscription();
     });
@@ -174,15 +173,13 @@ export function AuthGate({ children }: AuthGateProps) {
 
     let confirmedActive = hasSubscription; // cached fallback
 
-    if (isRevenueCatEnabled()) {
-      const result = await getCustomerInfo();
-      if (result.ok) {
-        confirmedActive = hasEntitlement(result.data);
-        if (confirmedActive) setSubscription(true);
-        else clearSubscription();
-      }
-      // If SDK call failed (network), fall back to cached value
+    const result = await getProfile();
+    if (result.ok) {
+      confirmedActive = hasAccessLevel(result.data);
+      if (confirmedActive) setSubscription(true);
+      else clearSubscription();
     }
+    // If SDK call failed (not activated / network), fall back to cached value
 
     setSubscriptionVerified(true);
     setAuthenticated(true);
@@ -203,7 +200,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  if (isLoading || (hasCompletedOnboarding && !subscriptionVerified && isRevenueCatEnabled())) {
+  if (isLoading || (hasCompletedOnboarding && !subscriptionVerified)) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0F0E1A' }}>
         <ActivityIndicator size="large" color="#9333ea" />

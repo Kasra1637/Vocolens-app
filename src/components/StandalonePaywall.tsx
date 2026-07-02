@@ -1,9 +1,11 @@
 /**
- * StandalonePaywall — RevenueCat v10
+ * StandalonePaywall — Adapty (custom code paywall)
  *
  * Shown post-onboarding when subscription has lapsed or cannot be verified.
- * Uses RevenueCatUI.presentPaywall() as the primary flow.
- * Falls back to custom native UI when the native module is unavailable.
+ * Fetches the "yearly" / "monthly" products from the Adapty placement
+ * `PLACEMENT_MAIN_PAYWALL` and drives purchases directly via
+ * `adapty.makePurchase()`. Falls back to hardcoded prices + a local grant
+ * while Adapty is running in mock mode (no Public SDK Key configured yet).
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -38,27 +40,18 @@ import {
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import {
-  configureRevenueCat,
-  getOfferings,
-  purchasePackage,
+  configureAdapty,
+  getPaywallProducts,
+  findProductById,
+  makePurchase,
   restorePurchases,
-  hasEntitlement,
-  isRevenueCatEnabled,
-  RC_ENTITLEMENT,
-} from "@/lib/revenueCatClient";
-import type { PurchasesPackage } from "react-native-purchases";
+  hasAccessLevel,
+  PLACEMENT_MAIN_PAYWALL,
+  PRODUCT_ID_YEARLY,
+  PRODUCT_ID_MONTHLY,
+} from "@/lib/adaptyClient";
+import type { AdaptyPaywallProduct } from "react-native-adapty";
 import { NotificationService } from "@/lib/services/notification-service";
-
-// ── RevenueCatUI — lazy load so Expo Go doesn't crash ─────────────────────────
-let RevenueCatUI: typeof import("react-native-purchases-ui").default | null = null;
-let PAYWALL_RESULT: typeof import("react-native-purchases-ui").PAYWALL_RESULT | null = null;
-try {
-  const ui = require("react-native-purchases-ui");
-  RevenueCatUI = ui.default;
-  PAYWALL_RESULT = ui.PAYWALL_RESULT;
-} catch {
-  console.log("[StandalonePaywall] RevenueCatUI not available — need development build (not Expo Go).");
-}
 
 const YEARLY_PRICE  = "$79.99";
 const YEARLY_FULL   = "$119.88";
@@ -196,28 +189,21 @@ export function StandalonePaywall() {
   const themeColors             = THEME_COLORS[selectedTheme];
   const setSubscription         = useSubscriptionStore((s) => s.setSubscription);
 
-  const [yearlyPkg,   setYearlyPkg]   = useState<PurchasesPackage | null>(null);
-  const [monthlyPkg,  setMonthlyPkg]  = useState<PurchasesPackage | null>(null);
+  const [yearlyPkg,   setYearlyPkg]   = useState<AdaptyPaywallProduct | null>(null);
+  const [monthlyPkg,  setMonthlyPkg]  = useState<AdaptyPaywallProduct | null>(null);
   const [isPurchasing,        setIsPurchasing]        = useState(false);
   const [isPurchasingMonthly, setIsPurchasingMonthly] = useState(false);
   const [isRestoring,         setIsRestoring]         = useState(false);
   const [showExitModal,       setShowExitModal]       = useState(false);
 
   useEffect(() => {
-    if (!isRevenueCatEnabled()) return;
-    configureRevenueCat();
+    configureAdapty();
     (async () => {
-      const result = await getOfferings();
+      const result = await getPaywallProducts(PLACEMENT_MAIN_PAYWALL);
       if (!result.ok) return;
-      const allPkgs = (result.data.current?.availablePackages ?? []).length > 0
-        ? result.data.current!.availablePackages
-        : result.data.offerings.flatMap((o: any) => o.availablePackages);
-      setYearlyPkg(
-        allPkgs.find((p: any) => p.packageType === "ANNUAL"  || p.identifier === "$rc_annual"  || p.product.identifier === "yearly")  ?? null
-      );
-      setMonthlyPkg(
-        allPkgs.find((p: any) => p.packageType === "MONTHLY" || p.identifier === "$rc_monthly" || p.product.identifier === "monthly") ?? null
-      );
+      const { products } = result.data;
+      setYearlyPkg(findProductById(products, PRODUCT_ID_YEARLY));
+      setMonthlyPkg(findProductById(products, PRODUCT_ID_MONTHLY));
     })();
   }, []);
 
@@ -239,39 +225,41 @@ export function StandalonePaywall() {
 
   const handleContinue = async () => {
     tapHaptic();
-    if (!isRevenueCatEnabled() || !yearlyPkg) { grantYearly(); return; }
+    if (!yearlyPkg) { grantYearly(); return; }
     setIsPurchasing(true);
-    const result = await purchasePackage(yearlyPkg);
+    const result = await makePurchase(yearlyPkg);
     setIsPurchasing(false);
-    if (result.ok && hasEntitlement(result.data)) {
+    if (result.ok && result.data.type === "success" && hasAccessLevel(result.data.profile)) {
       grantYearly();
-    } else if (result.reason === "sdk_error") {
-      const cancelled = (result.error as any)?.userCancelled === true;
-      if (!cancelled) { errorHaptic(); Alert.alert("Payment Error", "Something went wrong. Please try again."); }
-      else errorHaptic();
+    } else if (result.ok && result.data.type === "user_cancelled") {
+      errorHaptic();
+    } else if (!result.ok && result.reason === "sdk_error") {
+      errorHaptic();
+      Alert.alert("Payment Error", "Something went wrong. Please try again.");
     }
   };
 
   const handleMonthlyAccept = async () => {
     tapHaptic();
-    if (!isRevenueCatEnabled() || !monthlyPkg) { grantMonthly(); return; }
+    if (!monthlyPkg) { grantMonthly(); return; }
     setIsPurchasingMonthly(true);
-    const result = await purchasePackage(monthlyPkg);
+    const result = await makePurchase(monthlyPkg);
     setIsPurchasingMonthly(false);
-    if (result.ok && hasEntitlement(result.data)) {
+    if (result.ok && result.data.type === "success" && hasAccessLevel(result.data.profile)) {
       grantMonthly();
-    } else if (result.reason === "sdk_error") {
-      const cancelled = (result.error as any)?.userCancelled === true;
-      if (!cancelled) { errorHaptic(); Alert.alert("Payment Error", "Something went wrong. Please try again."); }
+    } else if (result.ok && result.data.type === "user_cancelled") {
+      errorHaptic();
+    } else if (!result.ok && result.reason === "sdk_error") {
+      errorHaptic();
+      Alert.alert("Payment Error", "Something went wrong. Please try again.");
     }
   };
 
   const handleRestore = async () => {
-    if (!isRevenueCatEnabled()) return;
     setIsRestoring(true);
     const result = await restorePurchases();
     setIsRestoring(false);
-    if (result.ok && hasEntitlement(result.data)) {
+    if (result.ok && hasAccessLevel(result.data)) {
       successHaptic();
       setSubscription(true);
       if (notificationPreferences?.time && notificationPreferences.days.length > 0) {
@@ -286,33 +274,8 @@ export function StandalonePaywall() {
     }
   };
 
-  // ── Present RevenueCat managed paywall (primary path) ─────────────────────
-  const handlePresentRCPaywall = async () => {
-    if (!RevenueCatUI || !isRevenueCatEnabled()) {
-      // Fallback: use custom paywall CTA
-      handleContinue();
-      return;
-    }
-    try {
-      const result = await RevenueCatUI.presentPaywallIfNeeded({
-        requiredEntitlementIdentifier: RC_ENTITLEMENT,
-        displayCloseButton: true,
-      });
-      // If user completed purchase inside RC paywall, refresh store
-      if (result === PAYWALL_RESULT?.PURCHASED || result === PAYWALL_RESULT?.RESTORED) {
-        const infoResult = await import("@/lib/revenueCatClient").then((m) => m.getCustomerInfo());
-        if (infoResult.ok && hasEntitlement(infoResult.data)) {
-          grantYearly();
-        }
-      }
-    } catch (e: any) {
-      console.log("[StandalonePaywall] presentPaywallIfNeeded error:", e?.message);
-      handleContinue();
-    }
-  };
-
-  const yearlyPrice  = yearlyPkg?.product?.priceString  ?? YEARLY_PRICE;
-  const monthlyPrice = monthlyPkg?.product?.priceString ?? MONTHLY_PRICE;
+  const yearlyPrice  = yearlyPkg?.price?.localizedString  ?? YEARLY_PRICE;
+  const monthlyPrice = monthlyPkg?.price?.localizedString ?? MONTHLY_PRICE;
 
   const timelineSteps: { icon: LucideIcon; label: string; sublabel: string }[] = [
     { icon: Unlock,     label: "Today",                      sublabel: "Unlock all features instantly." },
@@ -392,9 +355,9 @@ export function StandalonePaywall() {
               </View>
             </View>
 
-            {/* CTA — uses RC managed paywall when available */}
+            {/* CTA — purchases the yearly plan via Adapty */}
             <Pressable
-              onPress={handlePresentRCPaywall}
+              onPress={handleContinue}
               disabled={isPurchasing}
               style={{ width: "100%", borderRadius: 16, borderWidth: 2, borderColor: "#FFFFFF", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: Platform.OS === "android" ? 0 : 8, opacity: isPurchasing ? 0.75 : 1 }}
             >

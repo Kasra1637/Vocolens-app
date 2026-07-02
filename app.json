@@ -40,7 +40,8 @@
         }
       ],
       "expo-updates",
-      "react-native-adapty"
+      ["react-native-adapty", { "replaceAndroidBackupConfig": true }],
+      ["expo-secure-store", { "configureAndroidBackup": false }]
     ],
     "extra": {
       "router": {},

@@ -1,0 +1,21 @@
+# Wrangler configuration for the vocolens-api Cloudflare Worker.
+#
+# This file is required for Cloudflare's Git-integrated "Workers Builds"
+# CI/CD to know which file is the Worker's entry point. Without it, every
+# push triggers a "Workers Builds: vocolens-api" check that fails
+# immediately because Cloudflare has nothing to build.
+#
+# Entry point: src/worker.js is the single-file Worker deployment described
+# in its own header comment — it's what actually serves
+# https://vocolens-api.kasrammarvel.workers.dev (see ALLOWED_ORIGINS in
+# src/worker.js and the default EXPO_PUBLIC_BACKEND_URL in app.config.js).
+# src/index.ts (Hono + routes/) is a separate Node.js backend, run via
+# `npm start` / railpack — not deployed through this Worker.
+#
+# Secrets (OPENROUTER_API_KEY, DEEPGRAM_API_KEY, VOCOLENS_API_KEY) are
+# configured directly in the Cloudflare dashboard / via `wrangler secret put`
+# — do NOT add them here.
+
+name = "vocolens-api"
+main = "src/worker.js"
+compatibility_date = "2026-07-01"
