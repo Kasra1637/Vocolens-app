@@ -1,6 +1,8 @@
 name: PR Preview (EAS Update)
 
 on:
+  push:
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -27,16 +29,17 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli@19.0.1
 
-      - name: Publish EAS Update for PR
+      - name: Publish EAS Update
         run: |
           eas update \
             --branch main \
-            --message "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}" \
+            --message "${{ github.event_name == 'pull_request' && format('PR #{0}: {1}', github.event.pull_request.number, github.event.pull_request.title) || format('Push to main: {0}', github.event.head_commit.message) }}" \
             --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Comment on PR with preview info
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
