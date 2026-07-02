@@ -4,7 +4,7 @@
  * Flow:
  *  1. Show splash on every launch
  *  2. Onboarding not done → OnboardingFlow (paywall embedded as step 23)
- *  3. Onboarding done, no active subscription → StandalonePaywall
+ *  3. Onboarding done, no active subscription → SubscriptionLapsedPaywall
  *  4. Lock enabled but not unlocked this session → BiometricLockScreen
  *  5. All good → show app
  *
@@ -27,7 +27,7 @@ import useSubscriptionStore from '@/lib/state/subscription-store';
 import { OnboardingFlow } from './onboarding';
 import { BiometricLockScreen } from './BiometricLockScreen';
 import { BiometricUnlockCelebration } from './BiometricUnlockCelebration';
-import { StandalonePaywall } from './StandalonePaywall';
+import { SubscriptionLapsedPaywall } from './SubscriptionLapsedPaywall';
 import { FirstLaunchCelebration } from './FirstLaunchCelebration';
 import { SplashScreen } from './onboarding/SplashScreen';
 import {
@@ -224,7 +224,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
   // No active subscription
   if (!hasSubscription) {
-    return <StandalonePaywall />;
+    return <SubscriptionLapsedPaywall />;
   }
 
   // ── SECURITY GATE ──────────────────────────────────────────────────────────
