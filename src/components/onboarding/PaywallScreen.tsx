@@ -1,12 +1,13 @@
 /**
- * PaywallScreen — RevenueCat v10 + RevenueCatUI
+ * PaywallScreen — Adapty (custom code paywall)
  *
- * Uses RevenueCatUI.presentPaywall() to show the remotely-configured
- * paywall from the RevenueCat dashboard.  Falls back to a native
- * custom paywall when the native UI module is unavailable (Expo Go).
+ * Fetches the "monthly" / "three_month" / "yearly" products from the Adapty
+ * placement `PLACEMENT_ONBOARDING_PAYWALL` and drives purchases directly via
+ * `adapty.makePurchase()`. Falls back to hardcoded prices + a local grant
+ * while Adapty is running in mock mode (no Public SDK Key configured yet).
  *
- * Products: monthly | three_month | yearly
- * Entitlement: "Vocolens Pro"
+ * Products (vendor product ids): monthly | three_month | yearly
+ * Access level: "premium"
  */
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -33,16 +34,18 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import {
-  configureRevenueCat,
-  getCustomerInfo,
-  getOfferings,
-  purchasePackage,
+  configureAdapty,
+  getPaywallProducts,
+  findProductById,
+  makePurchase,
   restorePurchases,
-  hasEntitlement,
-  isRevenueCatEnabled,
-  RC_ENTITLEMENT,
-} from "@/lib/revenueCatClient";
-import type { PurchasesPackage } from "react-native-purchases";
+  hasAccessLevel,
+  PLACEMENT_ONBOARDING_PAYWALL,
+  PRODUCT_ID_MONTHLY,
+  PRODUCT_ID_THREE_MONTH,
+  PRODUCT_ID_YEARLY,
+} from "@/lib/adaptyClient";
+import type { AdaptyPaywallProduct } from "react-native-adapty";
 import { NotificationService } from "@/lib/services/notification-service";
 
 // ── Pricing fallbacks (shown when SDK not available) ──────────────────────────
@@ -152,10 +155,10 @@ export function PaywallScreen() {
   const playClickSound = useClickSound();
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
 
-  // RevenueCat package references (loaded from SDK)
-  const [monthlyPkg,    setMonthlyPkg]    = useState<PurchasesPackage | null>(null);
-  const [threeMonthPkg, setThreeMonthPkg] = useState<PurchasesPackage | null>(null);
-  const [yearlyPkg,     setYearlyPkg]     = useState<PurchasesPackage | null>(null);
+  // Adapty product references (loaded from SDK)
+  const [monthlyPkg,    setMonthlyPkg]    = useState<AdaptyPaywallProduct | null>(null);
+  const [threeMonthPkg, setThreeMonthPkg] = useState<AdaptyPaywallProduct | null>(null);
+  const [yearlyPkg,     setYearlyPkg]     = useState<AdaptyPaywallProduct | null>(null);
 
   const [selectedPlan,       setSelectedPlan]       = useState<"yearly" | "three_month">("yearly");
   const [isPurchasing,       setIsPurchasing]        = useState(false);
@@ -163,29 +166,18 @@ export function PaywallScreen() {
   const [isRestoring,        setIsRestoring]         = useState(false);
   const [showExitModal,      setShowExitModal]       = useState(false);
 
-  // ── Load offerings ──────────────────────────────────────────────────────────
+  // ── Load products from Adapty ───────────────────────────────────────────────
   useEffect(() => {
     trackEvent("paywall_shown", { screen: "onboarding", default_plan: "yearly" });
-    if (!isRevenueCatEnabled()) return;
 
-    configureRevenueCat();
+    configureAdapty();
     (async () => {
-      const result = await getOfferings();
+      const result = await getPaywallProducts(PLACEMENT_ONBOARDING_PAYWALL);
       if (!result.ok) return;
-      // Prefer the current offering; fall back to all packages across all offerings.
-      // Match by RC packageType, then RC package identifier, then product identifier.
-      const allPkgs = (result.data.current?.availablePackages ?? []).length > 0
-        ? result.data.current!.availablePackages
-        : result.data.offerings.flatMap((o: any) => o.availablePackages);
-      setYearlyPkg(
-        allPkgs.find((p: any) => p.packageType === "ANNUAL"      || p.identifier === "$rc_annual"      || p.product.identifier === "yearly")       ?? null
-      );
-      setThreeMonthPkg(
-        allPkgs.find((p: any) => p.packageType === "THREE_MONTH" || p.identifier === "$rc_three_month" || p.product.identifier === "three_month")  ?? null
-      );
-      setMonthlyPkg(
-        allPkgs.find((p: any) => p.packageType === "MONTHLY"     || p.identifier === "$rc_monthly"     || p.product.identifier === "monthly")      ?? null
-      );
+      const { products } = result.data;
+      setYearlyPkg(findProductById(products, PRODUCT_ID_YEARLY));
+      setThreeMonthPkg(findProductById(products, PRODUCT_ID_THREE_MONTH));
+      setMonthlyPkg(findProductById(products, PRODUCT_ID_MONTHLY));
     })();
   }, []);
 
@@ -206,24 +198,21 @@ export function PaywallScreen() {
 
     const pkg = selectedPlan === "yearly" ? yearlyPkg : threeMonthPkg;
 
-    if (!isRevenueCatEnabled() || !pkg) {
+    if (!pkg) {
       grantAccess(selectedPlan); return;
     }
 
     setIsPurchasing(true);
-    const result = await purchasePackage(pkg);
+    const result = await makePurchase(pkg);
     setIsPurchasing(false);
 
-    if (result.ok && hasEntitlement(result.data)) {
+    if (result.ok && result.data.type === "success" && hasAccessLevel(result.data.profile)) {
       grantAccess(selectedPlan);
-    } else if (result.reason === "sdk_error") {
-      const cancelled = (result.error as any)?.userCancelled === true;
-      if (!cancelled) {
-        errorHaptic();
-        Alert.alert("Payment Error", "Something went wrong. Please try again.");
-      } else {
-        errorHaptic();
-      }
+    } else if (result.ok && result.data.type === "user_cancelled") {
+      errorHaptic();
+    } else if (!result.ok && result.reason === "sdk_error") {
+      errorHaptic();
+      Alert.alert("Payment Error", "Something went wrong. Please try again.");
     }
   };
 
@@ -232,22 +221,21 @@ export function PaywallScreen() {
     playClickSound();
     trackEvent("cta_tapped", { plan: "monthly" });
 
-    if (!isRevenueCatEnabled() || !monthlyPkg) {
+    if (!monthlyPkg) {
       grantAccess("monthly"); return;
     }
 
     setIsPurchasingMonthly(true);
-    const result = await purchasePackage(monthlyPkg);
+    const result = await makePurchase(monthlyPkg);
     setIsPurchasingMonthly(false);
 
-    if (result.ok && hasEntitlement(result.data)) {
+    if (result.ok && result.data.type === "success" && hasAccessLevel(result.data.profile)) {
       grantAccess("monthly");
-    } else if (result.reason === "sdk_error") {
-      const cancelled = (result.error as any)?.userCancelled === true;
-      if (!cancelled) {
-        errorHaptic();
-        Alert.alert("Payment Error", "Something went wrong. Please try again.");
-      }
+    } else if (result.ok && result.data.type === "user_cancelled") {
+      errorHaptic();
+    } else if (!result.ok && result.reason === "sdk_error") {
+      errorHaptic();
+      Alert.alert("Payment Error", "Something went wrong. Please try again.");
     }
   };
 
@@ -265,13 +253,12 @@ export function PaywallScreen() {
 
   // ── Restore ─────────────────────────────────────────────────────────────────
   const handleRestore = async () => {
-    if (!isRevenueCatEnabled()) return;
     playClickSound(); trackEvent("restore_tapped");
     setIsRestoring(true);
     const result = await restorePurchases();
     setIsRestoring(false);
 
-    if (result.ok && hasEntitlement(result.data)) {
+    if (result.ok && hasAccessLevel(result.data)) {
       successHaptic();
       setSubscription(true);
       nextStep();
@@ -291,13 +278,13 @@ export function PaywallScreen() {
   };
 
   // ── Prices (live from SDK or fallback) ──────────────────────────────────────
-  const yearlyPrice     = yearlyPkg?.product?.priceString     ?? YEARLY_PRICE;
-  const threeMonthPrice = threeMonthPkg?.product?.priceString ?? THREE_MONTH_PRICE;
-  const monthlyPrice    = monthlyPkg?.product?.priceString    ?? MONTHLY_PRICE;
+  const yearlyPrice     = yearlyPkg?.price?.localizedString     ?? YEARLY_PRICE;
+  const threeMonthPrice = threeMonthPkg?.price?.localizedString ?? THREE_MONTH_PRICE;
+  const monthlyPrice    = monthlyPkg?.price?.localizedString    ?? MONTHLY_PRICE;
 
   // Calculate savings percentage: Annual vs Quarterly (annualized)
-  const yearlyNum      = yearlyPkg?.product?.price      ?? 79.99;
-  const threeMonthNum  = threeMonthPkg?.product?.price  ?? 24.99;
+  const yearlyNum      = yearlyPkg?.price?.amount      ?? 79.99;
+  const threeMonthNum  = threeMonthPkg?.price?.amount  ?? 24.99;
   const quarterlyAnnualized = threeMonthNum * 4;
   const savingsPercent = Math.round(((quarterlyAnnualized - yearlyNum) / quarterlyAnnualized) * 100);
 

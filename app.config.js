@@ -54,10 +54,14 @@ export default ({ config }) => ({
       },
     ],
     'expo-updates',
-    // react-native-purchases does NOT ship an Expo config plugin.
-    // Native linking happens automatically via autolinking during `expo prebuild`.
-    // No plugin entry is needed — just include the package in dependencies and
-    // build a development client with EAS Build.
+    // react-native-adapty ships an Expo config plugin. `replaceAndroidBackupConfig`
+    // lets Adapty manage the Android Auto Backup manifest entry — required
+    // because this project also uses expo-secure-store, which otherwise
+    // registers its own backup rules and causes a manifest merger conflict.
+    ['react-native-adapty', { replaceAndroidBackupConfig: true }],
+    // Disable expo-secure-store's own Android backup config since Adapty
+    // now owns it (see comment above) — avoids a manifest merger warning.
+    ['expo-secure-store', { configureAndroidBackup: false }],
   ],
   owner: 'kasra1637',
   runtimeVersion: '1.0.0',
@@ -85,5 +89,11 @@ export default ({ config }) => ({
       process.env.EXPO_PUBLIC_BACKEND_URL || undefined,
     EXPO_PUBLIC_VOCOLENS_API_KEY:
       process.env.EXPO_PUBLIC_VOCOLENS_API_KEY || undefined,
+    // Adapty Public SDK Key (App settings → General → Api keys in the
+    // Adapty Dashboard). Until this is set, src/lib/adaptyClient.ts
+    // activates the SDK in mock mode with a placeholder key — no real
+    // purchases, no dashboard/App Store/Play Store setup required.
+    EXPO_PUBLIC_ADAPTY_KEY:
+      process.env.EXPO_PUBLIC_ADAPTY_KEY || undefined,
   },
 });

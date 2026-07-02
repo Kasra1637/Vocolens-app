@@ -36,8 +36,7 @@ config.resolver = {
         "reanimated-tab-view",
         "@bottom-tabs/react-navigation",
         // These require custom native modules — stub on web only
-        "react-native-purchases",
-        "react-native-purchases-ui",
+        "react-native-adapty",
         "react-native-mmkv",
         "lottie-react-native",
       ];

@@ -23,7 +23,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Settings, Heart } from "lucide-react-native";
+import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Heart } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
 import { ExportJournalModal } from "@/components/ExportJournalModal";
 import Animated from "react-native-reanimated";
@@ -73,10 +73,8 @@ import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store"
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import {
   restorePurchases,
-  isRevenueCatEnabled,
-  hasEntitlement,
-} from "@/lib/revenueCatClient";
-import { useCustomerCenter } from "@/lib/hooks/useCustomerCenter";
+  hasAccessLevel,
+} from "@/lib/adaptyClient";
 import { removePin, changePin } from "@/lib/auth-service";
 import { hexToRgba } from "@/lib/glass";
 import { PinEntryScreen, type PinEntryScreenHandle } from "@/components/PinEntryScreen";
@@ -95,7 +93,6 @@ export default function SettingsScreen() {
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
   const [isRestoringInSettings, setIsRestoringInSettings] = useState(false);
-  const { openCustomerCenter, isOpen: isCustomerCenterOpen } = useCustomerCenter();
   const [changePinVisible, setChangePinVisible] = useState(false);
   // 'verify' = enter current PIN, 'setup' = enter new PIN
   const [changePinStep, setChangePinStep] = useState<'verify' | 'setup'>('verify');
@@ -250,16 +247,12 @@ export default function SettingsScreen() {
   };
 
   const handleRestoreInSettings = async () => {
-    if (!isRevenueCatEnabled()) {
-      Alert.alert("Not available", "Payment system is not available in this build.");
-      return;
-    }
     tapHaptic();
     setIsRestoringInSettings(true);
     const result = await restorePurchases();
     setIsRestoringInSettings(false);
     if (result.ok) {
-      if (hasEntitlement(result.data)) {
+      if (hasAccessLevel(result.data)) {
         successHaptic();
         setSubscription(true, planType ?? undefined);
         showAlert("success", "Subscription Restored", "Your subscription has been restored successfully.");
@@ -272,12 +265,6 @@ export default function SettingsScreen() {
       errorHaptic();
       Alert.alert("Restore Failed", "Something went wrong. Please try again.");
     }
-  };
-
-  const handleOpenCustomerCenter = () => {
-    tapHaptic();
-    setSubscriptionModalVisible(false);
-    openCustomerCenter();
   };
 
   // ── Change PIN handlers ────────────────────────────────────────────────────
@@ -1740,34 +1727,6 @@ export default function SettingsScreen() {
                 marginBottom: 16,
               }}
             >
-              {/* Manage with RevenueCat Customer Center */}
-              <Pressable
-                onPress={handleOpenCustomerCenter}
-                disabled={isCustomerCenterOpen}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 18,
-                  paddingVertical: 17,
-                  borderBottomWidth: 1,
-                  borderBottomColor: "rgba(255,255,255,0.10)",
-                  opacity: pressed || isCustomerCenterOpen ? 0.6 : 1,
-                })}
-              >
-                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: hexToRgba(Colors.primary, 0.20), alignItems: "center", justifyContent: "center", marginRight: 14 }}>
-                  <Settings size={17} color="#FFFFFF" strokeWidth={2} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15, marginBottom: 2 }}>
-                    {isCustomerCenterOpen ? "Opening…" : "Manage Subscription"}
-                  </Text>
-                  <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 12 }}>
-                    Cancel, change plan, or get support
-                  </Text>
-                </View>
-                <ChevronRight size={18} color="rgba(255,255,255,0.35)" strokeWidth={2} />
-              </Pressable>
-
               {/* Restore purchases */}
               <Pressable
                 onPress={handleRestoreInSettings}
