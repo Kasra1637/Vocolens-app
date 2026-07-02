@@ -310,7 +310,7 @@ export function SubscriptionLapsedPaywall() {
                     lineHeight: 19,
                   }}
                 >
-                  Your streak will reset to zero if you don't reactivate today.
+                  The longer you wait, the harder it is to rebuild your habit.
                 </Text>
               </View>
             </Animated.View>
