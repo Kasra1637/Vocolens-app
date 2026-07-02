@@ -443,10 +443,7 @@ export default function SettingsScreen() {
                     flexDirection: "row",
                     alignItems: "center",
                     paddingHorizontal: 20,
-                    paddingTop: 20,
-                    paddingBottom: 16,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "rgba(255, 255, 255, 0.12)",
+                    paddingVertical: 18,
                   }}
                 >
                   <View
@@ -462,133 +459,28 @@ export default function SettingsScreen() {
                   >
                     <Crown size={22} color="#FFFFFF" strokeWidth={2} />
                   </View>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      color: "#FFFFFF",
-                      fontSize: 20,
-                      flex: 1,
-                    }}
-                  >
-                    Subscription
-                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontFamily: "Inter_600SemiBold",
+                        color: "#FFFFFF",
+                        fontSize: 20,
+                      }}
+                    >
+                      Subscription
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "Inter_400Regular",
+                        color: "rgba(255,255,255,0.55)",
+                        fontSize: 13,
+                        marginTop: 2,
+                      }}
+                    >
+                      Tap to manage
+                    </Text>
+                  </View>
                   <ChevronRight size={20} color="rgba(255,255,255,0.5)" strokeWidth={2} />
-                </View>
-
-                {/* Status row */}
-                <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
-                  {hasSubscription ? (
-                    <View>
-                      {/* Active badge + plan */}
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          marginBottom: 6,
-                        }}
-                      >
-                        <View
-                          style={{
-                            backgroundColor: "rgba(74,222,128,0.20)",
-                            borderRadius: 8,
-                            paddingHorizontal: 10,
-                            paddingVertical: 4,
-                            marginRight: 10,
-                            borderWidth: 1,
-                            borderColor: "rgba(74,222,128,0.35)",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontFamily: "Inter_700Bold",
-                              color: "#4ADE80",
-                              fontSize: 11,
-                              letterSpacing: 0.5,
-                            }}
-                          >
-                            ACTIVE
-                          </Text>
-                        </View>
-                        <Text
-                          style={{
-                            fontFamily: "Inter_600SemiBold",
-                            color: "#FFFFFF",
-                            fontSize: 15,
-                          }}
-                        >
-                          {planType === "yearly"
-                            ? "Yearly Pro · $79.99 / year"
-                            : planType === "quarterly"
-                              ? "Quarterly Pro · $24.99 / 3 months"
-                              : planType === "monthly"
-                                ? "Monthly Pro · $9.99 / month"
-                                : "Pro Plan"}
-                        </Text>
-                      </View>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_400Regular",
-                          color: "rgba(255,255,255,0.55)",
-                          fontSize: 13,
-                          lineHeight: 18,
-                        }}
-                      >
-                        Tap to manage or cancel your subscription.
-                      </Text>
-                    </View>
-                  ) : (
-                    <View>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          marginBottom: 6,
-                        }}
-                      >
-                        <View
-                          style={{
-                            backgroundColor: "rgba(239,68,68,0.18)",
-                            borderRadius: 8,
-                            paddingHorizontal: 10,
-                            paddingVertical: 4,
-                            marginRight: 10,
-                            borderWidth: 1,
-                            borderColor: "rgba(239,68,68,0.35)",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontFamily: "Inter_700Bold",
-                              color: "#F87171",
-                              fontSize: 11,
-                              letterSpacing: 0.5,
-                            }}
-                          >
-                            INACTIVE
-                          </Text>
-                        </View>
-                        <Text
-                          style={{
-                            fontFamily: "Inter_600SemiBold",
-                            color: "rgba(255,255,255,0.70)",
-                            fontSize: 15,
-                          }}
-                        >
-                          No active plan
-                        </Text>
-                      </View>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_400Regular",
-                          color: "rgba(255,255,255,0.55)",
-                          fontSize: 13,
-                          lineHeight: 18,
-                        }}
-                      >
-                        Tap to restore a previous purchase or subscribe.
-                      </Text>
-                    </View>
-                  )}
                 </View>
               </Pressable>
             </Animated.View>
@@ -654,7 +546,7 @@ export default function SettingsScreen() {
 
                   {/* Usage display */}
                   <View
-                    className="rounded-full self-center px-4 py-2"
+                    className="rounded-full self-start px-4 py-2"
                     style={{
                       backgroundColor: isAtLimit
                         ? "rgba(255, 100, 100, 0.35)"
