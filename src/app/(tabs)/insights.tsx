@@ -1105,10 +1105,10 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   const isAtLimit = usagePct >= 1;
   const greeting = React.useMemo(() => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return `Good morning, ${user.name}.`;
-    if (hour >= 12 && hour < 17) return `Good afternoon, ${user.name}.`;
-    if (hour >= 17 && hour < 21) return `Good evening, ${user.name}.`;
-    return `Hey, ${user.name}.`;
+    if (hour >= 5 && hour < 12) return `Good morning, ${user.name}!`;
+    if (hour >= 12 && hour < 17) return `Good afternoon, ${user.name}!`;
+    if (hour >= 17 && hour < 21) return `Good evening, ${user.name}!`;
+    return `Hey, ${user.name}!`;
   }, [user.name]);
 
   // Dynamic punchy subline that shifts each visit
