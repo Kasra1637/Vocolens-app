@@ -146,12 +146,12 @@ const CATEGORY_OPTIONS: {
   label: string;
   icon: typeof Award;
 }[] = [
-  { value: "all", label: "All Badges", icon: Award },
+  { value: "all", label: "All badges", icon: Award },
   { value: "streak", label: "Streak", icon: Flame },
   { value: "entries", label: "Entries", icon: Star },
   { value: "consistency", label: "Consistency", icon: Zap },
   { value: "mood", label: "Mood", icon: Heart },
-  { value: "time", label: "Time-Based", icon: Sun },
+  { value: "time", label: "Time-based", icon: Sun },
   { value: "special", label: "Special", icon: Sparkles },
 ];
 
@@ -398,14 +398,14 @@ function StatsOverview({ stats, isDarkMode = false }: StatsOverviewProps) {
         <View className="flex-row justify-between">
           <StatItem
             icon={Flame}
-            label="Current Streak"
+            label="Current streak"
             value={`${stats.currentStreak} ${stats.currentStreak === 1 ? "day" : "days"}`}
             color="#FFFFFF"
             isDarkMode={isDarkMode}
           />
           <StatItem
             icon={Award}
-            label="Total Entries"
+            label="Total entries"
             value={stats.totalEntries.toString()}
             color="#FFFFFF"
             isDarkMode={isDarkMode}
@@ -953,7 +953,6 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                     fontFamily: "Inter_700Bold",
                     fontSize: 10,
                     color: themeChipText,
-                    textTransform: "uppercase",
                     letterSpacing: 1.4,
                   }}
                 >
@@ -1039,7 +1038,6 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                   fontSize: 10,
                   letterSpacing: 0.8,
                   marginBottom: 6,
-                  textTransform: "uppercase",
                 }}
               >
                 Requirement
@@ -1076,7 +1074,6 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                   fontSize: 10,
                   letterSpacing: 0.8,
                   marginBottom: 6,
-                  textTransform: "uppercase",
                 }}
               >
                 Tip
@@ -1134,7 +1131,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                       fontSize: 15,
                     }}
                   >
-                    Share Milestone
+                    Share milestone
                   </Text>
                 </LinearGradient>
               </Pressable>

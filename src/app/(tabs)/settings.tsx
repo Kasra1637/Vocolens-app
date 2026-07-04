@@ -193,7 +193,7 @@ export default function SettingsScreen() {
         }
       } else {
         Alert.alert(
-          "Permission Required",
+          "Permission required",
           "Please enable notifications in your device settings to receive daily reminders.",
           [{ text: "OK" }],
         );
@@ -255,15 +255,15 @@ export default function SettingsScreen() {
       if (hasAccessLevel(result.data)) {
         successHaptic();
         setSubscription(true, planType ?? undefined);
-        showAlert("success", "Subscription Restored", "Your subscription has been restored successfully.");
+        showAlert("success", "Subscription restored", "Your subscription has been restored successfully.");
         setSubscriptionModalVisible(false);
       } else {
         errorHaptic();
-        Alert.alert("No Active Subscription", "We couldn't find an active subscription linked to this account.");
+        Alert.alert("No active subscription", "We couldn't find an active subscription linked to this account.");
       }
     } else {
       errorHaptic();
-      Alert.alert("Restore Failed", "Something went wrong. Please try again.");
+      Alert.alert("Restore failed", "Something went wrong. Please try again.");
     }
   };
 
@@ -286,7 +286,7 @@ export default function SettingsScreen() {
     // via auth-service. We just close and celebrate.
     successHaptic();
     setChangePinVisible(false);
-    showAlert('success', 'PIN Updated', 'Your new PIN is active. Use it next time you open Vocolens.');
+    showAlert('success', 'PIN updated', 'Your new PIN is active. Use it next time you open Vocolens.');
   };
 
   const handleChangePinCancel = () => {
@@ -328,7 +328,7 @@ export default function SettingsScreen() {
     try {
       await Clipboard.setStringAsync(APP_LINK);
       successHaptic();
-      showAlert("success", "Link Copied", "The link has been copied to your clipboard.");
+      showAlert("success", "Link copied", "The link has been copied to your clipboard.");
     } catch {
       // silent
     }
@@ -530,7 +530,7 @@ export default function SettingsScreen() {
                             fontSize: 15,
                           }}
                         >
-                          Monthly Usage
+                          Monthly usage
                         </Text>
                         <Text
                           style={{
@@ -603,7 +603,7 @@ export default function SettingsScreen() {
                     className="text-xl font-bold"
                     style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   >
-                    Theme Colors
+                    Theme colors
                   </Text>
                 </View>
 
@@ -772,7 +772,7 @@ export default function SettingsScreen() {
                         className="text-base font-semibold mb-1"
                         style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                       >
-                        Daily Reminders
+                        Daily reminders
                       </Text>
                       <Text style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: 15 }}>
                         Get reminded to journal every day
@@ -822,7 +822,7 @@ export default function SettingsScreen() {
                     className="text-xl font-bold"
                     style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   >
-                    Emotion Reflection
+                    Emotion reflection
                   </Text>
                 </View>
                 <View
@@ -927,7 +927,7 @@ export default function SettingsScreen() {
                           marginBottom: 2,
                         }}
                       >
-                        My Feedback History
+                        My feedback history
                       </Text>
                       <Text
                         style={{
@@ -988,7 +988,7 @@ export default function SettingsScreen() {
                     className="text-xl font-bold"
                     style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   >
-                    Privacy & Security
+                    Privacy & security
                   </Text>
                 </View>
 
@@ -1112,7 +1112,7 @@ export default function SettingsScreen() {
                       marginBottom: 4,
                     }}
                   >
-                    Reset All Data
+                    Reset all data
                   </Text>
                   <Text
                     style={{
@@ -1161,7 +1161,7 @@ export default function SettingsScreen() {
                           fontSize: 18,
                         }}
                       >
-                        Reset All Data
+                        Reset all data
                       </Text>
                     </LinearGradient>
                   </Pressable>
@@ -1298,7 +1298,7 @@ export default function SettingsScreen() {
                   color: Colors.textPrimary,
                 }}
               >
-                Sign Out
+                Sign out
               </Text>
               <Text
                 className="text-center text-base"
@@ -1324,7 +1324,7 @@ export default function SettingsScreen() {
                     className="text-white text-lg font-bold"
                     style={{ fontFamily: "Inter_700Bold" }}
                   >
-                    Yes, Sign Out
+                    Yes, sign out
                   </Text>
                 </LinearGradient>
               </Pressable>
@@ -1384,7 +1384,7 @@ export default function SettingsScreen() {
                   color: "#FFFFFF",
                 }}
               >
-                {resetStep === 1 ? "Reset All Data?" : "Are you sure?"}
+                {resetStep === 1 ? "Reset all data?" : "Are you sure?"}
               </Text>
               <Text
                 className="text-center text-base"
@@ -1435,8 +1435,8 @@ export default function SettingsScreen() {
                   style={{ fontFamily: "Inter_600SemiBold" }}
                 >
                   {resetStep === 1
-                    ? "Yes, Reset Everything"
-                    : "Delete All Data Now"}
+                    ? "Yes, reset everything"
+                    : "Delete all data now"}
                 </Text>
               </Pressable>
 
@@ -1525,7 +1525,7 @@ export default function SettingsScreen() {
                     fontSize: 22,
                   }}
                 >
-                  Manage Subscription
+                  Manage subscription
                 </Text>
               </View>
               <Pressable
@@ -1626,7 +1626,7 @@ export default function SettingsScreen() {
                       marginBottom: 2,
                     }}
                   >
-                    {isRestoringInSettings ? "Restoring…" : "Restore Purchases"}
+                    {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
                   </Text>
                   <Text
                     style={{
@@ -1674,7 +1674,7 @@ export default function SettingsScreen() {
                       marginBottom: 2,
                     }}
                   >
-                    Cancel Subscription
+                    Cancel subscription
                   </Text>
                   <Text
                     style={{
@@ -1730,7 +1730,7 @@ export default function SettingsScreen() {
             <PinEntryScreen
               ref={changePinVerifyRef}
               mode="verify"
-              title="Enter Your Current PIN"
+              title="Enter your current PIN"
               subtitle="Confirm your current PIN before setting a new one."
               onSuccess={handleChangePinCurrentVerified}
               onBack={handleChangePinCancel}
@@ -1740,7 +1740,7 @@ export default function SettingsScreen() {
             <PinEntryScreen
               ref={changePinSetupRef}
               mode="setup"
-              title="Enter Your New PIN"
+              title="Enter your new PIN"
               subtitle="Choose a new 4-digit PIN for Vocolens."
               onComplete={handleChangePinNewSaved}
               onCancel={handleChangePinCancel}
@@ -1754,8 +1754,8 @@ export default function SettingsScreen() {
       <ExportJournalModal
         visible={exportModalVisible}
         onClose={() => setExportModalVisible(false)}
-        onSuccess={() => showAlert('success', 'Export Downloaded', 'Your journal archive has been saved.')}
-        onError={(msg) => showAlert('error', 'Export Failed', msg)}
+        onSuccess={() => showAlert('success', 'Export downloaded', 'Your journal archive has been saved.')}
+        onError={(msg) => showAlert('error', 'Export failed', msg)}
       />
 
       {/* Branded Alert */}

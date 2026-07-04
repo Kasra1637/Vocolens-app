@@ -93,13 +93,13 @@ const EMOTION_FILTERS: DisplayEmotion[] = [
   "Anticipation",
 ];
 
-const SORT_OPTIONS = ["Newest First", "Oldest First"] as const;
+const SORT_OPTIONS = ["Newest first", "Oldest first"] as const;
 
 type SortOption = (typeof SORT_OPTIONS)[number];
 
 type DurationFilter = "Any" | "Short" | "Medium" | "Long";
 const DURATION_FILTERS: { label: string; value: DurationFilter }[] = [
-  { label: "Any Length", value: "Any" },
+  { label: "Any length", value: "Any" },
   { label: "Short (<1 min)", value: "Short" },
   { label: "Medium (1–3 min)", value: "Medium" },
   { label: "Long (3+ min)", value: "Long" },
@@ -122,7 +122,7 @@ export default function EntriesScreen() {
   const [animationKey, setAnimationKey] = useState(0);
   const playClickSound = useClickSound();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSort, setSelectedSort] = useState<SortOption>("Newest First");
+  const [selectedSort, setSelectedSort] = useState<SortOption>("Newest first");
   const [selectedEmotions, setSelectedEmotions] = useState<DisplayEmotion[]>(
     [],
   );
@@ -211,7 +211,7 @@ export default function EntriesScreen() {
     }
 
     // Sort
-    if (selectedSort === "Newest First") {
+    if (selectedSort === "Newest first") {
       filtered.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -342,9 +342,9 @@ export default function EntriesScreen() {
                 fontFamily: "Inter_500Medium",
                 color: "rgba(255, 255, 255, 0.8)",
               }}
-              className="text-xs uppercase tracking-wider"
+              className="text-xs tracking-wider"
             >
-              Total Entries
+              Total entries
             </Text>
           </View>
         </Animated.View>
@@ -383,7 +383,7 @@ export default function EntriesScreen() {
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   className="text-sm ml-2"
                 >
-                  FILTER & SEARCH
+                  Filter & search
                 </Text>
               </View>
 
@@ -740,7 +740,7 @@ export default function EntriesScreen() {
               style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
               className="text-center text-lg mb-2"
             >
-              {entries.length === 0 ? "No Entries Yet" : "No Matches Found"}
+              {entries.length === 0 ? "No entries yet" : "No matches found"}
             </Text>
             <Text
               style={{
@@ -797,7 +797,7 @@ export default function EntriesScreen() {
                   className="text-2xl font-bold mb-2 text-center"
                   style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}
                 >
-                  Delete Entry?
+                  Delete entry?
                 </Text>
                 <Text
                   className="text-center text-base"
@@ -828,7 +828,7 @@ export default function EntriesScreen() {
                       className="text-white text-base font-bold"
                       style={{ fontFamily: "Inter_700Bold" }}
                     >
-                      Delete Entry
+                      Delete entry
                     </Text>
                   </LinearGradient>
                 </Pressable>
@@ -905,7 +905,7 @@ function EntryCard({
         ? firstSentence.slice(0, 50).trimEnd() + "..."
         : firstSentence;
     }
-    return "Journal Entry";
+    return "Journal entry";
   }, [entry.title, entry.transcript]);
 
   const formatDate = (dateString: string) => {
@@ -1106,7 +1106,7 @@ function EntryCard({
                     fontFamily: "Inter_600SemiBold",
                     color: "rgba(255, 255, 255, 0.8)",
                   }}
-                  className="text-xs uppercase mb-2"
+                  className="text-xs mb-2"
                 >
                   Topics
                 </Text>
@@ -1200,7 +1200,7 @@ function EntryCard({
                 style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.85)" }}
                 className="text-sm"
               >
-                View Full Analysis
+                View full analysis
               </Text>
             </View>
             <Pressable

@@ -786,12 +786,12 @@ function InsightsContent({
   const handleSharePDF = () => {
     tapHaptic();
     Alert.alert(
-      "Share Insights Report",
+      "Share insights report",
       "Generate a personalized emotional wellness report to share with your doctor, counselor, or therapist.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Share Report",
+          text: "Share report",
           onPress: async () => {
             try {
               setIsGeneratingPDF(true);
@@ -1226,7 +1226,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                 className="text-xl"
               >
-                {user.streak} {user.streak === 1 ? "Day" : "Days"} Streak
+                {user.streak} {user.streak === 1 ? "day" : "days"} streak
               </Text>
               <Text
                 style={{
@@ -1238,15 +1238,15 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                 {user.streak === 0
                   ? "Record today to start!"
                   : user.streak < 3
-                    ? "Next: 3-Day Streak"
+                    ? "Next: 3-day streak"
                     : user.streak < 7
-                      ? "Next: 7-Day Streak"
+                      ? "Next: 7-day streak"
                       : user.streak < 14
-                        ? "Next: 14-Day Streak"
+                        ? "Next: 14-day streak"
                         : user.streak < 30
-                          ? "Next: 30-Day Streak"
+                          ? "Next: 30-day streak"
                           : user.streak < 100
-                            ? "Next: 100-Day Streak"
+                            ? "Next: 100-day streak"
                             : "Amazing streak!"}
               </Text>
             </View>
@@ -1336,7 +1336,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                     fontSize: 14,
                   }}
                 >
-                  Monthly Minutes
+                  Monthly minutes
                 </Text>
                 <Text
                   style={{
@@ -1423,7 +1423,7 @@ function EmotionSelector({
           marginBottom: 10,
         }}
       >
-        Select Emotion
+        Select emotion
       </Text>
       <View
         style={{
@@ -1557,8 +1557,8 @@ function SentimentTimeline({
               className="text-lg"
             >
               {viewMode === "overall"
-                ? "Sentiment Timeline"
-                : `${selectedEmotionData?.label || "Emotion"} Focus`}
+                ? "Sentiment timeline"
+                : `${selectedEmotionData?.label || "Emotion"} focus`}
             </Text>
           </View>
         </View>
@@ -1600,7 +1600,7 @@ function SentimentTimeline({
                 fontSize: 13,
               }}
             >
-              Overall Mood
+              Overall mood
             </Text>
           </Pressable>
 
@@ -1633,7 +1633,7 @@ function SentimentTimeline({
                 fontSize: 13,
               }}
             >
-              Emotion Focus
+              Emotion focus
             </Text>
           </Pressable>
         </View>
@@ -2082,7 +2082,7 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
             <Text
               style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
             >
-              Emotional Themes
+              Emotional themes
             </Text>
             <Text
               style={{
@@ -2258,7 +2258,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
             <Text
               style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
             >
-              Time of Day
+              Time of day
             </Text>
             <Text
               style={{
@@ -2430,7 +2430,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
   const getPriorityLabel = (priority: string) => {
     switch (priority) {
       case "high":
-        return "Key Insight";
+        return "Key insight";
       case "medium":
         return "Notable";
       case "low":
@@ -2478,7 +2478,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
               <Text
                 style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
               >
-                Deep Insights
+                Deep insights
               </Text>
               <Text
                 style={{
@@ -2553,7 +2553,6 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                           fontFamily: "Inter_600SemiBold",
                           fontSize: 9,
                           color: "#FFFFFF",
-                          textTransform: "uppercase",
                           letterSpacing: 0.5,
                         }}
                       >

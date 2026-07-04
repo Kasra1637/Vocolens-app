@@ -140,10 +140,10 @@ const CONVERSATION_STARTERS: Record<TopicCategory, string[]> = {
 };
 
 const TOPIC_LABELS: Record<TopicCategory, string> = {
-  emotional: "Emotional Processing",
-  goals: "Goal Setting",
-  reflection: "Self-Reflection",
-  decision: "Decision Making",
+  emotional: "Emotional processing",
+  goals: "Goal setting",
+  reflection: "Self-reflection",
+  decision: "Decision making",
   manifestation: "Manifestation",
 };
 
@@ -721,7 +721,7 @@ export default function SpeakScreen() {
                               marginLeft: 6,
                             }}
                           >
-                            Open Settings
+                            Open settings
                           </Text>
                         </View>
                       </Pressable>
@@ -872,7 +872,7 @@ export default function SpeakScreen() {
                     }}
                     className="text-xs uppercase tracking-wide"
                   >
-                    Warm-up Question
+                    Warm-up question
                   </Text>
                   <Pressable
                     onPress={() => {
@@ -891,7 +891,7 @@ export default function SpeakScreen() {
                     >
                       {selectedTopic
                         ? TOPIC_LABELS[selectedTopic]
-                        : "Select Topic"}
+                        : "Select topic"}
                     </Text>
                     <ChevronDown
                       size={12}
@@ -1067,7 +1067,7 @@ export default function SpeakScreen() {
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   className="text-sm ml-2"
                 >
-                  Your Recording
+                  Your recording
                 </Text>
               </View>
 
