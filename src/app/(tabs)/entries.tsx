@@ -316,7 +316,7 @@ export default function EntriesScreen() {
             }}
             className="text-center mb-2"
           >
-            Your Journal Entries
+            Your journal entries
           </Text>
           <Text
             style={{

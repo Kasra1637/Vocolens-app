@@ -284,7 +284,7 @@ export default function MilestonesScreen() {
                 }}
                 className="mb-2"
               >
-                Your Milestones
+                Your milestones
               </Text>
               <Text
                 style={{
