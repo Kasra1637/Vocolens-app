@@ -176,7 +176,7 @@ export function BiometricUnlockCelebration({ onDone }: Props) {
           style={styles.textBlock}
         >
           <Text style={styles.headline}>
-            {firstName ? `Good to see you, ${firstName}.` : 'Good to see you.'}
+            {firstName ? `Good to see you, ${firstName} 👋` : 'Good to see you 👋'}
           </Text>
           <Text style={styles.subline}>
             Your journal is here.{'\n'}Ready when you are.
