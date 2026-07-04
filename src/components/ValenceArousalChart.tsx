@@ -383,7 +383,7 @@ export default function ValenceArousalChart({
                 color: "#FFFFFF",
               }}
             >
-              Emotional Landscape
+              Emotional landscape
             </Text>
             <Text
               style={{

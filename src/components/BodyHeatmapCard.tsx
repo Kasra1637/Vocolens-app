@@ -230,7 +230,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
             <Scan size={22} color="#FFFFFF" strokeWidth={2} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>Body Sensation Map</Text>
+            <Text style={s.title}>Body sensation map</Text>
             <Text style={s.subtitle}>
               {hasData
                 ? `${totalScans} body scan${totalScans !== 1 ? "s" : ""} · tap a region to explore`

@@ -389,7 +389,7 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
               color: '#FFFFFF',
             }}
           >
-            Emotional Triggers
+            Emotional triggers
           </Text>
           <Text
             style={{

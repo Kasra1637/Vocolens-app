@@ -115,7 +115,7 @@ export function MoodStoryTimeline({
                 color: "#FFFFFF",
               }}
             >
-              Mood Story
+              Mood story
             </Text>
             <Text
               style={{
