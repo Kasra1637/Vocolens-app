@@ -478,45 +478,36 @@ export function PaywallScreen() {
                 </Animated.View>
               )}
 
-              {/* Quarterly + Monthly — shown only when expanded */}
+              {/* Quarterly + Monthly — side by side */}
               {showMorePlans && (
-                <Animated.View entering={FadeInDown.duration(350).easing(SOFT)} style={{ gap: 10 }}>
+                <Animated.View entering={FadeInDown.duration(350).easing(SOFT)} style={{ flexDirection: "row", gap: 10 }}>
                   {/* Quarterly */}
                   <Pressable
                     onPress={() => { selectHaptic(); setSelectedPlan("three_month"); trackEvent("plan_selected", { plan: "three_month" }); }}
-                    style={{ width: "100%", borderRadius: 18, borderWidth: selectedPlan === "three_month" ? 2.5 : 1.5, borderColor: selectedPlan === "three_month" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "three_month" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14 }}
+                    style={{ flex: 1, borderRadius: 18, borderWidth: selectedPlan === "three_month" ? 2.5 : 1.5, borderColor: selectedPlan === "three_month" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "three_month" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14 }}
                   >
-                    <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Quarterly</Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                      <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{threeMonthPrice}</Text>
-                      <View style={{ flex: 1, gap: 4 }}>
-                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
-                          {THREE_MONTH_PER_MONTH}/mo · Billed every 3 months
-                        </Text>
-                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
-                          No free trial
-                        </Text>
-                      </View>
+                    <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 8 }}>Quarterly</Text>
+                    <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 22, lineHeight: 26, marginBottom: 6 }}>{THREE_MONTH_PER_MONTH}<Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 11 }}>/mo</Text></Text>
+                    <View style={{ backgroundColor: "rgba(74, 222, 128, 0.20)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start", marginBottom: 4 }}>
+                      <Text style={{ fontFamily: "Inter_700Bold", color: "#4ADE80", fontSize: 9 }}>
+                        Save {savingsVsQuarterly > 0 ? Math.round(((monthlyNum * 3 - threeMonthNum) / (monthlyNum * 3)) * 100) : 17}% vs Monthly
+                      </Text>
                     </View>
+                    <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.50)", fontSize: 10 }}>
+                      Billed {threeMonthPrice} / 3 mo
+                    </Text>
                   </Pressable>
 
                   {/* Monthly */}
                   <Pressable
                     onPress={() => { selectHaptic(); setSelectedPlan("monthly"); trackEvent("plan_selected", { plan: "monthly" }); }}
-                    style={{ width: "100%", borderRadius: 18, borderWidth: selectedPlan === "monthly" ? 2.5 : 1.5, borderColor: selectedPlan === "monthly" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "monthly" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14 }}
+                    style={{ flex: 1, borderRadius: 18, borderWidth: selectedPlan === "monthly" ? 2.5 : 1.5, borderColor: selectedPlan === "monthly" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "monthly" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14 }}
                   >
-                    <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Monthly</Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                      <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{monthlyPrice}</Text>
-                      <View style={{ flex: 1, gap: 4 }}>
-                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
-                          {MONTHLY_PER_MONTH}/mo · Cancel anytime
-                        </Text>
-                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
-                          No free trial
-                        </Text>
-                      </View>
-                    </View>
+                    <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 8 }}>Monthly</Text>
+                    <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 22, lineHeight: 26, marginBottom: 6 }}>{monthlyPrice}<Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 11 }}>/mo</Text></Text>
+                    <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.50)", fontSize: 10, marginTop: 4 }}>
+                      Cancel anytime
+                    </Text>
                   </Pressable>
                 </Animated.View>
               )}
