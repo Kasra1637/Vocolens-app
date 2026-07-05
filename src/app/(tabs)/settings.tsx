@@ -965,13 +965,28 @@ export default function SettingsScreen() {
                   borderColor: borderColor,
                 }}
               >
-                {/* Button — Heart icon + "Spread the word" inside one tappable container */}
+                {/* Body */}
+                <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255, 255, 255, 0.75)",
+                      fontSize: 14,
+                      lineHeight: 22,
+                    }}
+                  >
+                    Know someone who struggles to put their feelings into words? Share Vocolens — built by one person who gets it, not a company.
+                  </Text>
+                </View>
+
+                {/* Button — Heart icon + "Share the words" inside one tappable container */}
                 <Pressable
                   data-testid="share-app-card"
                   onPress={shareUnavailable ? handleCopyLink : handleShareApp}
                   className="active:opacity-75"
                   style={{
-                    margin: 16,
+                    marginHorizontal: 16,
+                    marginBottom: 16,
                     borderRadius: 18,
                     overflow: "hidden",
                   }}
@@ -998,29 +1013,13 @@ export default function SettingsScreen() {
                         marginLeft: 10,
                       }}
                     >
-                      Spread the word
+                      Share the words
                     </Text>
                   </LinearGradient>
                 </Pressable>
 
-                {/* Body */}
-                <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      color: "rgba(255, 255, 255, 0.75)",
-                      fontSize: 14,
-                      lineHeight: 22,
-                      marginBottom: shareUnavailable ? 16 : 0,
-                    }}
-                  >
-                    Someone you know probably feels what you feel — but doesn't have the
-                    words for it yet. Vocolens was built by one person who's lived it, not
-                    a company. Share it to help them find their words, and help an indie
-                    developer keep building.
-                  </Text>
-
-                  {shareUnavailable && (
+                {shareUnavailable && (
+                  <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
                     <Pressable
                       data-testid="copy-link-button"
                       onPress={handleCopyLink}
@@ -1044,8 +1043,8 @@ export default function SettingsScreen() {
                         Copy link
                       </Text>
                     </Pressable>
-                  )}
-                </View>
+                  </View>
+                )}
               </View>
             </Animated.View>
 
