@@ -450,6 +450,11 @@ export function PaywallScreen() {
             {/* Plan cards — toggle between annual view and quarterly/monthly view */}
             <Animated.View entering={FadeIn.delay(180).duration(700).easing(SOFT)} style={{ flexDirection: "column", gap: 10, marginBottom: 14 }}>
 
+              {/* Trial Timeline — shown above annual card in yearly view */}
+              {!showMorePlans && (
+                <TrialTimeline yearlyPrice={yearlyPrice} themeColors={themeColors} />
+              )}
+
               {/* Annual — shown only in default (yearly) view */}
               {!showMorePlans && (
                 <Animated.View entering={FadeInDown.duration(350).easing(SOFT)}>
@@ -540,11 +545,6 @@ export function PaywallScreen() {
                   : <ChevronDown size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />}
               </Pressable>
             </Animated.View>
-
-            {/* Trial Timeline — only shown in yearly view */}
-            {!showMorePlans && (
-              <TrialTimeline yearlyPrice={yearlyPrice} themeColors={themeColors} />
-            )}
 
             {/* CTA */}
             <Animated.View entering={FadeIn.delay(320).duration(600).easing(SOFT)} style={{ alignItems: "center" }}>
