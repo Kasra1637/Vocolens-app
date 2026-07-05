@@ -426,69 +426,57 @@ export function PaywallScreen() {
               </Text>
             </Animated.View>
 
-            {/* Benefits */}
-            <Animated.View entering={FadeIn.delay(120).duration(700).easing(SOFT)} style={{ marginTop: 14, marginBottom: 14 }}>
-              <View style={{ backgroundColor: "rgba(255,255,255,0.10)", borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", paddingHorizontal: 16, paddingVertical: 14, gap: 11 }}>
-                {[
-                  { Icon: MessageCircle, text: "Name feelings you couldn't before" },
-                  { Icon: Shield, text: "Catch overwhelm before it hits" },
-                  { Icon: Eye, text: "See your thought loops clearly" },
-                  { Icon: TrendingUp, text: "Track patterns week after week" },
-                ].map((item, idx) => (
-                  <View key={idx} style={{ flexDirection: "row", alignItems: "center" }}>
-                    <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
-                      <item.Icon size={16} color="#FFFFFF" strokeWidth={2.2} />
+            {/* Benefits — shown ONLY when quarterly/monthly plans are visible */}
+            {showMorePlans && (
+              <Animated.View entering={FadeInDown.delay(50).duration(400).easing(SOFT)} style={{ marginTop: 14, marginBottom: 14 }}>
+                <View style={{ backgroundColor: "rgba(255,255,255,0.10)", borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", paddingHorizontal: 16, paddingVertical: 14, gap: 11 }}>
+                  {[
+                    { Icon: MessageCircle, text: "Name feelings you couldn't before" },
+                    { Icon: Shield, text: "Catch overwhelm before it hits" },
+                    { Icon: Eye, text: "See your thought loops clearly" },
+                    { Icon: TrendingUp, text: "Track patterns week after week" },
+                  ].map((item, idx) => (
+                    <View key={idx} style={{ flexDirection: "row", alignItems: "center" }}>
+                      <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+                        <item.Icon size={16} color="#FFFFFF" strokeWidth={2.2} />
+                      </View>
+                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.88)", fontSize: 13, lineHeight: 19, flex: 1 }}>{item.text}</Text>
                     </View>
-                    <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.88)", fontSize: 13, lineHeight: 19, flex: 1 }}>{item.text}</Text>
-                  </View>
-                ))}
-              </View>
-            </Animated.View>
+                  ))}
+                </View>
+              </Animated.View>
+            )}
 
-            {/* Plan cards */}
+            {/* Plan cards — toggle between annual view and quarterly/monthly view */}
             <Animated.View entering={FadeIn.delay(180).duration(700).easing(SOFT)} style={{ flexDirection: "column", gap: 10, marginBottom: 14 }}>
-              {/* Annual — always visible */}
-              <Pressable
-                onPress={() => { selectHaptic(); setSelectedPlan("yearly"); setShowMorePlans(false); trackEvent("plan_selected", { plan: "yearly" }); }}
-                style={{ width: "100%", borderRadius: 18, borderWidth: selectedPlan === "yearly" ? 2.5 : 1.5, borderColor: selectedPlan === "yearly" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "yearly" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14, position: "relative", overflow: "hidden" }}
-              >
-                <View style={{ position: "absolute", top: 0, right: 0, backgroundColor: "#FFFFFF", borderBottomLeftRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
-                  <Text style={{ fontFamily: "Inter_700Bold", fontSize: 9, color: themeColors.primary, letterSpacing: 0.5 }}>3-DAY FREE TRIAL</Text>
-                </View>
-                <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Annual</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                  <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{yearlyPrice}</Text>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <View style={{ backgroundColor: "rgba(74, 222, 128, 0.20)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start" }}>
-                      <Text style={{ fontFamily: "Inter_700Bold", color: "#4ADE80", fontSize: 10 }}>
-                        Save {savingsVsMonthly}% vs Monthly
-                      </Text>
-                    </View>
-                    <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
-                      Just {YEARLY_PER_MONTH}/mo · Best value
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
 
-              {/* "See other plans" toggle */}
-              <Pressable
-                onPress={() => { tapHaptic(); setShowMorePlans((v) => !v); trackEvent("more_plans_toggled", { expanded: !showMorePlans }); }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingVertical: 10,
-                  gap: 6,
-                }}
-              >
-                <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
-                  {showMorePlans ? "Hide other plans" : "See other plans"}
-                </Text>
-                {showMorePlans
-                  ? <ChevronUp size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />
-                  : <ChevronDown size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />}
-              </Pressable>
+              {/* Annual — shown only in default (yearly) view */}
+              {!showMorePlans && (
+                <Animated.View entering={FadeInDown.duration(350).easing(SOFT)}>
+                  <Pressable
+                    onPress={() => { selectHaptic(); setSelectedPlan("yearly"); trackEvent("plan_selected", { plan: "yearly" }); }}
+                    style={{ width: "100%", borderRadius: 18, borderWidth: 2.5, borderColor: "#FFFFFF", backgroundColor: "rgba(255,255,255,0.18)", padding: 14, position: "relative", overflow: "hidden" }}
+                  >
+                    <View style={{ position: "absolute", top: 0, right: 0, backgroundColor: "#FFFFFF", borderBottomLeftRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
+                      <Text style={{ fontFamily: "Inter_700Bold", fontSize: 9, color: themeColors.primary, letterSpacing: 0.5 }}>3-DAY FREE TRIAL</Text>
+                    </View>
+                    <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Annual</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{yearlyPrice}</Text>
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <View style={{ backgroundColor: "rgba(74, 222, 128, 0.20)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start" }}>
+                          <Text style={{ fontFamily: "Inter_700Bold", color: "#4ADE80", fontSize: 10 }}>
+                            Save {savingsVsMonthly}% vs Monthly
+                          </Text>
+                        </View>
+                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
+                          Just {YEARLY_PER_MONTH}/mo · Best value
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                </Animated.View>
+              )}
 
               {/* Quarterly + Monthly — shown only when expanded */}
               {showMorePlans && (
@@ -532,10 +520,38 @@ export function PaywallScreen() {
                   </Pressable>
                 </Animated.View>
               )}
+
+              {/* Toggle between views */}
+              <Pressable
+                onPress={() => {
+                  tapHaptic();
+                  const nextState = !showMorePlans;
+                  setShowMorePlans(nextState);
+                  // When switching back to yearly view, re-select yearly
+                  if (!nextState) setSelectedPlan("yearly");
+                  // When switching to other plans, default-select quarterly
+                  if (nextState && selectedPlan === "yearly") setSelectedPlan("three_month");
+                  trackEvent("more_plans_toggled", { expanded: nextState });
+                }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingVertical: 10,
+                  gap: 6,
+                }}
+              >
+                <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+                  {showMorePlans ? "See yearly plan" : "See other plans"}
+                </Text>
+                {showMorePlans
+                  ? <ChevronUp size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />
+                  : <ChevronDown size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />}
+              </Pressable>
             </Animated.View>
 
-            {/* Trial Timeline — only for annual plan when other plans are NOT expanded */}
-            {selectedPlan === "yearly" && !showMorePlans && (
+            {/* Trial Timeline — only shown in yearly view */}
+            {!showMorePlans && (
               <TrialTimeline yearlyPrice={yearlyPrice} themeColors={themeColors} />
             )}
 
