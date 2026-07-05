@@ -1,16 +1,14 @@
 /**
  * PaywallScreen — Adapty (custom code paywall)
  *
- * Fetches the "monthly" / "three_month" / "yearly" products from the Adapty
- * placement `PLACEMENT_ONBOARDING_PAYWALL` and drives purchases directly via
- * `adapty.makePurchase()`. Falls back to hardcoded prices + a local grant
- * while Adapty is running in mock mode (no Public SDK Key configured yet).
+ * Shows the Annual plan by default with a trial timeline. Quarterly and
+ * Monthly plans are hidden behind a "See other plans" expandable.
  *
  * Products (vendor product ids): monthly | three_month | yearly
  * Access level: "premium"
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -24,10 +22,10 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeIn, Easing } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
-import { Check, ChevronRight, X, Settings, MessageCircle, Shield, Eye, TrendingUp } from "lucide-react-native";
+import { ChevronRight, ChevronDown, ChevronUp, X, MessageCircle, Shield, Eye, TrendingUp, Unlock, Bell, Star } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -54,12 +52,119 @@ const THREE_MONTH_PRICE = "$24.99";
 const YEARLY_PRICE     = "$79.99";
 const YEARLY_PER_MONTH = "$6.67";
 const THREE_MONTH_PER_MONTH = "$8.33";
+const MONTHLY_PER_MONTH = "$9.99";
 const TRIAL_DAYS = 3;
 
 type PlanKey = "yearly" | "three_month" | "monthly";
 
 function trackEvent(event: string, props?: Record<string, unknown>) {
   if (__DEV__) console.log(`[Analytics] ${event}`, props ?? "");
+}
+
+// ── Trial Timeline (shown only for annual plan) ────────────────────────────────
+function TrialTimeline({
+  yearlyPrice,
+  themeColors,
+}: {
+  yearlyPrice: string;
+  themeColors: (typeof THEME_COLORS)[keyof typeof THEME_COLORS];
+}) {
+  const trialEndDate = new Date();
+  trialEndDate.setDate(trialEndDate.getDate() + TRIAL_DAYS);
+  const formattedDate = trialEndDate.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  const steps = [
+    {
+      Icon: Unlock,
+      title: "Today",
+      description: "Full access to voice journaling, emotion AI, and all insights",
+    },
+    {
+      Icon: Bell,
+      title: `Day ${TRIAL_DAYS - 1}`,
+      description: "We'll remind you before your trial ends — no surprises",
+    },
+    {
+      Icon: Star,
+      title: `Day ${TRIAL_DAYS}`,
+      description: `Your first charge of ${yearlyPrice}/yr begins on ${formattedDate}. Cancel anytime before`,
+    },
+  ];
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(100).duration(500).easing(SOFT)}
+      style={{
+        backgroundColor: "rgba(255,255,255,0.08)",
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.15)",
+        padding: 16,
+        marginBottom: 14,
+      }}
+    >
+      {steps.map((step, idx) => (
+        <View key={idx} style={{ flexDirection: "row", alignItems: "flex-start" }}>
+          {/* Timeline line + dot */}
+          <View style={{ alignItems: "center", width: 36 }}>
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: "rgba(255,255,255,0.14)",
+                borderWidth: 1.5,
+                borderColor: "rgba(255,255,255,0.35)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <step.Icon size={14} color="#FFFFFF" strokeWidth={2.2} />
+            </View>
+            {idx < steps.length - 1 && (
+              <View
+                style={{
+                  width: 1.5,
+                  flex: 1,
+                  minHeight: 24,
+                  backgroundColor: "rgba(255,255,255,0.20)",
+                  marginVertical: 4,
+                }}
+              />
+            )}
+          </View>
+
+          {/* Content */}
+          <View style={{ flex: 1, marginLeft: 12, paddingBottom: idx < steps.length - 1 ? 14 : 0 }}>
+            <Text
+              style={{
+                fontFamily: "Inter_700Bold",
+                color: "#FFFFFF",
+                fontSize: 13,
+                marginBottom: 3,
+              }}
+            >
+              {step.title}
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                color: "rgba(255,255,255,0.65)",
+                fontSize: 12,
+                lineHeight: 17,
+              }}
+            >
+              {step.description}
+            </Text>
+          </View>
+        </View>
+      ))}
+    </Animated.View>
+  );
 }
 
 // ── Monthly exit-offer modal ───────────────────────────────────────────────────
@@ -160,11 +265,12 @@ export function PaywallScreen() {
   const [threeMonthPkg, setThreeMonthPkg] = useState<AdaptyPaywallProduct | null>(null);
   const [yearlyPkg,     setYearlyPkg]     = useState<AdaptyPaywallProduct | null>(null);
 
-  const [selectedPlan,       setSelectedPlan]       = useState<"yearly" | "three_month">("yearly");
+  const [selectedPlan,       setSelectedPlan]       = useState<PlanKey>("yearly");
   const [isPurchasing,       setIsPurchasing]        = useState(false);
   const [isPurchasingMonthly, setIsPurchasingMonthly] = useState(false);
   const [isRestoring,        setIsRestoring]         = useState(false);
   const [showExitModal,      setShowExitModal]       = useState(false);
+  const [showMorePlans,      setShowMorePlans]       = useState(false);
 
   // ── Load products from Adapty ───────────────────────────────────────────────
   useEffect(() => {
@@ -191,12 +297,16 @@ export function PaywallScreen() {
     return () => sub.remove();
   }, [showExitModal]);
 
-  // ── Purchase selected plan (yearly / three_month) ───────────────────────────
+  // ── Purchase selected plan ────────────────────────────────────────────────
   const handleCTA = async () => {
     playClickSound(); tapHaptic();
     trackEvent("cta_tapped", { plan: selectedPlan });
 
-    const pkg = selectedPlan === "yearly" ? yearlyPkg : threeMonthPkg;
+    const pkg = selectedPlan === "yearly"
+      ? yearlyPkg
+      : selectedPlan === "three_month"
+        ? threeMonthPkg
+        : monthlyPkg;
 
     if (!pkg) {
       grantAccess(selectedPlan); return;
@@ -274,7 +384,13 @@ export function PaywallScreen() {
   const handleBack = () => {
     playClickSound(); tapHaptic();
     trackEvent("paywall_back");
-    setShowExitModal(true);
+    // If user hasn't expanded plans yet, show exit modal with monthly offer.
+    // Otherwise just go back.
+    if (!showMorePlans) {
+      setShowExitModal(true);
+    } else {
+      prevStep();
+    }
   };
 
   // ── Prices (live from SDK or fallback) ──────────────────────────────────────
@@ -285,8 +401,11 @@ export function PaywallScreen() {
   // Calculate savings percentage: Annual vs Quarterly (annualized)
   const yearlyNum      = yearlyPkg?.price?.amount      ?? 79.99;
   const threeMonthNum  = threeMonthPkg?.price?.amount  ?? 24.99;
+  const monthlyNum     = monthlyPkg?.price?.amount     ?? 9.99;
   const quarterlyAnnualized = threeMonthNum * 4;
-  const savingsPercent = Math.round(((quarterlyAnnualized - yearlyNum) / quarterlyAnnualized) * 100);
+  const monthlyAnnualized   = monthlyNum * 12;
+  const savingsVsQuarterly  = Math.round(((quarterlyAnnualized - yearlyNum) / quarterlyAnnualized) * 100);
+  const savingsVsMonthly    = Math.round(((monthlyAnnualized - yearlyNum) / monthlyAnnualized) * 100);
 
   return (
     <View style={{ flex: 1 }}>
@@ -328,9 +447,9 @@ export function PaywallScreen() {
 
             {/* Plan cards */}
             <Animated.View entering={FadeIn.delay(180).duration(700).easing(SOFT)} style={{ flexDirection: "column", gap: 10, marginBottom: 14 }}>
-              {/* Annual */}
+              {/* Annual — always visible */}
               <Pressable
-                onPress={() => { selectHaptic(); setSelectedPlan("yearly"); trackEvent("plan_selected", { plan: "yearly" }); }}
+                onPress={() => { selectHaptic(); setSelectedPlan("yearly"); setShowMorePlans(false); trackEvent("plan_selected", { plan: "yearly" }); }}
                 style={{ width: "100%", borderRadius: 18, borderWidth: selectedPlan === "yearly" ? 2.5 : 1.5, borderColor: selectedPlan === "yearly" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "yearly" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14, position: "relative", overflow: "hidden" }}
               >
                 <View style={{ position: "absolute", top: 0, right: 0, backgroundColor: "#FFFFFF", borderBottomLeftRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
@@ -342,30 +461,83 @@ export function PaywallScreen() {
                   <View style={{ flex: 1, gap: 4 }}>
                     <View style={{ backgroundColor: "rgba(74, 222, 128, 0.20)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start" }}>
                       <Text style={{ fontFamily: "Inter_700Bold", color: "#4ADE80", fontSize: 10 }}>
-                        Save {savingsPercent}% vs Quarterly
+                        Save {savingsVsMonthly}% vs Monthly
                       </Text>
                     </View>
                     <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
-                      Just {YEARLY_PER_MONTH}/mo
+                      Just {YEARLY_PER_MONTH}/mo · Best value
                     </Text>
                   </View>
                 </View>
               </Pressable>
 
-              {/* Three-month */}
+              {/* "See other plans" toggle */}
               <Pressable
-                onPress={() => { selectHaptic(); setSelectedPlan("three_month"); trackEvent("plan_selected", { plan: "three_month" }); }}
-                style={{ width: "100%", borderRadius: 18, borderWidth: selectedPlan === "three_month" ? 2.5 : 1.5, borderColor: selectedPlan === "three_month" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "three_month" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14 }}
+                onPress={() => { tapHaptic(); setShowMorePlans((v) => !v); trackEvent("more_plans_toggled", { expanded: !showMorePlans }); }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingVertical: 10,
+                  gap: 6,
+                }}
               >
-                <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Quarterly</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                  <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{threeMonthPrice}</Text>
-                  <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
-                    Just {THREE_MONTH_PER_MONTH}/mo
-                  </Text>
-                </View>
+                <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+                  {showMorePlans ? "Hide other plans" : "See other plans"}
+                </Text>
+                {showMorePlans
+                  ? <ChevronUp size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />
+                  : <ChevronDown size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />}
               </Pressable>
+
+              {/* Quarterly + Monthly — shown only when expanded */}
+              {showMorePlans && (
+                <Animated.View entering={FadeInDown.duration(350).easing(SOFT)} style={{ gap: 10 }}>
+                  {/* Quarterly */}
+                  <Pressable
+                    onPress={() => { selectHaptic(); setSelectedPlan("three_month"); trackEvent("plan_selected", { plan: "three_month" }); }}
+                    style={{ width: "100%", borderRadius: 18, borderWidth: selectedPlan === "three_month" ? 2.5 : 1.5, borderColor: selectedPlan === "three_month" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "three_month" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14 }}
+                  >
+                    <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Quarterly</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{threeMonthPrice}</Text>
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
+                          {THREE_MONTH_PER_MONTH}/mo · Billed every 3 months
+                        </Text>
+                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
+                          No free trial
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+
+                  {/* Monthly */}
+                  <Pressable
+                    onPress={() => { selectHaptic(); setSelectedPlan("monthly"); trackEvent("plan_selected", { plan: "monthly" }); }}
+                    style={{ width: "100%", borderRadius: 18, borderWidth: selectedPlan === "monthly" ? 2.5 : 1.5, borderColor: selectedPlan === "monthly" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "monthly" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14 }}
+                  >
+                    <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Monthly</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{monthlyPrice}</Text>
+                      <View style={{ flex: 1, gap: 4 }}>
+                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
+                          {MONTHLY_PER_MONTH}/mo · Cancel anytime
+                        </Text>
+                        <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
+                          No free trial
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                </Animated.View>
+              )}
             </Animated.View>
+
+            {/* Trial Timeline — only for annual plan when other plans are NOT expanded */}
+            {selectedPlan === "yearly" && !showMorePlans && (
+              <TrialTimeline yearlyPrice={yearlyPrice} themeColors={themeColors} />
+            )}
 
             {/* CTA */}
             <Animated.View entering={FadeIn.delay(320).duration(600).easing(SOFT)} style={{ alignItems: "center" }}>
@@ -379,7 +551,11 @@ export function PaywallScreen() {
                     ? <ActivityIndicator color="#FFFFFF" size="small" />
                     : <>
                         <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 18 }}>
-                          {selectedPlan === "yearly" ? `Start Free ${TRIAL_DAYS}-Day Trial` : "Continue with Quarterly"}
+                          {selectedPlan === "yearly"
+                            ? `Start Free ${TRIAL_DAYS}-Day Trial`
+                            : selectedPlan === "three_month"
+                              ? "Continue with Quarterly"
+                              : "Continue with Monthly"}
                         </Text>
                         <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
                       </>}
@@ -389,7 +565,9 @@ export function PaywallScreen() {
               <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.6)", fontSize: 10, textAlign: "center", marginTop: 10, lineHeight: 15 }}>
                 {selectedPlan === "yearly"
                   ? `No charge for ${TRIAL_DAYS} days · Then ${yearlyPrice}/yr · Cancel anytime`
-                  : `${threeMonthPrice} billed every 3 months · Cancel anytime`}
+                  : selectedPlan === "three_month"
+                    ? `${threeMonthPrice} billed every 3 months · Cancel anytime`
+                    : `${monthlyPrice} billed monthly · Cancel anytime`}
               </Text>
 
               {/* Legal + Restore */}
