@@ -988,6 +988,8 @@ export default function SettingsScreen() {
                     marginHorizontal: 16,
                     marginBottom: 16,
                     borderRadius: 18,
+                    borderWidth: 2,
+                    borderColor: "#FFFFFF",
                     overflow: "hidden",
                   }}
                 >
@@ -1276,7 +1278,7 @@ export default function SettingsScreen() {
                           fontSize: 18,
                         }}
                       >
-                        Reset all data
+                        Erase everything
                       </Text>
                     </LinearGradient>
                   </Pressable>
