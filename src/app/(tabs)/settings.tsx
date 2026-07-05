@@ -1171,95 +1171,96 @@ export default function SettingsScreen() {
 
             {/* ── Share / Spread the Word ── */}
             <Animated.View key={`s-share-${animationKey}`} entering={ENTER_6} className="mb-6">
-              <Pressable
-                data-testid="share-app-card"
-                onPress={shareUnavailable ? handleCopyLink : handleShareApp}
-                className="active:opacity-75"
+              <View
+                className="rounded-3xl overflow-hidden"
+                style={{
+                  backgroundColor: surfaceBg,
+                  borderWidth: 2,
+                  borderColor: borderColor,
+                }}
               >
-                <View
-                  className="rounded-3xl overflow-hidden"
+                {/* Button — Heart icon + "Spread the word" inside one tappable container */}
+                <Pressable
+                  data-testid="share-app-card"
+                  onPress={shareUnavailable ? handleCopyLink : handleShareApp}
+                  className="active:opacity-75"
                   style={{
-                    backgroundColor: surfaceBg,
-                    borderWidth: 2,
-                    borderColor: borderColor,
+                    margin: 16,
+                    borderRadius: 18,
+                    overflow: "hidden",
                   }}
                 >
-                  {/* Section header */}
-                  <View
-                    className="flex-row items-center px-5 pt-5 pb-4"
+                  <LinearGradient
+                    colors={Gradients.button}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
                     style={{
-                      borderBottomWidth: 1,
-                      borderBottomColor: "rgba(255, 255, 255, 0.12)",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 16,
+                      paddingHorizontal: 24,
+                      borderRadius: 18,
                     }}
                   >
-                    <View
-                      className="items-center justify-center mr-3"
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
-                        backgroundColor: "rgba(255, 255, 255, 0.15)",
-                      }}
-                    >
-                      <Heart size={22} color="#FFFFFF" strokeWidth={2} />
-                    </View>
+                    <Heart size={20} color="#FFFFFF" strokeWidth={2.5} />
                     <Text
                       style={{
-                        fontFamily: "Inter_600SemiBold",
+                        fontFamily: "Inter_700Bold",
                         color: "#FFFFFF",
-                        fontSize: 20,
-                        flex: 1,
+                        fontSize: 17,
+                        marginLeft: 10,
                       }}
                     >
-                      Help someone else feel understood
+                      Spread the word
                     </Text>
-                  </View>
+                  </LinearGradient>
+                </Pressable>
 
-                  {/* Body */}
-                  <View className="p-5">
-                    <Text
+                {/* Body */}
+                <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255, 255, 255, 0.75)",
+                      fontSize: 14,
+                      lineHeight: 22,
+                      marginBottom: shareUnavailable ? 16 : 0,
+                    }}
+                  >
+                    Someone you know probably feels what you feel — but doesn't have the
+                    words for it yet. Vocolens was built by one person who's lived it, not
+                    a company. Share it to help them find their words, and help an indie
+                    developer keep building.
+                  </Text>
+
+                  {shareUnavailable && (
+                    <Pressable
+                      data-testid="copy-link-button"
+                      onPress={handleCopyLink}
+                      className="active:opacity-80"
                       style={{
-                        fontFamily: "Inter_400Regular",
-                        color: "rgba(255, 255, 255, 0.75)",
-                        fontSize: 14,
-                        lineHeight: 22,
-                        marginBottom: shareUnavailable ? 16 : 0,
+                        borderRadius: 18,
+                        borderWidth: 1.5,
+                        borderColor: "rgba(255, 255, 255, 0.35)",
+                        backgroundColor: "rgba(255, 255, 255, 0.12)",
+                        paddingVertical: 14,
+                        alignItems: "center",
                       }}
                     >
-                      Someone you know probably feels what you feel — but doesn't have the
-                      words for it yet. Vocolens was built by one person who's lived it, not
-                      a company. Share it to help them find their words, and help an indie
-                      developer keep building.
-                    </Text>
-
-                    {shareUnavailable && (
-                      <Pressable
-                        data-testid="copy-link-button"
-                        onPress={handleCopyLink}
-                        className="active:opacity-80"
+                      <Text
                         style={{
-                          borderRadius: 18,
-                          borderWidth: 1.5,
-                          borderColor: "rgba(255, 255, 255, 0.35)",
-                          backgroundColor: "rgba(255, 255, 255, 0.12)",
-                          paddingVertical: 14,
-                          alignItems: "center",
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
+                          fontSize: 15,
                         }}
                       >
-                        <Text
-                          style={{
-                            fontFamily: "Inter_600SemiBold",
-                            color: "#FFFFFF",
-                            fontSize: 15,
-                          }}
-                        >
-                          Copy link
-                        </Text>
-                      </Pressable>
-                    )}
-                  </View>
+                        Copy link
+                      </Text>
+                    </Pressable>
+                  )}
                 </View>
-              </Pressable>
+              </View>
             </Animated.View>
           </ScrollView>
         </SafeAreaView>
