@@ -962,7 +962,7 @@ export default function SettingsScreen() {
                 style={{
                   backgroundColor: surfaceBg,
                   borderWidth: 2,
-                  borderColor: borderColor,
+                  borderColor: "rgba(255, 255, 255, 0.40)",
                 }}
               >
                 {/* Body */}
@@ -1215,16 +1215,16 @@ export default function SettingsScreen() {
                       width: 40,
                       height: 40,
                       borderRadius: 12,
-                      backgroundColor: "rgba(239, 68, 68, 0.18)",
+                      backgroundColor: "rgba(255, 255, 255, 0.15)",
                     }}
                   >
-                    <Trash2 size={22} color="#F87171" strokeWidth={2} />
+                    <Trash2 size={22} color="#FFFFFF" strokeWidth={2} />
                   </View>
                   <Text
                     className="text-xl font-bold"
                     style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   >
-                    Reset All Data
+                    Reset all data
                   </Text>
                 </View>
 
@@ -1276,7 +1276,7 @@ export default function SettingsScreen() {
                           fontSize: 18,
                         }}
                       >
-                        Reset All Data
+                        Reset all data
                       </Text>
                     </LinearGradient>
                   </Pressable>
