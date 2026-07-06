@@ -1224,16 +1224,34 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
     return `Hey, ${user.name}!`;
   }, [user.name]);
 
-  // Dynamic punchy subline that shifts each visit
-  const subline = React.useMemo(() => {
-    const lines = [
-      "Here's what your journal reveals about you.",
+  // Dynamic subline that rotates every app open — never the same twice in a row
+  const [subline, setSubline] = React.useState("");
+
+  React.useEffect(() => {
+    const SUBLINES = [
+      "Here's what your voice revealed about you.",
       "Your emotions have been speaking. Let's listen.",
-      "Every entry shapes a clearer picture of you.",
-      "Ready to understand yourself a little better?",
+      "Patterns are forming. Take a look.",
+      "You're building self-awareness, one entry at a time.",
+      "What did your feelings tell you this week?",
     ];
-    const idx = new Date().getDate() % lines.length;
-    return lines[idx];
+    const STORAGE_KEY = "insights_subline_last_index";
+
+    (async () => {
+      try {
+        const AsyncStorage = require("@react-native-async-storage/async-storage").default;
+        const lastStr = await AsyncStorage.getItem(STORAGE_KEY);
+        const last = lastStr !== null ? parseInt(lastStr, 10) : -1;
+        let next: number;
+        do {
+          next = Math.floor(Math.random() * SUBLINES.length);
+        } while (next === last && SUBLINES.length > 1);
+        await AsyncStorage.setItem(STORAGE_KEY, next.toString());
+        setSubline(SUBLINES[next]);
+      } catch {
+        setSubline(SUBLINES[0]);
+      }
+    })();
   }, []);
 
   React.useEffect(() => {
