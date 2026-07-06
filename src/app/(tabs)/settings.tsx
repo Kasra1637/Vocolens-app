@@ -860,10 +860,11 @@ export default function SettingsScreen() {
                               return d;
                             })()}
                             mode="time"
-                            display="spinner"
+                            display={Platform.OS === "android" ? "clock" : "spinner"}
                             themeVariant="dark"
                             style={{ backgroundColor: "transparent" }}
                             onChange={(_, date) => {
+                              if (Platform.OS === "android") setShowTimePicker(false);
                               if (date) {
                                 const timeStr = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
                                 useSettingsStore.getState().setDailyReminderTime(timeStr);
@@ -876,7 +877,6 @@ export default function SettingsScreen() {
                                   notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
                                 );
                               }
-                              if (Platform.OS === "android") setShowTimePicker(false);
                             }}
                           />
                         </View>
