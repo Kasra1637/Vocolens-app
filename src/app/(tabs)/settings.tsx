@@ -397,7 +397,7 @@ export default function SettingsScreen() {
         end={{ x: 0, y: 1 }}
         style={{ flex: 1 }}
       >
-        <SafeAreaView className="flex-1">
+        <View style={{ flex: 1, paddingTop: insets.top }}>
           {/* Header */}
           <Animated.View key={`s-hdr-${animationKey}`} entering={ENTER_1} className="px-6 pt-4 pb-6">
             <View>
@@ -1286,7 +1286,7 @@ export default function SettingsScreen() {
               </View>
             </Animated.View>
           </ScrollView>
-        </SafeAreaView>
+        </View>
       </LinearGradient>
 
       {/* Sign Out Confirmation Modal */}
