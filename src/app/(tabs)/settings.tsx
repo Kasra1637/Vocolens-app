@@ -840,7 +840,17 @@ export default function SettingsScreen() {
 
                       {/* Time Picker */}
                       {showTimePicker && (
-                        <View style={{ marginTop: 12 }}>
+                        <View
+                          style={{
+                            marginTop: 12,
+                            backgroundColor: "rgba(255, 255, 255, 0.08)",
+                            borderRadius: 18,
+                            borderWidth: 1,
+                            borderColor: "rgba(255, 255, 255, 0.15)",
+                            overflow: "hidden",
+                            padding: 8,
+                          }}
+                        >
                           <DateTimePicker
                             value={(() => {
                               const t = notificationPreferences?.time || dailyReminderTime;
@@ -852,6 +862,7 @@ export default function SettingsScreen() {
                             mode="time"
                             display="spinner"
                             themeVariant="dark"
+                            style={{ backgroundColor: "transparent" }}
                             onChange={(_, date) => {
                               if (date) {
                                 const timeStr = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
@@ -881,16 +892,26 @@ export default function SettingsScreen() {
                       />
 
                       {/* Reminder Days */}
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "#FFFFFF",
-                          fontSize: 14,
-                          marginBottom: 12,
-                        }}
-                      >
-                        Reminder days
-                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                        <Text
+                          style={{
+                            fontFamily: "Inter_600SemiBold",
+                            color: "#FFFFFF",
+                            fontSize: 14,
+                          }}
+                        >
+                          Reminder days
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: "Inter_500Medium",
+                            color: "rgba(255,255,255,0.50)",
+                            fontSize: 13,
+                          }}
+                        >
+                          {(notificationPreferences?.days || []).length}/7
+                        </Text>
+                      </View>
                       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                         {(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const).map((day) => {
                           const isSelected = (notificationPreferences?.days || []).includes(day);
