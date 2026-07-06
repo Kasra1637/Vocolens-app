@@ -57,7 +57,6 @@ const BIOMETRIC_POINTS = [
 
 // Privacy points shown when only PIN is available
 const PIN_ONLY_POINTS = [
-  { icon: Lock,         text: 'Only you can open your journal' },
   { icon: Lock,         text: 'A PIN keeps entries private' },
   { icon: Lock,         text: 'PIN is hardware-encrypted' },
   { icon: Lock,         text: 'Change PIN anytime in Settings' },
