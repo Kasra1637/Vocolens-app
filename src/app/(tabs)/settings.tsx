@@ -25,7 +25,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Heart, Clock } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { ExportJournalModal } from "@/components/ExportJournalModal";
 import Animated from "react-native-reanimated";
 import {
@@ -848,10 +848,10 @@ export default function SettingsScreen() {
                             borderWidth: 1,
                             borderColor: "rgba(255, 255, 255, 0.15)",
                             overflow: "hidden",
-                            padding: 8,
+                            paddingVertical: 12,
                           }}
                         >
-                          <DateTimePicker
+                          <TimeWheelPicker
                             value={(() => {
                               const t = notificationPreferences?.time || dailyReminderTime;
                               const [h, m] = t.split(":").map(Number);
@@ -859,24 +859,18 @@ export default function SettingsScreen() {
                               d.setHours(h, m, 0, 0);
                               return d;
                             })()}
-                            mode="time"
-                            display={Platform.OS === "android" ? "clock" : "spinner"}
-                            themeVariant="dark"
-                            style={{ backgroundColor: "transparent" }}
-                            onChange={(_, date) => {
-                              if (Platform.OS === "android") setShowTimePicker(false);
-                              if (date) {
-                                const timeStr = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
-                                useSettingsStore.getState().setDailyReminderTime(timeStr);
-                                useOnboardingStore.getState().setNotificationPreferences({
-                                  days: notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
-                                  time: timeStr,
-                                });
-                                NotificationService.scheduleWeeklyNotifications(
-                                  timeStr,
-                                  notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
-                                );
-                              }
+                            primaryColor={Colors.primary}
+                            onChange={(date) => {
+                              const timeStr = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+                              useSettingsStore.getState().setDailyReminderTime(timeStr);
+                              useOnboardingStore.getState().setNotificationPreferences({
+                                days: notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+                                time: timeStr,
+                              });
+                              NotificationService.scheduleWeeklyNotifications(
+                                timeStr,
+                                notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+                              );
                             }}
                           />
                         </View>
