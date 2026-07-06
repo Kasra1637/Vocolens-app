@@ -23,8 +23,9 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Heart } from "lucide-react-native";
+import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Heart, Clock } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { ExportJournalModal } from "@/components/ExportJournalModal";
 import Animated from "react-native-reanimated";
 import {
@@ -91,6 +92,7 @@ export default function SettingsScreen() {
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [exportModalVisible, setExportModalVisible] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
   const [isRestoringInSettings, setIsRestoringInSettings] = useState(false);
   const [changePinVisible, setChangePinVisible] = useState(false);
@@ -163,6 +165,13 @@ export default function SettingsScreen() {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertVisible(true);
+  };
+
+  const formatReminderTime = (time: string): string => {
+    const [h, m] = time.split(":").map(Number);
+    const period = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 || 12;
+    return `${hour}:${m.toString().padStart(2, "0")} ${period}`;
   };
 
   const handleThemeSelect = (theme: ThemeColorType) => {
@@ -765,6 +774,7 @@ export default function SettingsScreen() {
                 </View>
 
                 <View className="p-5">
+                  {/* Toggle */}
                   <View className="flex-row items-center justify-between">
                     <View className="flex-1 mr-4">
                       <Text
@@ -773,8 +783,8 @@ export default function SettingsScreen() {
                       >
                         Daily reminders
                       </Text>
-                      <Text style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: 15 }}>
-                        Get reminded to journal every day
+                      <Text style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: 14 }}>
+                        Get reminded to journal
                       </Text>
                     </View>
                     <ThemedSwitch
@@ -784,6 +794,151 @@ export default function SettingsScreen() {
                       thumbColor="#FFFFFF"
                     />
                   </View>
+
+                  {/* Time & Day selectors — shown when notifications are enabled */}
+                  {notificationsEnabled && (
+                    <View style={{ marginTop: 20 }}>
+                      {/* Reminder Time */}
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
+                          fontSize: 14,
+                          marginBottom: 10,
+                        }}
+                      >
+                        Reminder time
+                      </Text>
+                      <Pressable
+                        onPress={() => {
+                          tapHaptic();
+                          setShowTimePicker(!showTimePicker);
+                        }}
+                        style={{
+                          backgroundColor: "rgba(255, 255, 255, 0.10)",
+                          borderRadius: 14,
+                          borderWidth: 1,
+                          borderColor: "rgba(255, 255, 255, 0.18)",
+                          paddingHorizontal: 16,
+                          paddingVertical: 14,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "Inter_500Medium",
+                            color: "#FFFFFF",
+                            fontSize: 16,
+                          }}
+                        >
+                          {formatReminderTime(notificationPreferences?.time || dailyReminderTime)}
+                        </Text>
+                        <Clock size={18} color="rgba(255,255,255,0.55)" strokeWidth={2} />
+                      </Pressable>
+
+                      {/* Time Picker */}
+                      {showTimePicker && (
+                        <View style={{ marginTop: 12 }}>
+                          <DateTimePicker
+                            value={(() => {
+                              const t = notificationPreferences?.time || dailyReminderTime;
+                              const [h, m] = t.split(":").map(Number);
+                              const d = new Date();
+                              d.setHours(h, m, 0, 0);
+                              return d;
+                            })()}
+                            mode="time"
+                            display="spinner"
+                            themeVariant="dark"
+                            onChange={(_, date) => {
+                              if (date) {
+                                const timeStr = `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+                                useSettingsStore.getState().setDailyReminderTime(timeStr);
+                                useOnboardingStore.getState().setNotificationPreferences({
+                                  days: notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+                                  time: timeStr,
+                                });
+                                NotificationService.scheduleWeeklyNotifications(
+                                  timeStr,
+                                  notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+                                );
+                              }
+                              if (Platform.OS === "android") setShowTimePicker(false);
+                            }}
+                          />
+                        </View>
+                      )}
+
+                      {/* Divider */}
+                      <View
+                        style={{
+                          height: 1,
+                          backgroundColor: "rgba(255, 255, 255, 0.10)",
+                          marginVertical: 16,
+                        }}
+                      />
+
+                      {/* Reminder Days */}
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
+                          fontSize: 14,
+                          marginBottom: 12,
+                        }}
+                      >
+                        Reminder days
+                      </Text>
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                        {(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const).map((day) => {
+                          const isSelected = (notificationPreferences?.days || []).includes(day);
+                          const label = day.slice(0, 3).charAt(0).toUpperCase() + day.slice(1, 3);
+                          return (
+                            <Pressable
+                              key={day}
+                              onPress={() => {
+                                tapHaptic();
+                                const currentDays = new Set(notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]);
+                                if (isSelected) {
+                                  if (currentDays.size <= 1) return;
+                                  currentDays.delete(day);
+                                } else {
+                                  currentDays.add(day);
+                                }
+                                const daysArray = Array.from(currentDays);
+                                const timeStr = notificationPreferences?.time || dailyReminderTime;
+                                useOnboardingStore.getState().setNotificationPreferences({
+                                  days: daysArray,
+                                  time: timeStr,
+                                });
+                                NotificationService.scheduleWeeklyNotifications(timeStr, daysArray);
+                              }}
+                              style={{
+                                paddingHorizontal: 14,
+                                paddingVertical: 10,
+                                borderRadius: 12,
+                                borderWidth: 1.5,
+                                borderColor: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.20)",
+                                backgroundColor: isSelected ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontFamily: isSelected ? "Inter_600SemiBold" : "Inter_400Regular",
+                                  color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.50)",
+                                  fontSize: 14,
+                                }}
+                              >
+                                {label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  )}
                 </View>
               </View>
             </Animated.View>
