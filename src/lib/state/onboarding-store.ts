@@ -274,7 +274,13 @@ const useOnboardingStore = create<OnboardingState>()(
         set({ hasExistingAccount: existing }),
       markWelcomeCelebrationSeen: () =>
         set({ hasSeenWelcomeCelebration: true }),
-      setUserName: (name) => set({ userName: name }),
+      setUserName: (name) => {
+        // Normalize: "KASRA" → "Kasra", "kaSRA" → "Kasra"
+        const normalized = name
+          ? name.trim().charAt(0).toUpperCase() + name.trim().slice(1).toLowerCase()
+          : name;
+        set({ userName: normalized });
+      },
       setSelectedTheme: (theme) => set({ selectedTheme: theme }),
       setSelectedMood: (mood) => set({ selectedMood: mood }),
       setSelectedMoodFollowUp: (followUp) =>
