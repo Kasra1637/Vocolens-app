@@ -464,7 +464,7 @@ export default function SettingsScreen() {
                       style={{
                         fontFamily: "Inter_600SemiBold",
                         color: "#FFFFFF",
-                        fontSize: 20,
+                        fontSize: 18,
                       }}
                     >
                       Subscription
@@ -473,7 +473,7 @@ export default function SettingsScreen() {
                       style={{
                         fontFamily: "Inter_400Regular",
                         color: "rgba(255,255,255,0.55)",
-                        fontSize: 13,
+                        fontSize: 14,
                         marginTop: 2,
                       }}
                     >
@@ -600,8 +600,8 @@ export default function SettingsScreen() {
                     <Palette size={22} color="#FFFFFF" />
                   </View>
                   <Text
-                    className="text-xl font-bold"
-                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+                    
+                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
                   >
                     Theme colors
                   </Text>
@@ -758,8 +758,7 @@ export default function SettingsScreen() {
                     <Bell size={22} color="#FFFFFF" />
                   </View>
                   <Text
-                    className="text-xl font-bold"
-                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
                   >
                     Notifications
                   </Text>
@@ -770,7 +769,7 @@ export default function SettingsScreen() {
                     <View className="flex-1 mr-4">
                       <Text
                         className="text-base font-semibold mb-1"
-                        style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+                        style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
                       >
                         Daily reminders
                       </Text>
@@ -819,8 +818,8 @@ export default function SettingsScreen() {
                     <Brain size={22} color="#FFFFFF" />
                   </View>
                   <Text
-                    className="text-xl font-bold"
-                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+                    
+                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
                   >
                     Emotion reflection
                   </Text>
@@ -845,7 +844,7 @@ export default function SettingsScreen() {
                   <Text
                     style={{
                       color: "rgba(255, 255, 255, 0.7)",
-                      fontSize: 13,
+                      fontSize: 14,
                       marginBottom: 12,
                     }}
                   >
@@ -894,7 +893,7 @@ export default function SettingsScreen() {
                           <Text
                             style={{
                               color: "rgba(255, 255, 255, 0.6)",
-                              fontSize: 13,
+                              fontSize: 14,
                               lineHeight: 18,
                             }}
                           >
@@ -932,7 +931,7 @@ export default function SettingsScreen() {
                       <Text
                         style={{
                           color: "rgba(255, 255, 255, 0.7)",
-                          fontSize: 13,
+                          fontSize: 14,
                         }}
                       >
                         Confirmation rate, patterns, export CSV
@@ -1080,8 +1079,8 @@ export default function SettingsScreen() {
                     <Shield size={22} color="#FFFFFF" />
                   </View>
                   <Text
-                    className="text-xl font-bold"
-                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+                    
+                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
                   >
                     Privacy & security
                   </Text>
@@ -1124,7 +1123,7 @@ export default function SettingsScreen() {
                           style={{
                             fontFamily: 'Inter_400Regular',
                             color: 'rgba(255,255,255,0.55)',
-                            fontSize: 13,
+                            fontSize: 14,
                           }}
                         >
                           Enter your current PIN, then create a new one
@@ -1178,7 +1177,7 @@ export default function SettingsScreen() {
                           style={{
                             fontFamily: 'Inter_400Regular',
                             color: 'rgba(255,255,255,0.55)',
-                            fontSize: 13,
+                            fontSize: 14,
                             lineHeight: 18,
                           }}
                         >
@@ -1223,8 +1222,8 @@ export default function SettingsScreen() {
                     <Trash2 size={22} color="#FFFFFF" strokeWidth={2} />
                   </View>
                   <Text
-                    className="text-xl font-bold"
-                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
+                    
+                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
                   >
                     Reset all data
                   </Text>
@@ -1234,7 +1233,7 @@ export default function SettingsScreen() {
                   <Text
                     style={{
                       color: "rgba(255, 255, 255, 0.7)",
-                      fontSize: 13,
+                      fontSize: 14,
                       marginBottom: 16,
                       lineHeight: 19,
                     }}

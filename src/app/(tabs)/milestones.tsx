@@ -569,7 +569,7 @@ function CategoryDropdown({
                       fontFamily: "Inter_500Medium",
                       color: "#FFFFFF",
                       marginLeft: 12,
-                      fontSize: 13,
+                      fontSize: 14,
                     }}
                   >
                     {option.label}
@@ -1082,7 +1082,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                 style={{
                   fontFamily: "Inter_500Medium",
                   color: "rgba(255,255,255,0.90)",
-                  fontSize: 13,
+                  fontSize: 14,
                   lineHeight: 21,
                 }}
               >

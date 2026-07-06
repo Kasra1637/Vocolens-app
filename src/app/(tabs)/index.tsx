@@ -697,7 +697,7 @@ export default function SpeakScreen() {
                         style={{
                           fontFamily: "Inter_600SemiBold",
                           color: "#FFFFFF",
-                          fontSize: 13,
+                          fontSize: 14,
                           lineHeight: 22,
                           marginBottom: 8,
                         }}
@@ -757,7 +757,7 @@ export default function SpeakScreen() {
                     style={{
                       fontFamily: "Inter_700Bold",
                       color: "#FFFFFF",
-                      fontSize: 13,
+                      fontSize: 14,
                       marginBottom: 3,
                     }}
                   >
@@ -832,7 +832,7 @@ export default function SpeakScreen() {
                         style={{
                           fontFamily: "Inter_600SemiBold",
                           color: isDarkMode ? "#FCD34D" : "#92400E",
-                          fontSize: 13,
+                          fontSize: 14,
                           lineHeight: 22,
                         }}
                       >
@@ -902,7 +902,7 @@ export default function SpeakScreen() {
                     fontFamily: "Inter_400Regular",
                     color: "rgba(255, 255, 255, 0.7)",
                     lineHeight: 22,
-                    fontSize: 13,
+                    fontSize: 14,
                     fontStyle: "italic",
                   }}
                 >
@@ -1064,7 +1064,7 @@ export default function SpeakScreen() {
                 style={{
                   fontFamily: "Inter_500Medium",
                   color: "rgba(255, 255, 255, 0.7)",
-                  fontSize: 13,
+                  fontSize: 14,
                   textAlign: "center",
                 }}
               >

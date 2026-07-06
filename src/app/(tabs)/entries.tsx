@@ -653,7 +653,7 @@ export default function EntriesScreen() {
                           <Text
                             style={{
                               fontFamily: "Inter_500Medium",
-                              fontSize: 13,
+                              fontSize: 14,
                               color: "#FFFFFF",
                               textTransform: "capitalize",
                             }}
@@ -665,7 +665,7 @@ export default function EntriesScreen() {
                     </View>
                   ) : (
                     <View style={{ padding: 16, alignItems: "center" }}>
-                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
+                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
                         Topics will appear here after you record entries
                       </Text>
                     </View>

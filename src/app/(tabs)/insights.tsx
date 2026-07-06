@@ -1477,7 +1477,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                       : isNearLimit
                         ? "#FFD080"
                         : "rgba(255,255,255,0.9)",
-                    fontSize: 13,
+                    fontSize: 14,
                   }}
                 >
                   {Math.floor(user.usageMinutes)}{" "}
@@ -1728,7 +1728,7 @@ function SentimentTimeline({
               style={{
                 fontFamily: "Inter_500Medium",
                 color: "#FFFFFF",
-                fontSize: 13,
+                fontSize: 14,
               }}
             >
               Overall mood
@@ -1761,7 +1761,7 @@ function SentimentTimeline({
               style={{
                 fontFamily: "Inter_500Medium",
                 color: "#FFFFFF",
-                fontSize: 13,
+                fontSize: 14,
               }}
             >
               Emotion focus
@@ -1927,7 +1927,7 @@ function OverallMoodDisplay() {
                 <Text
                   style={{
                     fontFamily: "Inter_500Medium",
-                    fontSize: 13,
+                    fontSize: 14,
                     color: "#FFFFFF",
                     marginBottom: 4,
                   }}
@@ -2101,7 +2101,7 @@ function EmotionIntensityDisplay({ emotion }: { emotion: EmotionType }) {
               <Text
                 style={{
                   fontFamily: "Inter_500Medium",
-                  fontSize: 13,
+                  fontSize: 14,
                   color: "#FFFFFF",
                   marginBottom: 8,
                 }}
@@ -2211,7 +2211,7 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
           </View>
           <View>
             <Text
-              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
             >
               Emotional themes
             </Text>
@@ -2387,7 +2387,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
           </View>
           <View>
             <Text
-              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
             >
               Time of day
             </Text>
@@ -2607,7 +2607,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
             </View>
             <View>
               <Text
-                style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}
+                style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
               >
                 Deep insights
               </Text>
@@ -2695,7 +2695,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
                     <Text
                       style={{
                         fontFamily: "Inter_400Regular",
-                        fontSize: 13,
+                        fontSize: 14,
                         color: "rgba(255, 255, 255, 0.95)",
                         lineHeight: 22,
                         marginBottom: 16,
@@ -2782,7 +2782,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
             <Text
               style={{
                 fontFamily: "Inter_500Medium",
-                fontSize: 13,
+                fontSize: 14,
                 color: "#FFFFFF",
               }}
             >
