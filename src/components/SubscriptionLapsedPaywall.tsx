@@ -285,7 +285,7 @@ export function SubscriptionLapsedPaywall() {
                   maxWidth: "90%",
                 }}
               >
-                Your journal entries, streaks, and insights are locked. Reactivate now to pick up right where you left off — every day without it, your progress fades.
+                Your journal entries, streaks, and insights are locked. Reactivate now to pick up where you left off — without it, your progress fades.
               </Text>
             </Animated.View>
 
@@ -304,7 +304,7 @@ export function SubscriptionLapsedPaywall() {
                 <Text
                   style={{
                     fontFamily: "Inter_600SemiBold",
-                    color: "#F87171",
+                    color: "#FFFFFF",
                     fontSize: 13,
                     textAlign: "center",
                     lineHeight: 19,
