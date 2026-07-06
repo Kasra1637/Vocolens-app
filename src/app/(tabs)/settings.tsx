@@ -187,18 +187,18 @@ export default function SettingsScreen() {
       const status = await NotificationService.requestPermissions();
 
       if (status.granted) {
-        // Schedule notifications using the stored time from onboarding
+        // Schedule notifications using the stored time and days
         const timeToUse = notificationPreferences?.time || dailyReminderTime;
-        const scheduled =
-          await NotificationService.scheduleDailyNotification(timeToUse);
+        const daysToUse = notificationPreferences?.days || ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
-        if (scheduled) {
+        try {
+          const ids = await NotificationService.scheduleWeeklyNotifications(timeToUse, daysToUse);
+          // Even if ids is empty (e.g. expo-notifications unavailable in preview),
+          // still enable the toggle so the user can see/edit their preferences.
           setNotificationsEnabled(true);
-        } else {
-          Alert.alert(
-            "Error",
-            "Failed to schedule notifications. Please try again.",
-          );
+        } catch {
+          // Still enable — the scheduling will retry on next app launch via AuthGate
+          setNotificationsEnabled(true);
         }
       } else {
         Alert.alert(
