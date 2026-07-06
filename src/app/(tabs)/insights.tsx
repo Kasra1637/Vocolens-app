@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Modal } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 // Use legacy subpath — expo-file-system v55 top-level no longer exports
@@ -49,6 +49,7 @@ import {
   Brain,
 } from "lucide-react-native";
 import Animated, {
+  FadeIn,
   FadeOut,
   useAnimatedStyle,
   useSharedValue,
@@ -761,6 +762,7 @@ function InsightsContent({
   });
 
   const [shareToast, setShareToast] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
 
   if (!fontsLoaded) {
     return (
@@ -785,45 +787,35 @@ function InsightsContent({
 
   const handleSharePDF = () => {
     tapHaptic();
-    Alert.alert(
-      "Share insights report",
-      "Generate a personalized emotional wellness report to share with your doctor, counselor, or therapist.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Share report",
-          onPress: async () => {
-            try {
-              setIsGeneratingPDF(true);
-              const uri = await generateInsightsPDF({
-                userName: user.name,
-                stats,
-                entries,
-                primaryColor: Colors.primary,
-                priorityInsights,
-                triggerData,
-              });
-              if (!uri) {
-                Alert.alert("Error", "Could not generate report. Please try again.");
-                return;
-              }
-              await Sharing.shareAsync(uri, {
-                mimeType: "text/html",
-                dialogTitle: "Share Vocolens Insights Report",
-                UTI: "public.html",
-              });
-            } catch (err: any) {
-              Alert.alert(
-                "Could not share report",
-                err?.message || "An unexpected error occurred. Please try again.",
-              );
-            } finally {
-              setIsGeneratingPDF(false);
-            }
-          },
-        },
-      ],
-    );
+    setShareModalVisible(true);
+  };
+
+  const confirmSharePDF = async () => {
+    setShareModalVisible(false);
+    try {
+      setIsGeneratingPDF(true);
+      const uri = await generateInsightsPDF({
+        userName: user.name,
+        stats,
+        entries,
+        primaryColor: Colors.primary,
+        priorityInsights,
+        triggerData,
+      });
+      if (!uri) {
+        setIsGeneratingPDF(false);
+        return;
+      }
+      await Sharing.shareAsync(uri, {
+        mimeType: "text/html",
+        dialogTitle: "Share Vocolens Insights Report",
+        UTI: "public.html",
+      });
+    } catch (err: any) {
+      // silent
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   return (
@@ -1077,6 +1069,127 @@ function InsightsContent({
           </View>
         </Animated.View>
       )}
+
+      {/* Share Insights Modal */}
+      <Modal
+        visible={shareModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShareModalVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.70)", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+          <View
+            style={{
+              backgroundColor: Gradients.background[1],
+              borderRadius: 24,
+              padding: 24,
+              width: "100%",
+              maxWidth: 380,
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Icon */}
+            <View style={{ alignItems: "center", marginBottom: 16 }}>
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 16,
+                  backgroundColor: hexToRgba(Colors.primary, 0.18),
+                  borderWidth: 1.5,
+                  borderColor: hexToRgba(Colors.primary, 0.35),
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Share2 size={24} color="#FFFFFF" strokeWidth={2} />
+              </View>
+            </View>
+
+            {/* Title */}
+            <Text
+              style={{
+                fontFamily: "Inter_700Bold",
+                color: "#FFFFFF",
+                fontSize: 20,
+                textAlign: "center",
+                marginBottom: 10,
+              }}
+            >
+              Share insights report
+            </Text>
+
+            {/* Description */}
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                color: "rgba(255, 255, 255, 0.70)",
+                fontSize: 14,
+                textAlign: "center",
+                lineHeight: 21,
+                marginBottom: 24,
+              }}
+            >
+              Generate a personalized emotional wellness report to share with your doctor, counselor, or therapist.
+            </Text>
+
+            {/* Share button */}
+            <Pressable
+              onPress={confirmSharePDF}
+              style={{
+                borderRadius: 18,
+                borderWidth: 2,
+                borderColor: "#FFFFFF",
+                overflow: "hidden",
+                marginBottom: 12,
+              }}
+            >
+              <LinearGradient
+                colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingVertical: 15,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontFamily: "Inter_700Bold",
+                    fontSize: 16,
+                  }}
+                >
+                  Share report
+                </Text>
+              </LinearGradient>
+            </Pressable>
+
+            {/* Cancel button */}
+            <Pressable
+              onPress={() => setShareModalVisible(false)}
+              style={{
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Inter_500Medium",
+                  color: "rgba(255, 255, 255, 0.45)",
+                  fontSize: 14,
+                }}
+              >
+                Cancel
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
