@@ -848,7 +848,7 @@ export default function SettingsScreen() {
                             borderWidth: 1,
                             borderColor: "rgba(255, 255, 255, 0.15)",
                             overflow: "hidden",
-                            paddingVertical: 12,
+                            paddingVertical: 4,
                           }}
                         >
                           <TimeWheelPicker

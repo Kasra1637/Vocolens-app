@@ -18,7 +18,7 @@ import {
 import { selectionHaptic } from "@/lib/haptics";
 
 const ITEM_H = 52;
-const VISIBLE = 5;
+const VISIBLE = 3;
 const WHEEL_H = ITEM_H * VISIBLE;
 const PAD = ITEM_H * Math.floor(VISIBLE / 2);
 
@@ -86,10 +86,11 @@ function WheelColumn({ items, selectedIndex, onSelect, primaryColor, width }: Wh
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_H}
         decelerationRate="fast"
+        nestedScrollEnabled={true}
         contentContainerStyle={{ paddingTop: PAD, paddingBottom: PAD }}
         onScroll={handleScroll}
         onMomentumScrollEnd={handleMomentumEnd}
-        scrollEventThrottle={ITEM_H / 2}
+        scrollEventThrottle={16}
         bounces={false}
       >
         {items.map((label, i) => {
