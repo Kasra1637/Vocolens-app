@@ -43,24 +43,24 @@ export interface NotificationMessage {
 
 export const NOTIFICATION_MESSAGES: NotificationMessage[] = [
   {
-    title: 'What stood out to you today?',
-    body: 'A quick voice note helps you remember what matters.',
+    title: '🪞 How are you actually feeling?',
+    body: 'Speak it out — even 60 seconds helps you name what\'s going on inside.',
   },
   {
-    title: 'What made you smile today?',
-    body: 'Capture the good moments before they slip away.',
+    title: '🎙️ Your feelings have something to say',
+    body: 'Open Vocolens and let your voice do the thinking.',
   },
   {
-    title: "Ready for today's reflection?",
-    body: "You're building something meaningful, one day at a time.",
+    title: '💭 Check in with yourself',
+    body: 'A quick voice note today builds a clearer picture of your week.',
   },
   {
-    title: 'Got a minute to yourself?',
-    body: 'Your thoughts today are worth saving.',
+    title: '🌊 What\'s sitting with you right now?',
+    body: 'Say it out loud — the AI will help you make sense of it.',
   },
   {
-    title: 'Take a breath and reflect',
-    body: 'Even 60 seconds of journaling can shift your whole day.',
+    title: '🔥 You\'ve been consistent',
+    body: 'Keep your streak alive. One voice note, that\'s all it takes.',
   },
 ];
 
