@@ -251,7 +251,7 @@ export function BiometricSetupScreen() {
                   borderColor: 'rgba(255, 255, 255, 0.18)',
                   paddingVertical: 20,
                   paddingHorizontal: 20,
-                  gap: 16,
+                  gap: 18,
                 }}
               >
                 {privacyPoints.map((p, i) => {
@@ -280,7 +280,7 @@ export function BiometricSetupScreen() {
                           fontFamily: 'Inter_400Regular',
                           fontSize: 14,
                           color: 'rgba(255,255,255,0.85)',
-                          lineHeight: 34,
+                          lineHeight: 20,
                           includeFontPadding: false,
                           textAlignVertical: 'center',
                         }}
