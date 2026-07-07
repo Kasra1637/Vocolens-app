@@ -466,8 +466,10 @@ export function PaywallScreen() {
                     onPress={() => { selectHaptic(); setSelectedPlan("yearly"); trackEvent("plan_selected", { plan: "yearly" }); }}
                     style={{ width: "100%", borderRadius: 18, borderWidth: 2.5, borderColor: "#FFFFFF", backgroundColor: "rgba(255,255,255,0.18)", padding: 14, position: "relative", overflow: "hidden" }}
                   >
-                    <View style={{ position: "absolute", top: 0, left: 0, backgroundColor: "#FFFFFF", borderBottomRightRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
-                      <Text style={{ fontFamily: "Inter_700Bold", fontSize: 9, color: themeColors.primary, letterSpacing: 0.5 }}>3-DAY FREE TRIAL</Text>
+                    <View style={{ alignItems: "center", marginBottom: 8 }}>
+                      <View style={{ backgroundColor: "#FFFFFF", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 }}>
+                        <Text style={{ fontFamily: "Inter_700Bold", fontSize: 9, color: themeColors.primary, letterSpacing: 0.5 }}>3-DAY FREE TRIAL</Text>
+                      </View>
                     </View>
                     <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Annual</Text>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>

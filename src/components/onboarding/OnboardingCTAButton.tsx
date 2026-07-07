@@ -56,7 +56,6 @@ export function OnboardingCTAButton({
         borderRadius,
         borderWidth: 2,
         borderColor: activeBorderColor,
-        overflow: 'hidden',
         opacity: disabled ? 0.48 : 1,
         shadowColor: glow ? themeBorderColor : '#000000',
         shadowOffset: { width: 0, height: glow ? 6 : 8 },
@@ -75,6 +74,8 @@ export function OnboardingCTAButton({
           justifyContent: 'center',
           paddingVertical,
           gap: 6,
+          borderRadius: borderRadius - 2,
+          overflow: 'hidden',
         }}
       >
         <Text
