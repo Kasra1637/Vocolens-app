@@ -13,7 +13,7 @@ import {
 import {
   Pause,
   Check,
-  ChevronDown,
+  CaretDown,
   ArrowsClockwise,
   Sparkle,
   GearSix,

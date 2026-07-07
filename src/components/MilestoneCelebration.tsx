@@ -19,7 +19,7 @@
  *
  * BADGE ICON
  *  - The icon circle is filled with the rarity gradient (LinearGradient).
- *  - For streak-category badges the AnimatedStreakFire component replaces the
+ *  - For streak-category badges the AnimatedStreakFlame component replaces the
  *    static icon, giving it its breathing + glow-ring behaviour.
  *  - Non-streak badges get a continuous gentle pulse on the icon circle
  *    (scale 1.0 → 1.06 → 1.0, 2 s loop) so the visual never goes dead.
@@ -71,10 +71,10 @@ import {
   Moon as MoonStar,
   CalendarCheck,
   Clock,
-  Scaless,
+  Scales,
   Books,
   Microphone,
-  Activity,
+  Pulse,
   Compass,
 } from "phosphor-react-native";
 import useBadgesStore from "@/lib/state/badges-store";
@@ -82,7 +82,7 @@ import { shareMilestone } from "@/lib/share-utils";
 import { useMilestoneSound } from "@/lib/hooks/useMilestoneSound";
 import { Badge, BadgeRarity } from "@/lib/types";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
-import { AnimatedStreakFire } from "@/components/AnimatedStreakFire";
+import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -91,7 +91,7 @@ const { width: SW, height: SH } = Dimensions.get("window");
 
 const BADGE_ICONS: Record<
   string,
-  React.ComponentType<{ size: number; color: string; strokeWidth: number }>
+  React.ComponentType<any>
 > = {
   flame: Fire,
   calendar: Calendar,
@@ -115,7 +115,7 @@ const BADGE_ICONS: Record<
   clock: Clock,
   scale: Scales,
   mic: Microphone,
-  activity: Activity,
+  activity: Pulse,
   compass: Compass,
 };
 
@@ -340,7 +340,7 @@ function BadgeIconCircle({ badge, rarity, currentStreak, emojiStyle }: BadgeIcon
           }}
         />
         {isStreakBadge ? (
-          <AnimatedStreakFire
+          <AnimatedStreakFlame
             streak={currentStreak}
             size={36}
             badgeSize={72}

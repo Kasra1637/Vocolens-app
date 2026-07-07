@@ -47,7 +47,7 @@ import {
   Clock,
   GearSix,
   Microphone,
-  Activity,
+  Pulse,
   Compass,
   Scales,
   Books,
@@ -108,7 +108,7 @@ const BADGE_ICONS: Record<string, any> = {
   clock: Clock,
   scale: Scales,
   mic: Microphone,
-  activity: Activity,
+  activity: Pulse,
   compass: Compass,
 };
 

@@ -16,7 +16,7 @@ import {
   Briefcase,
   Heart,
   Users,
-  Activity,
+  Pulse,
   CurrencyDollar,
   Flower,
   Sparkle,
@@ -40,11 +40,11 @@ import { EMOTION_COLORS, EmotionType } from '@/lib/types';
 import { BorderRadius } from '@/lib/theme';
 
 // Map each trigger category to a relevant icon
-const TRIGGER_ICONS: Record<string, React.ComponentType<{ size: number; color: string; strokeWidth: number }>> = {
+const TRIGGER_ICONS: Record<string, React.ComponentType<any>> = {
   work:          Briefcase,
   family:        Heart,
   social:        Users,
-  health:        Activity,
+  health:        Pulse,
   finance:       CurrencyDollar,
   selfCare:      Flower,
   gratitude:     Sparkle,

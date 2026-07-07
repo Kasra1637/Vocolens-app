@@ -42,7 +42,7 @@ interface AnimatedStreakFlameProps {
   /** Icon colour. */
   iconColor?: string;
   /** Icon stroke width. */
-  strokeWidth?: number;
+  // weight handled internally
 }
 
 export function AnimatedStreakFlame({
@@ -53,7 +53,7 @@ export function AnimatedStreakFlame({
   badgeColor = "rgba(255,255,255,0.15)",
   glowColor = "rgba(255,255,255,0.5)",
   iconColor = "#FFFFFF",
-  strokeWidth = 2,
+  // weight handled internally
 }: AnimatedStreakFlameProps) {
   const scale = useSharedValue(1);
   const ringScale = useSharedValue(0.7);
@@ -155,7 +155,7 @@ export function AnimatedStreakFlame({
         }}
       >
         <Animated.View style={iconStyle}>
-          <Fire size={size} color={iconColor} strokeWidth={strokeWidth} />
+          <Fire size={size} color={iconColor}  />
         </Animated.View>
       </View>
     </View>

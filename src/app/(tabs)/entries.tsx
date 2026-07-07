@@ -26,7 +26,7 @@ import {
   Trash,
   X,
   BookOpen,
-  Activity,
+  Pulse,
   Microphone,
   CaretUp,
   Tag,
@@ -992,7 +992,7 @@ function EntryCard({
               </Text>
             </View>
             <View className="flex-row items-center">
-              <Activity
+              <Pulse
                 size={14}
                 color="rgba(255, 255, 255, 0.7)"
                 weight="duotone"
