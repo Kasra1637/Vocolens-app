@@ -16,8 +16,6 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import {
-  Award,
-  TrendingUp,
   Sun,
   Moon,
   Sunset,
@@ -29,10 +27,7 @@ import {
   Eye,
   ShieldAlert,
   Heart,
-  Sparkles,
-  BarChart3,
   Lightbulb,
-  TrendingDown,
   Shield,
   Target,
   MessageCircle,
@@ -44,10 +39,9 @@ import {
   Star,
   Zap as Shock,
   Heart as HeartFace,
-  Clock,
   Share2,
-  Brain,
 } from "lucide-react-native";
+import { Trophy, TrendUp, Sparkle, Clock, Brain, ChartBar } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -1394,18 +1388,9 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
 
           {/* Next Badge */}
           <View className="flex-row items-center">
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              <Award size={22} color="#FFFFFF" strokeWidth={2} />
+            <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
+              <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+              <Trophy size={24} color="#FFFFFF" weight="duotone" />
             </View>
             <View className="flex-1">
               <Text
@@ -1441,22 +1426,9 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
 
           {/* Monthly Usage */}
           <View className="flex-row items-center">
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: isAtLimit
-                  ? "rgba(255, 80, 80, 0.25)"
-                  : isNearLimit
-                    ? "rgba(255, 185, 50, 0.25)"
-                    : "rgba(255, 255, 255, 0.15)",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              <Clock size={22} color="#FFFFFF" strokeWidth={2} />
+            <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
+              <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+              <Clock size={24} color="#FFFFFF" weight="duotone" />
             </View>
             <View className="flex-1">
               <View className="flex-row items-center justify-between mb-1.5">
@@ -1670,18 +1642,9 @@ function SentimentTimeline({
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 10,
-              }}
-            >
-              <TrendingUp size={22} color="#FFFFFF" strokeWidth={2} />
+            <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 10 }}>
+              <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+              <TrendUp size={24} color="#FFFFFF" weight="duotone" />
             </View>
             <Text
               style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -1823,10 +1786,10 @@ function SentimentTimeline({
               justifyContent: "center",
             }}
           >
-            <BarChart3
+            <ChartBar
               size={40}
               color="rgba(255, 255, 255, 0.5)"
-              strokeWidth={1.5}
+              weight="duotone"
             />
             <Text
               style={{
@@ -2196,18 +2159,9 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
     >
       <View className="p-5">
         <View className="flex-row items-center mb-4">
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "rgba(255, 255, 255, 0.15)",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Sparkles size={22} color="#FFFFFF" strokeWidth={2} />
+          <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
+            <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+            <Sparkle size={24} color="#FFFFFF" weight="duotone" />
           </View>
           <View>
             <Text
@@ -2372,18 +2326,9 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
     >
       <View className="p-5">
         <View className="flex-row items-center mb-4">
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "rgba(255, 255, 255, 0.15)",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Clock size={22} color="#FFFFFF" strokeWidth={2} />
+          <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
+            <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+            <Clock size={24} color="#FFFFFF" weight="duotone" />
           </View>
           <View>
             <Text
@@ -2460,16 +2405,17 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
       >
         <View
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            backgroundColor: "rgba(255, 255, 255, 0.15)",
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            overflow: "hidden",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 12,
           }}
         >
-          <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+          <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+          <Icon size={24} color="#FFFFFF" strokeWidth={2} />
         </View>
         <Text
           style={{
@@ -2529,7 +2475,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
       case "self_awareness":
         return Eye;
       case "growth":
-        return TrendingUp;
+        return Eye;
       case "warning":
         return AlertTriangle;
       case "strength":
@@ -2537,7 +2483,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
       case "recommendation":
         return Lightbulb;
       default:
-        return Sparkles;
+        return Eye;
     }
   };
 
@@ -2592,18 +2538,9 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
         {/* Header */}
         <View style={{ marginBottom: 16 }}>
           <View className="flex-row items-center mb-2">
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              <Brain size={22} color="#FFFFFF" strokeWidth={2} />
+            <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
+              <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+              <Brain size={24} color="#FFFFFF" weight="duotone" />
             </View>
             <View>
               <Text

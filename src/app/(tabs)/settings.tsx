@@ -23,7 +23,8 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { Palette, Bell, LogOut, Check, X, Shield, ChevronRight, Brain, ChartBar as BarChart3, TriangleAlert as AlertTriangle, Trash2, Download, Globe, Crown, RefreshCw, ExternalLink, KeyRound, Heart, Clock } from "lucide-react-native";
+import { LogOut, Check, X, ChevronRight, RefreshCw, ExternalLink } from "lucide-react-native";
+import { Palette, Bell, Shield, Brain, ChartBar, Warning, Trash, DownloadSimple, Crown, Key, Heart, Clock } from "phosphor-react-native";
 import * as Clipboard from "expo-clipboard";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { ExportJournalModal } from "@/components/ExportJournalModal";
@@ -455,18 +456,9 @@ export default function SettingsScreen() {
                     paddingVertical: 18,
                   }}
                 >
-                  <View
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 12,
-                    }}
-                  >
-                    <Crown size={22} color="#FFFFFF" strokeWidth={2} />
+                  <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
+                    <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                    <Crown size={24} color="#FFFFFF" weight="duotone" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text
@@ -597,16 +589,9 @@ export default function SettingsScreen() {
                     borderBottomColor: "rgba(255, 255, 255, 0.12)",
                   }}
                 >
-                  <View
-                    className="items-center justify-center mr-3"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    }}
-                  >
-                    <Palette size={22} color="#FFFFFF" />
+                  <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
+                    <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                    <Palette size={24} color="#FFFFFF" weight="duotone" />
                   </View>
                   <Text
                     
@@ -755,16 +740,9 @@ export default function SettingsScreen() {
                     borderBottomColor: "rgba(255, 255, 255, 0.12)",
                   }}
                 >
-                  <View
-                    className="items-center justify-center mr-3"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    }}
-                  >
-                    <Bell size={22} color="#FFFFFF" />
+                  <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
+                    <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                    <Bell size={24} color="#FFFFFF" weight="duotone" />
                   </View>
                   <Text
                     style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
@@ -835,7 +813,7 @@ export default function SettingsScreen() {
                         >
                           {formatReminderTime(notificationPreferences?.time || dailyReminderTime)}
                         </Text>
-                        <Clock size={18} color="rgba(255,255,255,0.55)" strokeWidth={2} />
+                        <Clock size={18} color="rgba(255,255,255,0.55)" weight="duotone" />
                       </Pressable>
 
                       {/* Time Picker */}
@@ -976,16 +954,9 @@ export default function SettingsScreen() {
                     borderBottomColor: "rgba(255, 255, 255, 0.12)",
                   }}
                 >
-                  <View
-                    className="items-center justify-center mr-3"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    }}
-                  >
-                    <Brain size={22} color="#FFFFFF" />
+                  <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
+                    <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                    <Brain size={24} color="#FFFFFF" weight="duotone" />
                   </View>
                   <Text
                     
@@ -1109,15 +1080,17 @@ export default function SettingsScreen() {
                     </View>
                     <View
                       style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
-                        backgroundColor: "rgba(255, 255, 255, 0.15)",
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        overflow: "hidden",
                         alignItems: "center",
                         justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
-                      <BarChart3 size={22} color="#FFFFFF" />
+                      <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                      <ChartBar size={24} color="#FFFFFF" weight="duotone" />
                     </View>
                   </View>
                 </Pressable>
@@ -1175,7 +1148,7 @@ export default function SettingsScreen() {
                       borderRadius: 18,
                     }}
                   >
-                    <Heart size={20} color="#FFFFFF" strokeWidth={2.5} />
+                    <Heart size={20} color="#FFFFFF" weight="duotone" />
                     <Text
                       style={{
                         fontFamily: "Inter_700Bold",
@@ -1237,16 +1210,9 @@ export default function SettingsScreen() {
                     borderBottomColor: "rgba(255, 255, 255, 0.12)",
                   }}
                 >
-                  <View
-                    className="items-center justify-center mr-3"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    }}
-                  >
-                    <Shield size={22} color="#FFFFFF" />
+                  <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
+                    <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                    <Shield size={24} color="#FFFFFF" weight="duotone" />
                   </View>
                   <Text
                     
@@ -1265,18 +1231,9 @@ export default function SettingsScreen() {
                     style={{ marginBottom: 20 }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 12,
-                          backgroundColor: "rgba(255, 255, 255, 0.15)",
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: 14,
-                        }}
-                      >
-                        <KeyRound size={20} color="#FFFFFF" strokeWidth={2} />
+                      <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 14 }}>
+                        <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                        <Key size={24} color="#FFFFFF" weight="duotone" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text
@@ -1319,18 +1276,9 @@ export default function SettingsScreen() {
                     style={{ marginBottom: 20 }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 12,
-                          backgroundColor: "rgba(255, 255, 255, 0.15)",
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: 14,
-                        }}
-                      >
-                        <Download size={20} color="#FFFFFF" strokeWidth={2} />
+                      <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 14 }}>
+                        <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                        <DownloadSimple size={24} color="#FFFFFF" weight="duotone" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text
@@ -1380,16 +1328,9 @@ export default function SettingsScreen() {
                     borderBottomColor: "rgba(255, 255, 255, 0.12)",
                   }}
                 >
-                  <View
-                    className="items-center justify-center mr-3"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 12,
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    }}
-                  >
-                    <Trash2 size={22} color="#FFFFFF" strokeWidth={2} />
+                  <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
+                    <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                    <Trash size={24} color="#FFFFFF" weight="duotone" />
                   </View>
                   <Text
                     
@@ -1568,7 +1509,7 @@ export default function SettingsScreen() {
                   borderColor: hexToRgba(Colors.primary, 0.30),
                 }}
               >
-                <AlertTriangle size={32} color="#FFFFFF" strokeWidth={2} />
+                <Warning size={32} color="#FFFFFF" weight="duotone" />
               </View>
               <Text
                 className="text-2xl font-bold mb-2"
@@ -1709,7 +1650,7 @@ export default function SettingsScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <Crown size={18} color="#FFFFFF" strokeWidth={2} />
+                  <Crown size={18} color="#FFFFFF" weight="duotone" />
                 </View>
                 <Text
                   style={{

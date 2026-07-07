@@ -446,16 +446,17 @@ function StatItem({
     <View className="items-center flex-1">
       <View
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 12,
-          backgroundColor: "rgba(255, 255, 255, 0.18)",
+          width: 44,
+          height: 44,
+          borderRadius: 22,
+          overflow: "hidden",
           alignItems: "center",
           justifyContent: "center",
           marginBottom: 8,
         }}
       >
-        <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+        <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+        <Icon size={24} color="#FFFFFF" strokeWidth={2} />
       </View>
       <Text
         style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -655,23 +656,23 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
             <View
               style={{
                 position: "relative",
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
               }}
             >
               <View
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
-                  backgroundColor: "rgba(255, 255, 255, 0.18)",
                 }}
               >
+                <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
                 <Icon
-                  size={22}
+                  size={24}
                   color="#FFFFFF"
                   strokeWidth={2}
                 />

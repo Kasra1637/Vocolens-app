@@ -19,7 +19,6 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import {
-  Filter,
   Search,
   Calendar,
   Clock,
@@ -33,6 +32,7 @@ import {
   Tag,
   Timer,
 } from "lucide-react-native";
+import { Funnel } from "phosphor-react-native";
 import Animated, {
   FadeOut,
   useAnimatedStyle,
@@ -366,18 +366,9 @@ export default function EntriesScreen() {
             <View className="p-4">
               {/* Section Header */}
               <View className="flex-row items-center mb-3">
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 12,
-                    backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: 10,
-                  }}
-                >
-                  <Filter size={22} color="#FFFFFF" strokeWidth={2} />
+                <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 10 }}>
+                  <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                  <Funnel size={24} color="#FFFFFF" weight="duotone" />
                 </View>
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
