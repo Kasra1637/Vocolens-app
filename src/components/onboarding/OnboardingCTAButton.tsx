@@ -38,8 +38,9 @@ export function OnboardingCTAButton({
   pill = false,
 }: OnboardingCTAButtonProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-  const themePrimary = THEME_COLORS[selectedTheme].primary;
-  const activeBorderColor = disabled ? 'rgba(255,255,255,0.3)' : (customBorderColor || themePrimary);
+  const themeColors = THEME_COLORS[selectedTheme];
+  const themeBorderColor = themeColors.secondary || themeColors.primary;
+  const activeBorderColor = disabled ? 'rgba(255,255,255,0.3)' : (customBorderColor || themeBorderColor);
   const borderRadius = pill ? 50 : 18;
 
   return (
