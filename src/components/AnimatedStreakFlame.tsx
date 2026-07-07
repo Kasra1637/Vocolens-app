@@ -24,7 +24,7 @@ import Animated, {
   Easing,
   cancelAnimation,
 } from "react-native-reanimated";
-import { Flame } from "lucide-react-native";
+import { Fire } from "phosphor-react-native";
 
 interface AnimatedStreakFlameProps {
   /** Current streak count — drives the celebratory pop when it increases. */
@@ -155,7 +155,7 @@ export function AnimatedStreakFlame({
         }}
       >
         <Animated.View style={iconStyle}>
-          <Flame size={size} color={iconColor} strokeWidth={strokeWidth} />
+          <Fire size={size} color={iconColor} strokeWidth={strokeWidth} />
         </Animated.View>
       </View>
     </View>

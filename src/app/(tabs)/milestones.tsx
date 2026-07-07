@@ -149,7 +149,7 @@ const CATEGORY_OPTIONS: {
   { value: "all", label: "All badges", icon: Trophy },
   { value: "streak", label: "Streak", icon: Fire },
   { value: "entries", label: "Entries", icon: Star },
-  { value: "consistency", label: "Consistency", icon: Zap },
+  { value: "consistency", label: "Consistency", icon: Lightning },
   { value: "mood", label: "Mood", icon: Heart },
   { value: "time", label: "Time-based", icon: Sun },
   { value: "special", label: "Special", icon: Sparkle },

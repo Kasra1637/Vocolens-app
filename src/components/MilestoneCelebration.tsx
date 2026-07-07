@@ -19,7 +19,7 @@
  *
  * BADGE ICON
  *  - The icon circle is filled with the rarity gradient (LinearGradient).
- *  - For streak-category badges the AnimatedStreakFlame component replaces the
+ *  - For streak-category badges the AnimatedStreakFire component replaces the
  *    static icon, giving it its breathing + glow-ring behaviour.
  *  - Non-streak badges get a continuous gentle pulse on the icon circle
  *    (scale 1.0 → 1.06 → 1.0, 2 s loop) so the visual never goes dead.
@@ -50,39 +50,39 @@ import Animated, {
 } from "react-native-reanimated";
 import { celebrationHaptic, tapHaptic, selectHaptic } from "@/lib/haptics";
 import {
-  Share2,
+  ShareNetwork,
   X,
-  Flame,
+  Fire,
   Calendar,
-  Award,
+  Trophy as TrophyLucide,
   Moon,
   Sun,
   Heart,
   Trophy,
   Star,
   Target,
-  Zap,
+  Lightning,
   Crown,
-  Sparkles,
+  Sparkle,
   BookOpen,
-  PenTool,
+  PenNib,
   Book,
-  Sunrise,
-  MoonStar,
+  SunDim,
+  Moon as MoonStar,
   CalendarCheck,
   Clock,
-  Scale,
-  Library,
-  Mic,
+  Scaless,
+  Books,
+  Microphone,
   Activity,
   Compass,
-} from "lucide-react-native";
+} from "phosphor-react-native";
 import useBadgesStore from "@/lib/state/badges-store";
 import { shareMilestone } from "@/lib/share-utils";
 import { useMilestoneSound } from "@/lib/hooks/useMilestoneSound";
 import { Badge, BadgeRarity } from "@/lib/types";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
-import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
+import { AnimatedStreakFire } from "@/components/AnimatedStreakFire";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 
 const { width: SW, height: SH } = Dimensions.get("window");
@@ -93,28 +93,28 @@ const BADGE_ICONS: Record<
   string,
   React.ComponentType<{ size: number; color: string; strokeWidth: number }>
 > = {
-  flame: Flame,
+  flame: Fire,
   calendar: Calendar,
   trophy: Trophy,
   crown: Crown,
-  award: Award,
+  award: Trophy,
   star: Star,
   target: Target,
   sun: Sun,
   moon: Moon,
   heart: Heart,
-  zap: Zap,
-  sparkles: Sparkles,
+  zap: Lightning,
+  sparkles: Sparkle,
   "book-open": BookOpen,
-  "pen-tool": PenTool,
+  "pen-tool": PenNib,
   book: Book,
-  library: Library,
-  sunrise: Sunrise,
+  library: Books,
+  sunrise: SunDim,
   "moon-star": MoonStar,
   "calendar-check": CalendarCheck,
   clock: Clock,
-  scale: Scale,
-  mic: Mic,
+  scale: Scales,
+  mic: Microphone,
   activity: Activity,
   compass: Compass,
 };
@@ -340,7 +340,7 @@ function BadgeIconCircle({ badge, rarity, currentStreak, emojiStyle }: BadgeIcon
           }}
         />
         {isStreakBadge ? (
-          <AnimatedStreakFlame
+          <AnimatedStreakFire
             streak={currentStreak}
             size={36}
             badgeSize={72}
@@ -348,12 +348,12 @@ function BadgeIconCircle({ badge, rarity, currentStreak, emojiStyle }: BadgeIcon
             badgeColor="transparent"
             glowColor={rarity.glow + "88"}
             iconColor="#FFFFFF"
-            strokeWidth={1.8}
+            weight="duotone"
           />
         ) : (
           (() => {
-            const BadgeIcon = BADGE_ICONS[badge.icon] ?? Award;
-            return <BadgeIcon size={42} color="#FFFFFF" strokeWidth={1.5} />;
+            const BadgeIcon = BADGE_ICONS[badge.icon] ?? Trophy;
+            return <BadgeIcon size={42} color="#FFFFFF" weight="duotone" />;
           })()
         )}
       </View>
@@ -386,13 +386,13 @@ export function MilestoneCelebration() {
 
   // Animations
   const overlayOpacity = useSharedValue(0);
-  const cardScale = useSharedValue(0.5);
+  const cardScales = useSharedValue(0.5);
   const cardOpacity = useSharedValue(0);
-  const emojiScale = useSharedValue(0);
+  const emojiScales = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
 
   const theme = THEME_COLORS[selectedTheme] ?? THEME_COLORS.darkMode;
-  // Use the active theme color for all badge accents — matches the Awards screen
+  // Use the active theme color for all badge accents — matches the Trophys screen
   const themeColor = theme.accent;
   const rarity = badge ? {
     gradient: [themeColor, themeColor + "BB"] as readonly [string, string],
@@ -433,9 +433,9 @@ export function MilestoneCelebration() {
     if (!visible) return;
 
     overlayOpacity.value = 0;
-    cardScale.value = 0.5;
+    cardScales.value = 0.5;
     cardOpacity.value = 0;
-    emojiScale.value = 0;
+    emojiScales.value = 0;
     contentOpacity.value = 0;
 
     playCelebration();
@@ -443,9 +443,9 @@ export function MilestoneCelebration() {
     setTimeout(() => setConfettiOn(true), 50);
 
     overlayOpacity.value = withTiming(1, { duration: 300 });
-    cardScale.value = withDelay(100, withSpring(1, { damping: 14, stiffness: 160 }));
+    cardScales.value = withDelay(100, withSpring(1, { damping: 14, stiffness: 160 }));
     cardOpacity.value = withDelay(100, withTiming(1, { duration: 250 }));
-    emojiScale.value = withDelay(
+    emojiScales.value = withDelay(
       320,
       withSequence(
         withSpring(1.3, { damping: 6, stiffness: 300 }),
@@ -460,7 +460,7 @@ export function MilestoneCelebration() {
   const handleDismiss = () => {
     tapHaptic();
     overlayOpacity.value = withTiming(0, { duration: 250 });
-    cardScale.value = withTiming(0.85, { duration: 220 });
+    cardScales.value = withTiming(0.85, { duration: 220 });
     cardOpacity.value = withTiming(0, { duration: 220 }, () => {
       runOnJS(closeModal)();
     });
@@ -481,10 +481,10 @@ export function MilestoneCelebration() {
   const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,
-    transform: [{ scale: cardScale.value }],
+    transform: [{ scale: cardScales.value }],
   }));
   const emojiStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: emojiScale.value }],
+    transform: [{ scale: emojiScales.value }],
   }));
   const contentStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
 
@@ -541,7 +541,7 @@ export function MilestoneCelebration() {
             justifyContent: "center",
           }}
         >
-          <X size={16} color="#FFFFFF" strokeWidth={2.5} />
+          <X size={16} color="#FFFFFF" weight="duotone" />
         </Pressable>
 
         {/* Card */}
@@ -671,7 +671,7 @@ export function MilestoneCelebration() {
                       gap: 8,
                     }}
                   >
-                    <Share2 size={17} color="#FFFFFF" strokeWidth={2.5} />
+                    <ShareNetwork size={17} color="#FFFFFF" weight="duotone" />
                     <Text
                       style={{
                         fontFamily: "Inter_700Bold",

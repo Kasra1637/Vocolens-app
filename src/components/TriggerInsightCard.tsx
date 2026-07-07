@@ -17,22 +17,22 @@ import {
   Heart,
   Users,
   Activity,
-  DollarSign,
-  Flower2,
-  Sparkles,
-  Zap,
+  CurrencyDollar,
+  Flower,
+  Sparkle,
+  Lightning,
   Trophy,
-  RefreshCw,
+  ArrowsClockwise,
   BookOpen,
   HandHeart,
-  Dumbbell,
+  Barbell,
   Coffee,
   Palette,
   Calendar,
   Link,
-  TrendingUp,
-  TrendingDown,
-} from 'lucide-react-native';
+  TrendUp,
+  TrendDown,
+} from 'phosphor-react-native';
 import {
   DetectedTrigger,
 } from '@/lib/trigger-detection';
@@ -45,15 +45,15 @@ const TRIGGER_ICONS: Record<string, React.ComponentType<{ size: number; color: s
   family:        Heart,
   social:        Users,
   health:        Activity,
-  finance:       DollarSign,
-  selfCare:      Flower2,
-  gratitude:     Sparkles,
-  stress:        Zap,
+  finance:       CurrencyDollar,
+  selfCare:      Flower,
+  gratitude:     Sparkle,
+  stress:        Lightning,
   achievement:   Trophy,
-  change:        RefreshCw,
+  change:        ArrowsClockwise,
   reflection:    BookOpen,
   relationships: HandHeart,
-  exercise:      Dumbbell,
+  exercise:      Barbell,
   relaxation:    Coffee,
   creativity:    Palette,
   planning:      Calendar,
@@ -112,7 +112,7 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
     trigger.trigger.charAt(0).toUpperCase() + trigger.trigger.slice(1);
 
   // Category-specific icon; fall back to trending up/down
-  const CategoryIcon = TRIGGER_ICONS[trigger.trigger] ?? (isPositive ? TrendingUp : TrendingDown);
+  const CategoryIcon = TRIGGER_ICONS[trigger.trigger] ?? (isPositive ? TrendUp : TrendDown);
 
   // Get primary emotion color
   const primaryEmotion = trigger.associatedEmotions[0] as EmotionType;
@@ -159,7 +159,7 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
                   marginRight: 12,
                 }}
               >
-                <CategoryIcon size={22} color="#FFFFFF" strokeWidth={2} />
+                <CategoryIcon size={22} color="#FFFFFF" weight="duotone" />
               </View>
 
               <View style={{ flex: 1 }}>
@@ -304,7 +304,7 @@ export function TriggerEmptyState({ currentEntries, minRequired }: TriggerEmptyS
             marginBottom: 16,
           }}
         >
-          <Sparkles size={22} color="#FFFFFF" strokeWidth={2} />
+          <Sparkle size={22} color="#FFFFFF" weight="duotone" />
         </View>
 
         <Text
@@ -379,7 +379,7 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
             marginRight: 12,
           }}
         >
-          <Zap size={22} color="#FFFFFF" strokeWidth={2} />
+          <Lightning size={22} color="#FFFFFF" weight="duotone" />
         </View>
         <View>
           <Text
