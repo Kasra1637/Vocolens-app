@@ -557,7 +557,7 @@ export function PaywallScreen() {
               <Pressable
                 onPress={handleCTA}
                 disabled={isPurchasing}
-                style={{ width: "100%", borderRadius: 50, borderWidth: 2, borderColor: themeColors.secondary, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: Platform.OS === "android" ? 0 : 8, opacity: isPurchasing ? 0.7 : 1 }}
+                style={{ width: "100%", borderRadius: 50, borderWidth: 2, borderColor: themeColors.secondary, overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: Platform.OS === "android" ? 0 : 8, opacity: isPurchasing ? 0.7 : 1 }}
               >
                 <LinearGradient colors={["rgba(255,255,255,0.28)", "rgba(255,255,255,0.10)"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 17, gap: 8 }}>
                   {isPurchasing
