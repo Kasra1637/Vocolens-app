@@ -153,7 +153,7 @@ export function PersonalizePermissionScreen() {
             <Animated.View
               entering={FadeIn.delay(480).duration(800).easing(SOFT)}
             >
-              <OnboardingCTAButton label="Continue" onPress={handleContinue} />
+              <OnboardingCTAButton label="Continue" onPress={handleContinue} glow />
             </Animated.View>
 
             <View style={{ flex: 1 }} />

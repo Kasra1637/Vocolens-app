@@ -25,6 +25,8 @@ interface OnboardingCTAButtonProps {
   borderColor?: string;
   /** Use pill shape (full radius) instead of rounded rectangle. Defaults to true. */
   pill?: boolean;
+  /** Add a colored glow/lift shadow beneath the button. Defaults to false. */
+  glow?: boolean;
 }
 
 export function OnboardingCTAButton({
@@ -36,6 +38,7 @@ export function OnboardingCTAButton({
   fontSize = 18,
   borderColor: customBorderColor,
   pill = true,
+  glow = false,
 }: OnboardingCTAButtonProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors = THEME_COLORS[selectedTheme];
@@ -55,10 +58,10 @@ export function OnboardingCTAButton({
         borderColor: activeBorderColor,
         overflow: 'hidden',
         opacity: disabled ? 0.48 : 1,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: disabled ? 0 : 0.25,
-        shadowRadius: 16,
+        shadowColor: glow ? themeBorderColor : '#000000',
+        shadowOffset: { width: 0, height: glow ? 6 : 8 },
+        shadowOpacity: disabled ? 0 : (glow ? 0.35 : 0.25),
+        shadowRadius: glow ? 14 : 16,
         elevation: Platform.OS === 'android' ? 0 : (disabled ? 0 : 8),
       }}
     >
