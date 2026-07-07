@@ -44,6 +44,7 @@ export function MoodSelectionScreen() {
   const setSelectedMood = useOnboardingStore((s) => s.setSelectedMood);
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const currentStep = useOnboardingStore((s) => s.currentStep);
+  const userName = useOnboardingStore((s) => s.userName);
   const themeColors = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
 
@@ -111,7 +112,7 @@ export function MoodSelectionScreen() {
                   lineHeight: 38,
                 }}
               >
-                How are you feeling today?
+                How are you feeling today, {userName || "friend"}?
               </Text>
             </Animated.View>
 
@@ -193,7 +194,7 @@ export function MoodSelectionScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedMood}
-                borderColor={themeColors.primary}
+                pill
               />
             </Animated.View>
 

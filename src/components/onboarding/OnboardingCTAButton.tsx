@@ -23,6 +23,8 @@ interface OnboardingCTAButtonProps {
   fontSize?: number;
   /** Override border color. Defaults to the active theme's primary color. */
   borderColor?: string;
+  /** Use pill shape (full radius) instead of rounded rectangle. Defaults to false. */
+  pill?: boolean;
 }
 
 export function OnboardingCTAButton({
@@ -33,10 +35,12 @@ export function OnboardingCTAButton({
   paddingVertical = 16,
   fontSize = 18,
   borderColor: customBorderColor,
+  pill = false,
 }: OnboardingCTAButtonProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themePrimary = THEME_COLORS[selectedTheme].primary;
   const activeBorderColor = disabled ? 'rgba(255,255,255,0.3)' : (customBorderColor || themePrimary);
+  const borderRadius = pill ? 50 : 18;
 
   return (
     <Pressable
@@ -45,7 +49,7 @@ export function OnboardingCTAButton({
       android_ripple={{ color: 'rgba(255,255,255,0.22)', borderless: false }}
       style={{
         width: '100%',
-        borderRadius: 18,
+        borderRadius,
         borderWidth: 2,
         borderColor: activeBorderColor,
         overflow: 'hidden',
