@@ -414,7 +414,7 @@ export function ThemeSelectionScreen() {
                 ))}
               </View>
               <View style={{ width: "100%" }}>
-                <OnboardingCTAButton label="Continue" onPress={handleContinue} />
+                <OnboardingCTAButton label="Continue" onPress={handleContinue} borderColor={THEME_COLORS[THEMES[activeIndex]].secondary || THEME_COLORS[THEMES[activeIndex]].primary} />
               </View>
             </Animated.View>
 
