@@ -78,7 +78,7 @@ export function BiometricLockScreen() {
     if (authenticating) return;
     setAuthenticating(true);
 
-    const result = await authenticateWithBiometrics('Unlock Vocolens');
+    const result = await authenticateWithBiometrics('Touch to open your safe space');
     setAuthenticating(false);
 
     if (result.success) {
