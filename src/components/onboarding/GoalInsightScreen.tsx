@@ -35,9 +35,9 @@ import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton
 
 const GOAL_LABELS: Record<GoalType, string> = {
   "emotional-processing": "Emotional Processing",
-  "goal-setting": "Goal Setting",
+  "goal-setting": "Finding Direction",
   "self-reflection": "Self-Reflection",
-  "decision-making": "Decision Making",
+  "decision-making": "Thinking Clearly Under Pressure",
 };
 
 const BLOCKER_LABELS: Record<GoalBlockerType, string> = {

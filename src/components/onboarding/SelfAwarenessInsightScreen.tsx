@@ -37,7 +37,7 @@ const SELF_AWARENESS_LABELS: Record<SelfAwarenessType, string> = {
   "deep-focus":     "Lost in what I love",
   "no-demands":     "No one needs me",
   "talking-aloud":  "Thinking out loud",
-  "after-movement": "I exercise",
+  "after-movement": "When I understand why I feel this way",
 };
 
 // Personalised insight copy per selection
@@ -49,7 +49,7 @@ const SELF_AWARENESS_INSIGHTS: Record<SelfAwarenessType, string> = {
   "talking-aloud":
     "Voice journaling is built for you — just speak and let clarity find you",
   "after-movement":
-    "Journaling after movement captures your most grounded, clear-headed thoughts",
+    "Naming the feeling is the first step to understanding it — we'll guide you there",
 };
 
 export function SelfAwarenessInsightScreen() {
