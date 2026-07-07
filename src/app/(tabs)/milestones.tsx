@@ -19,39 +19,39 @@ import {
 } from "@expo-google-fonts/inter";
 import { shareMilestone } from "@/lib/share-utils";
 import {
-  Flame,
+  Fire,
   Calendar,
-  Award,
+  Trophy as TrophyIcon,
   Moon,
   Sun,
   Heart,
-  Smile,
+  Smiley,
   Lock,
-  Unlock,
+  LockOpen,
   Check,
   Trophy,
   Star,
   Target,
-  Zap,
+  Lightning,
   Crown,
-  Sparkles,
-  ChevronDown,
+  Sparkle,
+  CaretDown,
   X,
-  Share2,
+  ShareNetwork,
   BookOpen,
-  PenTool,
+  PenNib,
   Book,
-  Sunrise,
-  MoonStar,
+  SunDim,
+  Moon as MoonStar,
   CalendarCheck,
   Clock,
-  Settings,
-  Mic,
+  GearSix,
+  Microphone,
   Activity,
   Compass,
-  Scale,
-  Library,
-} from "lucide-react-native";
+  Scales,
+  Books,
+} from "phosphor-react-native";
 import Animated, {
   FadeOut,
   useAnimatedStyle,
@@ -456,7 +456,7 @@ function StatItem({
         }}
       >
         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-        <Icon size={24} color="#FFFFFF" strokeWidth={2} />
+        <Icon size={24} color="#FFFFFF" weight="duotone" />
       </View>
       <Text
         style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -522,7 +522,7 @@ function CategoryDropdown({
         }}
       >
         <View className="flex-row items-center">
-          <Icon size={20} color="#FFFFFF" strokeWidth={2} />
+          <Icon size={20} color="#FFFFFF" weight="duotone" />
           <Text
             style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF" }}
             className="text-base ml-2"
@@ -533,7 +533,7 @@ function CategoryDropdown({
         <ChevronDown
           size={20}
           color="rgba(255, 255, 255, 0.8)"
-          strokeWidth={2}
+          weight="duotone"
           style={{ transform: [{ rotate: isOpen ? "180deg" : "0deg" }] }}
         />
       </Pressable>
@@ -564,7 +564,7 @@ function CategoryDropdown({
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <OptionIcon size={18} color="#FFFFFF" strokeWidth={2} />
+                  <OptionIcon size={18} color="#FFFFFF" weight="duotone" />
                   <Text
                     style={{
                       fontFamily: "Inter_500Medium",
@@ -674,7 +674,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 <Icon
                   size={24}
                   color="#FFFFFF"
-                  strokeWidth={2}
+                  weight="duotone"
                 />
               </View>
 
@@ -695,9 +695,9 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 }}
               >
                 {badge.unlocked ? (
-                  <Unlock size={12} color={Colors.primary} strokeWidth={2.5} />
+                  <Unlock size={12} color={Colors.primary} weight="duotone" />
                 ) : (
-                  <Lock size={12} color={Colors.primary} strokeWidth={2} />
+                  <Lock size={12} color={Colors.primary} weight="duotone" />
                 )}
               </View>
             </View>
@@ -734,7 +734,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
           {badge.unlocked ? (
             <View className="items-center">
               <View className="flex-row items-center">
-                <Check size={12} color="#FFFFFF" strokeWidth={2.5} />
+                <Check size={12} color="#FFFFFF" weight="duotone" />
                 <Text
                   style={{
                     fontFamily: "Inter_400Regular",
@@ -934,7 +934,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                 justifyContent: "center",
               }}
             >
-              <X size={18} color="#FFFFFF" strokeWidth={2.5} />
+              <X size={18} color="#FFFFFF" weight="duotone" />
             </Pressable>
 
             {/* Rarity chip */}
@@ -1124,7 +1124,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                     gap: 8,
                   }}
                 >
-                  <Share2 size={18} color="#FFFFFF" strokeWidth={2} />
+                  <ShareNetwork size={18} color="#FFFFFF" weight="duotone" />
                   <Text
                     style={{
                       fontFamily: "Inter_600SemiBold",

@@ -14,11 +14,11 @@ import {
   Pause,
   Check,
   ChevronDown,
-  RefreshCw,
-  Sparkles,
-  Settings,
-  AlertCircle,
-} from "lucide-react-native";
+  ArrowsClockwise,
+  Sparkle,
+  GearSix,
+  WarningCircle,
+} from "phosphor-react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -687,7 +687,7 @@ export default function SpeakScreen() {
                   <AlertCircle
                     size={20}
                     color="#FFFFFF"
-                    strokeWidth={2}
+                    weight="duotone"
                     style={{ marginRight: 12, marginTop: 2 }}
                   />
                   <View className="flex-1">
@@ -712,7 +712,7 @@ export default function SpeakScreen() {
                         style={{ backgroundColor: "#EF4444" }}
                       >
                         <View className="flex-row items-center">
-                          <Settings size={14} color="#FFFFFF" strokeWidth={2} />
+                          <GearSix size={14} color="#FFFFFF" weight="duotone" />
                           <Text
                             style={{
                               fontFamily: "Inter_600SemiBold",
@@ -821,7 +821,7 @@ export default function SpeakScreen() {
                   <AlertCircle
                     size={20}
                     color="#F59E0B"
-                    strokeWidth={2}
+                    weight="duotone"
                     style={{ marginRight: 12, marginTop: 2 }}
                   />
                   <View className="flex-1">
@@ -863,7 +863,7 @@ export default function SpeakScreen() {
             >
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center">
-                  <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
+                  <Sparkle size={16} color="#FFFFFF" weight="duotone" />
                   <Text
                     style={{
                       fontFamily: "Inter_600SemiBold",
@@ -933,7 +933,7 @@ export default function SpeakScreen() {
               contentContainerStyle={{ paddingBottom: 10 }}
             >
               <View className="flex-row items-center mb-3">
-                <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
+                <Sparkle size={16} color="#FFFFFF" weight="duotone" />
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   className="text-sm ml-2"

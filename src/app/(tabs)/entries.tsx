@@ -19,19 +19,19 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import {
-  Search,
+  MagnifyingGlass,
   Calendar,
   Clock,
-  ChevronDown,
-  Trash2,
+  CaretDown,
+  Trash,
   X,
   BookOpen,
   Activity,
-  Mic,
-  ChevronUp,
+  Microphone,
+  CaretUp,
   Tag,
   Timer,
-} from "lucide-react-native";
+} from "phosphor-react-native";
 import { Funnel } from "phosphor-react-native";
 import Animated, {
   FadeOut,
@@ -387,7 +387,7 @@ export default function EntriesScreen() {
                   borderColor: "rgba(255, 255, 255, 0.15)",
                 }}
               >
-                <Search size={18} color="#FFFFFF" strokeWidth={2} />
+                <MagnifyingGlass size={18} color="#FFFFFF" weight="duotone" />
                 <TextInput
                   className="flex-1 ml-3"
                   style={{
@@ -402,7 +402,7 @@ export default function EntriesScreen() {
                 />
                 {searchQuery.length > 0 && (
                   <Pressable onPress={() => setSearchQuery("")}>
-                    <X size={18} color="#FFFFFF" strokeWidth={2} />
+                    <X size={18} color="#FFFFFF" weight="duotone" />
                   </Pressable>
                 )}
               </View>
@@ -431,7 +431,7 @@ export default function EntriesScreen() {
                   >
                     {selectedSort}
                   </Text>
-                  <ChevronDown size={14} color="#FFFFFF" strokeWidth={2} />
+                  <CaretDown size={14} color="#FFFFFF" weight="duotone" />
                 </Pressable>
 
                 {/* Emotion Filter */}
@@ -458,7 +458,7 @@ export default function EntriesScreen() {
                       ? `${selectedEmotions.length} Emotion${selectedEmotions.length > 1 ? "s" : ""}`
                       : "Emotions"}
                   </Text>
-                  <ChevronDown size={14} color="#FFFFFF" strokeWidth={2} />
+                  <CaretDown size={14} color="#FFFFFF" weight="duotone" />
                 </Pressable>
               </View>
 
@@ -488,7 +488,7 @@ export default function EntriesScreen() {
                       ? `${selectedTopics.length} Topic${selectedTopics.length > 1 ? "s" : ""}`
                       : "Topics"}
                   </Text>
-                  <ChevronDown size={14} color="#FFFFFF" strokeWidth={2} />
+                  <CaretDown size={14} color="#FFFFFF" weight="duotone" />
                 </Pressable>
 
                 {/* Duration Filter */}
@@ -513,7 +513,7 @@ export default function EntriesScreen() {
                   >
                     {selectedDuration === "Any" ? "Duration" : DURATION_FILTERS.find(d => d.value === selectedDuration)?.label}
                   </Text>
-                  <ChevronDown size={14} color="#FFFFFF" strokeWidth={2} />
+                  <CaretDown size={14} color="#FFFFFF" weight="duotone" />
                 </Pressable>
               </View>
 
@@ -782,7 +782,7 @@ export default function EntriesScreen() {
                   className="w-16 h-16 rounded-full items-center justify-center mb-4"
                   style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
                 >
-                  <Trash2 size={32} color="#FFFFFF" strokeWidth={2} />
+                  <Trash size={32} color="#FFFFFF" weight="duotone" />
                 </View>
                 <Text
                   className="text-2xl font-bold mb-2 text-center"
@@ -957,7 +957,7 @@ function EntryCard({
                       borderColor: "rgba(255, 255, 255, 0.20)",
                     }}
                   >
-                    <Mic size={12} color="rgba(255,255,255,0.85)" strokeWidth={2.5} />
+                    <Microphone size={12} color="rgba(255,255,255,0.85)" weight="duotone" />
                   </View>
                 )}
               </View>
@@ -979,7 +979,7 @@ function EntryCard({
               <Clock
                 size={14}
                 color="rgba(255, 255, 255, 0.7)"
-                strokeWidth={2}
+                weight="duotone"
               />
               <Text
                 style={{
@@ -995,7 +995,7 @@ function EntryCard({
               <Activity
                 size={14}
                 color="rgba(255, 255, 255, 0.7)"
-                strokeWidth={2}
+                weight="duotone"
               />
               <Text
                 style={{
@@ -1198,7 +1198,7 @@ function EntryCard({
               onPress={(e) => { e.stopPropagation?.(); onDelete(); }}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
+              <Trash size={20} color="#FFFFFF" weight="duotone" />
             </Pressable>
           </View>
         </View>

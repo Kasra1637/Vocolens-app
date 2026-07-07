@@ -226,7 +226,7 @@ function MonthlyExitModal({
           <Pressable
             onPress={onAccept}
             disabled={isPurchasing}
-            style={{ borderRadius: 18, borderWidth: 2, borderColor: "#FFFFFF", overflow: "hidden", opacity: isPurchasing ? 0.7 : 1, marginBottom: 12 }}
+            style={{ borderRadius: 18, borderWidth: 2, borderColor: themeColors.secondary, overflow: "hidden", opacity: isPurchasing ? 0.7 : 1, marginBottom: 12 }}
           >
             <LinearGradient
               colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
@@ -464,14 +464,14 @@ export function PaywallScreen() {
                 <Animated.View entering={FadeInDown.duration(350).easing(SOFT)}>
                   <Pressable
                     onPress={() => { selectHaptic(); setSelectedPlan("yearly"); trackEvent("plan_selected", { plan: "yearly" }); }}
-                    style={{ width: "100%", borderRadius: 18, borderWidth: 2.5, borderColor: "#FFFFFF", backgroundColor: "rgba(255,255,255,0.18)", padding: 14, position: "relative", overflow: "hidden" }}
+                    style={{ width: "100%", borderRadius: 18, borderWidth: 2.5, borderColor: themeColors.secondary, backgroundColor: "rgba(255,255,255,0.18)", padding: 14, overflow: "hidden" }}
                   >
-                    <View style={{ alignItems: "center", marginBottom: 8 }}>
-                      <View style={{ backgroundColor: "#FFFFFF", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                      <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2 }}>Annual</Text>
+                      <View style={{ backgroundColor: "#FFFFFF", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
                         <Text style={{ fontFamily: "Inter_700Bold", fontSize: 9, color: themeColors.primary, letterSpacing: 0.5 }}>3-DAY FREE TRIAL</Text>
                       </View>
                     </View>
-                    <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 6 }}>Annual</Text>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                       <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{yearlyPrice}</Text>
                       <View style={{ flex: 1, gap: 4 }}>
@@ -557,7 +557,7 @@ export function PaywallScreen() {
               <Pressable
                 onPress={handleCTA}
                 disabled={isPurchasing}
-                style={{ width: "100%", borderRadius: 18, borderWidth: 2, borderColor: "#FFFFFF", overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: Platform.OS === "android" ? 0 : 8, opacity: isPurchasing ? 0.7 : 1 }}
+                style={{ width: "100%", borderRadius: 50, borderWidth: 2, borderColor: themeColors.secondary, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: Platform.OS === "android" ? 0 : 8, opacity: isPurchasing ? 0.7 : 1 }}
               >
                 <LinearGradient colors={["rgba(255,255,255,0.28)", "rgba(255,255,255,0.10)"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 17, gap: 8 }}>
                   {isPurchasing

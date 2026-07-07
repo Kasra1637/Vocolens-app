@@ -18,29 +18,28 @@ import {
 import {
   Sun,
   Moon,
-  Sunset,
-  CloudMoon,
-  Smile,
-  Frown,
-  AlertTriangle,
-  Zap,
+  SunHorizon,
+  Cloud,
+  Smiley,
+  SmileySad,
+  Warning,
+  Lightning,
   Eye,
-  ShieldAlert,
+  ShieldWarning,
   Heart,
   Lightbulb,
   Shield,
   Target,
-  MessageCircle,
-  Laugh,
-  Meh,
-  Angry,
-  Sunrise,
+  ChatCircle,
+  SmileyWink,
+  SmileyMeh,
+  SmileyAngry,
+  SunDim,
   Handshake,
   Star,
-  Zap as Shock,
   Heart as HeartFace,
-  Share2,
-} from "lucide-react-native";
+  ShareNetwork,
+} from "phosphor-react-native";
 import { Trophy, TrendUp, Sparkle, Clock, Brain, ChartBar } from "phosphor-react-native";
 import Animated, {
   FadeIn,
@@ -469,7 +468,7 @@ const CORE_EMOTIONS = [
   {
     id: "surprise" as EmotionType,
     label: "Surprise",
-    icon: Shock,
+    icon: Lightning,
     color: "#FF8A65",
     emoji: "😮",
     faceIcon: Star,
@@ -1008,7 +1007,7 @@ function InsightsContent({
         {isGeneratingPDF ? (
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
-          <Share2 size={17} color="#FFFFFF" strokeWidth={2} />
+          <ShareNetwork size={17} color="#FFFFFF" weight="duotone" />
         )}
       </Pressable>
 
@@ -1098,7 +1097,7 @@ function InsightsContent({
                   justifyContent: "center",
                 }}
               >
-                <Share2 size={24} color="#FFFFFF" strokeWidth={2} />
+                <ShareNetwork size={24} color="#FFFFFF" weight="duotone" />
               </View>
             </View>
 
@@ -1583,7 +1582,7 @@ function EmotionSelector({
                       backgroundColor: "transparent",
                     }}
                   >
-                    <FaceIcon size={20} color="#FFFFFF" strokeWidth={2} />
+                    <FaceIcon size={20} color="#FFFFFF" weight="duotone" />
                     <Text
                       style={{
                         fontFamily: "Inter_500Medium",
@@ -2415,7 +2414,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
           }}
         >
           <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-          <Icon size={24} color="#FFFFFF" strokeWidth={2} />
+          <Icon size={24} color="#FFFFFF" weight="duotone" />
         </View>
         <Text
           style={{

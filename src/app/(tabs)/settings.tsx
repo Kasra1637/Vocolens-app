@@ -23,7 +23,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { LogOut, Check, X, ChevronRight, RefreshCw, ExternalLink } from "lucide-react-native";
+import { SignOut, Check, X, CaretRight, ArrowsClockwise, ArrowSquareOut } from "phosphor-react-native";
 import { Palette, Bell, Shield, Brain, ChartBar, Warning, Trash, DownloadSimple, Crown, Key, Heart, Clock } from "phosphor-react-native";
 import * as Clipboard from "expo-clipboard";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
@@ -481,7 +481,7 @@ export default function SettingsScreen() {
                       Tap to manage
                     </Text>
                   </View>
-                  <ChevronRight size={20} color="rgba(255,255,255,0.5)" strokeWidth={2} />
+                  <CaretRight size={20} color="rgba(255,255,255,0.5)" weight="duotone" />
                 </View>
               </Pressable>
             </Animated.View>
@@ -1256,7 +1256,7 @@ export default function SettingsScreen() {
                           Enter your current PIN, then create a new one
                         </Text>
                       </View>
-                      <ChevronRight size={18} color="rgba(255,255,255,0.35)" strokeWidth={2} />
+                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
                     </View>
                   </Pressable>
 
@@ -1302,7 +1302,7 @@ export default function SettingsScreen() {
                           Get your journal entries as a PDF archive with audio files organized by date
                         </Text>
                       </View>
-                      <ChevronRight size={18} color="rgba(255,255,255,0.35)" strokeWidth={2} />
+                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
                     </View>
                   </Pressable>
 
@@ -1423,7 +1423,7 @@ export default function SettingsScreen() {
                     : "#FEE2E2",
                 }}
               >
-                <LogOut size={32} color="#DC2626" strokeWidth={2} />
+                <SignOut size={32} color="#DC2626" weight="duotone" />
               </View>
               <Text
                 className="text-2xl font-bold mb-2"
@@ -1666,7 +1666,7 @@ export default function SettingsScreen() {
                 onPress={() => setSubscriptionModalVisible(false)}
                 hitSlop={12}
               >
-                <X size={22} color="rgba(255,255,255,0.55)" strokeWidth={2} />
+                <X size={22} color="rgba(255,255,255,0.55)" weight="duotone" />
               </Pressable>
             </View>
 
@@ -1749,7 +1749,7 @@ export default function SettingsScreen() {
                     marginRight: 14,
                   }}
                 >
-                  <RefreshCw size={17} color="#FFFFFF" strokeWidth={2} />
+                  <ArrowsClockwise size={17} color="#FFFFFF" weight="duotone" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text
@@ -1772,7 +1772,7 @@ export default function SettingsScreen() {
                     Reactivate a subscription linked to this account
                   </Text>
                 </View>
-                <ChevronRight size={18} color="rgba(255,255,255,0.35)" strokeWidth={2} />
+                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
               </Pressable>
 
               {/* Cancel subscription — opens store */}
@@ -1797,7 +1797,7 @@ export default function SettingsScreen() {
                     marginRight: 14,
                   }}
                 >
-                  <ExternalLink size={17} color="#F87171" strokeWidth={2} />
+                  <ArrowSquareOut size={17} color="#F87171" weight="duotone" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text
@@ -1820,7 +1820,7 @@ export default function SettingsScreen() {
                     Opens Google Play · cancel from your subscriptions list
                   </Text>
                 </View>
-                <ChevronRight size={18} color="rgba(255,255,255,0.35)" strokeWidth={2} />
+                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
               </Pressable>
             </View>
 

@@ -1095,7 +1095,7 @@ export function FreeTrialPreviewScreen() {
                   width: "100%",
                   borderRadius: 18,
                   borderWidth: 2,
-                  borderColor: "#FFFFFF",
+                  borderColor: themeColors.secondary,
                   overflow: "hidden",
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 8 },
