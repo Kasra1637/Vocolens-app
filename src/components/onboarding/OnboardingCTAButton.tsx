@@ -26,6 +26,8 @@ interface OnboardingCTAButtonProps {
   paddingVertical?: number;
   /** Font size for the label. Defaults to 18. */
   fontSize?: number;
+  /** Override border color. Defaults to #FFFFFF. */
+  borderColor?: string;
 }
 
 export function OnboardingCTAButton({
@@ -35,6 +37,7 @@ export function OnboardingCTAButton({
   icon = <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />,
   paddingVertical = 16,
   fontSize = 18,
+  borderColor: customBorderColor,
 }: OnboardingCTAButtonProps) {
   return (
     <Pressable
@@ -45,7 +48,7 @@ export function OnboardingCTAButton({
         width: '100%',
         borderRadius: 18,
         borderWidth: 2,
-        borderColor: disabled ? 'rgba(255,255,255,0.3)' : '#FFFFFF',
+        borderColor: disabled ? 'rgba(255,255,255,0.3)' : (customBorderColor || '#FFFFFF'),
         overflow: 'hidden',
         opacity: disabled ? 0.48 : 1,
         shadowColor: '#000000',
