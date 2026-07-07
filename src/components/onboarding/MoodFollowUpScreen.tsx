@@ -15,18 +15,18 @@ const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
 import {
   Trophy,
-  Smile,
+  Smiley,
   Target,
-  ListTodo,
+  ListChecks,
   Clock,
-  TrendingUp,
+  TrendUp,
   Wind,
-  Frown,
-  Meh,
-  Sunset,
+  SmileySad,
+  SmileyMeh,
+  SunHorizon,
   Leaf,
-  Laugh,
-} from "lucide-react-native";
+  SmileyWink,
+} from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   MoodType,
@@ -38,12 +38,10 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
-type IconComponent = React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
-
 interface FollowUpOption {
   id: MoodFollowUpType;
   label: string;
-  icon: IconComponent;
+  icon: any;
 }
 
 interface MoodFollowUpConfig {
@@ -55,33 +53,33 @@ const MOOD_FOLLOWUP_MAP: Record<MoodType, MoodFollowUpConfig> = {
   happy: {
     question: "What's inspiring you most today?",
     options: [
-      { id: "small-win",        label: "Small win",         icon: Trophy  },
-      { id: "supportive-friend",label: "Supportive friend", icon: Smile   },
-      { id: "clear-goal",       label: "Clear goal",        icon: Target  },
+      { id: "small-win",        label: "Small win",         icon: Trophy    },
+      { id: "supportive-friend",label: "Supportive friend", icon: Smiley    },
+      { id: "clear-goal",       label: "Clear goal",        icon: Target    },
     ],
   },
   stressed: {
     question: "What's adding pressure to your day?",
     options: [
-      { id: "too-many-tasks",      label: "Too many tasks",      icon: ListTodo   },
+      { id: "too-many-tasks",      label: "Too many tasks",      icon: ListChecks },
       { id: "tight-deadline",      label: "Tight deadline",      icon: Clock      },
-      { id: "high-expectations",   label: "High expectations",   icon: TrendingUp },
+      { id: "high-expectations",   label: "High expectations",   icon: TrendUp    },
     ],
   },
   anxious: {
     question: "What's keeping you from feeling calm right now?",
     options: [
-      { id: "get-distracted",   label: "Get distracted",   icon: Wind  },
-      { id: "feel-overwhelmed", label: "Feel overwhelmed", icon: Frown },
-      { id: "dont-start",       label: "Don't start",      icon: Meh   },
+      { id: "get-distracted",   label: "Get distracted",   icon: Wind      },
+      { id: "feel-overwhelmed", label: "Feel overwhelmed", icon: SmileySad },
+      { id: "dont-start",       label: "Don't start",      icon: SmileyMeh },
     ],
   },
   calm: {
     question: "What's bringing you peace today?",
     options: [
-      { id: "quiet-moment",    label: "Quiet moment",    icon: Sunset },
-      { id: "fresh-air",       label: "Fresh air",       icon: Leaf   },
-      { id: "positive-thought",label: "Positive thought",icon: Laugh  },
+      { id: "quiet-moment",    label: "Quiet moment",    icon: SunHorizon },
+      { id: "fresh-air",       label: "Fresh air",       icon: Leaf       },
+      { id: "positive-thought",label: "Positive thought",icon: SmileyWink },
     ],
   },
 };
@@ -208,13 +206,23 @@ export function MoodFollowUpScreen() {
                         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
                           <View
                             style={{
-                              width: 40, height: 40, borderRadius: 12,
-                              backgroundColor: "rgba(255,255,255,0.15)",
+                              width: 44, height: 44, borderRadius: 22,
+                              overflow: "hidden",
                               alignItems: "center", justifyContent: "center",
                               marginRight: 14,
+                              flexShrink: 0,
                             }}
                           >
-                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                            <LinearGradient
+                              colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={{
+                                position: "absolute",
+                                left: 0, right: 0, top: 0, bottom: 0,
+                              }}
+                            />
+                            <Icon size={24} color="#FFFFFF" weight="duotone" />
                           </View>
                           <Text
                             style={{
@@ -242,6 +250,7 @@ export function MoodFollowUpScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedOption}
+                borderColor={themeColors.primary}
               />
             </Animated.View>
             <View style={{ flex: 1 }} />

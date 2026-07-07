@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Home, CalendarCheck, Heart } from "lucide-react-native";
+import { House, CalendarCheck, Heart } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   AppFeelingType,
@@ -24,14 +24,15 @@ import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton
 interface Option {
   id: AppFeelingType;
   label: string;
-  icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
+  icon: any;
 }
 
 const OPTIONS: Option[] = [
-  { id: "quiet-room",         label: "Private space to self discover", icon: Home },
+  { id: "quiet-room",         label: "Private space to self discover", icon: House },
   { id: "understanding-tool", label: "Daily emotional check-in",        icon: CalendarCheck },
   { id: "listening-friend",   label: "Friend, not a fixer",             icon: Heart },
 ];
+
 
 export function AppFeelingScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -86,6 +87,7 @@ export function AppFeelingScreen() {
                 themeColor={themeColors.primary}
               />
             </View>
+
 
             {/* Title */}
             <Animated.View
@@ -153,13 +155,23 @@ export function AppFeelingScreen() {
                         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
                           <View
                             style={{
-                              width: 40, height: 40, borderRadius: 12,
-                              backgroundColor: "rgba(255,255,255,0.15)",
+                              width: 44, height: 44, borderRadius: 22,
+                              overflow: "hidden",
                               alignItems: "center", justifyContent: "center",
                               marginRight: 14,
+                              flexShrink: 0,
                             }}
                           >
-                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                            <LinearGradient
+                              colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={{
+                                position: "absolute",
+                                left: 0, right: 0, top: 0, bottom: 0,
+                              }}
+                            />
+                            <Icon size={24} color="#FFFFFF" weight="duotone" />
                           </View>
                           <Text
                             style={{
@@ -188,6 +200,7 @@ export function AppFeelingScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selected}
+                borderColor={themeColors.primary}
               />
             </Animated.View>
 

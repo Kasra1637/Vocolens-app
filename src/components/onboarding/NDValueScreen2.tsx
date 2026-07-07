@@ -11,7 +11,7 @@ import { View, Text, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-import { Mic, Smile, TrendingUp } from "lucide-react-native";
+import { Microphone, Smiley, TrendUp } from "phosphor-react-native";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
@@ -24,19 +24,19 @@ const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 
 const HOW_IT_WORKS = [
   {
-    icon: Mic,
+    icon: Microphone,
     step: "01",
     headline: "Speak without filter",
     body: "No blank page, no executive-function hurdle",
   },
   {
-    icon: Smile,
+    icon: Smiley,
     step: "02",
     headline: "Emotions get named",
     body: "When emotions are hard to name, the AI names them for you",
   },
   {
-    icon: TrendingUp,
+    icon: TrendUp,
     step: "03",
     headline: "Watch patterns unfold",
     body: "See the patterns behind your emotions — privately, at your pace",
@@ -156,13 +156,22 @@ export function NDValueScreen2() {
                     {/* Icon badge */}
                     <View
                       style={{
-                        width: 40, height: 40, borderRadius: 12,
-                        backgroundColor: "rgba(255,255,255,0.15)",
+                        width: 44, height: 44, borderRadius: 22,
+                        overflow: "hidden",
                         alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
                       }}
                     >
-                      <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                      <LinearGradient
+                        colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          position: "absolute",
+                          left: 0, right: 0, top: 0, bottom: 0,
+                        }}
+                      />
+                      <Icon size={24} color="#FFFFFF" weight="duotone" />
                     </View>
 
                     {/* Text */}
@@ -215,6 +224,7 @@ export function NDValueScreen2() {
                 onPress={handleContinue}
                 paddingVertical={17}
                 fontSize={17}
+                borderColor={themeColors.primary}
               />
             </Animated.View>
           </ScrollView>

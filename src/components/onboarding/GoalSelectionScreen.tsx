@@ -12,7 +12,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Smile, Target, Eye, GitBranch } from "lucide-react-native";
+import { Smiley, Target, Eye, Brain } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   GoalType,
@@ -23,13 +23,11 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
-type IconComponent = React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
-
 interface GoalOption {
   id: GoalType;
   label: string;
   description: string;
-  icon: IconComponent;
+  icon: any;
 }
 
 const GOAL_OPTIONS: GoalOption[] = [
@@ -37,7 +35,7 @@ const GOAL_OPTIONS: GoalOption[] = [
     id: "emotional-processing",
     label: "Emotional processing",
     description: "Process and understand emotions",
-    icon: Smile,
+    icon: Smiley,
   },
   {
     id: "goal-setting",
@@ -55,9 +53,10 @@ const GOAL_OPTIONS: GoalOption[] = [
     id: "decision-making",
     label: "Thinking clearly",
     description: "Make clearer decisions",
-    icon: GitBranch,
+    icon: Brain,
   },
 ];
+
 
 export function GoalSelectionScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -115,6 +114,7 @@ export function GoalSelectionScreen() {
                 themeColor={themeColors.primary}
               />
             </View>
+
 
             {/* Title */}
             <Animated.View
@@ -182,13 +182,23 @@ export function GoalSelectionScreen() {
                         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
                           <View
                             style={{
-                              width: 40, height: 40, borderRadius: 12,
-                              backgroundColor: "rgba(255,255,255,0.15)",
+                              width: 44, height: 44, borderRadius: 22,
+                              overflow: "hidden",
                               alignItems: "center", justifyContent: "center",
                               marginRight: 14,
+                              flexShrink: 0,
                             }}
                           >
-                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                            <LinearGradient
+                              colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={{
+                                position: "absolute",
+                                left: 0, right: 0, top: 0, bottom: 0,
+                              }}
+                            />
+                            <Icon size={24} color="#FFFFFF" weight="duotone" />
                           </View>
                           <Text
                             style={{
@@ -216,6 +226,7 @@ export function GoalSelectionScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedGoal}
+                borderColor={themeColors.primary}
               />
             </Animated.View>
             <View style={{ flex: 1 }} />

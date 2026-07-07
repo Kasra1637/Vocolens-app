@@ -13,7 +13,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Smile, Laugh, Flame } from "lucide-react-native";
+import { Smiley, SmileyWink, Fire } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   JournalingFrequencyType,
@@ -24,19 +24,18 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
-type IconComponent = React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
-
 interface FrequencyOption {
   id: JournalingFrequencyType;
   label: string;
-  icon: IconComponent;
+  icon: any;
 }
 
 const FREQUENCY_OPTIONS: FrequencyOption[] = [
-  { id: "once-twice", label: "1–2 times a week",   icon: Smile },
-  { id: "three-five", label: "3–5 times a week",   icon: Laugh },
-  { id: "daily",      label: "Every day",           icon: Flame },
+  { id: "once-twice", label: "1–2 times a week",   icon: Smiley     },
+  { id: "three-five", label: "3–5 times a week",   icon: SmileyWink },
+  { id: "daily",      label: "Every day",           icon: Fire       },
 ];
+
 
 export function ReflectionFeelingsScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -97,6 +96,7 @@ export function ReflectionFeelingsScreen() {
                 themeColor={themeColors.primary}
               />
             </View>
+
 
             {/* Title */}
             <Animated.View
@@ -165,13 +165,23 @@ export function ReflectionFeelingsScreen() {
                         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
                           <View
                             style={{
-                              width: 40, height: 40, borderRadius: 12,
-                              backgroundColor: "rgba(255,255,255,0.15)",
+                              width: 44, height: 44, borderRadius: 22,
+                              overflow: "hidden",
                               alignItems: "center", justifyContent: "center",
                               marginRight: 14,
+                              flexShrink: 0,
                             }}
                           >
-                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                            <LinearGradient
+                              colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={{
+                                position: "absolute",
+                                left: 0, right: 0, top: 0, bottom: 0,
+                              }}
+                            />
+                            <Icon size={24} color="#FFFFFF" weight="duotone" />
                           </View>
                           <Text
                             style={{
@@ -199,6 +209,7 @@ export function ReflectionFeelingsScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedFrequency}
+                borderColor={themeColors.primary}
               />
             </Animated.View>
             <View style={{ flex: 1 }} />

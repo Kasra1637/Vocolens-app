@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Headphones, Leaf, MessageCircle, Lightbulb } from "lucide-react-native";
+import { Headphones, Leaf, ChatCircle, Lightbulb } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   SelfAwarenessType,
@@ -24,15 +24,16 @@ import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton
 interface Option {
   id: SelfAwarenessType;
   label: string;
-  icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
+  icon: any;
 }
 
 const OPTIONS: Option[] = [
   { id: "deep-focus",      label: "Lost in what I love",  icon: Headphones },
   { id: "no-demands",      label: "No one needs me",      icon: Leaf },
-  { id: "talking-aloud",   label: "Thinking out loud",    icon: MessageCircle },
+  { id: "talking-aloud",   label: "Thinking out loud",    icon: ChatCircle },
   { id: "after-movement",  label: "I understand why", icon: Lightbulb },
 ];
+
 
 export function SelfAwarenessScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -87,6 +88,7 @@ export function SelfAwarenessScreen() {
                 themeColor={themeColors.primary}
               />
             </View>
+
 
             {/* Title */}
             <Animated.View
@@ -154,13 +156,23 @@ export function SelfAwarenessScreen() {
                         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 }}>
                           <View
                             style={{
-                              width: 40, height: 40, borderRadius: 12,
-                              backgroundColor: "rgba(255,255,255,0.15)",
+                              width: 44, height: 44, borderRadius: 22,
+                              overflow: "hidden",
                               alignItems: "center", justifyContent: "center",
                               marginRight: 14,
+                              flexShrink: 0,
                             }}
                           >
-                            <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                            <LinearGradient
+                              colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={{
+                                position: "absolute",
+                                left: 0, right: 0, top: 0, bottom: 0,
+                              }}
+                            />
+                            <Icon size={24} color="#FFFFFF" weight="duotone" />
                           </View>
                           <Text
                             style={{
@@ -189,6 +201,7 @@ export function SelfAwarenessScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selected}
+                borderColor={themeColors.primary}
               />
             </Animated.View>
 
