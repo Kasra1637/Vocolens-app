@@ -423,9 +423,11 @@ export function PaywallScreen() {
                   ? "Your journal is ready.\nLet's make it yours."
                   : "How your free\ntrial works"}
               </Text>
-              <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.60)", fontSize: 14, textAlign: "center", marginTop: 8, lineHeight: 20, maxWidth: "85%" }}>
-                Speak freely and let clarity find you
-              </Text>
+              {!showMorePlans && (
+                <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.60)", fontSize: 14, textAlign: "center", marginTop: 8, lineHeight: 20, maxWidth: "85%" }}>
+                  Speak freely and let clarity find you
+                </Text>
+              )}
             </Animated.View>
 
             {/* Benefits — shown ONLY when quarterly/monthly plans are visible */}
@@ -561,7 +563,7 @@ export function PaywallScreen() {
                     : <>
                         <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 18 }}>
                           {selectedPlan === "yearly"
-                            ? `Start Free ${TRIAL_DAYS}-Day Trial`
+                            ? "Start my free trial now"
                             : selectedPlan === "three_month"
                               ? "Continue with Quarterly"
                               : "Continue with Monthly"}
