@@ -163,7 +163,7 @@ export function MoodInsightScreen() {
               />
             </View>
 
-            {/* Personalized greeting headline */}
+            {/* Confirmation headline */}
             <Animated.View
               entering={FadeIn.delay(80).duration(900).easing(SOFT)}
               style={{ alignItems: "center", marginBottom: 12 }}
@@ -179,9 +179,13 @@ export function MoodInsightScreen() {
                   lineHeight: 38,
                 }}
               >
-                {userName
-                  ? `${getGreetingPrefix()}, ${userName} 👋`
-                  : `${getGreetingPrefix()} 👋`}
+                {selectedMood === "happy"
+                  ? "Let's capture that energy"
+                  : selectedMood === "stressed"
+                    ? "We hear you"
+                    : selectedMood === "anxious"
+                      ? "You're not alone in this"
+                      : "Let's build on that calm"}
               </Text>
               <Text
                 style={{
