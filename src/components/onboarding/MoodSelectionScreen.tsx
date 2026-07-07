@@ -113,18 +113,6 @@ export function MoodSelectionScreen() {
               >
                 How are you feeling today?
               </Text>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.70)",
-                  fontSize: 14,
-                  textAlign: "center",
-                  marginTop: 8,
-                  lineHeight: 20,
-                }}
-              >
-                There are no wrong answers here
-              </Text>
             </Animated.View>
 
             {/* Mood Options */}
