@@ -728,7 +728,7 @@ function InsightsContent({
       },
       {
         period: "Night",
-        icon: CloudMoon,
+        icon: Cloud,
         entries: patterns.Night.entries,
         mood: getMoodLabel(
           "Night",
@@ -2476,7 +2476,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
       case "growth":
         return Eye;
       case "warning":
-        return AlertTriangle;
+        return Warning;
       case "strength":
         return Shield;
       case "recommendation":

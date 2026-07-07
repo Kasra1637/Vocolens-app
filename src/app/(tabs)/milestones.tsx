@@ -144,15 +144,15 @@ type FilterCategory = "all" | BadgeCategory;
 const CATEGORY_OPTIONS: {
   value: FilterCategory;
   label: string;
-  icon: typeof Award;
+  icon: typeof Trophy;
 }[] = [
-  { value: "all", label: "All badges", icon: Award },
-  { value: "streak", label: "Streak", icon: Flame },
+  { value: "all", label: "All badges", icon: Trophy },
+  { value: "streak", label: "Streak", icon: Fire },
   { value: "entries", label: "Entries", icon: Star },
   { value: "consistency", label: "Consistency", icon: Zap },
   { value: "mood", label: "Mood", icon: Heart },
   { value: "time", label: "Time-based", icon: Sun },
-  { value: "special", label: "Special", icon: Sparkles },
+  { value: "special", label: "Special", icon: Sparkle },
 ];
 
 export default function MilestonesScreen() {
@@ -397,14 +397,14 @@ function StatsOverview({ stats, isDarkMode = false }: StatsOverviewProps) {
       <View className="p-5">
         <View className="flex-row justify-between">
           <StatItem
-            icon={Flame}
+            icon={Fire}
             label="Current streak"
             value={`${stats.currentStreak} ${stats.currentStreak === 1 ? "day" : "days"}`}
             color="#FFFFFF"
             isDarkMode={isDarkMode}
           />
           <StatItem
-            icon={Award}
+            icon={Trophy}
             label="Total entries"
             value={stats.totalEntries.toString()}
             color="#FFFFFF"
@@ -424,7 +424,7 @@ function StatsOverview({ stats, isDarkMode = false }: StatsOverviewProps) {
 }
 
 interface StatItemProps {
-  icon: typeof Flame;
+  icon: typeof Fire;
   label: string;
   value: string;
   color: string;
@@ -479,7 +479,7 @@ function StatItem({
 
 // Category Dropdown Component
 interface CategoryDropdownProps {
-  selectedOption: { value: FilterCategory; label: string; icon: typeof Award };
+  selectedOption: { value: FilterCategory; label: string; icon: typeof Trophy };
   isOpen: boolean;
   onToggle: () => void;
   onSelect: (category: FilterCategory) => void;
@@ -593,7 +593,7 @@ interface BadgeCardProps {
 }
 
 function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
-  const Icon = BADGE_ICONS[badge.icon] || Award;
+  const Icon = BADGE_ICONS[badge.icon] || Trophy;
   const rarityConfig = RARITY_CONFIG[badge.rarity];
 
   // Get theme colors for dark mode support
@@ -849,7 +849,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
 
   if (!badge) return null;
 
-  const Icon = BADGE_ICONS[badge.icon] || Award;
+  const Icon = BADGE_ICONS[badge.icon] || Trophy;
   const rc = MODAL_RARITY_CONFIG[badge.rarity];
 
   // Use the active theme color for all badge accents instead of per-rarity colors
