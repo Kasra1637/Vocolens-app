@@ -148,13 +148,22 @@ export function NDValueScreen1() {
                     {/* Icon badge */}
                     <View
                       style={{
-                        width: 48, height: 48, borderRadius: 14,
-                        backgroundColor: "rgba(255,255,255,0.15)",
+                        width: 43, height: 43, borderRadius: 14,
+                        overflow: "hidden",
                         alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
                       }}
                     >
-                      <Icon size={28} color="#FFFFFF" weight="duotone" />
+                      <LinearGradient
+                        colors={["rgba(255,255,255,0.22)", "rgba(255,255,255,0.06)"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          position: "absolute",
+                          left: 0, right: 0, top: 0, bottom: 0,
+                        }}
+                      />
+                      <Icon size={26} color="#FFFFFF" weight="duotone" />
                     </View>
 
                     {/* Text */}
