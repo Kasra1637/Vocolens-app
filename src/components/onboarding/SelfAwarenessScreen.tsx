@@ -31,7 +31,7 @@ const OPTIONS: Option[] = [
   { id: "deep-focus",      label: "Lost in what I love",  icon: Headphones },
   { id: "no-demands",      label: "No one needs me",      icon: Leaf },
   { id: "talking-aloud",   label: "Thinking out loud",    icon: MessageCircle },
-  { id: "after-movement",  label: "When I understand why I feel this way", icon: Lightbulb },
+  { id: "after-movement",  label: "I understand why", icon: Lightbulb },
 ];
 
 export function SelfAwarenessScreen() {
