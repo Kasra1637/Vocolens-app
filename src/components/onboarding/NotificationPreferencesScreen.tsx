@@ -496,7 +496,7 @@ export function NotificationPreferencesScreen() {
                   lineHeight: 38,
                 }}
               >
-                Set your journaling time
+                Your journaling time
               </Text>
               <Text
                 className="text-sm text-center px-2"
@@ -655,7 +655,7 @@ export function NotificationPreferencesScreen() {
                       fontFamily: "Inter_400Regular",
                       fontSize: 12,
                       marginTop: 8,
-                      textAlign: "center",
+                      textAlign: "left",
                     }}
                   >
                     {selectedDays.size === 7

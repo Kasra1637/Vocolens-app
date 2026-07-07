@@ -419,7 +419,9 @@ export function PaywallScreen() {
             {/* Hero */}
             <Animated.View entering={FadeIn.delay(50).duration(700).easing(SOFT)} style={{ alignItems: "center", marginBottom: 6 }}>
               <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 30, textAlign: "center", lineHeight: 38, opacity: 0.92, letterSpacing: 0.2 }}>
-                Your journal is ready.{"\n"}Let's make it yours.
+                {showMorePlans
+                  ? "Your journal is ready.\nLet's make it yours."
+                  : "How your free\ntrial works"}
               </Text>
               <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.60)", fontSize: 14, textAlign: "center", marginTop: 8, lineHeight: 20, maxWidth: "85%" }}>
                 Speak freely and let clarity find you
