@@ -11,8 +11,8 @@ import { View, Text, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-import { HelpCircle, Frown, Meh, Angry } from "lucide-react-native";
 import { tapHaptic } from "@/lib/haptics";
+import { Question, SmileyMeh, SmileyNervous, MaskSad } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -23,22 +23,22 @@ const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 
 const PAIN_POINTS = [
   {
-    icon: HelpCircle,
+    icon: Question,
     headline: "Feelings are hard to name",
     body: "Just speak — the app tracks what you feel and names the emotion",
   },
   {
-    icon: Meh,
+    icon: SmileyNervous,
     headline: "Overwhelm sneaks up",
     body: "Small things pile up unnoticed — until suddenly it's too much",
   },
   {
-    icon: Frown,
+    icon: SmileyMeh,
     headline: "The same thought loops",
     body: "A worry replays on repeat and you can't tell if it matters",
   },
   {
-    icon: Angry,
+    icon: MaskSad,
     headline: "Masking is exhausting",
     body: "Holding it together all day leaves nothing left to process",
   },
@@ -154,7 +154,7 @@ export function NDValueScreen1() {
                         flexShrink: 0,
                       }}
                     >
-                      <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                      <Icon size={22} color="#FFFFFF" weight="duotone" />
                     </View>
 
                     {/* Text */}
