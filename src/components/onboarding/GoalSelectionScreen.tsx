@@ -41,7 +41,7 @@ const GOAL_OPTIONS: GoalOption[] = [
   },
   {
     id: "goal-setting",
-    label: "Goal Setting",
+    label: "Finding Direction",
     description: "Track and achieve your goals",
     icon: Target,
   },
@@ -53,7 +53,7 @@ const GOAL_OPTIONS: GoalOption[] = [
   },
   {
     id: "decision-making",
-    label: "Decision Making",
+    label: "Thinking Clearly Under Pressure",
     description: "Make clearer decisions",
     icon: GitBranch,
   },
