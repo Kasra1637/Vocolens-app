@@ -1117,7 +1117,7 @@ export default function SettingsScreen() {
                       lineHeight: 22,
                     }}
                   >
-                    Know someone who struggles to put their feelings into words? Share Vocolens — built by one person who gets it, not a company.
+                    Know someone who struggles to put their feelings into words? Share Vocolens — made by someone who lives it, not a company chasing a trend.
                   </Text>
                 </View>
 
