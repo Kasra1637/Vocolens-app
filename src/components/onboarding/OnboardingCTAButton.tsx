@@ -2,19 +2,14 @@
  * OnboardingCTAButton
  *
  * Single source of truth for all primary CTA buttons in the onboarding flow.
- * Matches the ReminderScreen reference design exactly on both iOS and Android:
- *  - LinearGradient translucent white fill (matches ReminderScreen)
- *  - android_ripple for proper Android touch feedback
- *  - borderRadius in style (not className) so Android clips the ripple correctly
- *  - overflow: hidden for Android ripple containment
- *  - iOS shadow via shadowColor/shadowOffset/etc.
- *  - disabled state with reduced opacity + dimmed border
+ * Border color automatically adapts to the active theme's primary color.
  */
 
 import React from 'react';
 import { View, Text, Pressable, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight } from 'lucide-react-native';
+import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 
 interface OnboardingCTAButtonProps {
   label: string;
@@ -26,7 +21,7 @@ interface OnboardingCTAButtonProps {
   paddingVertical?: number;
   /** Font size for the label. Defaults to 18. */
   fontSize?: number;
-  /** Override border color. Defaults to #FFFFFF. */
+  /** Override border color. Defaults to the active theme's primary color. */
   borderColor?: string;
 }
 
@@ -39,6 +34,10 @@ export function OnboardingCTAButton({
   fontSize = 18,
   borderColor: customBorderColor,
 }: OnboardingCTAButtonProps) {
+  const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const themePrimary = THEME_COLORS[selectedTheme].primary;
+  const activeBorderColor = disabled ? 'rgba(255,255,255,0.3)' : (customBorderColor || themePrimary);
+
   return (
     <Pressable
       onPress={onPress}
@@ -48,7 +47,7 @@ export function OnboardingCTAButton({
         width: '100%',
         borderRadius: 18,
         borderWidth: 2,
-        borderColor: disabled ? 'rgba(255,255,255,0.3)' : (customBorderColor || '#FFFFFF'),
+        borderColor: activeBorderColor,
         overflow: 'hidden',
         opacity: disabled ? 0.48 : 1,
         shadowColor: '#000000',
