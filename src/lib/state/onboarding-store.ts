@@ -143,7 +143,7 @@ export const THEME_COLORS: Record<
     name: "Sage & Still",
     description: "Grounded and natural",
     primary: "#6D9B6A",
-    secondary: "#9AAC99",
+    secondary: "#8FBF8C",
     gradientStart: "#527A55",
     gradientEnd: "#243A26",
     accent: "#9AAC99",

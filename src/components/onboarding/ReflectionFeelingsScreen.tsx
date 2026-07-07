@@ -209,7 +209,6 @@ export function ReflectionFeelingsScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedFrequency}
-                borderColor={themeColors.primary}
               />
             </Animated.View>
             <View style={{ flex: 1 }} />

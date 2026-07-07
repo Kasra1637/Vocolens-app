@@ -226,7 +226,6 @@ export function GoalSelectionScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedGoal}
-                borderColor={themeColors.primary}
               />
             </Animated.View>
             <View style={{ flex: 1 }} />

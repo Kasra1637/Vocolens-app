@@ -201,7 +201,6 @@ export function ProcessingStyleScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selected}
-                borderColor={themeColors.primary}
               />
             </Animated.View>
 

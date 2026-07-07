@@ -201,7 +201,6 @@ export function SelfAwarenessScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selected}
-                borderColor={themeColors.primary}
               />
             </Animated.View>
 

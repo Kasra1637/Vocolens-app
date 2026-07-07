@@ -224,7 +224,6 @@ export function NDValueScreen2() {
                 onPress={handleContinue}
                 paddingVertical={17}
                 fontSize={17}
-                borderColor={themeColors.primary}
               />
             </Animated.View>
           </ScrollView>

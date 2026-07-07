@@ -250,7 +250,6 @@ export function MoodFollowUpScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedOption}
-                borderColor={themeColors.primary}
               />
             </Animated.View>
             <View style={{ flex: 1 }} />
