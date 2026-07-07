@@ -25,7 +25,7 @@ const PAIN_POINTS = [
   {
     icon: SmileyBlank,
     headline: "Feelings are hard to name",
-    body: "Just speak — the app tracks what you feel and names the emotion",
+    body: "Just speak — we'll track what you feel and put a name to it",
   },
   {
     icon: SmileyNervous,
@@ -148,7 +148,7 @@ export function NDValueScreen1() {
                     {/* Icon badge */}
                     <View
                       style={{
-                        width: 43, height: 43, borderRadius: 14,
+                        width: 43, height: 43, borderRadius: 22,
                         overflow: "hidden",
                         alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
