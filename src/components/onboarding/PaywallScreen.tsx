@@ -423,7 +423,7 @@ export function PaywallScreen() {
                   ? "Your journal is ready.\nLet's make it yours."
                   : "How your free\ntrial works"}
               </Text>
-              {!showMorePlans && (
+              {showMorePlans && (
                 <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.60)", fontSize: 14, textAlign: "center", marginTop: 8, lineHeight: 20, maxWidth: "85%" }}>
                   Speak freely and let clarity find you
                 </Text>
