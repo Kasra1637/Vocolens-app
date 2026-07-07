@@ -35,25 +35,25 @@ interface GoalOption {
 const GOAL_OPTIONS: GoalOption[] = [
   {
     id: "emotional-processing",
-    label: "Emotional Processing",
+    label: "Emotional processing",
     description: "Process and understand emotions",
     icon: Smile,
   },
   {
     id: "goal-setting",
-    label: "Finding Direction",
+    label: "Finding direction",
     description: "Track and achieve your goals",
     icon: Target,
   },
   {
     id: "self-reflection",
-    label: "Self-Reflection",
+    label: "Self-reflection",
     description: "Gain deeper self-awareness",
     icon: Eye,
   },
   {
     id: "decision-making",
-    label: "Thinking Clearly Under Pressure",
+    label: "Thinking clearly",
     description: "Make clearer decisions",
     icon: GitBranch,
   },
@@ -98,7 +98,7 @@ export function GoalSelectionScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={24} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />

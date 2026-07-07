@@ -55,33 +55,33 @@ const MOOD_FOLLOWUP_MAP: Record<MoodType, MoodFollowUpConfig> = {
   happy: {
     question: "What's inspiring you most today?",
     options: [
-      { id: "small-win",        label: "Small Win",         icon: Trophy  },
-      { id: "supportive-friend",label: "Supportive Friend", icon: Smile   },
-      { id: "clear-goal",       label: "Clear Goal",        icon: Target  },
+      { id: "small-win",        label: "Small win",         icon: Trophy  },
+      { id: "supportive-friend",label: "Supportive friend", icon: Smile   },
+      { id: "clear-goal",       label: "Clear goal",        icon: Target  },
     ],
   },
   stressed: {
     question: "What's adding pressure to your day?",
     options: [
-      { id: "too-many-tasks",      label: "Too Many Tasks",      icon: ListTodo   },
-      { id: "tight-deadline",      label: "Tight Deadline",      icon: Clock      },
-      { id: "high-expectations",   label: "High Expectations",   icon: TrendingUp },
+      { id: "too-many-tasks",      label: "Too many tasks",      icon: ListTodo   },
+      { id: "tight-deadline",      label: "Tight deadline",      icon: Clock      },
+      { id: "high-expectations",   label: "High expectations",   icon: TrendingUp },
     ],
   },
   anxious: {
     question: "What's keeping you from feeling calm right now?",
     options: [
-      { id: "get-distracted",   label: "Get Distracted",   icon: Wind  },
-      { id: "feel-overwhelmed", label: "Feel Overwhelmed", icon: Frown },
-      { id: "dont-start",       label: "Don't Start",      icon: Meh   },
+      { id: "get-distracted",   label: "Get distracted",   icon: Wind  },
+      { id: "feel-overwhelmed", label: "Feel overwhelmed", icon: Frown },
+      { id: "dont-start",       label: "Don't start",      icon: Meh   },
     ],
   },
   calm: {
     question: "What's bringing you peace today?",
     options: [
-      { id: "quiet-moment",    label: "Quiet Moment",    icon: Sunset },
-      { id: "fresh-air",       label: "Fresh Air",       icon: Leaf   },
-      { id: "positive-thought",label: "Positive Thought",icon: Laugh  },
+      { id: "quiet-moment",    label: "Quiet moment",    icon: Sunset },
+      { id: "fresh-air",       label: "Fresh air",       icon: Leaf   },
+      { id: "positive-thought",label: "Positive thought",icon: Laugh  },
     ],
   },
 };
@@ -136,7 +136,7 @@ export function MoodFollowUpScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={24} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />

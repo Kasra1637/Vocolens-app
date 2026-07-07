@@ -34,17 +34,17 @@ import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
 const GOAL_LABELS: Record<GoalType, string> = {
-  "emotional-processing": "Emotional Processing",
-  "goal-setting": "Finding Direction",
-  "self-reflection": "Self-Reflection",
-  "decision-making": "Thinking Clearly Under Pressure",
+  "emotional-processing": "Emotional processing",
+  "goal-setting": "Finding direction",
+  "self-reflection": "Self-reflection",
+  "decision-making": "Thinking clearly",
 };
 
 const BLOCKER_LABELS: Record<GoalBlockerType, string> = {
-  "lack-of-time": "Lack of Time",
-  "self-doubt": "Self-Doubt",
-  "lack-of-consistency": "Lack of Consistency",
-  "not-sure-how": "Not Sure How",
+  "lack-of-time": "Lack of time",
+  "self-doubt": "Self-doubt",
+  "lack-of-consistency": "Lack of consistency",
+  "not-sure-how": "Not sure how",
 };
 
 const GOAL_INSIGHT_MESSAGES: Record<GoalType, string> = {
@@ -118,7 +118,7 @@ export function GoalInsightScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={24} />
+        <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />
@@ -152,7 +152,13 @@ export function GoalInsightScreen() {
                   lineHeight: 38,
                 }}
               >
-                You're on the right path
+                {selectedGoal === "emotional-processing"
+                  ? "We'll help you\nprocess this"
+                  : selectedGoal === "goal-setting"
+                    ? "Clarity is\ncoming"
+                    : selectedGoal === "self-reflection"
+                      ? "You're already\nbuilding awareness"
+                      : "Let's bring\nsome focus"}
               </Text>
             </Animated.View>
 
@@ -204,18 +210,6 @@ export function GoalInsightScreen() {
                       {goalLabel}
                     </Text>
                   </View>
-
-                  {blockerLabel && (
-                    <Text
-                      style={{
-                        fontFamily: "Inter_500Medium",
-                        color: "rgba(255, 255, 255, 0.8)",
-                        fontSize: 14,
-                      }}
-                    >
-                      Challenge: {blockerLabel}
-                    </Text>
-                  )}
                 </View>
 
                 {/* Progress Bar — matches MoodInsightScreen */}
