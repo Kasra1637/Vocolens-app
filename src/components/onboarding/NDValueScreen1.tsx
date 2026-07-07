@@ -155,7 +155,7 @@ export function NDValueScreen1() {
                       }}
                     >
                       <LinearGradient
-                        colors={["rgba(255,255,255,0.22)", "rgba(255,255,255,0.06)"]}
+                        colors={[themeColors.primary + "38", themeColors.primary + "0A"]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={{
