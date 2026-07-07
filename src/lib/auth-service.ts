@@ -190,7 +190,7 @@ export interface BiometricAuthResult {
 }
 
 export async function authenticateWithBiometrics(
-  promptMessage = 'Unlock Vocolens with your fingerprint',
+  promptMessage = 'Touch to open your safe space',
 ): Promise<BiometricAuthResult> {
   const LocalAuth = getLocalAuth();
   if (!LocalAuth) {
