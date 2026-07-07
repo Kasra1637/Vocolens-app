@@ -690,7 +690,7 @@ export default function SettingsScreen() {
                               <Check
                                 size={18}
                                 color="#FFFFFF"
-                                strokeWidth={2.8}
+                                weight="bold"
                               />
                             )}
                           </LinearGradient>

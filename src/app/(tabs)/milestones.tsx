@@ -530,7 +530,7 @@ function CategoryDropdown({
             {selectedOption.label}
           </Text>
         </View>
-        <ChevronDown
+        <CaretDown
           size={20}
           color="rgba(255, 255, 255, 0.8)"
           weight="duotone"
@@ -647,7 +647,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 zIndex: 10,
               }}
             >
-              <Check size={12} color="#FFFFFF" strokeWidth={3} />
+              <Check size={12} color="#FFFFFF" weight="bold" />
             </View>
           )}
 
@@ -695,7 +695,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 }}
               >
                 {badge.unlocked ? (
-                  <Unlock size={12} color={Colors.primary} weight="duotone" />
+                  <LockOpen size={12} color={Colors.primary} weight="duotone" />
                 ) : (
                   <Lock size={12} color={Colors.primary} weight="duotone" />
                 )}
@@ -990,7 +990,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                     borderRadius: 50,
                   }}
                 />
-                <Icon size={50} color="#FFFFFF" strokeWidth={1.8} />
+                <Icon size={50} color="#FFFFFF" weight="duotone" />
               </View>
             </View>
 

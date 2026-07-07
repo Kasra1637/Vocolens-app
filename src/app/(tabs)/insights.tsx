@@ -692,7 +692,7 @@ function InsightsContent({
       },
       {
         period: "Afternoon",
-        icon: Sunset,
+        icon: SunHorizon,
         entries: patterns.Afternoon.entries,
         mood: getMoodLabel(
           "Afternoon",

@@ -684,7 +684,7 @@ export default function SpeakScreen() {
             >
               <View className="p-4">
                 <View className="flex-row items-start">
-                  <AlertCircle
+                  <WarningCircle
                     size={20}
                     color="#FFFFFF"
                     weight="duotone"
@@ -818,7 +818,7 @@ export default function SpeakScreen() {
             >
               <View className="p-4">
                 <View className="flex-row items-start">
-                  <AlertCircle
+                  <WarningCircle
                     size={20}
                     color="#F59E0B"
                     weight="duotone"
@@ -1134,7 +1134,7 @@ export default function SpeakScreen() {
                             size={30}
                             color="#FFFFFF"
                             fill="#FFFFFF"
-                            strokeWidth={0}
+                            weight="thin"
                           />
                         </View>
                       )}
@@ -1167,7 +1167,7 @@ export default function SpeakScreen() {
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                     >
-                      <Check size={36} color="#FFFFFF" strokeWidth={3} />
+                      <Check size={36} color="#FFFFFF" weight="bold" />
                     </LinearGradient>
                   </Pressable>
                   <Text
