@@ -194,7 +194,6 @@ export function MoodSelectionScreen() {
                 label="Continue"
                 onPress={handleContinue}
                 disabled={!selectedMood}
-                pill
               />
             </Animated.View>
 

@@ -23,7 +23,7 @@ interface OnboardingCTAButtonProps {
   fontSize?: number;
   /** Override border color. Defaults to the active theme's primary color. */
   borderColor?: string;
-  /** Use pill shape (full radius) instead of rounded rectangle. Defaults to false. */
+  /** Use pill shape (full radius) instead of rounded rectangle. Defaults to true. */
   pill?: boolean;
 }
 
@@ -35,7 +35,7 @@ export function OnboardingCTAButton({
   paddingVertical = 16,
   fontSize = 18,
   borderColor: customBorderColor,
-  pill = false,
+  pill = true,
 }: OnboardingCTAButtonProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const themeColors = THEME_COLORS[selectedTheme];
