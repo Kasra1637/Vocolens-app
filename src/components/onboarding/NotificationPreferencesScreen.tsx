@@ -848,7 +848,7 @@ export function NotificationPreferencesScreen() {
                     marginRight: 36, // balance the X width so text is truly centred
                   }}
                 >
-                  What time works for you?
+                  Choose your time
                 </Text>
               </View>
 
@@ -858,7 +858,7 @@ export function NotificationPreferencesScreen() {
                   color: "rgba(255,255,255,0.60)",
                   fontSize: 13,
                   textAlign: "center",
-                  marginBottom: 28,
+                  marginBottom: 12,
                 }}
               >
                 We'll send your reminder at this time
