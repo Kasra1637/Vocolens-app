@@ -12,7 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
-import { Question, SmileyMeh, SmileyNervous, MaskSad } from "phosphor-react-native";
+import { SmileyBlank, SmileyMeh, SmileyNervous, MaskSad } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -23,7 +23,7 @@ const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 
 const PAIN_POINTS = [
   {
-    icon: Question,
+    icon: SmileyBlank,
     headline: "Feelings are hard to name",
     body: "Just speak — the app tracks what you feel and names the emotion",
   },
@@ -148,13 +148,13 @@ export function NDValueScreen1() {
                     {/* Icon badge */}
                     <View
                       style={{
-                        width: 40, height: 40, borderRadius: 12,
+                        width: 48, height: 48, borderRadius: 14,
                         backgroundColor: "rgba(255,255,255,0.15)",
                         alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
                       }}
                     >
-                      <Icon size={22} color="#FFFFFF" weight="duotone" />
+                      <Icon size={28} color="#FFFFFF" weight="duotone" />
                     </View>
 
                     {/* Text */}
