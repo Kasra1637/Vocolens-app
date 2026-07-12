@@ -18,14 +18,14 @@ import Animated, {
 } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
 import {
-  CalendarDays,
+  CalendarDots,
   BookOpen,
-  ChevronDown,
-  ChevronUp,
+  CaretDown,
+  CaretUp,
   Leaf,
   Star,
-  Sunrise,
-} from "lucide-react-native";
+  SunDim,
+} from "phosphor-react-native";
 import { useWeeklyReflection } from "@/lib/hooks";
 import { BorderRadius } from "@/lib/theme";
 
@@ -55,7 +55,7 @@ function BouncingChevron({ color }: { color: string }) {
 
   return (
     <Animated.View style={[{ marginTop: 4 }, animStyle]}>
-      <ChevronDown size={16} color={color} strokeWidth={2} />
+      <CaretDown size={16} color={color} weight="duotone" />
     </Animated.View>
   );
 }
@@ -120,7 +120,7 @@ export function WeeklyReflectionCard({
                     justifyContent: "center",
                   }}
                 >
-                  <CalendarDays size={22} color="#FFFFFF" strokeWidth={2} />
+                  <CalendarDots size={22} color="#FFFFFF" weight="duotone" />
                 </View>
                 <View>
                   <View className="flex-row items-center" style={{ gap: 6 }}>
@@ -171,16 +171,16 @@ export function WeeklyReflectionCard({
 
               <View className="flex-row items-center" style={{ gap: 12 }}>
                 {expanded ? (
-                  <ChevronUp
+                  <CaretUp
                     size={18}
                     color="rgba(255,255,255,0.6)"
-                    strokeWidth={2}
+                    weight="duotone"
                   />
                 ) : (
-                  <ChevronDown
+                  <CaretDown
                     size={18}
                     color="rgba(255,255,255,0.6)"
-                    strokeWidth={2}
+                    weight="duotone"
                   />
                 )}
               </View>
@@ -306,7 +306,7 @@ export function WeeklyReflectionCard({
                         className="flex-row items-center mb-2"
                         style={{ gap: 6 }}
                       >
-                        <BookOpen size={13} color="#FFFFFF" strokeWidth={2.5} />
+                        <BookOpen size={13} color="#FFFFFF" weight="duotone" />
                         <Text
                           style={{
                             fontFamily: "Inter_700Bold",
@@ -338,7 +338,7 @@ export function WeeklyReflectionCard({
                           className="flex-row items-center mb-2"
                           style={{ gap: 6 }}
                         >
-                          <Leaf size={13} color="#FFFFFF" strokeWidth={2.5} />
+                          <Leaf size={13} color="#FFFFFF" weight="duotone" />
                           <Text
                             style={{
                               fontFamily: "Inter_700Bold",
@@ -394,7 +394,7 @@ export function WeeklyReflectionCard({
                         className="flex-row items-center mb-2"
                         style={{ gap: 6 }}
                       >
-                        <Star size={13} color="#FFFFFF" strokeWidth={2.5} />
+                        <Star size={13} color="#FFFFFF" weight="duotone" />
                         <Text
                           style={{
                             fontFamily: "Inter_700Bold",
@@ -434,10 +434,10 @@ export function WeeklyReflectionCard({
                         className="flex-row items-center mb-2"
                         style={{ gap: 6 }}
                       >
-                        <Sunrise
+                        <SunDim
                           size={13}
                           color="rgba(255,255,255,0.7)"
-                          strokeWidth={2.5}
+                          weight="duotone"
                         />
                         <Text
                           style={{

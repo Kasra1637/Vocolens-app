@@ -13,10 +13,10 @@ import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import {
   X,
   Check,
-  ChevronRight,
-  Sparkles,
+  CaretRight,
+  Sparkle,
   SkipForward,
-} from "lucide-react-native";
+} from "phosphor-react-native";
 import { router } from "expo-router";
 import { EmotionType, BodyRegionSensation, DistressLevel } from "@/lib/types";
 import { getEmotionDefinition } from "@/lib/emotion-definitions";
@@ -309,7 +309,7 @@ export default function ReflectionScreen() {
                       <View
                         style={[s.checkBadge, { backgroundColor: accentColor }]}
                       >
-                        <Check size={10} color="#1F2937" strokeWidth={3} />
+                        <Check size={10} color="#1F2937" weight="duotone" />
                       </View>
                     )}
                   </Pressable>
@@ -360,7 +360,7 @@ export default function ReflectionScreen() {
               ]}
             >
               <Text style={s.nextBtnText}>Next</Text>
-              <ChevronRight size={18} color="#FFFFFF" />
+              <CaretRight size={18} color="#FFFFFF" />
             </Pressable>
             <Pressable onPress={skipStep} style={s.skipBtnWrap}>
               <Text style={s.skipText}>Skip reflection</Text>
@@ -460,9 +460,9 @@ export default function ReflectionScreen() {
             >
               <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
               {isLast ? (
-                <Sparkles size={16} color="#FFFFFF" />
+                <Sparkle size={16} color="#FFFFFF" />
               ) : (
-                <ChevronRight size={18} color="#FFFFFF" />
+                <CaretRight size={18} color="#FFFFFF" />
               )}
             </Pressable>
             <Pressable onPress={skipStep} style={s.skipBtnWrap}>
@@ -490,9 +490,9 @@ export default function ReflectionScreen() {
             >
               <Text style={s.nextBtnText}>{isLast ? "Save" : "Next"}</Text>
               {isLast ? (
-                <Sparkles size={16} color="#FFFFFF" />
+                <Sparkle size={16} color="#FFFFFF" />
               ) : (
-                <ChevronRight size={18} color="#FFFFFF" />
+                <CaretRight size={18} color="#FFFFFF" />
               )}
             </Pressable>
             <Pressable onPress={skipStep} style={s.skipBtnWrap}>

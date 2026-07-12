@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, Pressable, Modal, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { X, HelpCircle, Heart, Activity, Sparkles } from 'lucide-react-native';
+import { X, Question, Heart, Pulse, Sparkle } from 'phosphor-react-native';
 import { EmotionType, BodySensation, DistressLevel } from '@/lib/types';
 import { getEmotionDefinition } from '@/lib/emotion-definitions';
 import { tapHaptic, successHaptic } from '@/lib/haptics';
@@ -98,7 +98,7 @@ export default function EmotionReflectionScreen({
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={s.emotionTitle}>Emotion labels</Text>
               <Pressable onPress={handleIDontKnow} style={[s.idkButton, { backgroundColor: alexithymiaMode ? hexToRgba(themeColors.primary, 0.3) : hexToRgba(themeColors.primary, 0.15) }]}>
-                <HelpCircle size={14} color={alexithymiaMode ? '#FFFFFF' : 'rgba(255,255,255,0.7)'} />
+                <Question size={14} color={alexithymiaMode ? '#FFFFFF' : 'rgba(255,255,255,0.7)'} />
                 <Text style={[s.idkText, { color: alexithymiaMode ? '#FFFFFF' : 'rgba(255,255,255,0.7)' }]}>
                   {alexithymiaMode ? 'Not sure mode' : "I don't know"}
                 </Text>
@@ -165,7 +165,7 @@ export default function EmotionReflectionScreen({
 
             <View style={{ marginTop: 24 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                <Activity size={16} color="#FFB84D" style={{ marginRight: 6 }} />
+                <Pulse size={16} color="#FFB84D" style={{ marginRight: 6 }} />
                 <Text style={s.sliderLabel}>Calm — Activated</Text>
               </View>
               <ArousalSlider value={arousal} onChange={setArousal} />
@@ -183,7 +183,7 @@ export default function EmotionReflectionScreen({
         {/* Bottom bar */}
         <View style={[s.bottomBar, { borderTopColor: hexToRgba(themeColors.primary, 0.2), backgroundColor: hexToRgba(themeColors.primary, 0.08) }]}>
           <Pressable onPress={handleSave} style={[s.saveButton, { backgroundColor: hexToRgba(themeColors.primary, 0.25), borderWidth: 1.5, borderColor: hexToRgba(themeColors.primary, 0.55) }]}>
-            <Sparkles size={18} color="#FFFFFF" />
+            <Sparkle size={18} color="#FFFFFF" />
             <Text style={s.saveButtonText}>Save Entry</Text>
           </Pressable>
         </View>

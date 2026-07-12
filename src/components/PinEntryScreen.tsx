@@ -31,7 +31,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { Lock, Check, X } from 'lucide-react-native';
+import { Lock, Check, X } from 'phosphor-react-native';
 import { successHaptic, confirmHaptic, errorHaptic } from '@/lib/haptics';
 import { setPin, verifyPin } from '@/lib/auth-service';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
@@ -255,7 +255,7 @@ function PinEntryScreen({
           if (matched && isTyped) {
             return (
               <View key={i} style={[styles.dot, styles.dotFilled, styles.dotGreen]}>
-                <Check size={10} color="#FFFFFF" strokeWidth={3} />
+                <Check size={10} color="#FFFFFF" weight="duotone" />
               </View>
             );
           }
@@ -265,8 +265,8 @@ function PinEntryScreen({
             return (
               <View key={i} style={[styles.dot, styles.dotFilled, ok ? styles.dotGreen : styles.dotRed]}>
                 {ok
-                  ? <Check size={10} color="#FFFFFF" strokeWidth={3} />
-                  : <X     size={10} color="#FFFFFF" strokeWidth={3} />
+                  ? <Check size={10} color="#FFFFFF" weight="duotone" />
+                  : <X     size={10} color="#FFFFFF" weight="duotone" />
                 }
               </View>
             );
@@ -301,7 +301,7 @@ function PinEntryScreen({
             {/* Header area — icon + text */}
             <Animated.View entering={FadeInDown.duration(400)} style={styles.headerArea}>
               <View style={styles.iconCircle}>
-                <Lock size={28} color="#FFFFFF" strokeWidth={1.6} />
+                <Lock size={28} color="#FFFFFF" weight="duotone" />
               </View>
               <Animated.Text
                 key={`heading-${setupPhase}`}

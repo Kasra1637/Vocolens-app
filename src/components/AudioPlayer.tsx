@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Pressable, Platform } from 'react-native';
 import { Audio } from 'expo-av';
-import { Play, Pause, RotateCcw } from 'lucide-react-native';
+import { Play, Pause, ArrowCounterClockwise } from 'phosphor-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -232,9 +232,9 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
           ]}
         >
           {isPlaying ? (
-            <Pause size={20} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+            <Pause size={20} color="#FFFFFF" fill="#FFFFFF" weight="duotone" />
           ) : (
-            <Play size={20} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+            <Play size={20} color="#FFFFFF" fill="#FFFFFF" weight="duotone" />
           )}
         </Animated.View>
       </Pressable>
@@ -295,7 +295,7 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
             className="w-10 h-10 rounded-full items-center justify-center"
             style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
           >
-            <RotateCcw size={18} color="#FFFFFF" strokeWidth={2} />
+            <ArrowCounterClockwise size={18} color="#FFFFFF" weight="duotone" />
           </View>
         </Pressable>
 
@@ -327,9 +327,9 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
             ]}
           >
             {isPlaying ? (
-              <Pause size={28} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+              <Pause size={28} color="#FFFFFF" fill="#FFFFFF" weight="duotone" />
             ) : (
-              <Play size={28} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} style={{ marginLeft: 2 }} />
+              <Play size={28} color="#FFFFFF" fill="#FFFFFF" weight="duotone" style={{ marginLeft: 2 }} />
             )}
           </Animated.View>
         </Pressable>

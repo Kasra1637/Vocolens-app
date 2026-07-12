@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { X } from 'lucide-react-native';
+import { X } from 'phosphor-react-native';
 import { EmotionDefinition } from '@/lib/emotion-definitions';
 import { getThemeColors } from '@/lib/theme';
 import { hexToRgba } from '@/lib/glass';

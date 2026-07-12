@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { Shield, Wind } from 'lucide-react-native';
+import { Shield, Wind } from 'phosphor-react-native';
 import { DistressLevel } from '@/lib/types';
 import { tapHaptic } from '@/lib/haptics';
 import { getThemeColors } from '@/lib/theme';

@@ -41,7 +41,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { Activity } from "lucide-react-native";
+import { Pulse } from "phosphor-react-native";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import { hexToRgba } from "@/lib/glass";
@@ -373,7 +373,7 @@ export default function ValenceArousalChart({
               marginRight: 12,
             }}
           >
-            <Activity size={22} color="#FFFFFF" strokeWidth={2} />
+            <Pulse size={22} color="#FFFFFF" weight="duotone" />
           </View>
           <View>
             <Text
@@ -785,7 +785,7 @@ function ChartSvg({
         x2={half}
         y2={chartSize}
         stroke="rgba(255,255,255,0.15)"
-        strokeWidth={1}
+        weight="duotone"
         strokeDasharray="4,4"
       />
       <Line
@@ -794,7 +794,7 @@ function ChartSvg({
         x2={chartSize}
         y2={half}
         stroke="rgba(255,255,255,0.15)"
-        strokeWidth={1}
+        weight="duotone"
         strokeDasharray="4,4"
       />
 
@@ -811,7 +811,7 @@ function ChartSvg({
             x2={gp.userX}
             y2={gp.userY}
             stroke="rgba(255,255,255,0.30)"
-            strokeWidth={1.5}
+            weight="duotone"
             strokeDasharray="3,3"
           />
           {/* AI ghost dot (hollow, dashed outline) */}
@@ -821,7 +821,7 @@ function ChartSvg({
             r={8}
             fill="rgba(255,255,255,0.06)"
             stroke="rgba(255,255,255,0.35)"
-            strokeWidth={1.5}
+            weight="duotone"
             strokeDasharray="3,2"
           />
           {/* Tiny "AI" label next to ghost */}
@@ -853,7 +853,7 @@ function ChartSvg({
                 r={r + 7}
                 fill={`${p.color}18`}
                 stroke={p.color}
-                strokeWidth={1}
+                weight="duotone"
                 strokeOpacity={0.4}
               />
             )}
@@ -882,7 +882,7 @@ function ChartSvg({
                 r={4}
                 fill={primaryColor}
                 stroke="rgba(0,0,0,0.4)"
-                strokeWidth={1}
+                weight="duotone"
               />
             )}
             {/* Transparent tap target — slightly larger than the ring */}

@@ -25,9 +25,9 @@ import Animated, {
 import { tapHaptic } from "@/lib/haptics";
 import {
   BookOpen,
-  CalendarDays,
-  Sparkles,
-} from "lucide-react-native";
+  CalendarDots,
+  Sparkle,
+} from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import { hexToRgba } from "@/lib/glass";
@@ -105,7 +105,7 @@ export function MoodStoryTimeline({
               marginRight: 12,
             }}
           >
-            <BookOpen size={22} color="#FFFFFF" strokeWidth={2} />
+            <BookOpen size={22} color="#FFFFFF" weight="duotone" />
           </View>
           <View>
             <Text
@@ -772,7 +772,7 @@ function EmotionStoryCard({
               <Path
                 d={sparkPath}
                 stroke={`url(#sg-${emotion})`}
-                strokeWidth={2}
+                weight="duotone"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"

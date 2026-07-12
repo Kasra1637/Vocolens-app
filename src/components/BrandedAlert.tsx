@@ -9,7 +9,7 @@ import React from 'react';
 import { View, Text, Modal, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { tapHaptic, successHaptic, errorHaptic } from '@/lib/haptics';
-import { CheckCircle, AlertCircle } from 'lucide-react-native';
+import { CheckCircle, WarningCircle } from 'phosphor-react-native';
 import useOnboardingStore from '@/lib/state/onboarding-store';
 import useSettingsStore from '@/lib/state/settings-store';
 import { getThemeColors } from '@/lib/theme';
@@ -74,9 +74,9 @@ export function BrandedAlert({ visible, type, title, message, onClose }: Branded
                 }}
               >
                 {type === 'success' ? (
-                  <CheckCircle size={40} color={themeColors.primary} strokeWidth={2} />
+                  <CheckCircle size={40} color={themeColors.primary} weight="duotone" />
                 ) : (
-                  <AlertCircle size={40} color="#EF4444" strokeWidth={2} />
+                  <WarningCircle size={40} color="#EF4444" weight="duotone" />
                 )}
               </View>
             </View>

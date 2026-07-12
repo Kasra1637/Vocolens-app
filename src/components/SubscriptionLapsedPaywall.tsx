@@ -28,7 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
-import { ChevronRight, X } from "lucide-react-native";
+import { CaretRight, X } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import {
@@ -83,7 +83,7 @@ function MonthlyExitModal({
               Prefer a lighter plan?
             </Text>
             <Pressable onPress={onDecline} hitSlop={12}>
-              <X size={22} color="rgba(255,255,255,0.6)" strokeWidth={2} />
+              <X size={22} color="rgba(255,255,255,0.6)" weight="duotone" />
             </Pressable>
           </View>
 
@@ -404,7 +404,7 @@ export function SubscriptionLapsedPaywall() {
                       <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 18 }}>
                         Reactivate Now
                       </Text>
-                      <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+                      <CaretRight size={20} color="#FFFFFF" weight="duotone" />
                     </>
                   )}
                 </LinearGradient>

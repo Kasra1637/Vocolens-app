@@ -10,7 +10,7 @@ import Animated, {
   FadeIn,
   FadeInUp,
 } from 'react-native-reanimated';
-import { X, Wind, Eye, Ear, Hand, ChevronRight, Flower2, Coffee } from 'lucide-react-native';
+import { X, Wind, Eye, Ear, Hand, CaretRight, Flower, Coffee } from 'phosphor-react-native';
 import { tapHaptic } from '@/lib/haptics';
 
 type GroundingTool = 'box-breathing' | 'five-senses' | 'body-scan' | null;
@@ -96,7 +96,7 @@ function ToolCard({ icon, title, description, color, onPress }: { icon: React.Re
         <Text style={{ fontSize: 16, fontWeight: '700', color: '#1F2937', marginBottom: 4 }}>{title}</Text>
         <Text style={{ fontSize: 13, color: '#6B7280', lineHeight: 22 }}>{description}</Text>
       </View>
-      <ChevronRight size={20} color="#9CA3AF" />
+      <CaretRight size={20} color="#9CA3AF" />
     </Pressable>
   );
 }
@@ -182,7 +182,7 @@ function FiveSenses({ onDone }: { onDone: () => void }) {
     { icon: <Eye size={28} color="#10B981" />, count: 5, sense: 'See', prompt: 'Look around. Name 5 things you can see right now.' },
     { icon: <Hand size={28} color="#10B981" />, count: 4, sense: 'Feel', prompt: 'Notice 4 things you can physically feel. Your clothes, the air, the ground.' },
     { icon: <Ear size={28} color="#10B981" />, count: 3, sense: 'Hear', prompt: 'Listen carefully. Name 3 sounds you can hear.' },
-    { icon: <Flower2 size={28} color="#10B981" />, count: 2, sense: 'Smell', prompt: 'Breathe in. Notice 2 scents around you.' },
+    { icon: <Flower size={28} color="#10B981" />, count: 2, sense: 'Smell', prompt: 'Breathe in. Notice 2 scents around you.' },
     { icon: <Coffee size={28} color="#10B981" />, count: 1, sense: 'Taste', prompt: 'What is 1 taste in your mouth right now?' },
   ];
 

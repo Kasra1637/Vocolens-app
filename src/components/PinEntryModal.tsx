@@ -9,7 +9,7 @@ import { View, Text, Modal, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { tapHaptic, successHaptic, errorHaptic } from '@/lib/haptics';
 import { verifyPin } from '@/lib/auth-service';
-import { Lock, Delete, X } from 'lucide-react-native';
+import { Lock, Backspace, X } from 'phosphor-react-native';
 import useOnboardingStore from '@/lib/state/onboarding-store';
 import useSettingsStore from '@/lib/state/settings-store';
 import { getThemeColors } from '@/lib/theme';
@@ -88,7 +88,7 @@ export function PinEntryModal({ visible, onSuccess, onDismiss }: PinEntryModalPr
               }}
               className="absolute top-4 right-4 p-2 active:opacity-70"
             >
-              <X size={24} color={themeColors.primary} strokeWidth={2.5} />
+              <X size={24} color={themeColors.primary} weight="duotone" />
             </Pressable>
 
             {/* Icon */}
@@ -258,7 +258,7 @@ export function PinEntryModal({ visible, onSuccess, onDismiss }: PinEntryModalPr
                     opacity: pin.length === 0 ? 0.35 : 1,
                   })}
                 >
-                  <Delete size={24} color={themeColors.primary} strokeWidth={2} />
+                  <Backspace size={24} color={themeColors.primary} weight="duotone" />
                 </Pressable>
               </View>
             </View>

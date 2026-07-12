@@ -17,7 +17,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, { Ellipse, Rect, G, Circle, Line } from "react-native-svg";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
-import { Scan } from "lucide-react-native";
+import { Scan } from "phosphor-react-native";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import { AnimatedPill } from "@/components/AnimatedPill";
 import {
@@ -227,7 +227,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
               marginRight: 12,
             }}
           >
-            <Scan size={22} color="#FFFFFF" strokeWidth={2} />
+            <Scan size={22} color="#FFFFFF" weight="duotone" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.title}>Body sensation map</Text>
@@ -293,7 +293,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
           <View style={s.svgWrap}>
             <Svg width={VW} height={VH} viewBox={`0 0 ${VW} ${VH}`}>
               {/* Silhouette — always visible at low opacity */}
-              <G opacity={0.22} stroke="white" strokeWidth={1} fill="none">
+              <G opacity={0.22} stroke="white" weight="duotone" fill="none">
                 <Ellipse cx={CX} cy={22} rx={20} ry={22} />
                 <Rect x={CX - 8} y={64} width={16} height={14} rx={6} />
                 <Rect x={CX - 28} y={78} width={56} height={85} rx={14} />

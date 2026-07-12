@@ -20,13 +20,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Speech from 'expo-speech';
 import {
-  Sparkles,
+  Sparkle,
   Play,
   Square,
-  Volume2,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react-native';
+  SpeakerHigh,
+  CaretDown,
+  CaretUp,
+} from 'phosphor-react-native';
 import { tapHaptic, selectHaptic } from '@/lib/haptics';
 
 // ── Glassmorphic tokens ───────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ export function RecommendationCard({
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-            <Sparkles size={13} color="#FFFFFF" strokeWidth={2} />
+            <Sparkle size={13} color="#FFFFFF" weight="duotone" />
             <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 12 }}>
               AI Recommendation
             </Text>
@@ -197,13 +197,13 @@ export function RecommendationCard({
                 }}
               >
                 {isSpeaking
-                  ? <Square size={10} color="#FFFFFF" strokeWidth={2} />
-                  : <Play   size={10} color="#FFFFFF" strokeWidth={2} />}
+                  ? <Square size={10} color="#FFFFFF" weight="duotone" />
+                  : <Play   size={10} color="#FFFFFF" weight="duotone" />}
               </Pressable>
             )}
             {isExpanded
-              ? <ChevronUp   size={14} color="rgba(255,255,255,0.6)" strokeWidth={2} />
-              : <ChevronDown size={14} color="rgba(255,255,255,0.6)" strokeWidth={2} />}
+              ? <CaretUp   size={14} color="rgba(255,255,255,0.6)" weight="duotone" />
+              : <CaretDown size={14} color="rgba(255,255,255,0.6)" weight="duotone" />}
           </View>
         </Pressable>
 
@@ -279,7 +279,7 @@ export function RecommendationCard({
                 borderColor: GLASS_INNER_BORDER,
               }}
             >
-              <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
+              <Sparkle size={16} color="#FFFFFF" weight="duotone" />
             </View>
             <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
               Recommendation
@@ -300,8 +300,8 @@ export function RecommendationCard({
             </View>
           </View>
           {isExpanded
-            ? <ChevronUp   size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-            : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+            ? <CaretUp   size={18} color="rgba(255,255,255,0.7)" weight="duotone" />
+            : <CaretDown size={18} color="rgba(255,255,255,0.7)" weight="duotone" />}
         </Pressable>
 
         {/* Collapsible body */}
@@ -351,7 +351,7 @@ export function RecommendationCard({
                         borderColor: GLASS_INNER_BORDER,
                       }}
                     >
-                      <Volume2 size={14} color="#FFFFFF" strokeWidth={2} />
+                      <SpeakerHigh size={14} color="#FFFFFF" weight="duotone" />
                     </View>
                     {isSpeaking
                       ? <AudioWaveform isPlaying />
@@ -375,8 +375,8 @@ export function RecommendationCard({
                     }}
                   >
                     {isSpeaking
-                      ? <Square size={14} color="#FFFFFF" strokeWidth={2} />
-                      : <Play   size={14} color="#FFFFFF" strokeWidth={2} />}
+                      ? <Square size={14} color="#FFFFFF" weight="duotone" />
+                      : <Play   size={14} color="#FFFFFF" weight="duotone" />}
                     <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 13 }}>
                       {isSpeaking ? 'Stop' : 'Listen'}
                     </Text>

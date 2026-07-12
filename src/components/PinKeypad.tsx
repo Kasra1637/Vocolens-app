@@ -22,7 +22,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Delete, Check } from 'lucide-react-native';
+import { Backspace, Check } from 'phosphor-react-native';
 import { tapHaptic } from '@/lib/haptics';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 
@@ -138,8 +138,8 @@ function KeypadButton({
   const isDigit = !isBack && !isOk;
 
   const content = (() => {
-    if (isBack) return <Delete size={22} color="#FFFFFF" strokeWidth={1.8} />;
-    if (isOk)   return <Check  size={22} color="#FFFFFF" strokeWidth={2.5} />;
+    if (isBack) return <Backspace size={22} color="#FFFFFF" weight="duotone" />;
+    if (isOk)   return <Check  size={22} color="#FFFFFF" weight="duotone" />;
     return <Text style={styles.digitText}>{label}</Text>;
   })();
 

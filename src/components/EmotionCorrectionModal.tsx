@@ -23,11 +23,11 @@ import Animated from "react-native-reanimated";
 import {
   Check,
   X,
-  ChevronLeft,
+  CaretLeft,
   Tag,
   Sliders,
-  MessageSquare,
-} from "lucide-react-native";
+  ChatSquare,
+} from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmotionType, DistressLevel } from "@/lib/types";
@@ -286,7 +286,7 @@ export default function EmotionCorrectionModal({
                 borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)",
                 alignItems: "center", justifyContent: "center" }}
             >
-              <ChevronLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+              <CaretLeft size={20} color="#FFFFFF" weight="duotone" />
             </Pressable>
           ) : (
             <Pressable
@@ -296,7 +296,7 @@ export default function EmotionCorrectionModal({
                 borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)",
                 alignItems: "center", justifyContent: "center" }}
             >
-              <X size={20} color="#FFFFFF" strokeWidth={2.5} />
+              <X size={20} color="#FFFFFF" weight="duotone" />
             </Pressable>
           )}
 
@@ -464,17 +464,17 @@ export default function EmotionCorrectionModal({
               </Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
                 <ReasonChip label="Wrong label"
-                  icon={<Tag size={13} color="#FFFFFF" strokeWidth={2} />}
+                  icon={<Tag size={13} color="#FFFFFF" weight="duotone" />}
                   active={correctionType === "label"}
                   onPress={() => { tapHaptic(); setCorrectionType("label"); }}
                   primaryColor={Colors.primary} />
                 <ReasonChip label="Wrong intensity"
-                  icon={<Sliders size={13} color="#FFFFFF" strokeWidth={2} />}
+                  icon={<Sliders size={13} color="#FFFFFF" weight="duotone" />}
                   active={correctionType === "intensity"}
                   onPress={() => { tapHaptic(); setCorrectionType("intensity"); }}
                   primaryColor={Colors.primary} />
                 <ReasonChip label="Context"
-                  icon={<MessageSquare size={13} color="#FFFFFF" strokeWidth={2} />}
+                  icon={<ChatSquare size={13} color="#FFFFFF" weight="duotone" />}
                   active={correctionType === "context"}
                   onPress={() => { tapHaptic(); setCorrectionType("context"); }}
                   primaryColor={Colors.primary} />

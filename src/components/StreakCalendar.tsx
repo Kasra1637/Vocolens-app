@@ -10,9 +10,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
 import {
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react-native";
+  CaretLeft,
+  CaretRight,
+} from "phosphor-react-native";
 import { JournalEntry } from "@/lib/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -399,10 +399,10 @@ export function StreakCalendar({
             borderColor: "rgba(255,255,255,0.15)",
           })}
         >
-          <ChevronLeft
+          <CaretLeft
             size={18}
             color="rgba(255,255,255,0.8)"
-            strokeWidth={2}
+            weight="duotone"
           />
         </Pressable>
 
@@ -447,12 +447,12 @@ export function StreakCalendar({
               : "rgba(255,255,255,0.15)",
           })}
         >
-          <ChevronRight
+          <CaretRight
             size={18}
             color={
               isCurrentMonth ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.8)"
             }
-            strokeWidth={2}
+            weight="duotone"
           />
         </Pressable>
       </View>
