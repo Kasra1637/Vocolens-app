@@ -26,7 +26,7 @@ import {
   CaretLeft,
   Tag,
   Sliders,
-  ChatSquare,
+  ChatTeardropText,
 } from "phosphor-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -474,7 +474,7 @@ export default function EmotionCorrectionModal({
                   onPress={() => { tapHaptic(); setCorrectionType("intensity"); }}
                   primaryColor={Colors.primary} />
                 <ReasonChip label="Context"
-                  icon={<ChatSquare size={13} color="#FFFFFF" weight="duotone" />}
+                  icon={<ChatTeardropText size={13} color="#FFFFFF" weight="duotone" />}
                   active={correctionType === "context"}
                   onPress={() => { tapHaptic(); setCorrectionType("context"); }}
                   primaryColor={Colors.primary} />
