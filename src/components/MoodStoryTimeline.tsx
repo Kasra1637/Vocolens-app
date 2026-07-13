@@ -54,8 +54,8 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: "patterns", label: "Patterns", Icon: CalendarDays },
-  { id: "emotions", label: "Emotions", Icon: Sparkles },
+  { id: "patterns", label: "Patterns", Icon: CalendarDots },
+  { id: "emotions", label: "Emotions", Icon: Sparkle },
 ];
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
