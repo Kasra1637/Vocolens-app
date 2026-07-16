@@ -31,6 +31,7 @@ import {
   CaretUp,
   Tag,
   Timer,
+  Check,
 } from "phosphor-react-native";
 import { Funnel } from "phosphor-react-native";
 import Animated, {
@@ -134,6 +135,9 @@ export default function EntriesScreen() {
   const [selectedDuration, setSelectedDuration] = useState<DurationFilter>("Any");
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
+  const [bulkDeleteModalVisible, setBulkDeleteModalVisible] = useState(false);
 
   // Get selected theme and dark mode
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
@@ -276,6 +280,50 @@ export default function EntriesScreen() {
     setEntryToDelete(null);
   }, []);
 
+  const toggleSelectMode = useCallback(() => {
+    tapHaptic();
+    setIsSelectMode((v) => !v);
+    setSelectedEntries(new Set());
+  }, []);
+
+  const toggleEntrySelection = useCallback((entryId: string) => {
+    tapHaptic();
+    setSelectedEntries((prev) => {
+      const next = new Set(prev);
+      if (next.has(entryId)) {
+        next.delete(entryId);
+      } else {
+        next.add(entryId);
+      }
+      return next;
+    });
+  }, []);
+
+  const selectAllEntries = useCallback(() => {
+    tapHaptic();
+    setSelectedEntries(new Set(filteredEntries.map((e) => e.id)));
+  }, [filteredEntries]);
+
+  const handleBulkDeleteRequest = useCallback(() => {
+    warningHaptic();
+    setBulkDeleteModalVisible(true);
+  }, []);
+
+  const handleBulkDeleteConfirm = useCallback(() => {
+    confirmHaptic();
+    selectedEntries.forEach((id) => {
+      deleteEntryMutation.mutate(id);
+    });
+    setBulkDeleteModalVisible(false);
+    setSelectedEntries(new Set());
+    setIsSelectMode(false);
+  }, [selectedEntries, deleteEntryMutation]);
+
+  const handleBulkDeleteCancel = useCallback(() => {
+    tapHaptic();
+    setBulkDeleteModalVisible(false);
+  }, []);
+
   if (!fontsLoaded) {
     return (
       <View className="flex-1" style={{ backgroundColor: Gradients.background[1] }}>
@@ -308,16 +356,37 @@ export default function EntriesScreen() {
       >
         {/* Header */}
         <Animated.View key={`entries-hdr-${animationKey}`} entering={ENTER_1} className="mb-6">
-          <Text
-            style={{
-              fontFamily: "Fraunces_700Bold",
-              color: "#FFFFFF",
-              fontSize: 30,
-            }}
-            className="text-center mb-2"
-          >
-            Your journal entries
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontFamily: "Fraunces_700Bold",
+                  color: "#FFFFFF",
+                  fontSize: 30,
+                }}
+                className="text-center mb-2"
+              >
+                Your journal entries
+              </Text>
+            </View>
+            {entries.length > 0 && (
+              <Pressable
+                onPress={toggleSelectMode}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 12,
+                  backgroundColor: isSelectMode ? "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.10)",
+                  borderWidth: 1,
+                  borderColor: isSelectMode ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.18)",
+                }}
+              >
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13 }}>
+                  {isSelectMode ? "Cancel" : "Select"}
+                </Text>
+              </Pressable>
+            )}
+          </View>
           <Text
             style={{
               fontFamily: "Inter_400Regular",
@@ -709,18 +778,93 @@ export default function EntriesScreen() {
           </View>
         </Animated.View>
 
+        {/* Bulk Action Bar — shown in select mode */}
+        {isSelectMode && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 16,
+              paddingHorizontal: 4,
+            }}
+          >
+            <Pressable onPress={selectAllEntries}>
+              <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.70)", fontSize: 14 }}>
+                {selectedEntries.size === filteredEntries.length ? "Deselect all" : "Select all"}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={handleBulkDeleteRequest}
+              disabled={selectedEntries.size === 0}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 14,
+                backgroundColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.20)" : "rgba(255,255,255,0.08)",
+                borderWidth: 1,
+                borderColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.15)",
+                opacity: selectedEntries.size === 0 ? 0.5 : 1,
+              }}
+            >
+              <Trash size={16} color={selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)"} weight="duotone" />
+              <Text style={{ fontFamily: "Inter_600SemiBold", color: selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)", fontSize: 13 }}>
+                Delete{selectedEntries.size > 0 ? ` (${selectedEntries.size})` : ""}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         {/* Entry Cards */}
         <Animated.View key={`entries-lst-${animationKey}`} entering={ENTER_3}>
         {filteredEntries.map((entry, index) => (
           <View key={entry.id}>
-            <EntryCard
-              entry={entry}
-              onPress={() => handleEntryPress(entry)}
-              onDelete={() => handleDeleteRequest(entry.id)}
-              surfaceElevatedColor={Colors.surfaceElevated}
-              primaryColor={Colors.primary}
-              isDarkMode={isDarkMode}
-            />
+            {isSelectMode ? (
+              <Pressable
+                onPress={() => toggleEntrySelection(entry.id)}
+                style={{ flexDirection: "row", alignItems: "center" }}
+              >
+                <View
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    borderWidth: 2,
+                    borderColor: selectedEntries.has(entry.id) ? Colors.primary : "rgba(255,255,255,0.30)",
+                    backgroundColor: selectedEntries.has(entry.id) ? Colors.primary : "transparent",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 12,
+                  }}
+                >
+                  {selectedEntries.has(entry.id) && (
+                    <Check size={14} color="#FFFFFF" weight="bold" />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <EntryCard
+                    entry={entry}
+                    onPress={() => toggleEntrySelection(entry.id)}
+                    onDelete={() => {}}
+                    surfaceElevatedColor={Colors.surfaceElevated}
+                    primaryColor={Colors.primary}
+                    isDarkMode={isDarkMode}
+                  />
+                </View>
+              </Pressable>
+            ) : (
+              <EntryCard
+                entry={entry}
+                onPress={() => handleEntryPress(entry)}
+                onDelete={() => handleDeleteRequest(entry.id)}
+                surfaceElevatedColor={Colors.surfaceElevated}
+                primaryColor={Colors.primary}
+                isDarkMode={isDarkMode}
+              />
+            )}
           </View>
         ))}
 
@@ -827,6 +971,104 @@ export default function EntriesScreen() {
                 <Pressable
                   data-testid="cancel-delete-entry-button"
                   onPress={handleDeleteCancel}
+                  className="rounded-2xl py-4 items-center"
+                  style={{
+                    borderWidth: 2,
+                    borderColor: Colors.primary,
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  <Text
+                    className="text-base font-bold"
+                    style={{
+                      fontFamily: "Inter_700Bold",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    Cancel
+                  </Text>
+                </Pressable>
+              </View>
+            </LinearGradient>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <Modal
+        visible={bulkDeleteModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={handleBulkDeleteCancel}
+      >
+        <View className="flex-1 bg-black/60 items-center justify-center px-6">
+          <View className="rounded-3xl overflow-hidden w-full max-w-sm"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.12,
+              shadowRadius: 16,
+            }}
+          >
+            <LinearGradient
+              colors={Gradients.background}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={{
+                padding: 24,
+                borderRadius: 24,
+              }}
+            >
+              <View className="items-center mb-4">
+                <View
+                  className="w-16 h-16 rounded-full items-center justify-center mb-4"
+                  style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
+                >
+                  <Trash size={32} color="#FFFFFF" weight="duotone" />
+                </View>
+                <Text
+                  className="text-2xl font-bold mb-2 text-center"
+                  style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}
+                >
+                  Delete {selectedEntries.size} {selectedEntries.size === 1 ? "entry" : "entries"}?
+                </Text>
+                <Text
+                  className="text-center text-base"
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255, 255, 255, 0.8)",
+                    lineHeight: 22,
+                  }}
+                >
+                  This will permanently delete the selected entries. This action cannot be undone.
+                </Text>
+              </View>
+
+              <View style={{ gap: 12 }}>
+                <Pressable
+                  onPress={handleBulkDeleteConfirm}
+                  className="rounded-2xl overflow-hidden"
+                >
+                  <LinearGradient
+                    colors={["#EF4444", "#DC2626"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ padding: 16, alignItems: "center" }}
+                  >
+                    <Text
+                      className="text-white text-base font-bold"
+                      style={{ fontFamily: "Inter_700Bold" }}
+                    >
+                      Delete {selectedEntries.size} {selectedEntries.size === 1 ? "entry" : "entries"}
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
+
+                <Pressable
+                  onPress={handleBulkDeleteCancel}
                   className="rounded-2xl py-4 items-center"
                   style={{
                     borderWidth: 2,
