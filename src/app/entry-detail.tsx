@@ -104,8 +104,8 @@ export default function EntryDetailScreen() {
   // Independent collapse state — multiple sections can be open simultaneously
   const [sectionEmotions,    setSectionEmotions]    = useState(true);  // open by default
   const [sectionReflection,  setSectionReflection]  = useState(true);  // open by default
-  const [sectionTranscript,  setSectionTranscript]  = useState(false); // closed by default
-  const [transcriptExpanded, setTranscriptExpanded] = useState(false);
+  const [sectionTranscript,  setSectionTranscript]  = useState(true);  // open by default
+  const [transcriptExpanded, setTranscriptExpanded] = useState(true);
   const [barContainerWidth, setBarContainerWidth] = useState(0);
   const [showRefineModal, setShowRefineModal] = useState(false);
   const queryClient = useQueryClient();

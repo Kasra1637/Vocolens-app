@@ -58,7 +58,6 @@ import { MicTabIcon } from "@/components/TabIcons";
 import { TopicCategory, EmotionType } from "@/lib/types";
 import EmotionReflectionScreen from "@/components/emotion-reflection";
 import type { ReflectionResult } from "@/components/emotion-reflection";
-import GroundingToolsModal from "@/components/GroundingToolsModal";
 import { analyzeTranscript } from "@/lib/journal-service";
 import { buildPersonalizationPrompt } from "@/lib/personalization";
 import useReflectionStore from "@/lib/state/reflection-store";
@@ -180,7 +179,6 @@ export default function SpeakScreen() {
 
   // Emotion reflection state
   const [showReflection, setShowReflection] = useState(false);
-  const [showGrounding, setShowGrounding] = useState(false);
   const [reflectionTranscript, setReflectionTranscript] = useState("");
   const [reflectionAudioUri, setReflectionAudioUri] = useState<
     string | undefined
@@ -1246,14 +1244,10 @@ export default function SpeakScreen() {
           setRecordingState("idle");
           voiceActions.reset();
         }}
-        onGrounding={() => setShowGrounding(true)}
+        onGrounding={() => {}}
       />
 
-      {/* Grounding Tools Modal */}
-      <GroundingToolsModal
-        visible={showGrounding}
-        onDismiss={() => setShowGrounding(false)}
-      />
+      {/* Grounding Tools removed */}
     </View>
   );
 }
