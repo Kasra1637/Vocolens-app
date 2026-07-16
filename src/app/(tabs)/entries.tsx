@@ -763,43 +763,49 @@ export default function EntriesScreen() {
           </View>
         </Animated.View>
 
-        {/* Bulk Action Bar — shown in select mode */}
-        {isSelectMode && (
+        {/* Bulk Action Bar — always visible when entries exist */}
+        {entries.length > 0 && (
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: isSelectMode ? "space-between" : "center",
               marginBottom: 16,
               paddingHorizontal: 4,
             }}
           >
-            <Pressable onPress={selectAllEntries}>
-              <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.70)", fontSize: 14 }}>
-                {selectedEntries.size === filteredEntries.length ? "Deselect all" : "Select all"}
+            {isSelectMode ? (
+              <>
+                <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 13, fontStyle: "italic" }}>
+                  Tap entries to deselect
+                </Text>
+                <Pressable
+                  onPress={handleBulkDeleteRequest}
+                  disabled={selectedEntries.size === 0}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 14,
+                    backgroundColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.20)" : "rgba(255,255,255,0.08)",
+                    borderWidth: 1,
+                    borderColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.15)",
+                    opacity: selectedEntries.size === 0 ? 0.5 : 1,
+                  }}
+                >
+                  <Trash size={16} color={selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)"} weight="duotone" />
+                  <Text style={{ fontFamily: "Inter_600SemiBold", color: selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)", fontSize: 13 }}>
+                    Delete{selectedEntries.size > 0 ? ` (${selectedEntries.size})` : ""}
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 13, fontStyle: "italic" }}>
+                Hold an entry to select &amp; bulk delete
               </Text>
-            </Pressable>
-            <Pressable
-              onPress={handleBulkDeleteRequest}
-              disabled={selectedEntries.size === 0}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                paddingHorizontal: 16,
-                paddingVertical: 10,
-                borderRadius: 14,
-                backgroundColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.20)" : "rgba(255,255,255,0.08)",
-                borderWidth: 1,
-                borderColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.15)",
-                opacity: selectedEntries.size === 0 ? 0.5 : 1,
-              }}
-            >
-              <Trash size={16} color={selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)"} weight="duotone" />
-              <Text style={{ fontFamily: "Inter_600SemiBold", color: selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)", fontSize: 13 }}>
-                Delete{selectedEntries.size > 0 ? ` (${selectedEntries.size})` : ""}
-              </Text>
-            </Pressable>
+            )}
           </View>
         )}
 
