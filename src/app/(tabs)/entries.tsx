@@ -1163,18 +1163,6 @@ function EntryCard({
                 >
                   {displayTitle}
                 </Text>
-                {entry.audioUri && (
-                  <View
-                    className="px-2 py-1 rounded-full flex-row items-center"
-                    style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.12)",
-                      borderWidth: 1,
-                      borderColor: "rgba(255, 255, 255, 0.20)",
-                    }}
-                  >
-                    <Microphone size={12} color="rgba(255,255,255,0.85)" weight="duotone" />
-                  </View>
-                )}
               </View>
               <Text
                 style={{
