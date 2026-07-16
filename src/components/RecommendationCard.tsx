@@ -24,9 +24,8 @@ import {
   Play,
   Square,
   SpeakerHigh,
-  CaretDown,
-  CaretUp,
 } from 'phosphor-react-native';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { tapHaptic, selectHaptic } from '@/lib/haptics';
 
 // ── Glassmorphic tokens ───────────────────────────────────────────────────────
@@ -162,22 +161,8 @@ export function RecommendationCard({
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
             <Sparkle size={13} color="#FFFFFF" weight="duotone" />
             <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 12 }}>
-              AI Recommendation
+              Recommendation
             </Text>
-            <View
-              style={{
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-                borderRadius: 20,
-                backgroundColor: GLASS_INNER_BG,
-                borderWidth: 1,
-                borderColor: GLASS_INNER_BORDER,
-              }}
-            >
-              <Text style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.6)', fontSize: 8 }}>
-                AI
-              </Text>
-            </View>
           </View>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -202,8 +187,8 @@ export function RecommendationCard({
               </Pressable>
             )}
             {isExpanded
-              ? <CaretUp   size={14} color="rgba(255,255,255,0.6)" weight="duotone" />
-              : <CaretDown size={14} color="rgba(255,255,255,0.6)" weight="duotone" />}
+              ? <ChevronUp   size={14} color="rgba(255,255,255,0.6)" strokeWidth={2} />
+              : <ChevronDown size={14} color="rgba(255,255,255,0.6)" strokeWidth={2} />}
           </View>
         </Pressable>
 
@@ -284,24 +269,10 @@ export function RecommendationCard({
             <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
               Recommendation
             </Text>
-            <View
-              style={{
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 20,
-                backgroundColor: GLASS_INNER_BG,
-                borderWidth: 1,
-                borderColor: GLASS_INNER_BORDER,
-              }}
-            >
-              <Text style={{ fontFamily: 'Inter_600SemiBold', color: 'rgba(255,255,255,0.7)', fontSize: 9 }}>
-                AI
-              </Text>
-            </View>
           </View>
           {isExpanded
-            ? <CaretUp   size={18} color="rgba(255,255,255,0.7)" weight="duotone" />
-            : <CaretDown size={18} color="rgba(255,255,255,0.7)" weight="duotone" />}
+            ? <ChevronUp   size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+            : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
         </Pressable>
 
         {/* Collapsible body */}
