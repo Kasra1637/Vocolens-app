@@ -280,10 +280,10 @@ export default function EntriesScreen() {
     setEntryToDelete(null);
   }, []);
 
-  const toggleSelectMode = useCallback(() => {
-    tapHaptic();
-    setIsSelectMode((v) => !v);
-    setSelectedEntries(new Set());
+  const handleLongPress = useCallback((entryId: string) => {
+    selectHaptic();
+    setIsSelectMode(true);
+    setSelectedEntries(new Set([entryId]));
   }, []);
 
   const toggleEntrySelection = useCallback((entryId: string) => {
@@ -294,6 +294,10 @@ export default function EntriesScreen() {
         next.delete(entryId);
       } else {
         next.add(entryId);
+      }
+      // Exit select mode if nothing is selected anymore
+      if (next.size === 0) {
+        setIsSelectMode(false);
       }
       return next;
     });
@@ -356,36 +360,17 @@ export default function EntriesScreen() {
       >
         {/* Header */}
         <Animated.View key={`entries-hdr-${animationKey}`} entering={ENTER_1} className="mb-6">
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{
-                  fontFamily: "Fraunces_700Bold",
-                  color: "#FFFFFF",
-                  fontSize: 30,
-                }}
-                className="text-center mb-2"
-              >
-                Your journal entries
-              </Text>
-            </View>
-            {entries.length > 0 && (
-              <Pressable
-                onPress={toggleSelectMode}
-                style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 12,
-                  backgroundColor: isSelectMode ? "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.10)",
-                  borderWidth: 1,
-                  borderColor: isSelectMode ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.18)",
-                }}
-              >
-                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13 }}>
-                  {isSelectMode ? "Cancel" : "Select"}
-                </Text>
-              </Pressable>
-            )}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+            <Text
+              style={{
+                fontFamily: "Fraunces_700Bold",
+                color: "#FFFFFF",
+                fontSize: 30,
+              }}
+              className="text-center mb-2"
+            >
+              Your journal entries
+            </Text>
           </View>
           <Text
             style={{
@@ -823,46 +808,28 @@ export default function EntriesScreen() {
         {filteredEntries.map((entry, index) => (
           <View key={entry.id}>
             {isSelectMode ? (
-              <Pressable
+              <EntryCard
+                entry={entry}
                 onPress={() => toggleEntrySelection(entry.id)}
-                style={{ flexDirection: "row", alignItems: "center" }}
-              >
-                <View
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 13,
-                    borderWidth: 2,
-                    borderColor: selectedEntries.has(entry.id) ? Colors.primary : "rgba(255,255,255,0.30)",
-                    backgroundColor: selectedEntries.has(entry.id) ? Colors.primary : "transparent",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: 12,
-                  }}
-                >
-                  {selectedEntries.has(entry.id) && (
-                    <Check size={14} color="#FFFFFF" weight="bold" />
-                  )}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <EntryCard
-                    entry={entry}
-                    onPress={() => toggleEntrySelection(entry.id)}
-                    onDelete={() => {}}
-                    surfaceElevatedColor={Colors.surfaceElevated}
-                    primaryColor={Colors.primary}
-                    isDarkMode={isDarkMode}
-                  />
-                </View>
-              </Pressable>
+                onDelete={() => {}}
+                onLongPress={() => {}}
+                surfaceElevatedColor={Colors.surfaceElevated}
+                primaryColor={Colors.primary}
+                isDarkMode={isDarkMode}
+                isSelected={selectedEntries.has(entry.id)}
+                isSelectMode={true}
+              />
             ) : (
               <EntryCard
                 entry={entry}
                 onPress={() => handleEntryPress(entry)}
                 onDelete={() => handleDeleteRequest(entry.id)}
+                onLongPress={() => handleLongPress(entry.id)}
                 surfaceElevatedColor={Colors.surfaceElevated}
                 primaryColor={Colors.primary}
                 isDarkMode={isDarkMode}
+                isSelected={false}
+                isSelectMode={false}
               />
             )}
           </View>
@@ -1099,18 +1066,24 @@ interface EntryCardProps {
   entry: JournalEntry;
   onPress: () => void;
   onDelete: () => void;
+  onLongPress: () => void;
   surfaceElevatedColor: string;
   primaryColor: string;
   isDarkMode?: boolean;
+  isSelected?: boolean;
+  isSelectMode?: boolean;
 }
 
 function EntryCard({
   entry,
   onPress,
   onDelete,
+  onLongPress,
   surfaceElevatedColor,
   primaryColor,
   isDarkMode = false,
+  isSelected = false,
+  isSelectMode = false,
 }: EntryCardProps) {
   // ── Recommendation state ───────────────────────────────────────────────────
   // Recommendation text is always populated from the /api/analyze response's
@@ -1160,13 +1133,13 @@ function EntryCard({
   };
 
   return (
-    <Pressable onPress={onPress} style={{ activeOpacity: 0.85 }}>
+    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={1000} style={{ activeOpacity: 0.85 }}>
       <View
         style={[
           {
             backgroundColor: "rgba(255, 255, 255, 0.12)",
             borderWidth: 2,
-            borderColor: "rgba(255, 255, 255, 0.20)",
+            borderColor: isSelected ? primaryColor : "rgba(255, 255, 255, 0.20)",
             borderRadius: 24,
             marginBottom: 16,
             overflow: "hidden",
@@ -1418,7 +1391,31 @@ function EntryCard({
             </View>
           )}
 
+          {/* Selection indicator */}
+          {isSelectMode && (
+            <View
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                width: 26,
+                height: 26,
+                borderRadius: 13,
+                borderWidth: 2,
+                borderColor: isSelected ? primaryColor : "rgba(255,255,255,0.30)",
+                backgroundColor: isSelected ? primaryColor : "transparent",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {isSelected && (
+                <Check size={14} color="#FFFFFF" weight="bold" />
+              )}
+            </View>
+          )}
+
           {/* Action row — delete only; whole card is tappable to open */}
+          {!isSelectMode && (
           <View className="flex-row items-center justify-between" style={{ gap: 12 }}>
             <View
               className="flex-1 rounded-full py-3 items-center flex-row justify-center"
@@ -1443,6 +1440,7 @@ function EntryCard({
               <Trash size={20} color="#FFFFFF" weight="duotone" />
             </Pressable>
           </View>
+          )}
         </View>
       </View>
     </Pressable>
