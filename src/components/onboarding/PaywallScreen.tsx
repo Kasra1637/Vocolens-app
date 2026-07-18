@@ -435,7 +435,7 @@ export function PaywallScreen() {
               <Animated.View entering={FadeInDown.delay(50).duration(400).easing(SOFT)} style={{ marginTop: 14, marginBottom: 14 }}>
                 <View style={{ backgroundColor: "rgba(255,255,255,0.10)", borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", paddingHorizontal: 16, paddingVertical: 14, gap: 11 }}>
                   {[
-                    { Icon: ChatCircle, text: "Name feelings you couldn't before" },
+                    { Icon: ChatCircle, text: "Detect & name your emotions" },
                     { Icon: Shield, text: "Catch overwhelm before it hits" },
                     { Icon: Eye, text: "See your thought loops clearly" },
                     { Icon: TrendUp, text: "Track patterns week after week" },
@@ -568,8 +568,8 @@ export function PaywallScreen() {
                           {selectedPlan === "yearly"
                             ? "Start my free trial now"
                             : selectedPlan === "three_month"
-                              ? "Continue with Quarterly"
-                              : "Continue with Monthly"}
+                              ? "Continue with quarterly"
+                              : "Continue with monthly"}
                         </Text>
                         <CaretRight size={20} color="#FFFFFF" weight="bold" />
                       </>}
