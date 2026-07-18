@@ -25,7 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
-import { ChevronRight, ChevronDown, ChevronUp, X, MessageCircle, Shield, Eye, TrendingUp, Unlock, Bell, Star } from "lucide-react-native";
+import { CaretRight, CaretDown, CaretUp, X, ChatCircle, Shield, Eye, TrendUp, Unlock, Bell, Star } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -123,7 +123,7 @@ function TrialTimeline({
                 justifyContent: "center",
               }}
             >
-              <step.Icon size={14} color="#FFFFFF" strokeWidth={2.2} />
+              <step.Icon size={14} color="#FFFFFF" weight="duotone" />
             </View>
             {idx < steps.length - 1 && (
               <View
@@ -195,7 +195,7 @@ function MonthlyExitModal({
               Not ready to commit?
             </Text>
             <Pressable onPress={onDecline} hitSlop={12}>
-              <X size={22} color="rgba(255,255,255,0.6)" strokeWidth={2} />
+              <X size={22} color="rgba(255,255,255,0.6)" weight="duotone" />
             </Pressable>
           </View>
 
@@ -435,16 +435,17 @@ export function PaywallScreen() {
               <Animated.View entering={FadeInDown.delay(50).duration(400).easing(SOFT)} style={{ marginTop: 14, marginBottom: 14 }}>
                 <View style={{ backgroundColor: "rgba(255,255,255,0.10)", borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", paddingHorizontal: 16, paddingVertical: 14, gap: 11 }}>
                   {[
-                    { Icon: MessageCircle, text: "Name feelings you couldn't before" },
+                    { Icon: ChatCircle, text: "Name feelings you couldn't before" },
                     { Icon: Shield, text: "Catch overwhelm before it hits" },
                     { Icon: Eye, text: "See your thought loops clearly" },
-                    { Icon: TrendingUp, text: "Track patterns week after week" },
+                    { Icon: TrendUp, text: "Track patterns week after week" },
                   ].map((item, idx) => (
                     <View key={idx} style={{ flexDirection: "row", alignItems: "center" }}>
-                      <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
-                        <item.Icon size={16} color="#FFFFFF" strokeWidth={2.2} />
+                      <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+                        <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                        <item.Icon size={24} color="#FFFFFF" weight="duotone" />
                       </View>
-                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.88)", fontSize: 13, lineHeight: 19, flex: 1 }}>{item.text}</Text>
+                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.88)", fontSize: 14, lineHeight: 19, flex: 1 }}>{item.text}</Text>
                     </View>
                   ))}
                 </View>
@@ -464,7 +465,7 @@ export function PaywallScreen() {
                 <Animated.View entering={FadeInDown.duration(350).easing(SOFT)}>
                   <Pressable
                     onPress={() => { selectHaptic(); setSelectedPlan("yearly"); trackEvent("plan_selected", { plan: "yearly" }); }}
-                    style={{ width: "100%", borderRadius: 18, borderWidth: 2.5, borderColor: themeColors.secondary, backgroundColor: "rgba(255,255,255,0.18)", padding: 14, overflow: "hidden" }}
+                    style={{ width: "100%", borderRadius: 18, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.25)", backgroundColor: "rgba(255,255,255,0.18)", padding: 14, overflow: "hidden" }}
                   >
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                       <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2 }}>Annual</Text>
@@ -547,8 +548,8 @@ export function PaywallScreen() {
                   {showMorePlans ? "See yearly plan" : "See other plans"}
                 </Text>
                 {showMorePlans
-                  ? <ChevronUp size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />
-                  : <ChevronDown size={16} color="rgba(255,255,255,0.55)" strokeWidth={2} />}
+                  ? <CaretUp size={16} color="rgba(255,255,255,0.55)" weight="duotone" />
+                  : <CaretDown size={16} color="rgba(255,255,255,0.55)" weight="duotone" />}
               </Pressable>
             </Animated.View>
 
@@ -570,7 +571,7 @@ export function PaywallScreen() {
                               ? "Continue with Quarterly"
                               : "Continue with Monthly"}
                         </Text>
-                        <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+                        <CaretRight size={20} color="#FFFFFF" weight="duotone" />
                       </>}
                 </LinearGradient>
               </Pressable>
