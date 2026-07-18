@@ -78,7 +78,7 @@ function MiniMicIcon({
         d="M19 10v2a7 7 0 0 1-14 0v-2"
         fill="none"
         stroke={color}
-        weight="duotone"
+        strokeWidth={2}
         strokeLinecap="round"
       />
       <Line
@@ -87,7 +87,7 @@ function MiniMicIcon({
         x2={12}
         y2={22}
         stroke={color}
-        weight="duotone"
+        strokeWidth={2}
         strokeLinecap="round"
       />
       <Line
@@ -96,7 +96,7 @@ function MiniMicIcon({
         x2={16}
         y2={22}
         stroke={color}
-        weight="duotone"
+        strokeWidth={2}
         strokeLinecap="round"
       />
     </Svg>
@@ -658,7 +658,6 @@ export function FreeTrialPreviewScreen() {
                               <Pause
                                 size={18}
                                 color="#FFFFFF"
-                                fill="#FFFFFF"
                                 weight="duotone"
                               />
                             </View>
