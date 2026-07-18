@@ -25,7 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
-import { CaretRight, CaretDown, CaretUp, X, ChatCircle, Shield, Eye, TrendUp, Unlock, Bell, Star } from "phosphor-react-native";
+import { CaretRight, CaretDown, CaretUp, X, ChatCircle, Shield, Eye, TrendUp, LockOpen, Bell, Star } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -79,7 +79,7 @@ function TrialTimeline({
 
   const steps = [
     {
-      Icon: Unlock,
+      Icon: LockOpen,
       title: "Today",
       description: "Full access to voice journaling, emotion AI, and all insights",
     },

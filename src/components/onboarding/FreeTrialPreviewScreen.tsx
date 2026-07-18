@@ -25,23 +25,23 @@ import Animated, {
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import {
-  ChevronRight,
+  CaretRight,
   BookOpen,
-  BarChart3,
-  Award,
-  Settings,
-  Sparkles,
-  Radio,
+  ChartBar,
+  Trophy,
+  GearSix,
+  Sparkle,
+  RadioButton,
   Pause,
   Check,
   ArrowLeft,
   Calendar,
   Clock,
-  Activity,
-  Volume2,
-  BarChart2,
+  Pulse,
+  SpeakerHigh,
+  ChartBarHorizontal,
   Target,
-} from "lucide-react-native";
+} from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
@@ -78,7 +78,7 @@ function MiniMicIcon({
         d="M19 10v2a7 7 0 0 1-14 0v-2"
         fill="none"
         stroke={color}
-        strokeWidth={1.6}
+        weight="duotone"
         strokeLinecap="round"
       />
       <Line
@@ -87,7 +87,7 @@ function MiniMicIcon({
         x2={12}
         y2={22}
         stroke={color}
-        strokeWidth={1.6}
+        weight="duotone"
         strokeLinecap="round"
       />
       <Line
@@ -96,7 +96,7 @@ function MiniMicIcon({
         x2={16}
         y2={22}
         stroke={color}
-        strokeWidth={1.6}
+        weight="duotone"
         strokeLinecap="round"
       />
     </Svg>
@@ -205,10 +205,10 @@ function InsightChip({ label, delay }: { label: string; delay: number }) {
         style,
       ]}
     >
-      <Sparkles
+      <Sparkle
         size={10}
         color="#FFFFFF"
-        strokeWidth={2}
+        weight="duotone"
         style={{ marginRight: 3 }}
       />
       <Text
@@ -563,10 +563,10 @@ export function FreeTrialPreviewScreen() {
                                 alignItems: "center",
                               }}
                             >
-                              <Sparkles
+                              <Sparkle
                                 size={11}
                                 color="#FFFFFF"
-                                strokeWidth={2}
+                                weight="duotone"
                               />
                               <Text
                                 style={{
@@ -590,7 +590,7 @@ export function FreeTrialPreviewScreen() {
                                 paddingVertical: 2,
                               }}
                             >
-                              <Radio size={8} color="#FFFFFF" strokeWidth={2} />
+                              <RadioButton size={8} color="#FFFFFF" weight="duotone" />
                               <Text
                                 style={{
                                   fontFamily: "Inter_500Medium",
@@ -659,7 +659,7 @@ export function FreeTrialPreviewScreen() {
                                 size={18}
                                 color="#FFFFFF"
                                 fill="#FFFFFF"
-                                strokeWidth={0}
+                                weight="duotone"
                               />
                             </View>
                             <Text
@@ -690,7 +690,7 @@ export function FreeTrialPreviewScreen() {
                               <Check
                                 size={22}
                                 color="#FFFFFF"
-                                strokeWidth={3}
+                                weight="duotone"
                               />
                             </LinearGradient>
                             <Text
@@ -742,7 +742,7 @@ export function FreeTrialPreviewScreen() {
                             <ArrowLeft
                               size={12}
                               color="#FFFFFF"
-                              strokeWidth={2.5}
+                              weight="duotone"
                             />
                           </View>
                         </View>
@@ -787,7 +787,7 @@ export function FreeTrialPreviewScreen() {
                             <Calendar
                               size={9}
                               color="rgba(255,255,255,0.8)"
-                              strokeWidth={2}
+                              weight="duotone"
                             />
                             <Text
                               style={{
@@ -809,7 +809,7 @@ export function FreeTrialPreviewScreen() {
                             <Clock
                               size={9}
                               color="rgba(255,255,255,0.8)"
-                              strokeWidth={2}
+                              weight="duotone"
                             />
                             <Text
                               style={{
@@ -828,10 +828,10 @@ export function FreeTrialPreviewScreen() {
                               alignItems: "center",
                             }}
                           >
-                            <Activity
+                            <Pulse
                               size={9}
                               color="rgba(255,255,255,0.8)"
-                              strokeWidth={2}
+                              weight="duotone"
                             />
                             <Text
                               style={{
@@ -864,10 +864,10 @@ export function FreeTrialPreviewScreen() {
                               marginBottom: 4,
                             }}
                           >
-                            <Volume2
+                            <SpeakerHigh
                               size={10}
                               color="#FFFFFF"
-                              strokeWidth={2}
+                              weight="duotone"
                             />
                             <Text
                               style={{
@@ -920,10 +920,10 @@ export function FreeTrialPreviewScreen() {
                               marginBottom: 6,
                             }}
                           >
-                            <BarChart2
+                            <ChartBarHorizontal
                               size={10}
                               color="#FFFFFF"
-                              strokeWidth={2}
+                              weight="duotone"
                             />
                             <Text
                               style={{
@@ -1005,7 +1005,7 @@ export function FreeTrialPreviewScreen() {
                               marginBottom: 4,
                             }}
                           >
-                            <Target size={10} color="#FFFFFF" strokeWidth={2} />
+                            <Target size={10} color="#FFFFFF" weight="duotone" />
                             <Text
                               style={{
                                 fontFamily: "Inter_600SemiBold",
@@ -1073,7 +1073,7 @@ export function FreeTrialPreviewScreen() {
                 <Check
                   size={14}
                   color="#FFFFFF"
-                  strokeWidth={2.5}
+                  weight="duotone"
                   style={{ marginRight: 6 }}
                 />
                 <Text
@@ -1126,7 +1126,7 @@ export function FreeTrialPreviewScreen() {
                   >
                     Try for $0.00
                   </Text>
-                  <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+                  <CaretRight size={20} color="#FFFFFF" weight="duotone" />
                 </LinearGradient>
               </Pressable>
             </Animated.View>
