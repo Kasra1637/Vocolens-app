@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { ShieldCheck } from "lucide-react-native";
+import { ShieldCheck } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -176,16 +176,17 @@ export function PrivacyPermissionsScreen() {
                     {/* Icon badge */}
                     <View
                       style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
-                        backgroundColor: "rgba(255,255,255,0.15)",
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        overflow: "hidden",
                         alignItems: "center",
                         justifyContent: "center",
                         flexShrink: 0,
                       }}
                     >
-                      <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                      <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                      <Icon size={24} color="#FFFFFF" weight="duotone" />
                     </View>
 
                     {/* Text */}

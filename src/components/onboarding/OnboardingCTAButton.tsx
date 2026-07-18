@@ -8,7 +8,7 @@
 import React from 'react';
 import { View, Text, Pressable, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronRight } from 'lucide-react-native';
+import { CaretRight } from 'phosphor-react-native';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 
 interface OnboardingCTAButtonProps {
@@ -33,7 +33,7 @@ export function OnboardingCTAButton({
   label,
   onPress,
   disabled = false,
-  icon = <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />,
+  icon = <CaretRight size={20} color="#FFFFFF" weight="bold" />,
   paddingVertical = 16,
   fontSize = 18,
   borderColor: customBorderColor,

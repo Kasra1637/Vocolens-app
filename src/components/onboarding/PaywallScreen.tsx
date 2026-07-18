@@ -571,7 +571,7 @@ export function PaywallScreen() {
                               ? "Continue with Quarterly"
                               : "Continue with Monthly"}
                         </Text>
-                        <CaretRight size={20} color="#FFFFFF" weight="duotone" />
+                        <CaretRight size={20} color="#FFFFFF" weight="bold" />
                       </>}
                 </LinearGradient>
               </Pressable>
