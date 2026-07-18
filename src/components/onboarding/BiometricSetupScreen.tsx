@@ -151,13 +151,13 @@ export function BiometricSetupScreen() {
     : 'Secure your journal';
 
   const screenSubtitle = biometricAvailable
-    ? `Your journal locks automatically. Use your ${biometricName} or PIN to get back in`
+    ? `Use your ${biometricName} or PIN to get back in`
     : 'Your device doesn\'t have biometrics. Set a 4-digit PIN to keep your journal private';
 
   const ctaLabel = checking
     ? 'Checking…'
     : biometricAvailable
-      ? 'Protect My Journal'
+      ? 'Protect my journal'
       : 'Set up a PIN';
 
   const privacyPoints = biometricAvailable ? BIOMETRIC_POINTS : PIN_ONLY_POINTS;
