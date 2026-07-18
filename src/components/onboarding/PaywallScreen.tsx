@@ -441,9 +441,9 @@ export function PaywallScreen() {
                     { Icon: TrendUp, text: "Track patterns week after week" },
                   ].map((item, idx) => (
                     <View key={idx} style={{ flexDirection: "row", alignItems: "center" }}>
-                      <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+                      <View style={{ width: 32, height: 32, borderRadius: 16, overflow: "hidden", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
                         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                        <item.Icon size={24} color="#FFFFFF" weight="duotone" />
+                        <item.Icon size={14} color="#FFFFFF" weight="duotone" />
                       </View>
                       <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.88)", fontSize: 14, lineHeight: 19, flex: 1 }}>{item.text}</Text>
                     </View>
