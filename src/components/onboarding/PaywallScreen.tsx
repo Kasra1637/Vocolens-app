@@ -46,6 +46,11 @@ import {
 import type { AdaptyPaywallProduct } from "react-native-adapty";
 import { NotificationService } from "@/lib/services/notification-service";
 
+// ── Tester bypass flag ────────────────────────────────────────────────────────
+// Set to `true` while distributing via internal testing on Google Play.
+// Flip to `false` (or remove entirely) before submitting for production.
+const ALLOW_TESTER_SKIP = true;
+
 // ── Pricing fallbacks (shown when SDK not available) ──────────────────────────
 const MONTHLY_PRICE    = "$9.99";
 const THREE_MONTH_PRICE = "$24.99";
@@ -605,6 +610,23 @@ export function PaywallScreen() {
                 >
                   <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.25)", fontSize: 12, textDecorationLine: "underline" }}>
                     [DEV] Escape payment
+                  </Text>
+                </Pressable>
+              )}
+
+              {/* Tester skip — visible in internal testing builds */}
+              {ALLOW_TESTER_SKIP && !__DEV__ && (
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    trackEvent("tester_skip_tapped");
+                    setSubscription(true, "yearly");
+                    nextStep();
+                  }}
+                  style={{ marginTop: 16, paddingVertical: 8, paddingHorizontal: 16 }}
+                >
+                  <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.50)", fontSize: 13, textAlign: "center" }}>
+                    Skip — I'm a tester
                   </Text>
                 </Pressable>
               )}
