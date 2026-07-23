@@ -251,13 +251,14 @@ export default function CorrectionHistoryScreen() {
               <View style={{ flexDirection: "row", alignItems: "center", padding: 18, ...divider }}>
                 <View
                   style={{
-                    width: 40, height: 40, borderRadius: 12,
-                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    width: 44, height: 44, borderRadius: 22,
+                    overflow: "hidden",
                     alignItems: "center", justifyContent: "center",
                     marginRight: 12,
                   }}
                 >
-                  <Sparkles size={22} color="#FFFFFF" strokeWidth={2} />
+                  <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                  <Sparkles size={24} color="#FFFFFF" strokeWidth={2} />
                 </View>
                 <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}>
                   Top Pattern
@@ -309,13 +310,14 @@ export default function CorrectionHistoryScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", padding: 18, ...divider }}>
               <View
                 style={{
-                  width: 40, height: 40, borderRadius: 12,
-                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                  width: 44, height: 44, borderRadius: 22,
+                  overflow: "hidden",
                   alignItems: "center", justifyContent: "center",
                   marginRight: 12,
                 }}
               >
-                <BarChart3 size={22} color="#FFFFFF" strokeWidth={2} />
+                <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                <BarChart3 size={24} color="#FFFFFF" strokeWidth={2} />
               </View>
               <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16, flex: 1 }}>
                 Recent Feedback
@@ -443,12 +445,13 @@ export default function CorrectionHistoryScreen() {
             >
               <View
                 style={{
-                  width: 40, height: 40, borderRadius: 12,
-                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                  width: 44, height: 44, borderRadius: 22,
+                  overflow: "hidden",
                   alignItems: "center", justifyContent: "center",
                 }}
               >
-                <Download size={22} color="#FFFFFF" strokeWidth={2} />
+                <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                <Download size={24} color="#FFFFFF" strokeWidth={2} />
               </View>
               <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
                 Export Feedback as CSV

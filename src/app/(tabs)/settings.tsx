@@ -511,14 +511,13 @@ export default function SettingsScreen() {
                       <View
                         className="items-center justify-center mr-3"
                         style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 12,
-                          backgroundColor: isAtLimit
-                            ? "rgba(255, 100, 100, 0.3)"
-                            : "rgba(255, 255, 255, 0.15)",
+                          width: 44,
+                          height: 44,
+                          borderRadius: 22,
+                          overflow: "hidden",
                         }}
                       >
+                        <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
                         <Text style={{ fontSize: 17 }}>
                           {isAtLimit ? "🔒" : isNearLimit ? "⚠️" : "🎙️"}
                         </Text>
