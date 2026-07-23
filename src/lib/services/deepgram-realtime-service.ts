@@ -69,6 +69,12 @@ class DeepgramRealtimeService {
    * Get the Deepgram API key from environment
    */
   private getApiKey(): string | null {
+    // Primary: Constants.expoConfig.extra (reliable after OTA updates)
+    const fromConstants = Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY;
+    if (fromConstants && fromConstants !== 'undefined' && fromConstants !== 'null') {
+      return String(fromConstants).trim();
+    }
+    // Fallback: process.env (works in original build bundle)
     const apiKeyStr = (process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ?? '').trim();
     return (apiKeyStr && apiKeyStr !== 'undefined' && apiKeyStr !== 'null') ? apiKeyStr : null;
   }
