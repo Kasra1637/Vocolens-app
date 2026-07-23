@@ -1092,7 +1092,7 @@ export function FreeTrialPreviewScreen() {
                 onPress={handleContinue}
                 style={{
                   width: "100%",
-                  borderRadius: 18,
+                  borderRadius: 50,
                   borderWidth: 2,
                   borderColor: themeColors.secondary,
                   overflow: "hidden",
@@ -1113,6 +1113,7 @@ export function FreeTrialPreviewScreen() {
                     alignItems: "center",
                     justifyContent: "center",
                     paddingVertical: 16,
+                    borderRadius: 48,
                   }}
                 >
                   <Text
