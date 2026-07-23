@@ -15,6 +15,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, { Ellipse, Rect, G, Circle, Line } from "react-native-svg";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { tapHaptic } from "@/lib/haptics";
 import { Scan } from "phosphor-react-native";
@@ -218,16 +219,17 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "rgba(255, 255, 255, 0.15)",
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              overflow: "hidden",
               alignItems: "center",
               justifyContent: "center",
               marginRight: 12,
             }}
           >
-            <Scan size={22} color="#FFFFFF" weight="duotone" />
+            <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+            <Scan size={24} color="#FFFFFF" weight="duotone" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.title}>Body sensation map</Text>
