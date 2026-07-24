@@ -1,7 +1,7 @@
 import "react-native-get-random-values";
 import "react-native-reanimated";
 import "../../global.css";
-import { LogBox } from "react-native";
+import { LogBox, AppState } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -9,6 +9,7 @@ import {
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as Updates from "expo-updates";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -16,7 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AuthGate } from "@/components/AuthGate";
 import { MilestoneCelebration } from "@/components/MilestoneCelebration";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   useFonts,
   Inter_400Regular,
@@ -97,6 +98,38 @@ function RootLayoutNav({
 export default function RootLayout() {
   useFrameworkReady();
   const colorScheme = useColorScheme();
+
+  // ── OTA Update: check on launch + when returning from background ──────────
+  const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    async function checkForUpdate() {
+      if (__DEV__) return; // Skip in development
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync(); // Restart app with new bundle
+        }
+      } catch (e) {
+        // Silent fail — don't block the app if update check fails
+        console.log('[Updates] Check failed:', e);
+      }
+    }
+
+    // Check on launch
+    checkForUpdate();
+
+    // Check when app returns from background
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (appState.current.match(/inactive|background/) && nextState === 'active') {
+        checkForUpdate();
+      }
+      appState.current = nextState;
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   // Read the user's chosen theme so every background colour adapts —
   // never hardcoded to Midnight Glow's darkest stop.

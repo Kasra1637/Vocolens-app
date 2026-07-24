@@ -511,14 +511,13 @@ export default function SettingsScreen() {
                       <View
                         className="items-center justify-center mr-3"
                         style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 12,
-                          backgroundColor: isAtLimit
-                            ? "rgba(255, 100, 100, 0.3)"
-                            : "rgba(255, 255, 255, 0.15)",
+                          width: 44,
+                          height: 44,
+                          borderRadius: 22,
+                          overflow: "hidden",
                         }}
                       >
+                        <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
                         <Text style={{ fontSize: 17 }}>
                           {isAtLimit ? "🔒" : isNearLimit ? "⚠️" : "🎙️"}
                         </Text>
@@ -1057,8 +1056,23 @@ export default function SettingsScreen() {
                   }}
                   className="p-5 active:opacity-70"
                 >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        overflow: "hidden",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        marginRight: 14,
+                      }}
+                    >
+                      <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                      <ChartBar size={24} color="#FFFFFF" weight="duotone" />
+                    </View>
+                    <View style={{ flex: 1 }}>
                       <Text
                         style={{
                           fontFamily: "Inter_600SemiBold",
@@ -1078,20 +1092,7 @@ export default function SettingsScreen() {
                         Confirmation rate, patterns, export CSV
                       </Text>
                     </View>
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        overflow: "hidden",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                      <ChartBar size={24} color="#FFFFFF" weight="duotone" />
-                    </View>
+                    <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
                   </View>
                 </Pressable>
               </View>
