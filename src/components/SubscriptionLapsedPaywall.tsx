@@ -384,7 +384,7 @@ export function SubscriptionLapsedPaywall() {
                 disabled={isPurchasing}
                 style={{
                   width: "100%",
-                  borderRadius: 18,
+                  borderRadius: 50,
                   borderWidth: 2,
                   borderColor: "#FFFFFF",
                   overflow: "hidden",
@@ -409,7 +409,7 @@ export function SubscriptionLapsedPaywall() {
                       <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 18 }}>
                         Reactivate Now
                       </Text>
-                      <CaretRight size={20} color="#FFFFFF" weight="duotone" />
+                      <CaretRight size={20} color="#FFFFFF" weight="bold" />
                     </>
                   )}
                 </LinearGradient>
