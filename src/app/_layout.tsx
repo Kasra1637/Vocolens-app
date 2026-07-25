@@ -1,7 +1,7 @@
 import "react-native-get-random-values";
 import "react-native-reanimated";
 import "../../global.css";
-import { LogBox, AppState } from "react-native";
+import { LogBox, AppState, Platform } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -10,6 +10,7 @@ import {
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Updates from "expo-updates";
+import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "@/lib/useColorScheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -98,6 +99,27 @@ function RootLayoutNav({
 export default function RootLayout() {
   useFrameworkReady();
   const colorScheme = useColorScheme();
+
+  // ── DEBUG: Log environment state on launch (remove after confirming fix) ──
+  useEffect(() => {
+    const constants = Constants.expoConfig?.extra;
+    console.log('[DEBUG] ═══════════════════════════════════════════════════');
+    console.log('[DEBUG] App Launch — Environment Diagnostic');
+    console.log('[DEBUG] ═══════════════════════════════════════════════════');
+    console.log('[DEBUG] EXPO_PUBLIC_VOCOLENS_API_KEY:', constants?.EXPO_PUBLIC_VOCOLENS_API_KEY
+      ? `SET (len=${String(constants.EXPO_PUBLIC_VOCOLENS_API_KEY).length}, starts="${String(constants.EXPO_PUBLIC_VOCOLENS_API_KEY).slice(0, 6)}")`
+      : 'NOT SET — this causes 401!');
+    console.log('[DEBUG] EXPO_PUBLIC_DEEPGRAM_API_KEY:', constants?.EXPO_PUBLIC_DEEPGRAM_API_KEY
+      ? `SET (len=${String(constants.EXPO_PUBLIC_DEEPGRAM_API_KEY).length})`
+      : 'NOT SET');
+    console.log('[DEBUG] EXPO_PUBLIC_BACKEND_URL:', constants?.EXPO_PUBLIC_BACKEND_URL || 'NOT SET (using default)');
+    console.log('[DEBUG] process.env.EXPO_PUBLIC_VOCOLENS_API_KEY:', process.env.EXPO_PUBLIC_VOCOLENS_API_KEY
+      ? `SET (len=${String(process.env.EXPO_PUBLIC_VOCOLENS_API_KEY).length})`
+      : 'NOT SET');
+    console.log('[DEBUG] Platform:', Platform.OS);
+    console.log('[DEBUG] __DEV__:', __DEV__);
+    console.log('[DEBUG] ═══════════════════════════════════════════════════');
+  }, []);
 
   // ── OTA Update: block render until check completes on launch ────────────────
   // This prevents the app from rendering stale UI from the old cached bundle

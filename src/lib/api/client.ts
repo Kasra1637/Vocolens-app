@@ -19,11 +19,18 @@ function getBackendUrl(): string {
 }
 
 function getApiKey(): string {
-  return (
-    Constants.expoConfig?.extra?.EXPO_PUBLIC_VOCOLENS_API_KEY ||
-    process.env.EXPO_PUBLIC_VOCOLENS_API_KEY ||
-    ''
-  );
+  const fromConstants = Constants.expoConfig?.extra?.EXPO_PUBLIC_VOCOLENS_API_KEY;
+  const fromEnv = process.env.EXPO_PUBLIC_VOCOLENS_API_KEY;
+  const key = fromConstants || fromEnv || '';
+
+  // ── DEBUG: log API key resolution (remove after confirming fix) ────────
+  console.log('[API Client] Key resolution:', {
+    fromConstants: fromConstants ? `"${String(fromConstants).slice(0, 4)}...${String(fromConstants).slice(-4)}" (len=${String(fromConstants).length})` : 'MISSING',
+    fromEnv: fromEnv ? `"${String(fromEnv).slice(0, 4)}...${String(fromEnv).slice(-4)}" (len=${String(fromEnv).length})` : 'MISSING',
+    resolved: key ? `"${key.slice(0, 4)}...${key.slice(-4)}" (len=${key.length})` : 'EMPTY — will NOT send X-Api-Key header',
+  });
+
+  return key;
 }
 
 export const BACKEND_URL = getBackendUrl();
@@ -53,8 +60,28 @@ export async function apiFetch(
     headers['Content-Type'] = 'application/json';
   }
 
-  return fetch(url, {
+  // ── DEBUG: log outgoing request details (remove after confirming fix) ──
+  console.log('[API Client] Request:', {
+    url,
+    method: options.method || 'GET',
+    hasApiKey: Boolean(apiKey),
+    apiKeyPreview: apiKey ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : 'NONE',
+    headers: Object.keys(headers),
+  });
+
+  const response = await fetch(url, {
     ...options,
     headers,
   });
+
+  // ── DEBUG: log response status (remove after confirming fix) ───────────
+  if (!response.ok) {
+    console.error('[API Client] Response FAILED:', {
+      url,
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+
+  return response;
 }
