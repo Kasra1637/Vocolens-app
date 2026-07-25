@@ -1,6 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { Alert, Platform } from 'react-native';
-import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { apiFetch } from './api/client';
 
 export interface TranscriptionResult {
@@ -27,8 +26,6 @@ export async function transcribeAudioFile(
   audioUri: string | null | undefined,
   language: string = 'en'
 ): Promise<TranscriptionResult> {
-  console.log('[Transcription] Starting transcription...', { audioUri: audioUri?.slice(0, 50), language });
-
   if (!audioUri || typeof audioUri !== 'string' || audioUri.trim().length === 0) {
     throw new Error('Audio file URI is missing.');
   }
@@ -42,46 +39,15 @@ export async function transcribeAudioFile(
       encoding: FileSystem.EncodingType.Base64,
     });
   }
-
-  console.log('[Transcription] Audio encoded, size:', audioBase64.length, 'chars, mimeType:', mimeType);
-
   const response = await apiFetch('/api/transcribe', {
     method: 'POST',
     body: JSON.stringify({ audioBase64, language, mimeType }),
   });
-
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('[Transcription] FAILED:', {
-      status: response.status,
-      statusText: response.statusText,
-      body: errorText,
-      platform: Platform.OS,
-    });
-
-    // ── DEBUG ALERT: shows diagnostic info on-screen (remove after fix) ──
-    if (response.status === 401) {
-      const fromConstants = Constants.expoConfig?.extra?.EXPO_PUBLIC_VOCOLENS_API_KEY;
-      const fromEnv = process.env.EXPO_PUBLIC_VOCOLENS_API_KEY;
-      const key = fromConstants || fromEnv || '';
-      Alert.alert(
-        'DEBUG: 401 Unauthorized',
-        [
-          `Key from Constants: ${fromConstants ? `YES (len=${String(fromConstants).length}, "${String(fromConstants).slice(0, 8)}...")` : 'MISSING'}`,
-          `Key from process.env: ${fromEnv ? `YES (len=${String(fromEnv).length})` : 'MISSING'}`,
-          `Resolved key: ${key ? `"${key.slice(0, 8)}..." (len=${key.length})` : 'EMPTY'}`,
-          `Header sent: ${key ? 'YES' : 'NO — this is why 401 happens'}`,
-          `Backend URL: ${Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || 'default'}`,
-          `Response: ${errorText.slice(0, 100)}`,
-        ].join('\n\n'),
-        [{ text: 'OK' }]
-      );
-    }
-
     throw new Error(`Transcription failed (${response.status}): ${errorText}`);
   }
   const data = await response.json();
-  console.log('[Transcription] Success:', { hasTranscript: Boolean(data.transcript), length: data.transcript?.length });
   if (!data.success) throw new Error(data.error || 'Transcription failed');
   return { transcript: data.transcript || '', confidence: 0, duration: 0 };
 }
@@ -89,4 +55,3 @@ export async function transcribeAudioFile(
 export function isDeepgramConfigured(): boolean {
   return true;
 }
-
