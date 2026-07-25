@@ -164,11 +164,14 @@ class DeepgramRealtimeService {
 
     return new Promise((resolve, reject) => {
       try {
-        // React Native does not support custom WebSocket headers.
-        // Deepgram requires the API key in the URL query string for
-        // native clients — passing it as a subprotocol silently fails.
-        const authedUrl = `${wsUrl}&token=${encodeURIComponent(apiKey)}`;
-        this.ws = new WebSocket(authedUrl);
+        // React Native and browser WebSocket APIs do not support custom
+        // HTTP headers (e.g. Authorization). Deepgram's documented
+        // client-side auth mechanism is the Sec-WebSocket-Protocol header
+        // with two subprotocol values: the literal string "token" followed
+        // by the actual API key. The browser/RN WebSocket constructor
+        // accepts an array of protocols which maps to this header.
+        // See: https://developers.deepgram.com/docs/using-the-sec-websocket-protocol
+        this.ws = new WebSocket(wsUrl, ['token', apiKey]);
 
         this.ws.onopen = () => {
           console.log('[DeepgramRealtime] Connected');
