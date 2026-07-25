@@ -37,6 +37,17 @@ const useSubscriptionStore = create<SubscriptionState>()(
     {
       name: 'subscription-store',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        // v0 → v1: ensure hasSubscription and planType exist with safe defaults.
+        if (version < 1) {
+          return {
+            hasSubscription: persisted?.hasSubscription ?? false,
+            planType: persisted?.planType ?? null,
+          };
+        }
+        return persisted;
+      },
     },
   ),
 );

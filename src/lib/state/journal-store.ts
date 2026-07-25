@@ -120,8 +120,16 @@ const useJournalStore = create<JournalStore>()(
     {
       name: 'journal-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 0,
-      migrate: (persisted) => persisted as any,
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        // v0 → v1: ensure entries array exists and is valid so stale
+        // AsyncStorage data doesn't break the app after OTA updates.
+        if (version < 1) {
+          const entries = Array.isArray(persisted?.entries) ? persisted.entries : [];
+          return { entries };
+        }
+        return persisted;
+      },
       partialize: (state) => ({ entries: state.entries }),
     }
   )

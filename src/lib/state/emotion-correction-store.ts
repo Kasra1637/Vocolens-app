@@ -408,6 +408,23 @@ export const useEmotionCorrectionStore = create<EmotionCorrectionState>()(
     {
       name: 'emotion-corrections',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        // v0 → v1: ensure corrections array and userBias object exist with
+        // all required fields so OTA updates don't crash on stale data.
+        if (version < 1) {
+          const corrections = Array.isArray(persisted?.corrections) ? persisted.corrections : [];
+          const userBias = {
+            emotionMappings: persisted?.userBias?.emotionMappings ?? {},
+            patterns: Array.isArray(persisted?.userBias?.patterns) ? persisted.userBias.patterns : [],
+            totalCorrections: persisted?.userBias?.totalCorrections ?? 0,
+            totalConfirmations: persisted?.userBias?.totalConfirmations ?? 0,
+            lastUpdated: persisted?.userBias?.lastUpdated ?? new Date().toISOString(),
+          };
+          return { corrections, userBias };
+        }
+        return persisted;
+      },
     }
   )
 );

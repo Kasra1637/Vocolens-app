@@ -199,8 +199,31 @@ const useUserStatsStore = create<UserStatsStore>()(
     {
       name: 'user-stats-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 0,
-      migrate: (persisted) => persisted as any,
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        // v0 → v1: ensure stats and usage objects exist with all required
+        // fields so OTA updates don't render stale/incomplete data.
+        if (version < 1) {
+          const stats = {
+            totalEntries: persisted?.stats?.totalEntries ?? 0,
+            totalDuration: persisted?.stats?.totalDuration ?? 0,
+            currentStreak: persisted?.stats?.currentStreak ?? 0,
+            longestStreak: persisted?.stats?.longestStreak ?? 0,
+            lastEntryDate: persisted?.stats?.lastEntryDate ?? null,
+            weeklyEntries: persisted?.stats?.weeklyEntries ?? 0,
+            monthlyEntries: persisted?.stats?.monthlyEntries ?? 0,
+            averageMood: persisted?.stats?.averageMood ?? 50,
+            topEmotions: Array.isArray(persisted?.stats?.topEmotions) ? persisted.stats.topEmotions : [],
+          };
+          const usage = {
+            totalMinutesUsed: persisted?.usage?.totalMinutesUsed ?? 0,
+            monthlyMinutesUsed: persisted?.usage?.monthlyMinutesUsed ?? 0,
+            lastResetMonth: persisted?.usage?.lastResetMonth ?? new Date().toISOString().slice(0, 7),
+          };
+          return { stats, usage, lastUpdated: persisted?.lastUpdated ?? null };
+        }
+        return persisted;
+      },
     }
   )
 );

@@ -17,7 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AuthGate } from "@/components/AuthGate";
 import { MilestoneCelebration } from "@/components/MilestoneCelebration";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useFonts,
   Inter_400Regular,
@@ -99,28 +99,36 @@ export default function RootLayout() {
   useFrameworkReady();
   const colorScheme = useColorScheme();
 
-  // ── OTA Update: check on launch + when returning from background ──────────
+  // ── OTA Update: block render until check completes on launch ────────────────
+  // This prevents the app from rendering stale UI from the old cached bundle
+  // while a new OTA update is being downloaded.
+  const [isUpdateReady, setIsUpdateReady] = useState(__DEV__); // skip in dev
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
     async function checkForUpdate() {
-      if (__DEV__) return; // Skip in development
+      if (__DEV__) return;
       try {
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
           await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync(); // Restart app with new bundle
+          // reloadAsync restarts the app with the new bundle — nothing after
+          // this line executes in the current JS context.
+          await Updates.reloadAsync();
         }
       } catch (e) {
         // Silent fail — don't block the app if update check fails
         console.log('[Updates] Check failed:', e);
+      } finally {
+        // Whether update found or not (or error), allow app to render
+        setIsUpdateReady(true);
       }
     }
 
-    // Check on launch
+    // Blocking check on launch
     checkForUpdate();
 
-    // Check when app returns from background
+    // Non-blocking check when app returns from background
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (appState.current.match(/inactive|background/) && nextState === 'active') {
         checkForUpdate();
@@ -152,6 +160,12 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
+  // Block rendering until OTA update check completes. The native splash screen
+  // remains visible during this time so the user sees no blank frame.
+  if (!isUpdateReady) {
     return null;
   }
 

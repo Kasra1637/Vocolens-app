@@ -53,6 +53,14 @@ const usePinStore = create<PinState>()(
     {
       name: 'pin-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        // v0 → v1: ensure isPinSet flag exists with a safe default.
+        if (version < 1) {
+          return { isPinSet: persisted?.isPinSet ?? false };
+        }
+        return persisted;
+      },
       // Only persist isPinSet flag. pinHash and isPinVerified are ephemeral.
       partialize: (state) => ({ isPinSet: state.isPinSet }),
     }
