@@ -98,6 +98,19 @@ const useBiometricStore = create<BiometricState>()(
     {
       name: 'biometric-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        // v0 → v1: ensure all persisted flags exist with safe defaults so
+        // OTA updates don't produce undefined values from stale data.
+        if (version < 1) {
+          return {
+            isBiometricEnabled: persisted?.isBiometricEnabled ?? false,
+            isPinEnabled: persisted?.isPinEnabled ?? false,
+            needsPinReAuth: persisted?.needsPinReAuth ?? false,
+          };
+        }
+        return persisted;
+      },
       // isUnlocked always resets to false on launch — everything else is persisted.
       partialize: (state) => ({
         isBiometricEnabled: state.isBiometricEnabled,

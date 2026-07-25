@@ -334,8 +334,34 @@ const useOnboardingStore = create<OnboardingState>()(
     {
       name: "onboarding-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      version: 0,
-      migrate: (persisted) => persisted as any,
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        // v0 → v1: ensure all fields exist with sensible defaults so that
+        // OTA updates adding new fields don't produce undefined values from
+        // stale AsyncStorage data.
+        if (version < 1) {
+          return {
+            hasCompletedOnboarding: persisted?.hasCompletedOnboarding ?? false,
+            hasExistingAccount: persisted?.hasExistingAccount ?? false,
+            hasSeenWelcomeCelebration: persisted?.hasSeenWelcomeCelebration ?? false,
+            userName: persisted?.userName ?? null,
+            selectedTheme: persisted?.selectedTheme ?? "darkMode",
+            selectedMood: persisted?.selectedMood ?? null,
+            selectedMoodFollowUp: persisted?.selectedMoodFollowUp ?? null,
+            selectedGoal: persisted?.selectedGoal ?? null,
+            selectedGoalBlocker: persisted?.selectedGoalBlocker ?? null,
+            selectedJournalingGain: persisted?.selectedJournalingGain ?? null,
+            selectedReflectionFeeling: persisted?.selectedReflectionFeeling ?? null,
+            selectedJournalingFrequency: persisted?.selectedJournalingFrequency ?? null,
+            selectedJournalingTopic: persisted?.selectedJournalingTopic ?? null,
+            selectedSelfAwareness: persisted?.selectedSelfAwareness ?? null,
+            selectedProcessingStyle: persisted?.selectedProcessingStyle ?? null,
+            selectedAppFeeling: persisted?.selectedAppFeeling ?? null,
+            notificationPreferences: persisted?.notificationPreferences ?? null,
+          };
+        }
+        return persisted;
+      },
       partialize: (state) => ({
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         hasExistingAccount: state.hasExistingAccount,
