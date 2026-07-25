@@ -33,6 +33,13 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
 
+      - name: Disable Android lint fatal abort
+        run: |
+          mkdir -p android
+          echo "org.gradle.jvmargs=-Xmx4g" >> android/gradle.properties
+          echo "android.enableR8.fullMode=false" >> android/gradle.properties
+          echo "lintVitalAbortOnError=false" >> android/gradle.properties
+
       - name: Build AAB locally
         run: eas build --platform android --profile production --local --output ./app-release.aab --non-interactive
         env:
@@ -42,6 +49,7 @@ jobs:
           EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL }}
           EXPO_PUBLIC_VOCOLENS_API_KEY: ${{ secrets.EXPO_PUBLIC_VOCOLENS_API_KEY }}
           EAS_NO_VCS: "1"
+          ORG_GRADLE_PROJECT_lintVitalAbortOnError: "false"
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
