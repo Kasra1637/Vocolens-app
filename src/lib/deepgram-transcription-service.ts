@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { apiFetch } from './api/client';
 
 export interface TranscriptionResult {
@@ -57,6 +58,26 @@ export async function transcribeAudioFile(
       body: errorText,
       platform: Platform.OS,
     });
+
+    // ── DEBUG ALERT: shows diagnostic info on-screen (remove after fix) ──
+    if (response.status === 401) {
+      const fromConstants = Constants.expoConfig?.extra?.EXPO_PUBLIC_VOCOLENS_API_KEY;
+      const fromEnv = process.env.EXPO_PUBLIC_VOCOLENS_API_KEY;
+      const key = fromConstants || fromEnv || '';
+      Alert.alert(
+        'DEBUG: 401 Unauthorized',
+        [
+          `Key from Constants: ${fromConstants ? `YES (len=${String(fromConstants).length}, "${String(fromConstants).slice(0, 8)}...")` : 'MISSING'}`,
+          `Key from process.env: ${fromEnv ? `YES (len=${String(fromEnv).length})` : 'MISSING'}`,
+          `Resolved key: ${key ? `"${key.slice(0, 8)}..." (len=${key.length})` : 'EMPTY'}`,
+          `Header sent: ${key ? 'YES' : 'NO — this is why 401 happens'}`,
+          `Backend URL: ${Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || 'default'}`,
+          `Response: ${errorText.slice(0, 100)}`,
+        ].join('\n\n'),
+        [{ text: 'OK' }]
+      );
+    }
+
     throw new Error(`Transcription failed (${response.status}): ${errorText}`);
   }
   const data = await response.json();
