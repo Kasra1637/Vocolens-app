@@ -1339,9 +1339,9 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
               <AnimatedStreakFlame
                 streak={user.streak}
                 size={22}
-                badgeSize={40}
-                badgeRadius={12}
-                badgeColor="rgba(255, 255, 255, 0.15)"
+                badgeSize={44}
+                badgeRadius={22}
+                badgeColor="rgba(255, 255, 255, 0.12)"
                 glowColor="rgba(255, 255, 255, 0.5)"
               />
             </View>
