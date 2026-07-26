@@ -1359,7 +1359,7 @@ export default function SettingsScreen() {
                     onPress={handleResetAllData}
                     style={{
                       width: "100%",
-                      borderRadius: 18,
+                      borderRadius: 50,
                       borderWidth: 2,
                       borderColor: "#EF4444",
                       overflow: "hidden",
