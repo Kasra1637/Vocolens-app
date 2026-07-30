@@ -293,13 +293,6 @@ export default function ReflectionScreen() {
                         backgroundColor: `${accentColor}22`,
                       },
                     ]}
-                    onPress={() => toggleEmotion(emotion)}
-                    onLongPress={() => {
-                      tapHaptic();
-                      setSelectedEmotionDef(
-                        selectedEmotionDef === emotion ? null : emotion,
-                      );
-                    }}
                   >
                     <Text style={s.emotionEmoji}>{def.emoji}</Text>
                     <Text style={[s.emotionLabel, sel && { color: "#FFFFFF" }]}>
