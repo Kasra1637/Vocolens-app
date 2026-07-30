@@ -8,7 +8,11 @@
 // File/Paths handle-based API and these symbols are undefined there.
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import useJournalStore from './state/journal-store';
+import useJournalStore, {
+  countEntriesSince,
+  getStartOfMonth,
+  getStartOfWeek,
+} from './state/journal-store';
 import useBadgesStore, { BADGE_DEFINITIONS } from './state/badges-store';
 import useUserStatsStore from './state/user-stats-store';
 import useSettingsStore from './state/settings-store';
@@ -63,8 +67,8 @@ export async function exportAllDataAsCsv(): Promise<void> {
       ['Current Streak', String(stats.currentStreak)],
       ['Longest Streak', String(stats.longestStreak)],
       ['Last Entry Date', stats.lastEntryDate ?? 'N/A'],
-      ['Weekly Entries', String(stats.weeklyEntries)],
-      ['Monthly Entries', String(stats.monthlyEntries)],
+      ['Weekly Entries', String(countEntriesSince(entries, getStartOfWeek()))],
+      ['Monthly Entries', String(countEntriesSince(entries, getStartOfMonth()))],
       ['Average Mood', String(stats.averageMood)],
       ['Top Emotions', (stats.topEmotions || []).join('; ')],
       ['Monthly Minutes Used', String(usage?.monthlyMinutesUsed ?? 0)],

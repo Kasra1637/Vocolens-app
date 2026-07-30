@@ -241,8 +241,11 @@ export interface UserStats {
   currentStreak: number;
   longestStreak: number;
   lastEntryDate: string | null;
-  weeklyEntries: number;
-  monthlyEntries: number;
+  // NOTE: "this week"/"this month" entry counts are intentionally NOT stored
+  // here. As stored counters they could only ever increase and had no
+  // period-rollover logic, so they drifted into lifetime totals. They are now
+  // derived on demand from entry timestamps via the journal store helpers
+  // (countEntriesSince + getStartOfWeek / getStartOfMonth).
   averageMood: number;
   topEmotions: EmotionType[];
 }

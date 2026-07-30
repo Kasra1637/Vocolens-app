@@ -37,8 +37,6 @@ const DEFAULT_STATS: UserStats = {
   currentStreak: 0,
   longestStreak: 0,
   lastEntryDate: null,
-  weeklyEntries: 0,
-  monthlyEntries: 0,
   averageMood: 50,
   topEmotions: [],
 };
@@ -65,8 +63,6 @@ const useUserStatsStore = create<UserStatsStore>()(
           stats: {
             ...state.stats,
             totalEntries: state.stats.totalEntries + 1,
-            weeklyEntries: state.stats.weeklyEntries + 1,
-            monthlyEntries: state.stats.monthlyEntries + 1,
           },
           lastUpdated: new Date().toISOString(),
         }));
@@ -199,26 +195,27 @@ const useUserStatsStore = create<UserStatsStore>()(
     {
       name: 'user-stats-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
       migrate: (persisted: any, version: number) => {
-        // v0 → v1: ensure stats and usage objects exist with all required
-        // fields so OTA updates don't render stale/incomplete data.
-        if (version < 1) {
-          const stats = {
+        // v0/v1 → v2: normalise stats and usage so OTA updates don't render
+        // stale/incomplete data, and drop the legacy weeklyEntries /
+        // monthlyEntries counters. Those were incremented per entry but never
+        // reset on a new week/month, so their persisted values are meaningless
+        // lifetime totals. Both counts are now derived from entry timestamps.
+        if (version < 2) {
+          const stats: UserStats = {
             totalEntries: persisted?.stats?.totalEntries ?? 0,
             totalDuration: persisted?.stats?.totalDuration ?? 0,
             currentStreak: persisted?.stats?.currentStreak ?? 0,
             longestStreak: persisted?.stats?.longestStreak ?? 0,
             lastEntryDate: persisted?.stats?.lastEntryDate ?? null,
-            weeklyEntries: persisted?.stats?.weeklyEntries ?? 0,
-            monthlyEntries: persisted?.stats?.monthlyEntries ?? 0,
             averageMood: persisted?.stats?.averageMood ?? 50,
             topEmotions: Array.isArray(persisted?.stats?.topEmotions) ? persisted.stats.topEmotions : [],
           };
-          const usage = {
+          const usage: UsageStats = {
             totalMinutesUsed: persisted?.usage?.totalMinutesUsed ?? 0,
             monthlyMinutesUsed: persisted?.usage?.monthlyMinutesUsed ?? 0,
-            lastResetMonth: persisted?.usage?.lastResetMonth ?? new Date().toISOString().slice(0, 7),
+            lastResetMonth: persisted?.usage?.lastResetMonth ?? getCurrentMonth(),
           };
           return { stats, usage, lastUpdated: persisted?.lastUpdated ?? null };
         }

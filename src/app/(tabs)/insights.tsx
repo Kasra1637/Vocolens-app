@@ -66,7 +66,11 @@ import {
   getThemeShadows,
 } from "@/lib/theme";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
-import useJournalStore from "@/lib/state/journal-store";
+import useJournalStore, {
+  countEntriesSince,
+  getStartOfMonth,
+  getStartOfWeek,
+} from "@/lib/state/journal-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 import {
   useUsageMinutes,
@@ -122,6 +126,12 @@ async function generateInsightsPDF({
   const reportTime = now.toLocaleTimeString("en-US", {
     hour: "2-digit", minute: "2-digit",
   });
+
+  // ── Current-period entry counts ──────────────────────────────────────────
+  // Derived from entry timestamps so they always reflect the current week /
+  // month rather than a lifetime running total.
+  const entriesThisWeek = countEntriesSince(entries, getStartOfWeek(now));
+  const entriesThisMonth = countEntriesSince(entries, getStartOfMonth(now));
 
   // ── Compute emotion frequencies ──────────────────────────────────────────
   const emotionCounts: Record<string, number> = {};
@@ -326,8 +336,8 @@ async function generateInsightsPDF({
       <div class="stat-card"><div class="stat-val">${stats.totalEntries}</div><div class="stat-lbl">Total Entries</div></div>
       <div class="stat-card"><div class="stat-val">${stats.currentStreak}</div><div class="stat-lbl">Current Streak (days)</div></div>
       <div class="stat-card"><div class="stat-val">${stats.longestStreak}</div><div class="stat-lbl">Best Streak (days)</div></div>
-      <div class="stat-card"><div class="stat-val">${stats.weeklyEntries}</div><div class="stat-lbl">This Week</div></div>
-      <div class="stat-card"><div class="stat-val">${stats.monthlyEntries}</div><div class="stat-lbl">This Month</div></div>
+      <div class="stat-card"><div class="stat-val">${entriesThisWeek}</div><div class="stat-lbl">This Week</div></div>
+      <div class="stat-card"><div class="stat-val">${entriesThisMonth}</div><div class="stat-lbl">This Month</div></div>
       <div class="stat-card"><div class="stat-val">${Math.round(stats.totalDuration / 60)}</div><div class="stat-lbl">Total Minutes</div></div>
     </div>
   </div>

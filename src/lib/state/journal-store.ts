@@ -8,6 +8,39 @@ import {
   generateId,
 } from '../types';
 
+// ── Current-period helpers ──────────────────────────────────────────
+// "This week"/"this month" counts are derived from entry timestamps rather
+// than stored as incrementing counters, so they always reflect the *current*
+// calendar period without needing any rollover/reset bookkeeping.
+// All boundaries are computed in local time to match what the user sees.
+
+/**
+ * Start of the current week (Monday 00:00 local time), consistent with
+ * StreakCalendar and useWeeklyReflection.
+ */
+export function getStartOfWeek(ref: Date = new Date()): Date {
+  // getDay() returns 0=Sun..6=Sat; convert to Mon-start: Mon=0..Sun=6
+  const dayOfWeek = (ref.getDay() + 6) % 7;
+  const start = new Date(ref);
+  start.setDate(ref.getDate() - dayOfWeek);
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
+/** Start of the current calendar month (1st, 00:00 local time). */
+export function getStartOfMonth(ref: Date = new Date()): Date {
+  return new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0);
+}
+
+/** Number of entries created at or after `since`. Ignores unparseable dates. */
+export function countEntriesSince(entries: JournalEntry[], since: Date): number {
+  const sinceMs = since.getTime();
+  return entries.reduce((count, entry) => {
+    const ms = new Date(entry.createdAt).getTime();
+    return !Number.isNaN(ms) && ms >= sinceMs ? count + 1 : count;
+  }, 0);
+}
+
 interface JournalStore {
   // State
   entries: JournalEntry[];
@@ -23,6 +56,8 @@ interface JournalStore {
   getEntriesByDateRange: (startDate: string, endDate: string) => JournalEntry[];
   getEntriesByEmotion: (emotion: EmotionType) => JournalEntry[];
   searchEntries: (query: string) => JournalEntry[];
+  getEntriesThisWeekCount: () => number;
+  getEntriesThisMonthCount: () => number;
   clearAllEntries: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -105,6 +140,14 @@ const useJournalStore = create<JournalStore>()(
         );
       },
 
+      getEntriesThisWeekCount: () => {
+        return countEntriesSince(get().entries, getStartOfWeek());
+      },
+
+      getEntriesThisMonthCount: () => {
+        return countEntriesSince(get().entries, getStartOfMonth());
+      },
+
       clearAllEntries: () => {
         set({ entries: [] });
       },
@@ -140,5 +183,9 @@ export default useJournalStore;
 // Selector hooks for optimized re-renders
 export const useEntries = () => useJournalStore((s) => s.entries);
 export const useEntriesCount = () => useJournalStore((s) => s.entries.length);
+export const useEntriesThisWeekCount = () =>
+  useJournalStore((s) => countEntriesSince(s.entries, getStartOfWeek()));
+export const useEntriesThisMonthCount = () =>
+  useJournalStore((s) => countEntriesSince(s.entries, getStartOfMonth()));
 export const useJournalLoading = () => useJournalStore((s) => s.isLoading);
 export const useJournalError = () => useJournalStore((s) => s.error);
