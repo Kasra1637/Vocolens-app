@@ -246,8 +246,14 @@ export interface UserStats {
   // period-rollover logic, so they drifted into lifetime totals. They are now
   // derived on demand from entry timestamps via the journal store helpers
   // (countEntriesSince + getStartOfWeek / getStartOfMonth).
-  averageMood: number;
-  topEmotions: EmotionType[];
+  // NOTE: averageMood and topEmotions are intentionally NOT stored here.
+  // As running values they were both unreliable: averageMood divided by an
+  // entry count that had already been incremented (so it under-weighted every
+  // new entry and drifted toward its initial 50), and topEmotions kept only 5
+  // bare names with no counts, re-tallying that list against itself so real
+  // frequency history was lost. Neither was adjusted when an entry was deleted.
+  // Both are now derived from the entries — see calculateAverageMood and
+  // getTopEmotions in analytics.ts.
 }
 
 // Achievement/Badge Types

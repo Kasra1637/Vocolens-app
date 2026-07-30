@@ -136,6 +136,49 @@ export function getTopTopics(entries: JournalEntry[], limit: number = 5): string
     .map(([topic]) => topic);
 }
 
+// Get top emotions from entries, with their true occurrence counts
+//
+// Counts every emotion across every entry, so the ranking reflects real
+// lifetime frequency. This replaces the `topEmotions` field that used to live on
+// UserStats: that field stored only 5 bare emotion names with no counts, and its
+// update step re-tallied the stored list itself — where each name appears
+// exactly once — so an emotion's history collapsed to "present or absent". Any
+// emotion pushed out of the top 5 restarted from zero if it reappeared.
+export function getTopEmotions(
+  entries: JournalEntry[],
+  limit: number = 5
+): { emotion: EmotionType; count: number }[] {
+  const emotionCounts = new Map<EmotionType, number>();
+
+  entries.forEach((entry) => {
+    (entry.emotions || []).forEach((emotion) => {
+      emotionCounts.set(emotion, (emotionCounts.get(emotion) || 0) + 1);
+    });
+  });
+
+  return Array.from(emotionCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([emotion, count]) => ({ emotion, count }));
+}
+
+// Calculate lifetime average mood (mean emotion intensity, 0-100)
+//
+// Derived from the entries rather than maintained as a running average. The
+// previous incremental version read `totalEntries` *after* it had already been
+// incremented for the new entry, so it effectively divided by n+1 instead of n:
+// every update under-weighted the newest entry and dragged the result toward the
+// seeded default of 50. With ten entries all scoring 80 it reported 77, and a
+// first entry of 80 showed as 65.
+export function calculateAverageMood(entries: JournalEntry[]): number {
+  if (entries.length === 0) return DEFAULT_AVERAGE_MOOD;
+  const total = entries.reduce((sum, entry) => sum + (entry.emotionIntensity ?? 0), 0);
+  return Math.round(total / entries.length);
+}
+
+/** Neutral midpoint, used when there are no entries to average. */
+export const DEFAULT_AVERAGE_MOOD = 50;
+
 // Calculate average session length
 export function calculateAverageSessionLength(entries: JournalEntry[]): number {
   if (entries.length === 0) return 0;

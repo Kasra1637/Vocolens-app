@@ -31,6 +31,7 @@ import {
 import useJournalStore from "@/lib/state/journal-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 import useBadgesStore from "@/lib/state/badges-store";
+import { calculateAverageMood } from "@/lib/analytics";
 import { useAuthStore } from "@/lib/state/auth-store";
 import { removePin } from "@/lib/auth-service";
 import { clearAICache } from "@/lib/ai-emotional-intelligence";
@@ -71,7 +72,7 @@ export default function PrivacySettingsScreen() {
         currentStreak: stats.currentStreak,
         longestStreak: stats.longestStreak,
         totalEntries: stats.totalEntries,
-        averageMood: stats.averageMood,
+        averageMood: calculateAverageMood(entries),
         lastEntryDate: stats.lastEntryDate,
       };
       const badges = getAllBadges();

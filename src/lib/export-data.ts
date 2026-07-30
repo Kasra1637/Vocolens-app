@@ -14,6 +14,7 @@ import useJournalStore, {
   getStartOfWeek,
 } from './state/journal-store';
 import useBadgesStore, { BADGE_DEFINITIONS } from './state/badges-store';
+import { calculateAverageMood, getTopEmotions } from './analytics';
 import useUserStatsStore from './state/user-stats-store';
 import useSettingsStore from './state/settings-store';
 import useOnboardingStore from './state/onboarding-store';
@@ -69,8 +70,13 @@ export async function exportAllDataAsCsv(): Promise<void> {
       ['Last Entry Date', stats.lastEntryDate ?? 'N/A'],
       ['Weekly Entries', String(countEntriesSince(entries, getStartOfWeek()))],
       ['Monthly Entries', String(countEntriesSince(entries, getStartOfMonth()))],
-      ['Average Mood', String(stats.averageMood)],
-      ['Top Emotions', (stats.topEmotions || []).join('; ')],
+      ['Average Mood', String(calculateAverageMood(entries))],
+      [
+        'Top Emotions',
+        getTopEmotions(entries)
+          .map(({ emotion, count }) => `${emotion} (${count})`)
+          .join('; '),
+      ],
       ['Monthly Minutes Used', String(usage?.monthlyMinutesUsed ?? 0)],
       ['Total Minutes Used', String(usage?.totalMinutesUsed ?? 0)],
     ],

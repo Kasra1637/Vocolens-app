@@ -766,7 +766,9 @@ export async function createJournalEntry(
     conversationPrompt,
   });
 
-  // Update user stats - IMPORTANT: incrementEntries MUST be called first
+  // Update user stats.
+  // incrementEntries() MUST run before the badge check below, which reads
+  // stats.totalEntries to evaluate the "first entry" and entry-count badges.
   userStatsStore.incrementEntries();
   userStatsStore.addDuration(duration);
   // The 300-minute monthly cap is metered server-side, inside /api/transcribe,
@@ -776,7 +778,9 @@ export async function createJournalEntry(
   // Refresh the local display mirror from the authoritative balance instead.
   syncUsageFromBackend().catch(() => {});
   userStatsStore.updateStreak(entry.createdAt);
-  userStatsStore.updateMoodStats(analysis.emotionIntensity, analysis.emotions);
+  // Average mood and top emotions are no longer accumulated here. They are
+  // computed from the entries on read (analytics.ts), which removes the ordering
+  // dependency on incrementEntries() above and keeps them correct after a delete.
 
   // Check and update badges - calculate stats from ALL entries including the new one
   const allEntries = journalStore.entries;

@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserStats, EmotionType } from '../types';
+import { UserStats } from '../types';
 
 export const USAGE_LIMIT_MINUTES = 300;
 
@@ -38,7 +38,6 @@ interface UserStatsStore {
   }) => void;
   markUsageLimitReached: () => void;
   updateStreak: (entryDate: string) => void;
-  updateMoodStats: (mood: number, emotions: EmotionType[]) => void;
   resetStats: () => void;
   getStats: () => UserStats;
   getUsageMinutes: () => number;
@@ -52,8 +51,6 @@ const DEFAULT_STATS: UserStats = {
   currentStreak: 0,
   longestStreak: 0,
   lastEntryDate: null,
-  averageMood: 50,
-  topEmotions: [],
 };
 
 const DEFAULT_USAGE: UsageStats = {
@@ -203,36 +200,6 @@ const useUserStatsStore = create<UserStatsStore>()(
         }));
       },
 
-      updateMoodStats: (mood, emotions) => {
-        const { stats } = get();
-        const totalMoodPoints =
-          stats.averageMood * stats.totalEntries + mood;
-        const newAverageMood = Math.round(
-          totalMoodPoints / (stats.totalEntries + 1)
-        );
-
-        const emotionCounts = new Map<EmotionType, number>();
-        stats.topEmotions.forEach((e) => {
-          emotionCounts.set(e, (emotionCounts.get(e) || 0) + 1);
-        });
-        emotions.forEach((e) => {
-          emotionCounts.set(e, (emotionCounts.get(e) || 0) + 1);
-        });
-
-        const sortedEmotions = Array.from(emotionCounts.entries())
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
-          .map(([emotion]) => emotion);
-
-        set((state) => ({
-          stats: {
-            ...state.stats,
-            averageMood: newAverageMood,
-            topEmotions: sortedEmotions,
-          },
-        }));
-      },
-
       resetStats: () => {
         set({ stats: DEFAULT_STATS, usage: DEFAULT_USAGE, lastUpdated: null });
       },
@@ -254,22 +221,28 @@ const useUserStatsStore = create<UserStatsStore>()(
     {
       name: 'user-stats-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 2,
+      version: 3,
       migrate: (persisted: any, version: number) => {
-        // v0/v1 → v2: normalise stats and usage so OTA updates don't render
-        // stale/incomplete data, and drop the legacy weeklyEntries /
-        // monthlyEntries counters. Those were incremented per entry but never
-        // reset on a new week/month, so their persisted values are meaningless
-        // lifetime totals. Both counts are now derived from entry timestamps.
-        if (version < 2) {
+        // v0/v1 → v2: dropped the legacy weeklyEntries / monthlyEntries
+        //   counters. Those were incremented per entry but never reset on a new
+        //   week/month, so their persisted values were meaningless lifetime
+        //   totals. Both counts are now derived from entry timestamps.
+        //
+        // v2 → v3: dropped averageMood and topEmotions for the same reason —
+        //   both were running values that could not be trusted:
+        //     * averageMood divided by an already-incremented entry count, so it
+        //       under-weighted each new entry and drifted toward its seed of 50.
+        //     * topEmotions stored 5 bare names with no counts, and re-tallied
+        //       that list against itself, so real frequency history was lost.
+        //   Neither was ever decremented when an entry was deleted either. Both
+        //   are now computed from the entries via analytics.ts.
+        if (version < 3) {
           const stats: UserStats = {
             totalEntries: persisted?.stats?.totalEntries ?? 0,
             totalDuration: persisted?.stats?.totalDuration ?? 0,
             currentStreak: persisted?.stats?.currentStreak ?? 0,
             longestStreak: persisted?.stats?.longestStreak ?? 0,
             lastEntryDate: persisted?.stats?.lastEntryDate ?? null,
-            averageMood: persisted?.stats?.averageMood ?? 50,
-            topEmotions: Array.isArray(persisted?.stats?.topEmotions) ? persisted.stats.topEmotions : [],
           };
           const usage: UsageStats = {
             totalMinutesUsed: persisted?.usage?.totalMinutesUsed ?? 0,
@@ -289,7 +262,7 @@ export default useUserStatsStore;
 // Selector hooks
 export const useCurrentStreak = () => useUserStatsStore((s) => s.stats.currentStreak);
 export const useTotalEntries = () => useUserStatsStore((s) => s.stats.totalEntries);
-export const useAverageMood = () => useUserStatsStore((s) => s.stats.averageMood);
+
 export const useLongestStreak = () => useUserStatsStore((s) => s.stats.longestStreak);
 export const useUsageMinutes = () => useUserStatsStore((s) => s.usage?.monthlyMinutesUsed ?? 0);
 export const useRemainingMinutes = () => useUserStatsStore((s) => Math.max(0, USAGE_LIMIT_MINUTES - (s.usage?.monthlyMinutesUsed ?? 0)));

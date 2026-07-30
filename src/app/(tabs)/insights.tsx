@@ -71,6 +71,7 @@ import useJournalStore, {
   getStartOfMonth,
   getStartOfWeek,
 } from "@/lib/state/journal-store";
+import { calculateAverageMood } from "@/lib/analytics";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 import {
   useUsageMinutes,
@@ -132,6 +133,9 @@ async function generateInsightsPDF({
   // month rather than a lifetime running total.
   const entriesThisWeek = countEntriesSince(entries, getStartOfWeek(now));
   const entriesThisMonth = countEntriesSince(entries, getStartOfMonth(now));
+
+  // Averaged over the entries themselves rather than read from a running total.
+  const averageMood = calculateAverageMood(entries);
 
   // ── Compute emotion frequencies ──────────────────────────────────────────
   const emotionCounts: Record<string, number> = {};
@@ -348,7 +352,7 @@ async function generateInsightsPDF({
     <div class="chip-row">
       <div class="chip">Valence: <strong>${valenceLabel}</strong><br><span class="sub">avg ${avgValence > 0 ? "+" : ""}${avgValence} (−100 unpleasant → +100 pleasant)</span></div>
       <div class="chip">Energy: <strong>${arousalLabel}</strong><br><span class="sub">avg arousal ${avgArousal}/100</span></div>
-      <div class="chip">Avg Mood: <strong>${stats.averageMood}/100</strong><br><span class="sub">overall emotional intensity</span></div>
+      <div class="chip">Avg Mood: <strong>${averageMood}/100</strong><br><span class="sub">overall emotional intensity</span></div>
     </div>
     ${highDistress > 0 ? `<div class="alert">⚠️ High distress recorded in <strong>${highDistress}</strong> ${highDistress === 1 ? "entry" : "entries"}${groundingUsed > 0 ? ` · Grounding exercises used <strong>${groundingUsed}</strong> times` : ""}</div>` : ""}
   </div>
