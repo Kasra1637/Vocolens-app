@@ -428,7 +428,6 @@ export function PaywallScreen() {
                   ? "Your journal is ready.\nLet's make it yours."
                   : "How your free\ntrial works"}
               </Text>
-              )}
             </Animated.View>
 
             {/* Benefits — shown ONLY when quarterly/monthly plans are visible */}
