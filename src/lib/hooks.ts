@@ -375,7 +375,9 @@ export function usePriorityInsights() {
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ['priorityInsights', cacheKey],
     queryFn: async () => {
-      const sortByPriority = (arr: any[]) => arr.sort((a, b) => {
+      // Copy before sorting: `arr` may be an array held by the AI analysis
+      // cache, and sorting in place would mutate the cached value.
+      const sortByPriority = (arr: any[]) => [...arr].sort((a, b) => {
         const order = { high: 0, medium: 1, low: 2 };
         return order[a.priority] - order[b.priority];
       });

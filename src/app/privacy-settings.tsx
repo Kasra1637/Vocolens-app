@@ -33,6 +33,7 @@ import useUserStatsStore from "@/lib/state/user-stats-store";
 import useBadgesStore from "@/lib/state/badges-store";
 import { useAuthStore } from "@/lib/state/auth-store";
 import { removePin } from "@/lib/auth-service";
+import { clearAICache } from "@/lib/ai-emotional-intelligence";
 import { PinEntryModal } from "@/components/PinEntryModal";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
@@ -129,6 +130,9 @@ export default function PrivacySettingsScreen() {
       warningHaptic();
       clearAllEntries();
       resetStats();
+      // The cached AI analysis is derived from these entries and quotes them,
+      // so it must not outlive them.
+      await clearAICache();
       setShowDeleteConfirm(false);
       Alert.alert("Success", "All journal entries have been deleted");
     } catch (error) {
@@ -144,6 +148,7 @@ export default function PrivacySettingsScreen() {
       clearAllEntries();
       resetStats();
       resetBadges();
+      await clearAICache();
       await removePin();
       logout();
       setPinSetup(false);

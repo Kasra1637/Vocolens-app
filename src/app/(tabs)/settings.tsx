@@ -67,6 +67,7 @@ import {
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
+import { clearAICache } from "@/lib/ai-emotional-intelligence";
 import useJournalStore from "@/lib/state/journal-store";
 import useBadgesStore from "@/lib/state/badges-store";
 import usePinStore from "@/lib/state/pin-store";
@@ -363,6 +364,10 @@ export default function SettingsScreen() {
     useBiometricStore.getState().disableBiometric();
     useEmotionCorrectionStore.getState().clearCorrections();
     useSubscriptionStore.getState().clearSubscription();
+
+    // Drop the persisted AI analysis too — it's derived from the entries we
+    // just deleted and quotes them in its evidence strings.
+    await clearAICache();
 
     // Clear PIN from secure storage (non-blocking)
     try {

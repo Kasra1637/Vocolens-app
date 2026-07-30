@@ -25,21 +25,120 @@ export interface AIAnalysisResponse {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiFetch } from './api/client';
 
 // ── Cache ─────────────────────────────────────────────────────────────────────
+//
+// Every call here is a billed OpenRouter request (POST /api/journal/ai-completion
+// is in the Worker's PAID_PATHS), so this cache is a cost control, not just a
+// latency optimisation. It has three layers:
+//
+//   1. `inflight` — request coalescing. Five hooks in hooks.ts call
+//      getAIAnalysis() with identical arguments, and they use *different*
+//      react-query keys, so react-query will NOT deduplicate them. Without a
+//      shared in-flight promise, concurrent callers all miss the cache (which is
+//      only populated after the await resolves) and each fires a real, billed
+//      request. That is a classic cache stampede, and the comment in
+//      useCreateEntry records it happening in practice ("4+ duplicate billings
+//      per entry save"). Joining the in-flight promise makes N concurrent
+//      callers cost exactly one request.
+//
+//   2. `cachedAnalysis` — in-memory result cache, cleared on every app launch.
+//
+//   3. AsyncStorage — survives relaunch, so simply reopening the app and
+//      visiting Insights does not re-bill for an unchanged set of entries.
+//      Only successful analyses are persisted.
 
 interface CachedAnalysis {
   data: AIAnalysisResponse;
-  timestamp: number;
-  entryCount: number;
+  /** Absolute expiry, so successes and fallbacks can have different lifetimes. */
+  expiresAt: number;
+  key: string;
 }
 
 let cachedAnalysis: CachedAnalysis | null = null;
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
-function clearAICache(): void {
+/** Shared promise for an identical request that has not resolved yet. */
+let inflight: { key: string; promise: Promise<AIAnalysisResponse> } | null = null;
+
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+const PERSISTED_CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
+/**
+ * Fallback results are cached only briefly — long enough to stop a retry storm,
+ * short enough that one transient 503 doesn't pin the canned "Keep Journaling"
+ * copy in front of the user for a full 10 minutes.
+ */
+const FAILURE_CACHE_DURATION = 60 * 1000; // 1 minute
+
+const PERSIST_KEY = 'vocolens_ai_analysis_cache_v1';
+
+/**
+ * Identifies a set of entries for caching purposes. Matches the react-query key
+ * used by the hooks (count + newest entry timestamp) so the two layers
+ * invalidate together — the previous version keyed on entry count alone, which
+ * meant editing an entry, or deleting one and adding another, kept serving stale
+ * insights for up to 10 minutes.
+ */
+function getCacheKey(entries: JournalEntry[]): string {
+  return `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
+}
+
+/**
+ * Consumers sort/mutate what they get back (e.g. usePriorityInsights sorts
+ * `insights` in place), so never hand out the cached object itself.
+ */
+function cloneAnalysis(analysis: AIAnalysisResponse): AIAnalysisResponse {
+  return {
+    patterns: [...analysis.patterns],
+    triggers: [...analysis.triggers],
+    cycles: [...analysis.cycles],
+    shifts: [...analysis.shifts],
+    insights: [...analysis.insights],
+  };
+}
+
+async function readPersistedAnalysis(key: string): Promise<AIAnalysisResponse | null> {
+  try {
+    const raw = await AsyncStorage.getItem(PERSIST_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { key: string; savedAt: number; data: AIAnalysisResponse };
+    if (parsed.key !== key) return null;
+    if (Date.now() - parsed.savedAt >= PERSISTED_CACHE_DURATION) return null;
+    if (!parsed.data || !Array.isArray(parsed.data.insights)) return null;
+    return parsed.data;
+  } catch {
+    // Corrupt or unavailable storage is never fatal — just re-analyse.
+    return null;
+  }
+}
+
+async function writePersistedAnalysis(key: string, data: AIAnalysisResponse): Promise<void> {
+  try {
+    await AsyncStorage.setItem(
+      PERSIST_KEY,
+      JSON.stringify({ key, savedAt: Date.now(), data }),
+    );
+  } catch {
+    // Non-fatal: the in-memory cache still applies for this session.
+  }
+}
+
+/**
+ * Drops every cached analysis, in memory and on disk.
+ *
+ * Must be called when the user deletes their journal data: the cached payload is
+ * derived from their entries and quotes them in `evidence`, so leaving it in
+ * AsyncStorage would outlive the data it came from.
+ */
+export async function clearAICache(): Promise<void> {
   cachedAnalysis = null;
+  inflight = null;
+  try {
+    await AsyncStorage.removeItem(PERSIST_KEY);
+  } catch {
+    // Ignore — the in-memory copy is already gone.
+  }
 }
 
 // ── Default (safe fallback) ───────────────────────────────────────────────────
@@ -216,31 +315,68 @@ function validatePriority(priority: string): 'high' | 'medium' | 'low' {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-async function analyzeWithAI(entries: JournalEntry[]): Promise<AIAnalysisResponse> {
-  if (entries.length < 5) return getDefaultAnalysis();
+/**
+ * Resolves an analysis for `entries`, consulting the persisted cache before
+ * spending money, and recording the result in both cache layers.
+ */
+async function loadAnalysis(
+  entries: JournalEntry[],
+  key: string,
+): Promise<AIAnalysisResponse> {
+  // A previous launch may already have paid for this exact set of entries.
+  const persisted = await readPersistedAnalysis(key);
+  if (persisted) {
+    cachedAnalysis = { data: persisted, expiresAt: Date.now() + CACHE_DURATION, key };
+    return persisted;
+  }
+
+  // Too little material to analyse — no request, no charge.
+  if (entries.length < 5) {
+    const fallback = getDefaultAnalysis();
+    cachedAnalysis = { data: fallback, expiresAt: Date.now() + CACHE_DURATION, key };
+    return fallback;
+  }
 
   try {
-    return await callBackend(prepareEntriesForAI(entries));
+    const analysis = await callBackend(prepareEntriesForAI(entries));
+    cachedAnalysis = { data: analysis, expiresAt: Date.now() + CACHE_DURATION, key };
+    // Fire-and-forget: persisting is an optimisation, not a correctness concern.
+    void writePersistedAnalysis(key, analysis);
+    return analysis;
   } catch (error) {
     console.warn('[AI Emotional Intelligence] Analysis failed, using default:', error);
-    return getDefaultAnalysis();
+    const fallback = getDefaultAnalysis();
+    // Deliberately NOT persisted, and only briefly cached.
+    cachedAnalysis = { data: fallback, expiresAt: Date.now() + FAILURE_CACHE_DURATION, key };
+    return fallback;
   }
 }
 
 export async function getAIAnalysis(entries: JournalEntry[]): Promise<AIAnalysisResponse> {
-  const now = Date.now();
+  const key = getCacheKey(entries);
 
-  if (
-    cachedAnalysis &&
-    now - cachedAnalysis.timestamp < CACHE_DURATION &&
-    cachedAnalysis.entryCount === entries.length
-  ) {
-    return cachedAnalysis.data;
+  // 1. Fresh result already in memory.
+  if (cachedAnalysis && cachedAnalysis.key === key && Date.now() < cachedAnalysis.expiresAt) {
+    return cloneAnalysis(cachedAnalysis.data);
   }
 
-  const analysis = await analyzeWithAI(entries);
+  // 2. An identical request is already running — join it instead of starting a
+  //    second billed call.
+  if (inflight && inflight.key === key) {
+    return cloneAnalysis(await inflight.promise);
+  }
 
-  cachedAnalysis = { data: analysis, timestamp: now, entryCount: entries.length };
+  // 3. Start the request and publish the promise SYNCHRONOUSLY, before the first
+  //    await. This is what makes step 2 reachable: any caller that arrives while
+  //    this one is still waiting sees the shared promise rather than an empty
+  //    cache. Ordering here is load-bearing — do not await before assigning.
+  const promise = loadAnalysis(entries, key);
+  inflight = { key, promise };
 
-  return analysis;
+  try {
+    return cloneAnalysis(await promise);
+  } finally {
+    // Only clear if no newer request has replaced this one.
+    if (inflight?.promise === promise) inflight = null;
+  }
 }
