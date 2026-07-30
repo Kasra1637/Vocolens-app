@@ -9,7 +9,9 @@ Add a new "Share" section to the bottom of the Settings screen with a Heart icon
 - **Icons**: lucide-react-native
 - **Fonts**: Inter (400, 600, 700), Fraunces (700 Bold)
 - **State**: Zustand stores
-- **Backend**: Node.js/TypeScript (Express)
+- **Backend**: Cloudflare Worker (`backend/src/worker.js`), deployed as `vocolens-api`.
+  A second, non-deployed Hono app also exists under `backend/src/index.ts` — see
+  `backend/README.md` for which is canonical and the consolidation plan.
 - **Payments**: Adapty (mock mode until `EXPO_PUBLIC_ADAPTY_KEY` is configured)
 
 ## What's Been Implemented
