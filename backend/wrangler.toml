@@ -37,4 +37,4 @@ compatibility_date = "2026-07-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "vocolens-usage"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "9e089cba-17f6-4069-82d3-2178ba0af7d2"
