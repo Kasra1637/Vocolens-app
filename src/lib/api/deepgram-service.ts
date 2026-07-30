@@ -1,6 +1,12 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import { apiFetch } from './client';
+import { getDeviceId } from '../device-id';
+import {
+  applyServerUsage,
+  usageLimitErrorFrom,
+  UsageLimitError,
+} from './usage-service';
 
 export interface TranscriptionResult {
   transcript: string;
@@ -21,15 +27,29 @@ export async function transcribeAudio(
   });
   const response = await apiFetch('/api/transcribe', {
     method: 'POST',
+    headers: { 'X-Device-Id': await getDeviceId() },
     body: JSON.stringify({ audioBase64, language: options.language || 'en', mimeType }),
   });
+
+  // Monthly allowance exhausted — terminal, never retried.
+  const limitError = await usageLimitErrorFrom(response);
+  if (limitError) throw limitError;
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Transcription failed (${response.status}): ${errorText}`);
   }
   const data = await response.json();
   if (!data.success) throw new Error(data.error || 'Transcription failed');
-  return { transcript: data.transcript || '', confidence: 0, duration: 0 };
+
+  // The server returns the authoritative balance it just metered.
+  applyServerUsage(data.usage);
+
+  return {
+    transcript: data.transcript || '',
+    confidence: data.confidence || 0,
+    duration: data.duration || 0,
+  };
 }
 
 export async function transcribeAudioWithRetry(
@@ -42,6 +62,9 @@ export async function transcribeAudioWithRetry(
     try {
       return await transcribeAudio(audioUri, options);
     } catch (error) {
+      // Retrying a limit rejection just burns requests — the answer is final
+      // until the allowance resets.
+      if (error instanceof UsageLimitError) throw error;
       lastError = error instanceof Error ? error : new Error('Unknown error');
       if (attempt < maxRetries) {
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));

@@ -6,6 +6,16 @@ import { UserStats, EmotionType } from '../types';
 
 export const USAGE_LIMIT_MINUTES = 300;
 
+/**
+ * Local mirror of the usage allowance — for DISPLAY ONLY.
+ *
+ * The 300-minute monthly cap is enforced by the backend (see
+ * backend/src/worker.js), which meters the real audio duration Deepgram
+ * measured. This copy exists so the UI can render a progress bar without a
+ * round-trip; it is refreshed from GET /api/usage/status via
+ * `setUsageFromServer`. Never treat it as authoritative — it lives in
+ * AsyncStorage and can be edited or wiped by the user.
+ */
 interface UsageStats {
   totalMinutesUsed: number;      // lifetime total
   monthlyMinutesUsed: number;    // resets each calendar month
@@ -22,6 +32,11 @@ interface UserStatsStore {
   incrementEntries: () => void;
   addDuration: (seconds: number) => void;
   addUsageSeconds: (seconds: number) => void;
+  setUsageFromServer: (usage: {
+    monthlyMinutesUsed: number;
+    totalMinutesUsed?: number;
+  }) => void;
+  markUsageLimitReached: () => void;
   updateStreak: (entryDate: string) => void;
   updateMoodStats: (mood: number, emotions: EmotionType[]) => void;
   resetStats: () => void;
@@ -90,6 +105,50 @@ const useUserStatsStore = create<UserStatsStore>()(
               totalMinutesUsed: prevUsage.totalMinutesUsed + minutes,
               monthlyMinutesUsed: prevMonthly + minutes,
               lastResetMonth: currentMonth,
+            },
+            lastUpdated: new Date().toISOString(),
+          };
+        });
+      },
+
+      /**
+       * Overwrites the local usage mirror with the server's authoritative
+       * figures.
+       *
+       * The backend owns the 300-minute cap; this store is only a cache for
+       * rendering. This deliberately assigns rather than taking the maximum, so
+       * the value can be corrected downward — e.g. at the start of a new
+       * billing period, or when local storage has been tampered with.
+       */
+      setUsageFromServer: ({ monthlyMinutesUsed, totalMinutesUsed }) => {
+        set((state) => {
+          const prev = state.usage ?? DEFAULT_USAGE;
+          return {
+            usage: {
+              monthlyMinutesUsed: Math.max(0, monthlyMinutesUsed),
+              totalMinutesUsed: Math.max(
+                0,
+                totalMinutesUsed ?? prev.totalMinutesUsed,
+              ),
+              lastResetMonth: getCurrentMonth(),
+            },
+            lastUpdated: new Date().toISOString(),
+          };
+        });
+      },
+
+      /** Pins the mirror to the cap after the server responds 402. */
+      markUsageLimitReached: () => {
+        set((state) => {
+          const prev = state.usage ?? DEFAULT_USAGE;
+          return {
+            usage: {
+              ...prev,
+              monthlyMinutesUsed: Math.max(
+                prev.monthlyMinutesUsed,
+                USAGE_LIMIT_MINUTES,
+              ),
+              lastResetMonth: getCurrentMonth(),
             },
             lastUpdated: new Date().toISOString(),
           };

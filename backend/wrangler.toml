@@ -19,3 +19,22 @@
 name = "vocolens-api"
 main = "src/worker.js"
 compatibility_date = "2026-07-01"
+
+# ── Usage metering (D1) ───────────────────────────────────────────────────────
+# Backs the server-authoritative 300 minutes/month cap. D1 is used rather than
+# KV because the counter must be correct under concurrency: D1 is strongly
+# consistent and supports an atomic INSERT ... ON CONFLICT DO UPDATE with
+# arithmetic, whereas KV is eventually consistent with no atomic
+# read-modify-write. See backend/schema.sql and backend/README.md.
+#
+# One-time setup (the database_id below must be replaced with the real one):
+#   cd backend
+#   wrangler d1 create vocolens-usage
+#   wrangler d1 execute vocolens-usage --remote --file=./schema.sql
+#
+# The Worker fails CLOSED if this binding is missing, so the app will return
+# 503 "usage_metering_unavailable" until the database is created and bound.
+[[d1_databases]]
+binding = "DB"
+database_name = "vocolens-usage"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

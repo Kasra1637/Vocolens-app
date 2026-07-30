@@ -37,6 +37,8 @@ import {
   TAB_ENTER_3 as ENTER_3,
 } from "@/lib/tabAnimations";
 import { MicButton } from "@/components/MicButton";
+import { BrandedAlert } from "@/components/BrandedAlert";
+import { UsageLimitError } from "@/lib/api/usage-service";
 import {
   heavyHaptic,
   tapHaptic,
@@ -207,6 +209,12 @@ export default function SpeakScreen() {
   const isAtLimit = useIsAtLimit();
   const usagePct = Math.min(1, usageMinutes / USAGE_LIMIT_MINUTES);
   const isNearLimit = usagePct >= 0.8 && !isAtLimit;
+
+  // Shown when the *server* rejects a request because the allowance is spent.
+  // This can happen mid-flow (the recording itself pushed the user over, or
+  // another device consumed the balance), so it needs its own notice rather
+  // than relying only on the pre-recording banner.
+  const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   // Mutation hook for creating entries
   const createEntryMutation = useCreateEntry();
@@ -439,6 +447,7 @@ export default function SpeakScreen() {
           }
         } catch (error) {
           console.error("Failed to analyze recording:", error);
+          if (error instanceof UsageLimitError) setLimitNotice(error.message);
           setRecordingState("idle");
           errorHaptic();
         }
@@ -449,6 +458,7 @@ export default function SpeakScreen() {
       }
     } catch (error) {
       console.error("Failed to stop recording:", error);
+      if (error instanceof UsageLimitError) setLimitNotice(error.message);
       setRecordingState("idle");
       errorHaptic();
     } finally {
@@ -1245,6 +1255,15 @@ export default function SpeakScreen() {
           voiceActions.reset();
         }}
         onGrounding={() => {}}
+      />
+
+      {/* Monthly allowance exhausted — reported by the server */}
+      <BrandedAlert
+        visible={limitNotice !== null}
+        type="error"
+        title="Monthly limit reached"
+        message={limitNotice ?? ""}
+        onClose={() => setLimitNotice(null)}
       />
 
       {/* Grounding Tools removed */}

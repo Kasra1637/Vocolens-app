@@ -1,5 +1,6 @@
 import { EmotionType, EmotionScores, EmotionIntensityLabels, RankedEmotion, BlendedEmotionType, BLENDED_EMOTION_LABELS, OPPOSITE_EMOTION_PAIRS, buildIntensityLabels, getIntensityLabel } from "../types";
 import { apiFetch } from "./client";
+import { usageLimitErrorFrom } from "./usage-service";
 
 // Internal helpers — not exported (only used by parseResponse)
 function computeTopThreeEmotions(scores) { return Object.entries(scores).sort(([,a],[,b])=>(b as number)-(a as number)).slice(0,3).map(([emotion,score],i)=>({emotion,score,rank:i+1,intensityLabel:getIntensityLabel(emotion as EmotionType,score as number)})); }
@@ -62,6 +63,10 @@ export async function analyzeWithOpenRouter(transcript, _a?, personalizationCont
   try {
     const r=await apiFetch('/api/analyze',{method:"POST",body:JSON.stringify({transcript,personalizationContext}),signal:controller.signal});
     clearTimeout(timeout);
+    // Monthly allowance exhausted — surface as a typed error so the UI can show
+    // the limit message instead of a generic failure.
+    const limitError=await usageLimitErrorFrom(r);
+    if(limitError)throw limitError;
     if(!r.ok){const e=await r.text();throw new Error(`Analysis error (${r.status}): ${e}`);}
     const j=await r.json();
     if(!j.success||!j.data)throw new Error(j.error||"Invalid response");
@@ -76,6 +81,9 @@ export async function generateRecommendation(transcript, primaryEmotion="happine
   if(!transcript||transcript.trim().length===0) return {advice:"Taking time to check in with yourself is meaningful.",audioAdvice:"Showing up here is already an act of self-care."};
   try {
     const r=await apiFetch('/api/recommend',{method:"POST",body:JSON.stringify({transcript,primaryEmotion})});
+    // Records the exhausted allowance locally so the UI blocks, then falls
+    // through to the offline copy below rather than failing the whole entry.
+    await usageLimitErrorFrom(r).catch(()=>null);
     if(r.ok){
       const j=await r.json();
       if(j.success&&j.data?.advice&&typeof j.data.advice==="string"&&j.data.advice.trim().length>=60) return j.data;

@@ -5,7 +5,8 @@
  *   GET  /                              health ping
  *   GET  /health                        health ping
  *   GET  /api/journal/status            connection status
- *   POST /api/transcribe                Deepgram STT
+ *   GET  /api/usage/status              server-authoritative monthly balance
+ *   POST /api/transcribe                Deepgram STT (meters audio minutes)
  *   POST /api/analyze                   analyse transcript
  *   POST /api/journal/analyze           alias for /api/analyze
  *   POST /api/recommend                 recommendation card
@@ -62,6 +63,220 @@ function stripFences(str) {
     .replace(/^```\s*/i, "")
     .replace(/```\s*$/i, "")
     .trim();
+}
+
+// ─── Usage metering (server-authoritative monthly cap) ───────────────────────
+//
+// The 300-minute cap is a cost-control mechanism: every audio second costs us
+// money at Deepgram and OpenRouter. It therefore MUST be enforced here, not in
+// the app. The client's local counter is display-only and is treated as
+// untrusted.
+//
+// Design notes:
+//   * The billed unit is `metadata.duration` from Deepgram's response — the
+//     actual decoded audio length, measured server-side. We deliberately do NOT
+//     accept a client-reported duration, because a modified client would simply
+//     report zero.
+//   * State lives in D1 (see backend/schema.sql for why D1 and not KV).
+//   * The monthly reset is derived, not scheduled: each row stores the period
+//     its counter belongs to, and a request in a new period resets it as part of
+//     the same atomic UPDATE. No cron job to fail.
+//   * If metering is unavailable we fail CLOSED (503). An outage must not
+//     silently become unlimited free usage.
+
+const USAGE_LIMIT_MINUTES = 300;
+const USAGE_LIMIT_SECONDS = USAGE_LIMIT_MINUTES * 60;
+
+/** Every endpoint that costs money, and is therefore subject to the cap. */
+const PAID_PATHS = new Set([
+  "/api/transcribe",
+  "/api/analyze",
+  "/api/journal/analyze",
+  "/api/recommend",
+  "/api/journal/recommendation",
+  "/api/journal/weekly-reflection",
+  "/api/journal/ai-completion",
+]);
+
+// Bounds the worst-case overshoot from a single request, since we only learn the
+// true audio length after Deepgram has processed it.
+const MAX_AUDIO_SECONDS = 1800; // 30 min
+// Reject oversized uploads before we allocate/decode them.
+const MAX_AUDIO_BASE64_CHARS = 32 * 1024 * 1024; // ~24 MB of audio
+
+/** Current billing period as "YYYY-MM" in UTC. */
+function currentPeriod(date = new Date()) {
+  return date.toISOString().slice(0, 7);
+}
+
+/** First instant of the period after `period` ("YYYY-MM"), as an ISO string. */
+function nextPeriodResetIso(period) {
+  const [year, month] = period.split("-").map(Number);
+  const rollsOver = month === 12;
+  return new Date(
+    Date.UTC(rollsOver ? year + 1 : year, rollsOver ? 0 : month, 1)
+  ).toISOString();
+}
+
+/**
+ * The identity we meter against.
+ *
+ * Prefers the client-supplied stable device id. Falls back to the connecting IP
+ * so that a client which sends no (or a malformed) id still gets metered
+ * against *something* narrower than a single global bucket — older app builds
+ * sent the literal "unknown-device" for every iOS install, which would
+ * otherwise pool all of them into one counter.
+ */
+function resolveSubject(request) {
+  const raw = (request.headers.get("X-Device-Id") || "").trim();
+  const looksUsable =
+    raw.length >= 8 &&
+    raw.length <= 200 &&
+    /^[A-Za-z0-9._:-]+$/.test(raw) &&
+    raw !== "unknown-device" &&
+    raw !== "anonymous";
+  if (looksUsable) return "device:" + raw;
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  return "ip:" + ip;
+}
+
+/** SHA-256 hex, so D1 never stores a raw device identifier. */
+async function hashSubject(subject) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(subject)
+  );
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Reads the current balance. A row from a previous period counts as zero. */
+async function readUsage(env, subjectHash, period) {
+  const row = await env.DB.prepare(
+    "SELECT period, period_seconds, lifetime_seconds FROM usage WHERE subject_hash = ?1"
+  )
+    .bind(subjectHash)
+    .first();
+  if (!row) return { periodSeconds: 0, lifetimeSeconds: 0 };
+  return {
+    periodSeconds: row.period === period ? Number(row.period_seconds) || 0 : 0,
+    lifetimeSeconds: Number(row.lifetime_seconds) || 0,
+  };
+}
+
+/**
+ * Atomically adds `seconds` to the caller's balance, resetting the monthly
+ * counter first if the stored row belongs to an earlier period.
+ *
+ * The increment and the rollover are a single statement so concurrent requests
+ * cannot lose each other's writes (the read-modify-write race that makes KV
+ * unsuitable here).
+ */
+async function addUsage(env, subjectHash, period, seconds, nowIso) {
+  const row = await env.DB.prepare(
+    `INSERT INTO usage (subject_hash, period, period_seconds, lifetime_seconds, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?3, ?4, ?4)
+     ON CONFLICT(subject_hash) DO UPDATE SET
+       period_seconds = CASE
+         WHEN usage.period = excluded.period
+           THEN usage.period_seconds + excluded.period_seconds
+           ELSE excluded.period_seconds
+       END,
+       lifetime_seconds = usage.lifetime_seconds + excluded.period_seconds,
+       period = excluded.period,
+       updated_at = excluded.updated_at
+     RETURNING period_seconds, lifetime_seconds`
+  )
+    .bind(subjectHash, period, seconds, nowIso)
+    .first();
+  return {
+    periodSeconds: Number(row?.period_seconds) || 0,
+    lifetimeSeconds: Number(row?.lifetime_seconds) || 0,
+  };
+}
+
+/** The usage shape returned to the app. Minutes, rounded to 2dp. */
+function usagePayload(periodSeconds, lifetimeSeconds, period) {
+  const round = (n) => Math.round(n * 100) / 100;
+  const usedMinutes = periodSeconds / 60;
+  return {
+    monthlyMinutesUsed: round(usedMinutes),
+    totalMinutesUsed: round(lifetimeSeconds / 60),
+    limitMinutes: USAGE_LIMIT_MINUTES,
+    remainingMinutes: Math.max(0, round(USAGE_LIMIT_MINUTES - usedMinutes)),
+    isAtLimit: periodSeconds >= USAGE_LIMIT_SECONDS,
+    period,
+    resetsAt: nextPeriodResetIso(period),
+  };
+}
+
+/**
+ * Gate for every endpoint that spends money.
+ *
+ * Returns `{ response }` to short-circuit (limit reached / metering down), or
+ * `{ subjectHash, period }` for the caller to meter against on success.
+ */
+async function checkUsageAllowed(request, env) {
+  if (!env.DB) {
+    console.error("[usage] D1 binding 'DB' is missing — failing closed");
+    return {
+      response: json(
+        {
+          error: "usage_metering_unavailable",
+          message:
+            "Usage metering is temporarily unavailable. Please try again shortly.",
+        },
+        503,
+        request
+      ),
+    };
+  }
+
+  const subjectHash = await hashSubject(resolveSubject(request));
+  const period = currentPeriod();
+
+  let usage;
+  try {
+    usage = await readUsage(env, subjectHash, period);
+  } catch (err) {
+    // Fail closed: we cannot prove the caller is under their cap.
+    console.error("[usage] lookup failed:", err && err.message);
+    return {
+      response: json(
+        {
+          error: "usage_metering_unavailable",
+          message:
+            "Usage metering is temporarily unavailable. Please try again shortly.",
+        },
+        503,
+        request
+      ),
+    };
+  }
+
+  if (usage.periodSeconds >= USAGE_LIMIT_SECONDS) {
+    return {
+      response: json(
+        {
+          error: "monthly_limit_reached",
+          message:
+            "You've used all " +
+            USAGE_LIMIT_MINUTES +
+            " minutes included this month. Your allowance resets on the 1st.",
+          usage: usagePayload(
+            usage.periodSeconds,
+            usage.lifetimeSeconds,
+            period
+          ),
+        },
+        402,
+        request
+      ),
+    };
+  }
+
+  return { subjectHash, period, usage };
 }
 
 const ANALYSIS_PROMPT = `You are the core AI engine for Vocolens, an expert emotional intelligence analyst specialising in Plutchik's Wheel of Emotions.
@@ -161,19 +376,70 @@ Return ONLY this JSON — no markdown, no explanation:
   "emotionalRange": "brief phrase e.g. Mostly grounded with moments of joy"
 }`;
 
-async function handleTranscribe(request, env) {
+/** GET /api/usage/status — the app's single source of truth for the balance. */
+async function handleUsageStatus(request, env) {
+  if (!env.DB) {
+    console.error("[usage] D1 binding 'DB' is missing — failing closed");
+    return json(
+      {
+        error: "usage_metering_unavailable",
+        message: "Usage metering is temporarily unavailable.",
+      },
+      503,
+      request
+    );
+  }
+
+  const subjectHash = await hashSubject(resolveSubject(request));
+  const period = currentPeriod();
+
+  try {
+    const usage = await readUsage(env, subjectHash, period);
+    return json(
+      {
+        success: true,
+        ...usagePayload(usage.periodSeconds, usage.lifetimeSeconds, period),
+      },
+      200,
+      request
+    );
+  } catch (err) {
+    console.error("[usage] status lookup failed:", err && err.message);
+    return json(
+      {
+        error: "usage_metering_unavailable",
+        message: "Usage metering is temporarily unavailable.",
+      },
+      503,
+      request
+    );
+  }
+}
+
+async function handleTranscribe(request, env, gate) {
   const body = await request.json();
   const audioBase64 = body.audioBase64;
   const language = body.language || "en";
   const mimeType = body.mimeType || "audio/mp4";
 
   if (!audioBase64) {
-    return json({ error: "audioBase64 is required" }, 400);
+    return json({ error: "audioBase64 is required" }, 400, request);
+  }
+
+  if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
+    return json(
+      {
+        error: "audio_too_large",
+        message: "That recording is too long to process. Please record a shorter entry.",
+      },
+      413,
+      request
+    );
   }
 
   const apiKey = env.DEEPGRAM_API_KEY;
   if (!apiKey) {
-    return json({ error: "Deepgram API key not configured" }, 503);
+    return json({ error: "Deepgram API key not configured" }, 503, request);
   }
 
   const binary = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
@@ -192,7 +458,7 @@ async function handleTranscribe(request, env) {
 
   if (!resp.ok) {
     const err = await resp.text();
-    return json({ error: "Deepgram error: " + err }, 502);
+    return json({ error: "Deepgram error: " + err }, 502, request);
   }
 
   const data = await resp.json();
@@ -201,7 +467,35 @@ async function handleTranscribe(request, env) {
   const confidence = alt?.confidence || 0;
   const duration = data?.metadata?.duration || 0;
 
-  return json({ success: true, transcript, confidence, duration });
+  // ── Meter the audio we just paid for ──────────────────────────────────────
+  // `duration` is Deepgram's own measurement of the decoded audio, so it cannot
+  // be understated by a modified client. Clamped so one malformed response
+  // can't corrupt the balance.
+  const billableSeconds = Math.min(
+    Math.max(Number(duration) || 0, 0),
+    MAX_AUDIO_SECONDS
+  );
+
+  let usage = null;
+  try {
+    const updated = await addUsage(
+      env,
+      gate.subjectHash,
+      gate.period,
+      billableSeconds,
+      new Date().toISOString()
+    );
+    usage = usagePayload(updated.periodSeconds, updated.lifetimeSeconds, gate.period);
+  } catch (err) {
+    // The spend already happened; don't fail the user's request over a write
+    // blip. This under-counts, so it's logged loudly for reconciliation.
+    console.error(
+      "[usage] FAILED to record " + billableSeconds + "s:",
+      err && err.message
+    );
+  }
+
+  return json({ success: true, transcript, confidence, duration, usage }, 200, request);
 }
 
 async function handleAnalyze(request, env) {
@@ -447,6 +741,19 @@ export default {
       }, 200, request);
     }
 
+    // ── Usage status ────────────────────────────────────────────────────────
+    // Authenticated GET, so it must be handled before the POST-only guard
+    // below. This is what the app reads to learn its real balance; the local
+    // counter is only a mirror of this.
+    if (path === "/api/usage/status" && request.method === "GET") {
+      const clientKey = request.headers.get("X-Api-Key") || "";
+      const serverKey = env.VOCOLENS_API_KEY || "";
+      if (!serverKey || clientKey !== serverKey) {
+        return json({ error: "Unauthorized" }, 401, request);
+      }
+      return await handleUsageStatus(request, env);
+    }
+
     // ── Authentication ──────────────────────────────────────────────────────
     // All POST endpoints require a valid API key in the X-Api-Key header.
     // The key is set as a Cloudflare Worker secret (VOCOLENS_API_KEY).
@@ -462,26 +769,37 @@ export default {
       return json({ error: "Not found" }, 404, request);
     }
 
-    try {
-      if (path === "/api/transcribe") {
-        return await handleTranscribe(request, env);
+    // ── Monthly cap ─────────────────────────────────────────────────────────
+    // Every endpoint below spends money (Deepgram audio or OpenRouter tokens),
+    // so all of them are gated on the caller's remaining allowance. Only
+    // /api/transcribe adds to the balance — the audio duration is the billed
+    // unit — but once the cap is hit, nothing paid is served.
+    if (PAID_PATHS.has(path)) {
+      const gate = await checkUsageAllowed(request, env);
+      if (gate.response) return gate.response;
+
+      try {
+        if (path === "/api/transcribe") {
+          return await handleTranscribe(request, env, gate);
+        }
+        if (path === "/api/analyze" || path === "/api/journal/analyze") {
+          return await handleAnalyze(request, env);
+        }
+        if (path === "/api/recommend" || path === "/api/journal/recommendation") {
+          return await handleRecommend(request, env);
+        }
+        if (path === "/api/journal/weekly-reflection") {
+          return await handleWeeklyReflection(request, env);
+        }
+        if (path === "/api/journal/ai-completion") {
+          return await handleAICompletion(request, env);
+        }
+      } catch (err) {
+        console.error("[Worker] Unhandled error:", err.message);
+        return json({ error: err.message }, 500, request);
       }
-      if (path === "/api/analyze" || path === "/api/journal/analyze") {
-        return await handleAnalyze(request, env);
-      }
-      if (path === "/api/recommend" || path === "/api/journal/recommendation") {
-        return await handleRecommend(request, env);
-      }
-      if (path === "/api/journal/weekly-reflection") {
-        return await handleWeeklyReflection(request, env);
-      }
-      if (path === "/api/journal/ai-completion") {
-        return await handleAICompletion(request, env);
-      }
-      return json({ error: "Not found" }, 404, request);
-    } catch (err) {
-      console.error("[Worker] Unhandled error:", err.message);
-      return json({ error: err.message }, 500, request);
     }
+
+    return json({ error: "Not found" }, 404, request);
   },
 };

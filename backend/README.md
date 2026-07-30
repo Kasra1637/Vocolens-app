@@ -24,7 +24,8 @@ distinction isn't rediscovered from scratch each time.
 |---|---|---|---|
 | GET | `/`, `/health` | none | liveness |
 | GET | `/api/journal/status` | none | reports whether the OpenRouter key is configured |
-| POST | `/api/transcribe` | `X-Api-Key` | Deepgram `nova-2` speech-to-text |
+| GET | `/api/usage/status` | `X-Api-Key` | authoritative monthly balance |
+| POST | `/api/transcribe` | `X-Api-Key` | Deepgram `nova-2` STT — **meters usage** |
 | POST | `/api/analyze`, `/api/journal/analyze` | `X-Api-Key` | emotion analysis |
 | POST | `/api/recommend`, `/api/journal/recommendation` | `X-Api-Key` | advice generation |
 | POST | `/api/journal/weekly-reflection` | `X-Api-Key` | weekly digest |
@@ -33,6 +34,9 @@ distinction isn't rediscovered from scratch each time.
 Every `POST` requires a matching `X-Api-Key`, and fails closed if the server-side
 key is unset. Any non-`POST` request to a path other than the health/status
 endpoints returns 404.
+
+All of the `POST` endpoints above cost money and are gated on the monthly
+allowance — see [Usage metering](#usage-metering-the-300-minutemonth-cap).
 
 ## What is NOT deployed
 
@@ -52,26 +56,79 @@ Nothing builds, deploys, or successfully boots it:
   it** — so `/api/recommend` and `/api/journal/recommendation` reference a
   function that doesn't exist. `npx tsc --noEmit` reports this as TS2305.
 
-It is kept in the tree for one reason only: **`src/routes/usage.ts` is the sole
-implementation of the `/api/usage/*` endpoints**, which the client calls but the
-Worker does not implement. Treat it as a reference spec, not as running code.
+It is now fully superseded: the usage endpoints it used to be the only reference
+for have been implemented properly in `worker.js` on top of D1. Its
+`src/routes/usage.ts` used an in-memory `Map`, which cannot work in Workers
+anyway — isolates are ephemeral and distributed, so counts would be inconsistent
+and would reset unpredictably.
 
-## Known gap: usage endpoints 404 in production
+Nothing depends on it any more, so it is safe to delete whenever you want to
+close out the consolidation (step 5 below).
 
-`src/lib/api/usage-service.ts` in the app calls:
+## Usage metering: the 300 minute/month cap
 
-- `POST /api/usage/record`
-- `GET /api/usage/status`
+The cap is a **cost-control** mechanism — every audio second costs money at
+Deepgram and OpenRouter — so it is enforced **server-side, in this Worker**. The
+app's local counter is a display mirror and is treated as untrusted.
 
-Neither exists in `worker.js`, so both return `{"error":"Not found"}` (404). The
-client degrades silently — it updates the local Zustand store first and only
-logs a warning — so the 300-minute monthly cap is currently enforced
-**client-side only** and is not authoritative across reinstalls or devices.
+### Required one-time setup
 
-Porting these to the Worker needs durable storage (KV or D1). The Hono version
-uses an in-memory `Map`, which is not viable in Workers: isolates are ephemeral
-and distributed, so per-isolate state would produce inconsistent counts. Any
-port must therefore add a KV/D1 binding to `wrangler.toml` first.
+The Worker **fails closed**: without the D1 binding it returns
+`503 usage_metering_unavailable` for every paid endpoint rather than silently
+serving unlimited free usage. So this must be done before/with the next deploy:
+
+```bash
+cd backend
+wrangler d1 create vocolens-usage
+# copy the printed database_id into wrangler.toml, replacing
+# REPLACE_WITH_D1_DATABASE_ID
+wrangler d1 execute vocolens-usage --remote --file=./schema.sql
+```
+
+### How it works
+
+| Concern | Implementation |
+|---|---|
+| **What is billed** | `metadata.duration` from Deepgram's response — the actual decoded audio length, measured server-side inside `handleTranscribe`. |
+| **Why not the client's number** | A modified client would report `0`. The app no longer sends a duration at all, and there is deliberately **no** `POST /api/usage/record` endpoint. |
+| **Where it's checked** | `checkUsageAllowed()`, invoked from the router for every path in `PAID_PATHS`. The check runs **before** the upstream call, so a capped user costs nothing. |
+| **What's blocked at the cap** | All seven paid endpoints (transcribe + every OpenRouter route), with `402` and `{"error":"monthly_limit_reached"}`. Only `/api/transcribe` *adds* to the balance. |
+| **Storage** | D1 (`DB` binding), table `usage`. See `schema.sql` for why D1 rather than KV. |
+| **Monthly reset** | Derived, not scheduled. Each row stores the `period` (`YYYY-MM`, UTC) its counter belongs to; a request in a new period resets `period_seconds` as part of the same atomic `UPDATE`. No cron job that can fail. |
+| **Concurrency** | Increment and rollover happen in a single `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`, so simultaneous requests cannot lose each other's writes. |
+| **Privacy** | Only a SHA-256 `subject_hash` is stored, never a raw device id. |
+| **Survives reinstall / cleared data** | Yes. State lives in D1, keyed on a platform identity that sits outside app storage (Android SSAID / iOS IDFV). The app pulls the real balance on launch and on foreground, so wiping local storage changes nothing. |
+
+`GET /api/usage/status` (requires `X-Api-Key`) returns the authoritative
+balance, including `resetsAt`, and is what the app renders.
+
+### Residual gaps — please read
+
+These are **not** fixed by this change and need product decisions:
+
+1. **Cross-device is not enforced.** There is no server-side account: auth is a
+   local PIN/biometric, and Adapty is in mock mode with `identifyUser()` never
+   called. Metering is therefore per-device, and a user with a second phone gets
+   a second allowance. The schema stores an opaque `subject_hash` specifically so
+   the subject can be switched from a device id to an account/subscription id
+   later with no migration — that swap is the real fix.
+
+2. **The web build bypasses metering entirely.**
+   `src/lib/services/deepgram-realtime-service.ts` opens a WebSocket **straight
+   to Deepgram** using `EXPO_PUBLIC_DEEPGRAM_API_KEY`, which is embedded in the
+   client bundle. This path never touches the Worker, so it is unmetered, and the
+   extracted key can be used with no app at all. Fix: proxy web streaming audio
+   through the Worker and remove the key from the bundle. Until then, treat the
+   web build as uncapped.
+
+3. **`X-Device-Id` is client-supplied and `X-Api-Key` is a single shared secret**
+   baked into the bundle. A determined user can rotate device ids to mint fresh
+   allowances. Meaningful hardening requires per-user credentials (see #1);
+   short of that, the IP fallback in `resolveSubject()` limits casual abuse.
+
+4. **Overshoot is bounded, not eliminated.** The true audio length is only known
+   after Deepgram responds, so a session that starts under the cap may finish
+   over it. `MAX_AUDIO_SECONDS` (30 min) bounds the worst case per request.
 
 ## Consolidation plan
 

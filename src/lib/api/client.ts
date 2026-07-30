@@ -9,6 +9,7 @@
  */
 
 import Constants from 'expo-constants';
+import { getDeviceId } from '../device-id';
 
 function getBackendUrl(): string {
   const url =
@@ -38,6 +39,11 @@ export async function apiFetch(
 ): Promise<Response> {
   const url = `${getBackendUrl()}${path}`;
   const apiKey = getApiKey();
+  // Identifies which allowance to meter against. Attached centrally so no paid
+  // endpoint can accidentally be called without it — a missing id would be
+  // metered against a different (IP-derived) bucket on the server, which would
+  // let an already-capped device keep spending.
+  const deviceId = await getDeviceId().catch(() => '');
 
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> || {}),
@@ -46,6 +52,11 @@ export async function apiFetch(
   // Always attach API key
   if (apiKey) {
     headers['X-Api-Key'] = apiKey;
+  }
+
+  // Always attach the usage subject, unless a caller set it explicitly.
+  if (deviceId && !headers['X-Device-Id']) {
+    headers['X-Device-Id'] = deviceId;
   }
 
   // Default Content-Type for POST

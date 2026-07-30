@@ -31,6 +31,7 @@ import {
 } from "@expo-google-fonts/fraunces";
 import { useFrameworkReady } from "@/hooks/useFrameworkReady";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import { syncUsageFromBackend } from "@/lib/api/usage-service";
 
 LogBox.ignoreLogs([
   "Expo AV has been deprecated",
@@ -134,6 +135,23 @@ export default function RootLayout() {
         checkForUpdate();
       }
       appState.current = nextState;
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  // ── Usage allowance: reconcile with the server ─────────────────────────────
+  // The 300-minute monthly cap is owned by the backend. Pulling the real
+  // balance on launch (and whenever the app is foregrounded) means a fresh
+  // install, a device with cleared app data, or locally edited storage all
+  // converge on the server's figure instead of starting from zero.
+  useEffect(() => {
+    syncUsageFromBackend().catch(() => {});
+
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        syncUsageFromBackend().catch(() => {});
+      }
     });
 
     return () => subscription.remove();

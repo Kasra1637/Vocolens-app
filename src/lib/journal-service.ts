@@ -31,7 +31,7 @@ import { analyzeWithOpenRouter, generateRecommendation } from "./api/openrouter-
 // Use legacy subpath — v55's top-level export no longer includes
 // `EncodingType.Base64`, so the audio-to-base64 conversion crashes without this.
 import * as FileSystem from "expo-file-system/legacy";
-import { recordSessionUsage } from "./api/usage-service";
+import { syncUsageFromBackend } from "./api/usage-service";
 import { buildPersonalizationPrompt } from "./personalization";
 
 /**
@@ -769,8 +769,12 @@ export async function createJournalEntry(
   // Update user stats - IMPORTANT: incrementEntries MUST be called first
   userStatsStore.incrementEntries();
   userStatsStore.addDuration(duration);
-  // Record usage toward the 300-minute monthly limit (fire-and-forget)
-  recordSessionUsage(duration).catch(() => {});
+  // The 300-minute monthly cap is metered server-side, inside /api/transcribe,
+  // from the audio duration Deepgram actually measured. We deliberately do NOT
+  // report a client-measured duration here — that would double-count against
+  // the server's meter and would be trivially falsifiable anyway.
+  // Refresh the local display mirror from the authoritative balance instead.
+  syncUsageFromBackend().catch(() => {});
   userStatsStore.updateStreak(entry.createdAt);
   userStatsStore.updateMoodStats(analysis.emotionIntensity, analysis.emotions);
 
