@@ -22,9 +22,27 @@ interface BrandedAlertProps {
   title: string;
   message: string;
   onClose: () => void;
+  /** Label for the dismiss button. Defaults to "OK". */
+  confirmLabel?: string;
+  /**
+   * Optional secondary action rendered above the dismiss button — used for
+   * recoverable failures where the user should be offered a way forward
+   * (e.g. "Try again" after a transcription failure) instead of only "OK".
+   */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
 }
 
-export function BrandedAlert({ visible, type, title, message, onClose }: BrandedAlertProps) {
+export function BrandedAlert({
+  visible,
+  type,
+  title,
+  message,
+  onClose,
+  confirmLabel = 'OK',
+  secondaryLabel,
+  onSecondary,
+}: BrandedAlertProps) {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
   const themeColors = getThemeColors(selectedTheme, isDarkMode);
@@ -32,6 +50,11 @@ export function BrandedAlert({ visible, type, title, message, onClose }: Branded
   const handleClose = () => {
     tapHaptic();
     onClose();
+  };
+
+  const handleSecondary = () => {
+    tapHaptic();
+    onSecondary?.();
   };
 
   React.useEffect(() => {
@@ -97,14 +120,48 @@ export function BrandedAlert({ visible, type, title, message, onClose }: Branded
               {message}
             </Text>
 
-            {/* OK Button */}
+            {/* Secondary action — only rendered when a recovery path exists */}
+            {secondaryLabel && onSecondary && (
+              <Pressable
+                onPress={handleSecondary}
+                className="py-4 px-6 rounded-2xl active:opacity-80 mb-3"
+                style={{ backgroundColor: themeColors.primary }}
+              >
+                <Text className="font-bold text-center text-lg text-white">
+                  {secondaryLabel}
+                </Text>
+              </Pressable>
+            )}
+
+            {/* Dismiss button — de-emphasised to a border when a secondary
+                action is present, so the recovery path reads as primary. */}
             <Pressable
               onPress={handleClose}
               className="py-4 px-6 rounded-2xl active:opacity-80"
-              style={{ backgroundColor: themeColors.primary }}
+              style={
+                secondaryLabel && onSecondary
+                  ? {
+                      backgroundColor: 'transparent',
+                      borderWidth: 1.5,
+                      borderColor: isDarkMode
+                        ? 'rgba(196,181,220,0.35)'
+                        : 'rgba(107,91,149,0.3)',
+                    }
+                  : { backgroundColor: themeColors.primary }
+              }
             >
-              <Text className="font-bold text-center text-lg text-white">
-                OK
+              <Text
+                className="font-bold text-center text-lg"
+                style={{
+                  color:
+                    secondaryLabel && onSecondary
+                      ? isDarkMode
+                        ? '#C4B5DC'
+                        : '#6B5B95'
+                      : '#FFFFFF',
+                }}
+              >
+                {confirmLabel}
               </Text>
             </Pressable>
           </View>
