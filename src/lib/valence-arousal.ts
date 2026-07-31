@@ -56,10 +56,6 @@ export function distressFromVA(
   return "low";
 }
 
-export function shouldTriggerGrounding(distressLevel: DistressLevel): boolean {
-  return distressLevel === "high";
-}
-
 export function distressScore(valence: number, arousal: number): number {
   return Math.round(-valence * 0.5 + arousal * 0.5);
 }

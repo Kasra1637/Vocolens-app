@@ -37,7 +37,6 @@ import {
   Mic,
   Heart,
   AlertTriangle,
-  Wind,
 } from "lucide-react-native";
 import Animated, { FadeInDown, FadeIn, FadeOut } from "react-native-reanimated";
 import {
@@ -702,8 +701,7 @@ export default function EntryDetailScreen() {
         {/* ── Your Reflection ─────────────────────────────────────────────── */}
         {(entry.valence !== undefined ||
           entry.arousal !== undefined ||
-          entry.bodySensation ||
-          entry.groundingUsed) && (
+          entry.bodySensation) && (
           <Animated.View entering={FadeInDown.delay(450).duration(600)} style={{ marginBottom: 16 }}>
             <Pressable
               onPress={() => toggleSection("reflection")}
@@ -786,7 +784,7 @@ export default function EntryDetailScreen() {
                       </View>
                     )}
 
-                    {/* Body Sensation & Grounding chips */}
+                    {/* Body Sensation chip */}
                     <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                       {entry.bodySensation && (
                         <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
@@ -794,12 +792,6 @@ export default function EntryDetailScreen() {
                           <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6, textTransform: "capitalize" }}>
                             {entry.bodySensation.replace(/_/g, " ")}
                           </Text>
-                        </View>
-                      )}
-                      {entry.groundingUsed && (
-                        <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                          <Wind size={12} color="#FFFFFF" strokeWidth={2} />
-                          <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6 }}>Grounding used</Text>
                         </View>
                       )}
                       {entry.distressLevel && (

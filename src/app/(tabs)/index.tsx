@@ -1254,7 +1254,6 @@ export default function SpeakScreen() {
           setRecordingState("idle");
           voiceActions.reset();
         }}
-        onGrounding={() => {}}
       />
 
       {/* Monthly allowance exhausted — reported by the server */}
@@ -1265,8 +1264,6 @@ export default function SpeakScreen() {
         message={limitNotice ?? ""}
         onClose={() => setLimitNotice(null)}
       />
-
-      {/* Grounding Tools removed */}
     </View>
   );
 }

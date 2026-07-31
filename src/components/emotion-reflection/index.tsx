@@ -12,7 +12,6 @@ import ValenceSlider from './ValenceSlider';
 import ArousalSlider from './ArousalSlider';
 import EmotionDefinitionCard from './EmotionDefinitionCard';
 import BodySensationPicker from './BodySensationPicker';
-import DistressBanner from './DistressBanner';
 
 export interface ReflectionResult {
   emotions: EmotionType[];
@@ -34,7 +33,6 @@ interface Props {
   initialDistressLevel: DistressLevel;
   onComplete: (result: ReflectionResult) => void;
   onDismiss: () => void;
-  onGrounding: () => void;
 }
 
 function computeDistress(valence: number, arousal: number): DistressLevel {
@@ -48,7 +46,7 @@ const ALL_EMOTIONS: EmotionType[] = ['happiness', 'sadness', 'anger', 'disgust',
 
 export default function EmotionReflectionScreen({
   visible, transcript, suggestedEmotions, suggestedBodySensations,
-  initialValence, initialArousal, onComplete, onDismiss, onGrounding,
+  initialValence, initialArousal, onComplete, onDismiss,
 }: Props) {
   const [emotions, setEmotions] = useState<EmotionType[]>(suggestedEmotions);
   const [valence, setValence] = useState(initialValence);
@@ -171,13 +169,6 @@ export default function EmotionReflectionScreen({
               <ArousalSlider value={arousal} onChange={setArousal} />
             </View>
           </Animated.View>
-
-          {/* Distress banner */}
-          {distressLevel !== 'low' && (
-            <Animated.View entering={FadeInUp.delay(400)} style={{ marginTop: 24 }}>
-              <DistressBanner level={distressLevel} onGrounding={onGrounding} />
-            </Animated.View>
-          )}
         </ScrollView>
 
         {/* Bottom bar */}

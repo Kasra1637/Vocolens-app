@@ -174,7 +174,6 @@ async function generateInsightsPDF({
 
   // ── Distress overview ────────────────────────────────────────────────────
   const highDistress = entries.filter((e) => e.distressLevel === "high").length;
-  const groundingUsed = entries.filter((e) => e.groundingUsed).length;
 
   // ── Recent entries (last 5) ───────────────────────────────────────────────
   const recentEntries = [...entries]
@@ -354,7 +353,7 @@ async function generateInsightsPDF({
       <div class="chip">Energy: <strong>${arousalLabel}</strong><br><span class="sub">avg arousal ${avgArousal}/100</span></div>
       <div class="chip">Avg Mood: <strong>${averageMood}/100</strong><br><span class="sub">overall emotional intensity</span></div>
     </div>
-    ${highDistress > 0 ? `<div class="alert">⚠️ High distress recorded in <strong>${highDistress}</strong> ${highDistress === 1 ? "entry" : "entries"}${groundingUsed > 0 ? ` · Grounding exercises used <strong>${groundingUsed}</strong> times` : ""}</div>` : ""}
+    ${highDistress > 0 ? `<div class="alert">⚠️ High distress recorded in <strong>${highDistress}</strong> ${highDistress === 1 ? "entry" : "entries"}</div>` : ""}
   </div>
 
   ${topEmotions.length > 0 ? `

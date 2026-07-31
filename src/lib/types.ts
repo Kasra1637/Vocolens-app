@@ -201,9 +201,7 @@ export interface JournalEntry {
   bodySensation?: BodySensation; // where the user feels this in their body
   bodyRegions?: BodyRegionSensation[]; // 9-region body map with intensity
   alexithymiaFlag?: boolean; // user chose "I don't know" for emotions
-  // Grounding support
   distressLevel: DistressLevel;
-  groundingUsed?: boolean; // user engaged a grounding exercise
   // AI-generated
   topics: string[];
   aiAnalysis?: string;

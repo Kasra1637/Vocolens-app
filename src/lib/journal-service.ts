@@ -582,7 +582,6 @@ export interface ReflectionOverride {
   arousal: number;
   bodySensation?: import("./types").BodySensation;
   bodyRegions?: import("./types").BodyRegionSensation[];
-  groundingUsed?: boolean;
   alexithymiaFlag?: boolean;
   distressLevel: "low" | "moderate" | "high";
   emotionScores?: EmotionScores;
@@ -754,7 +753,6 @@ export async function createJournalEntry(
     distressLevel: analysis.distressLevel,
     bodySensation: reflectionOverride?.bodySensation,
     bodyRegions: reflectionOverride?.bodyRegions,
-    groundingUsed: reflectionOverride?.groundingUsed,
     alexithymiaFlag: reflectionOverride?.alexithymiaFlag,
     topics: analysis.topics,
     aiAnalysis: analysis.analysis,

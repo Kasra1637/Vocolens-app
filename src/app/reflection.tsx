@@ -25,7 +25,6 @@ import {
   valenceFromPlutchik,
   arousalFromPlutchik,
   distressFromVA,
-  shouldTriggerGrounding,
 } from "@/lib/valence-arousal";
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import useReflectionStore from "@/lib/state/reflection-store";
@@ -35,11 +34,9 @@ import { getThemeColors, getThemeGradients } from "@/lib/theme";
 import { useCreateEntry } from "@/lib/hooks";
 import ReflectionSlider from "@/components/reflection/ReflectionSlider";
 import BodyRegionMap from "@/components/reflection/BodyRegionMap";
-import BreathingExercise from "@/components/reflection/BreathingExercise";
-import GroundingSenses from "@/components/reflection/GroundingSenses";
 import { hexToRgba } from "@/lib/glass";
 
-type Step = "summary" | "sliders" | "body" | "grounding" | "done";
+type Step = "summary" | "sliders" | "body";
 
 const ALL_EMOTIONS: EmotionType[] = [
   "happiness",
@@ -81,7 +78,6 @@ export default function ReflectionScreen() {
   const [valence, setValence] = useState(0);
   const [arousal, setArousal] = useState(50);
   const [bodyRegions, setBodyRegions] = useState<BodyRegionSensation[]>([]);
-  const [groundingUsed, setGroundingUsed] = useState(false);
   const [selectedEmotionDef, setSelectedEmotionDef] =
     useState<EmotionType | null>(null);
   const [saving, setSaving] = useState(false);
@@ -111,16 +107,10 @@ export default function ReflectionScreen() {
     () => distressFromVA(valence, arousal),
     [valence, arousal],
   );
-  const showGrounding = useMemo(
-    () => shouldTriggerGrounding(distress) || distress === "moderate",
-    [distress],
-  );
   const effectiveSteps: Step[] = useMemo(() => {
     if (reflectionMode === "quick") return ["summary", "sliders"];
-    const base: Step[] = ["summary", "sliders", "body"];
-    if (showGrounding) base.push("grounding");
-    return base;
-  }, [reflectionMode, showGrounding]);
+    return ["summary", "sliders", "body"];
+  }, [reflectionMode]);
 
   const stepIdx = effectiveSteps.indexOf(step);
   const isLast = stepIdx === effectiveSteps.length - 1;
@@ -146,7 +136,6 @@ export default function ReflectionScreen() {
           valence,
           arousal,
           bodyRegions,
-          groundingUsed,
           alexithymiaFlag: emotions.length === 0,
           distressLevel: distress,
           aiTitle: pending.aiTitle,
@@ -169,7 +158,6 @@ export default function ReflectionScreen() {
     valence,
     arousal,
     bodyRegions,
-    groundingUsed,
     distress,
   ]);
 
@@ -435,7 +423,7 @@ export default function ReflectionScreen() {
               >
                 <Text style={s.distressText}>
                   {distress === "high"
-                    ? "⚠️  High distress detected — grounding may help"
+                    ? "⚠️  High distress detected — take a moment if you need"
                     : "🌿  Moderate distress — take a moment if you need"}
                 </Text>
               </Animated.View>
@@ -492,78 +480,6 @@ export default function ReflectionScreen() {
               <Text style={s.skipText}>Skip body scan</Text>
             </Pressable>
           </Animated.View>
-        )}
-
-        {/* ── Step: Grounding ── */}
-        {step === "grounding" && (
-          <Animated.View entering={FadeInUp}>
-            <Text style={s.sectionLabel}>Let's ground together</Text>
-            <View style={s.groundingChoice}>
-              <Pressable
-                onPress={() => {
-                  setGroundingUsed(true);
-                  setStep("breathe" as any);
-                }}
-                style={[
-                  s.groundingBtn,
-                  {
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderColor: "rgba(255, 255, 255, 0.20)",
-                  },
-                ]}
-              >
-                <Text style={s.groundingEmoji}>🫁</Text>
-                <Text style={s.groundingTitle}>4-7-8 Breathing</Text>
-                <Text style={s.groundingDesc}>Calm your nervous system</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setGroundingUsed(true);
-                  setStep("senses" as any);
-                }}
-                style={[
-                  s.groundingBtn,
-                  {
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderColor: "rgba(255, 255, 255, 0.20)",
-                  },
-                ]}
-              >
-                <Text style={s.groundingEmoji}>🌿</Text>
-                <Text style={s.groundingTitle}>5-4-3-2-1 Senses</Text>
-                <Text style={s.groundingDesc}>Return to the present</Text>
-              </Pressable>
-            </View>
-            <Pressable onPress={nextStep} style={s.skipBtnWrap}>
-              <Text style={s.skipText}>Skip grounding</Text>
-            </Pressable>
-          </Animated.View>
-        )}
-
-        {/* ── Sub-step: Breathing ── */}
-        {step === ("breathe" as any) && (
-          <BreathingExercise
-            onComplete={() => {
-              successHaptic();
-              handleSave();
-            }}
-            onSkip={() => {
-              tapHaptic();
-              handleSave();
-            }}
-          />
-        )}
-        {step === ("senses" as any) && (
-          <GroundingSenses
-            onComplete={() => {
-              successHaptic();
-              handleSave();
-            }}
-            onSkip={() => {
-              tapHaptic();
-              handleSave();
-            }}
-          />
         )}
       </ScrollView>
 
@@ -768,31 +684,6 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.6)",
     marginBottom: 20,
     marginTop: -8,
-  },
-  groundingChoice: { gap: 12 },
-  groundingBtn: {
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 24,
-    padding: 24,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.20)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-  },
-  groundingEmoji: { fontSize: 36, marginBottom: 8 },
-  groundingTitle: {
-    fontSize: 17,
-    fontFamily: "Fraunces_700Bold",
-    color: "#FFFFFF",
-    marginBottom: 4,
-  },
-  groundingDesc: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.6)",
   },
   savingOverlay: {
     ...StyleSheet.absoluteFillObject,
