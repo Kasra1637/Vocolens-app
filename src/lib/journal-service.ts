@@ -527,20 +527,21 @@ export async function transcribeAndAnalyze(
     );
   }
 
-  // Try to transcribe with Deepgram
+  // Transcribe with Deepgram. If this fails we must NOT invent content — a
+  // journal is a record of what the user actually said, so fabricating a
+  // transcript would corrupt their data. Fail loudly instead.
   try {
     const transcriptionResult = await transcribeAudioWithRetry(audioUri);
     transcript = transcriptionResult.transcript;
-    console.log(
-      "Deepgram transcription successful:",
-      transcript.substring(0, 100),
-    );
+    if (__DEV__) {
+      console.log(
+        "Deepgram transcription successful:",
+        transcript.substring(0, 100),
+      );
+    }
   } catch (error) {
-    console.warn(
-      "Deepgram transcription failed, using mock transcript:",
-      error,
-    );
-    transcript = generateMockTranscript();
+    console.warn("Deepgram transcription failed:", error);
+    throw error;
   }
 
   // Analyze with GPT-4o audio model (audio + transcript) - falls back to text-only / local
@@ -560,18 +561,6 @@ export async function transcribeAndAnalyze(
     transcript,
     analysis,
   };
-}
-
-// Generate mock transcript for testing/fallback
-function generateMockTranscript(): string {
-  const mockTranscripts = [
-    "Today has been a really good day. I woke up feeling energized and grateful for the opportunities ahead. I've been reflecting on my goals and I feel excited about the progress I'm making. There's a sense of peace and clarity that I haven't felt in a while.",
-    "I've been feeling a bit overwhelmed lately with everything going on. Work has been stressful and I'm finding it hard to balance everything. I need to remember to take care of myself and not push too hard. It's okay to slow down sometimes.",
-    "I'm really proud of what I accomplished this week. I finally finished that project I'd been working on and the feedback was amazing. It feels good to see my hard work paying off. I'm learning to trust myself more.",
-    "Spent quality time with family today and it reminded me of what's truly important. Sometimes we get so caught up in our daily routines that we forget to cherish these moments. Feeling grateful and content.",
-    "Had an interesting conversation that made me think differently about some things. I realize I've been holding onto some beliefs that no longer serve me. It's time for some positive changes and new perspectives.",
-  ];
-  return mockTranscripts[Math.floor(Math.random() * mockTranscripts.length)];
 }
 
 // Create a new journal entry with full processing

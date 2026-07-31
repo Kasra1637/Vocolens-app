@@ -75,7 +75,7 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
       setIsLoading(true);
       tapHaptic();
 
-      console.log('[AudioPlayer] Loading audio from URI:', audioUri);
+      if (__DEV__) console.log('[AudioPlayer] Loading audio from URI:', audioUri);
 
       // Configure audio mode for playback
       await Audio.setAudioModeAsync({

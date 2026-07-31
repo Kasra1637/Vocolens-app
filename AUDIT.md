@@ -20,6 +20,48 @@ Build health at time of audit: `tsc --noEmit` reports **68 errors**;
 
 ---
 
+## Progress log
+
+Target platform is **Android / Google Play first** — iOS-only items are
+deferred, not fixed.
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Microphone permission | ✅ Fixed for Android (`RECORD_AUDIO` declared). iOS `NSMicrophoneUsageDescription` deferred — not targeting iOS yet. |
+| 2 | Adapty mock mode | ❌ **Open — needs your Adapty key + Play Console products** |
+| 3 | `ALLOW_TESTER_SKIP` ships in production | ❌ **Open** |
+| 4 | Free premium on product-load failure | ✅ Fixed — shows an error, keeps the paywall up |
+| 5 | Terms/Privacy links + unreachable `legal`/`privacy-settings` | ❌ **Open** |
+| 6 | Hardcoded USD fallback prices | ✅ Fixed — per-month prices computed from live SDK amounts |
+| 7 | AI analysis discarded | ✅ Fixed — full analysis threaded through to the saved entry |
+| 8 | Empty/failed transcript silently dropped | ✅ Fixed — visible message; `UsageLimitError` now propagates |
+| 9 | Audio files never deleted | ✅ Fixed — deleted on entry delete and on all "delete all data" paths |
+| 10 | `AudioPlayer` no error feedback | ✅ Fixed — error state in both full and compact modes |
+| 11 | `settings-store` migration can throw | ✅ Fixed — null-guarded and version-aware |
+| 12 | No PIN recovery / no throttle | ❌ Open |
+| 13 | Entitlement local-only | ❌ Open (see privacy note below) |
+| 14 | Secrets in client bundle | ❌ Open |
+| 15 | Transcripts logged in release builds | ✅ Fixed — all journal content / file paths `__DEV__`-guarded |
+| 16 | No usage-row deletion endpoint | ❌ Open |
+| 17 | Two inconsistent delete flows | ❌ Open (audio cleanup added to both, but store coverage still differs) |
+| 18 | `secure-storage.ts` claims AES, implements XOR | ❌ Open |
+| 19 | Privacy policy inaccuracies | ❌ Open |
+| 20 | Dead code + mock-transcript landmine | ✅ Fixed — `generateMockTranscript` removed (now fails loudly); dead `emotion-reflection/` tree deleted. Unreachable routes remain (tracked under #5). |
+| 21 | Smaller correctness issues | ❌ Open |
+| 22 | 68 tsc errors / 25 failing tests | ❌ Open |
+
+### Privacy-model note
+
+The product goal is **local-first: user data stays on the device.** Storage is
+indeed local-only (AsyncStorage + SecureStore, no cloud sync). However **audio
+and transcripts do leave the device** for processing — Deepgram for
+transcription and OpenRouter for analysis, both proxied through the Worker.
+That is inherent to the feature set, not a bug, but it means "everything stays
+on your device" is accurate about *storage*, not about *processing*. The privacy
+policy needs to state that distinction precisely (see #19).
+
+---
+
 ## S1 — Release blockers
 
 ### 1. `NSMicrophoneUsageDescription` is missing → crash + automatic rejection

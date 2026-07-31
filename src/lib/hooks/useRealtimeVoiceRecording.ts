@@ -146,7 +146,8 @@ export function useRealtimeVoiceRecording(): [
    * Handle transcript updates from Deepgram
    */
   const handleTranscriptUpdate = useCallback((result: TranscriptResult) => {
-    console.log('[useRealtimeVoiceRecording] Transcript update:', result.transcript.slice(0, 50), '... isFinal:', result.isFinal);
+    // Transcript content is journal data — dev-only, never in release logs.
+    if (__DEV__) console.log('[useRealtimeVoiceRecording] Transcript update:', result.transcript.slice(0, 50), '... isFinal:', result.isFinal);
 
     if (result.isFinal) {
       setTranscript(result.transcript);
@@ -394,7 +395,7 @@ export function useRealtimeVoiceRecording(): [
       if (isStreaming) {
         try {
           streamingTranscript = await deepgramRealtimeService.disconnect();
-          console.log('[useRealtimeVoiceRecording] Streaming transcript:', streamingTranscript.slice(0, 100));
+          if (__DEV__) console.log('[useRealtimeVoiceRecording] Streaming transcript:', streamingTranscript.slice(0, 100));
         } catch (err) {
           console.warn('[useRealtimeVoiceRecording] Failed to get streaming transcript:', err);
         }
@@ -432,7 +433,7 @@ export function useRealtimeVoiceRecording(): [
         playsInSilentModeIOS: false,
       });
 
-      console.log('[useRealtimeVoiceRecording] Recording stopped, URI:', uri);
+      if (__DEV__) console.log('[useRealtimeVoiceRecording] Recording stopped, URI:', uri);
 
       // Determine final transcript
       let finalTranscript = streamingTranscript;
@@ -445,7 +446,7 @@ export function useRealtimeVoiceRecording(): [
         try {
           const result = await transcribeAudioFile(uri, language);
           finalTranscript = result.transcript;
-          console.log('[useRealtimeVoiceRecording] Post-recording transcript:', finalTranscript.slice(0, 100));
+          if (__DEV__) console.log('[useRealtimeVoiceRecording] Post-recording transcript:', finalTranscript.slice(0, 100));
         } catch (transcribeErr) {
           console.error('[useRealtimeVoiceRecording] Post-recording transcription failed:', transcribeErr);
           // UsageLimitError must propagate so the calling screen can show the

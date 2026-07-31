@@ -55,10 +55,26 @@ const useSettingsStore = create<SettingsState>()(
       name: 'settings-storage',
       storage: createJSONStorage(() => AsyncStorage),
       version: 3,
-      migrate: (persisted: any) => {
-        // Strip the old timeFormat field if present from previous versions
-        const { timeFormat: _dropped, setTimeFormat: _droppedFn, ...rest } = persisted as any;
-        return { ...DEFAULT_SETTINGS, ...rest };
+      migrate: (persisted: any, version: number) => {
+        // Guard against null/undefined/malformed persisted state. Object-rest
+        // destructuring of null throws, which would break rehydration entirely
+        // and leave the app stuck on a blank screen. Every other store in this
+        // project guards the same way.
+        const source = (persisted ?? {}) as Record<string, unknown>;
+
+        // v0/v1/v2 → v3: drop the removed `timeFormat` field (and its stale
+        // setter, if a previous version accidentally persisted it). Unknown
+        // fields are dropped by spreading DEFAULT_SETTINGS first.
+        if (version < 3) {
+          const {
+            timeFormat: _droppedTimeFormat,
+            setTimeFormat: _droppedSetter,
+            ...rest
+          } = source;
+          return { ...DEFAULT_SETTINGS, ...rest };
+        }
+
+        return { ...DEFAULT_SETTINGS, ...source };
       },
     }
   )
