@@ -30,6 +30,7 @@ export default ({ config }) => ({
   android: {
     package: 'com.vocolens.app',
     softwareKeyboardLayoutMode: 'pan',
+    permissions: ['RECORD_AUDIO'],
   },
   web: {
     bundler: 'metro',
