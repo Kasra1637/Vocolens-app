@@ -28,27 +28,27 @@ deferred, not fixed.
 | # | Item | Status |
 |---|---|---|
 | 1 | Microphone permission | ✅ Fixed for Android (`RECORD_AUDIO` declared). iOS `NSMicrophoneUsageDescription` deferred — not targeting iOS yet. |
-| 2 | Adapty mock mode | ❌ **Open — needs your Adapty key + Play Console products** |
-| 3 | `ALLOW_TESTER_SKIP` ships in production | ❌ **Open** |
+| 2 | Adapty mock mode | ⏳ Deferred by decision — needed for closed testing; set `EXPO_PUBLIC_ADAPTY_KEY` before production |
+| 3 | `ALLOW_TESTER_SKIP` ships in production | ✅ Made safe — now driven by the EAS build profile, structurally absent from `production` |
 | 4 | Free premium on product-load failure | ✅ Fixed — shows an error, keeps the paywall up |
-| 5 | Terms/Privacy links + unreachable `legal`/`privacy-settings` | ❌ **Open** |
+| 5 | Terms/Privacy links + unreachable `legal`/`privacy-settings` | ✅ Fixed in-app (both now reachable from Settings). ⚠️ You must still **host** `vocolens.com/privacy` + `/terms` — Play requires a policy URL in the listing |
 | 6 | Hardcoded USD fallback prices | ✅ Fixed — per-month prices computed from live SDK amounts |
 | 7 | AI analysis discarded | ✅ Fixed — full analysis threaded through to the saved entry |
 | 8 | Empty/failed transcript silently dropped | ✅ Fixed — visible message; `UsageLimitError` now propagates |
 | 9 | Audio files never deleted | ✅ Fixed — deleted on entry delete and on all "delete all data" paths |
 | 10 | `AudioPlayer` no error feedback | ✅ Fixed — error state in both full and compact modes |
 | 11 | `settings-store` migration can throw | ✅ Fixed — null-guarded and version-aware |
-| 12 | No PIN recovery / no throttle | ❌ Open |
-| 13 | Entitlement local-only | ❌ Open (see privacy note below) |
-| 14 | Secrets in client bundle | ❌ Open |
+| 12 | No PIN recovery / no throttle | ✅ Fixed — escalating lockout + on-device recovery code (no server) |
+| 13 | Entitlement local-only | ✅ Mitigated — 14-day verification grace window; still no server receipt validation (deliberate, see note) |
+| 14 | Secrets in client bundle | ✅ Mostly fixed — Deepgram + OpenRouter keys removed; `VOCOLENS_API_KEY` necessarily remains |
 | 15 | Transcripts logged in release builds | ✅ Fixed — all journal content / file paths `__DEV__`-guarded |
 | 16 | No usage-row deletion endpoint | ❌ Open |
 | 17 | Two inconsistent delete flows | ❌ Open (audio cleanup added to both, but store coverage still differs) |
 | 18 | `secure-storage.ts` claims AES, implements XOR | ❌ Open |
-| 19 | Privacy policy inaccuracies | ❌ Open |
+| 19 | Privacy policy inaccuracies | ✅ Fixed — OpenRouter named, retention claims corrected, storage-vs-processing distinction stated |
 | 20 | Dead code + mock-transcript landmine | ✅ Fixed — `generateMockTranscript` removed (now fails loudly); dead `emotion-reflection/` tree deleted. Unreachable routes remain (tracked under #5). |
 | 21 | Smaller correctness issues | ❌ Open |
-| 22 | 68 tsc errors / 25 failing tests | ❌ Open |
+| 22 | 68 tsc errors / 25 failing tests | ⚠️ Partly fixed — **tests now 70/70** (were 45/70; the auth suite had zero real coverage). The 68 `tsc` errors remain |
 
 ### Privacy-model note
 
