@@ -52,11 +52,11 @@ import { NotificationService } from "@/lib/services/notification-service";
 const ALLOW_TESTER_SKIP = true;
 
 // ── Pricing fallbacks ─────────────────────────────────────────────────────────
+// Display fallbacks when the SDK hasn't loaded products. They must NEVER
+// be used to unlock the app (see handleCTA).
 const MONTHLY_PRICE = "$9.99";
 const THREE_MONTH_PRICE = "$24.99";
 const YEARLY_PRICE = "$79.99";
-const YEARLY_PER_MONTH = "$6.67";
-const THREE_MONTH_PER_MONTH = "$8.33";
 
 type PlanKey = "yearly" | "three_month" | "monthly";
 
@@ -197,7 +197,14 @@ export function SubscriptionLapsedPaywall() {
   const handleCTA = async () => {
     tapHaptic();
     const pkg = selectedPlan === "yearly" ? yearlyPkg : threeMonthPkg;
-    if (!pkg) { grantAccess(selectedPlan); return; }
+    if (!pkg) {
+      errorHaptic();
+      Alert.alert(
+        "Products Unavailable",
+        "We couldn't load subscription options. Please check your connection and try again.",
+      );
+      return;
+    }
 
     setIsPurchasing(true);
     const result = await makePurchase(pkg);
@@ -215,7 +222,14 @@ export function SubscriptionLapsedPaywall() {
 
   const handleMonthlyAccept = async () => {
     tapHaptic();
-    if (!monthlyPkg) { grantAccess("monthly"); return; }
+    if (!monthlyPkg) {
+      errorHaptic();
+      Alert.alert(
+        "Products Unavailable",
+        "We couldn't load subscription options. Please check your connection and try again.",
+      );
+      return;
+    }
 
     setIsPurchasingMonthly(true);
     const result = await makePurchase(monthlyPkg);
@@ -255,6 +269,12 @@ export function SubscriptionLapsedPaywall() {
 
   const yearlyNum = yearlyPkg?.price?.amount ?? 79.99;
   const threeMonthNum = threeMonthPkg?.price?.amount ?? 24.99;
+
+  // Computed from live amounts — localised currency, never hardcoded.
+  const currencySymbol = yearlyPkg?.price?.currencySymbol ?? "$";
+  const yearlyPerMonth = `${currencySymbol}${(yearlyNum / 12).toFixed(2)}`;
+  const threeMonthPerMonth = `${currencySymbol}${(threeMonthNum / 3).toFixed(2)}`;
+
   const quarterlyAnnualized = threeMonthNum * 4;
   const savingsPercent = Math.round(((quarterlyAnnualized - yearlyNum) / quarterlyAnnualized) * 100);
 
@@ -349,7 +369,7 @@ export function SubscriptionLapsedPaywall() {
                       </Text>
                     </View>
                     <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
-                      Just {YEARLY_PER_MONTH}/mo
+                      Just {yearlyPerMonth}/mo
                     </Text>
                   </View>
                 </View>
@@ -371,7 +391,7 @@ export function SubscriptionLapsedPaywall() {
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                   <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26, lineHeight: 30 }}>{threeMonthPrice}</Text>
                   <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
-                    Just {THREE_MONTH_PER_MONTH}/mo
+                    Just {threeMonthPerMonth}/mo
                   </Text>
                 </View>
               </Pressable>

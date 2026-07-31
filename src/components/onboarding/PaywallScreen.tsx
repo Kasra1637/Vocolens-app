@@ -52,12 +52,11 @@ import { NotificationService } from "@/lib/services/notification-service";
 const ALLOW_TESTER_SKIP = true;
 
 // ── Pricing fallbacks (shown when SDK not available) ──────────────────────────
+// These are ONLY used as display fallbacks in the unlikely case where live
+// prices couldn't be loaded. They must NEVER unlock the app (see handleCTA).
 const MONTHLY_PRICE    = "$9.99";
 const THREE_MONTH_PRICE = "$24.99";
 const YEARLY_PRICE     = "$79.99";
-const YEARLY_PER_MONTH = "$6.67";
-const THREE_MONTH_PER_MONTH = "$8.33";
-const MONTHLY_PER_MONTH = "$9.99";
 const TRIAL_DAYS = 3;
 
 type PlanKey = "yearly" | "three_month" | "monthly";
@@ -314,7 +313,12 @@ export function PaywallScreen() {
         : monthlyPkg;
 
     if (!pkg) {
-      grantAccess(selectedPlan); return;
+      errorHaptic();
+      Alert.alert(
+        "Products Unavailable",
+        "We couldn't load subscription options. Please check your connection and try again.",
+      );
+      return;
     }
 
     setIsPurchasing(true);
@@ -337,7 +341,12 @@ export function PaywallScreen() {
     trackEvent("cta_tapped", { plan: "monthly" });
 
     if (!monthlyPkg) {
-      grantAccess("monthly"); return;
+      errorHaptic();
+      Alert.alert(
+        "Products Unavailable",
+        "We couldn't load subscription options. Please check your connection and try again.",
+      );
+      return;
     }
 
     setIsPurchasingMonthly(true);
@@ -407,6 +416,12 @@ export function PaywallScreen() {
   const yearlyNum      = yearlyPkg?.price?.amount      ?? 79.99;
   const threeMonthNum  = threeMonthPkg?.price?.amount  ?? 24.99;
   const monthlyNum     = monthlyPkg?.price?.amount     ?? 9.99;
+
+  // Per-month prices computed from the live amounts so they stay in sync with
+  // the storefront's currency and price tier — never hardcoded.
+  const currencySymbol = yearlyPkg?.price?.currencySymbol ?? "$";
+  const yearlyPerMonth = `${currencySymbol}${(yearlyNum / 12).toFixed(2)}`;
+  const threeMonthPerMonth = `${currencySymbol}${(threeMonthNum / 3).toFixed(2)}`;
   const quarterlyAnnualized = threeMonthNum * 4;
   const monthlyAnnualized   = monthlyNum * 12;
   const savingsVsQuarterly  = Math.round(((quarterlyAnnualized - yearlyNum) / quarterlyAnnualized) * 100);
@@ -482,7 +497,7 @@ export function PaywallScreen() {
                           </Text>
                         </View>
                         <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.70)", fontSize: 11 }}>
-                          Just {YEARLY_PER_MONTH}/mo · Best value
+                          Just {yearlyPerMonth}/mo · Best value
                         </Text>
                       </View>
                     </View>
@@ -499,7 +514,7 @@ export function PaywallScreen() {
                     style={{ flex: 1, borderRadius: 18, borderWidth: selectedPlan === "three_month" ? 2.5 : 1.5, borderColor: selectedPlan === "three_month" ? "#FFFFFF" : "rgba(255,255,255,0.25)", backgroundColor: selectedPlan === "three_month" ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.10)", padding: 14 }}
                   >
                     <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF", fontSize: 13, letterSpacing: 0.2, marginBottom: 8 }}>Quarterly</Text>
-                    <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 22, lineHeight: 26, marginBottom: 6 }}>{THREE_MONTH_PER_MONTH}<Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 11 }}>/mo</Text></Text>
+                    <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 22, lineHeight: 26, marginBottom: 6 }}>{threeMonthPerMonth}<Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 11 }}>/mo</Text></Text>
                     <View style={{ backgroundColor: "rgba(74, 222, 128, 0.20)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start", marginBottom: 4 }}>
                       <Text style={{ fontFamily: "Inter_700Bold", color: "#4ADE80", fontSize: 9 }}>
                         Save {savingsVsQuarterly > 0 ? Math.round(((monthlyNum * 3 - threeMonthNum) / (monthlyNum * 3)) * 100) : 17}% vs Monthly
