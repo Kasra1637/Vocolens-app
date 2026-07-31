@@ -26,7 +26,7 @@ import {
   arousalFromPlutchik,
   distressFromVA,
 } from "@/lib/valence-arousal";
-import { tapHaptic, successHaptic } from "@/lib/haptics";
+import { tapHaptic, successHaptic, errorHaptic } from "@/lib/haptics";
 import useReflectionStore from "@/lib/state/reflection-store";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
@@ -34,6 +34,8 @@ import { getThemeColors, getThemeGradients } from "@/lib/theme";
 import { useCreateEntry } from "@/lib/hooks";
 import ReflectionSlider from "@/components/reflection/ReflectionSlider";
 import BodyRegionMap from "@/components/reflection/BodyRegionMap";
+import { BrandedAlert } from "@/components/BrandedAlert";
+import { UsageLimitError } from "@/lib/api/usage-service";
 import { hexToRgba } from "@/lib/glass";
 
 type Step = "summary" | "sliders" | "body";
@@ -81,6 +83,10 @@ export default function ReflectionScreen() {
   const [selectedEmotionDef, setSelectedEmotionDef] =
     useState<EmotionType | null>(null);
   const [saving, setSaving] = useState(false);
+  // Shown when handleSave fails. The pending reflection data is untouched on
+  // failure (it's only cleared after a successful save), so closing this
+  // alert simply leaves the user on the same step, free to tap Save again.
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!pending) return;
@@ -122,6 +128,7 @@ export default function ReflectionScreen() {
   const handleSave = useCallback(async () => {
     if (!pending || saving) return;
     setSaving(true);
+    setSaveError(null);
     successHaptic();
     try {
       const entry = await createEntry.mutateAsync({
@@ -149,6 +156,14 @@ export default function ReflectionScreen() {
       }
     } catch (err) {
       console.error("Failed to save reflection:", err);
+      errorHaptic();
+      // pending is untouched here — nothing is cleared on failure — so the
+      // user can dismiss this and simply tap Save again to retry.
+      setSaveError(
+        err instanceof UsageLimitError
+          ? err.message
+          : "We couldn't save your entry. Please check your connection and try again.",
+      );
       setSaving(false);
     }
   }, [
@@ -488,6 +503,16 @@ export default function ReflectionScreen() {
           <Text style={s.savingText}>Saving...</Text>
         </View>
       )}
+
+      {/* Entry save failed — pending reflection data is intact, so retrying
+          (tap Save again) works. This just makes the failure visible. */}
+      <BrandedAlert
+        visible={saveError !== null}
+        type="error"
+        title="Couldn't save entry"
+        message={saveError ?? ""}
+        onClose={() => setSaveError(null)}
+      />
     </View>
   );
 }
