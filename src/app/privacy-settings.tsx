@@ -21,7 +21,12 @@ import {
   warningHaptic,
 } from "@/lib/haptics";
 import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system";
+// Legacy API: this file uses `documentDirectory` and `writeAsStringAsync`, which
+// only exist on the legacy surface. The new expo-file-system API exposes neither,
+// so importing "expo-file-system" here made `documentDirectory` undefined and
+// broke the data export entirely. Every other FileSystem consumer in the app
+// also imports from /legacy — keep them consistent.
+import * as FileSystem from "expo-file-system/legacy";
 import {
   Download,
   Trash2,

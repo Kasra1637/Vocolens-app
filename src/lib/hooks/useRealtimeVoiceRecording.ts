@@ -23,8 +23,31 @@ import {
 } from '../services/deepgram-realtime-service';
 import { webAudioStreamingService } from '../services/web-audio-streaming-service';
 import { transcribeAudioFile } from '../deepgram-transcription-service';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export type PermissionState = 'granted' | 'denied' | 'undetermined';
+
+/**
+ * Thrown when transcription itself failed (network, API error, unsupported
+ * audio) as opposed to succeeding but finding no speech.
+ *
+ * The distinction matters to the user: silence is something they can fix by
+ * re-recording, whereas a transport/API failure is not their fault and the
+ * audio they already recorded is still on disk. Previously both cases returned
+ * an empty transcript, so a network failure was reported as "we couldn't
+ * detect any speech", which is actively misleading.
+ */
+export class TranscriptionFailedError extends Error {
+  readonly code = 'transcription_failed';
+  /** URI of the recording that was captured but could not be transcribed. */
+  readonly audioUri: string | null;
+
+  constructor(message: string, audioUri: string | null) {
+    super(message);
+    this.name = 'TranscriptionFailedError';
+    this.audioUri = audioUri;
+  }
+}
 
 export interface AudioPermissionResult {
   status: PermissionState;
@@ -454,9 +477,14 @@ export function useRealtimeVoiceRecording(): [
           if (transcribeErr && (transcribeErr as any).code === 'monthly_limit_reached') {
             throw transcribeErr;
           }
-          setError(
-            transcribeErr instanceof Error ? transcribeErr.message : 'Transcription failed'
-          );
+          const message =
+            transcribeErr instanceof Error ? transcribeErr.message : 'Transcription failed';
+          setError(message);
+          // Propagate as a typed error rather than falling through with an
+          // empty transcript. Returning '' here made the caller unable to tell
+          // "no speech in the audio" apart from "the request failed", so both
+          // were reported to the user as silence.
+          throw new TranscriptionFailedError(message, uri ?? null);
         }
       }
 
@@ -481,7 +509,9 @@ export function useRealtimeVoiceRecording(): [
    * Cancel recording without saving
    */
   const cancelRecording = useCallback(async (): Promise<void> => {
-    if (!recordingRef.current) {
+    // Runs even when recordingRef is already null, so a URI left over from a
+    // previous stop still gets cleaned up rather than orphaned on disk.
+    if (!recordingRef.current && !recordingUriRef.current) {
       return;
     }
 
@@ -500,24 +530,52 @@ export function useRealtimeVoiceRecording(): [
         setIsStreaming(false);
       }
 
-      await recordingRef.current.stopAndUnloadAsync();
-      recordingRef.current = null;
+      // Capture the URI before unloading — getURI() is not reliable afterwards.
+      let uriToDelete = recordingUriRef.current;
+
+      if (recordingRef.current) {
+        try {
+          uriToDelete = recordingRef.current.getURI() ?? uriToDelete;
+        } catch {
+          // Recorder may not expose a URI yet; fall back to the stored one.
+        }
+        await recordingRef.current.stopAndUnloadAsync();
+        recordingRef.current = null;
+      }
 
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
       });
+
+      // A discarded recording must not linger. These files sit in the cache
+      // directory, so the OS would eventually reclaim them, but until then an
+      // un-referenced voice recording of the user remains on disk.
+      if (uriToDelete) {
+        try {
+          await FileSystem.deleteAsync(uriToDelete, { idempotent: true });
+        } catch {
+          // Non-fatal: file may already be gone or cache-purged.
+        }
+      }
+      recordingUriRef.current = null;
 
       setIsRecording(false);
       setIsPaused(false);
       setTranscript('');
       setInterimTranscript('');
       setError(null);
+      setIsTranscribing(false);
+      setIsFinal(false);
       setStreamingMode('none');
 
       console.log('[useRealtimeVoiceRecording] Recording cancelled');
     } catch (err) {
       console.error('[useRealtimeVoiceRecording] Cancel recording failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to cancel recording');
+      // Leave no half-live recorder behind even if teardown partly failed.
+      recordingRef.current = null;
+      setIsRecording(false);
+      setIsPaused(false);
     }
   }, [isStreaming]);
 

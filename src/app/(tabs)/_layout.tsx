@@ -170,16 +170,14 @@ const styles = StyleSheet.create({
 });
 
 export default function TabLayout() {
+  // ── Hook order ───────────────────────────────────────────────────────────
+  // EVERY hook must run before the `isLocked` early return below. `isLocked`
+  // flips whenever the app returns from background, so returning early above
+  // any hook call changes the hook count between two renders of the same
+  // mounted component, which React rejects with "Rendered fewer hooks than
+  // expected". Keep all hooks in this block and add new ones here.
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
-
-  // ── SECURITY: Defence-in-depth guard ─────────────────────────────────────
-  // If the session is locked (e.g. app just returned from background and
-  // AppState listener revoked isUnlocked), render nothing. AuthGate will
-  // unmount this tree shortly, but this prevents any content flash.
   const { isLocked } = useAuthGuard();
-  if (isLocked) {
-    return <View style={{ flex: 1, backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[1] }} />;
-  }
 
   const TabBarComponent = React.useMemo(() => {
     const Bar = (props: BottomTabBarProps) => <CustomTabBar {...props} />;
@@ -187,16 +185,26 @@ export default function TabLayout() {
     return Bar;
   }, []);
 
+  const headerShown = useClientOnlyValue(false, false);
+
   // Re-read on every render so sceneContainerStyle stays in sync when
   // the user changes their theme — never reads a stale cached colour.
   const sceneBg = THEME_COLORS[selectedTheme].backgroundGradient[1];
+
+  // ── SECURITY: Defence-in-depth guard ─────────────────────────────────────
+  // If the session is locked (e.g. app just returned from background and the
+  // AppState listener revoked isUnlocked), render nothing. AuthGate will
+  // unmount this tree shortly, but this prevents any content flash.
+  if (isLocked) {
+    return <View style={{ flex: 1, backgroundColor: sceneBg }} />;
+  }
 
   return (
     <Tabs
       tabBar={TabBarComponent}
       initialRouteName="insights"
       screenOptions={{
-        headerShown: useClientOnlyValue(false, false),
+        headerShown,
         // Matches the darkest gradient stop so the native container never
         // shows a colour that differs from the screen's own LinearGradient.
         sceneContainerStyle: { backgroundColor: sceneBg },

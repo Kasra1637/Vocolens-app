@@ -18,6 +18,7 @@ import {
   Sparkle,
   GearSix,
   WarningCircle,
+  Trash,
 } from "phosphor-react-native";
 import Animated, {
   useAnimatedStyle,
@@ -55,7 +56,11 @@ import {
   Spacing,
 } from "@/lib/theme";
 import { useCreateEntry } from "@/lib/hooks";
-import { useRealtimeVoiceRecording } from "@/lib/hooks/useRealtimeVoiceRecording";
+import {
+  useRealtimeVoiceRecording,
+  TranscriptionFailedError,
+} from "@/lib/hooks/useRealtimeVoiceRecording";
+import { transcribeAudioFile } from "@/lib/deepgram-transcription-service";
 import { MicTabIcon } from "@/components/TabIcons";
 import { TopicCategory, EmotionType } from "@/lib/types";
 
@@ -196,7 +201,19 @@ export default function SpeakScreen() {
   // This can happen mid-flow (the recording itself pushed the user over, or
   // another device consumed the balance), so it needs its own notice rather
   // than relying only on the pre-recording banner.
-  const [limitNotice, setLimitNotice] = useState<string | null>(null);
+  // Structured so the alert can carry an accurate title and, where the failure
+  // is recoverable, a retry action. Previously this was a bare string rendered
+  // under a hardcoded "Monthly limit reached" heading, so a transcription
+  // failure or a silent recording was reported to the user as a billing limit.
+  type Notice = {
+    title: string;
+    message: string;
+    /** Rendered as a "Try again" button when set. */
+    onRetry?: () => void;
+  };
+  const [notice, setNotice] = useState<Notice | null>(null);
+  // Discarding destroys an un-saved recording, so it is confirmed first.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   // Mutation hook for creating entries
   const createEntryMutation = useCreateEntry();
@@ -249,12 +266,36 @@ export default function SpeakScreen() {
     if (isFocused) setAnimationKey((k) => k + 1);
   }, [isFocused]);
 
-  // Clear transcript and reset voice state when user navigates away from this tab
+  // Tear down recording state when the user navigates away from this tab.
+  //
+  // reset() only clears UI state — it does NOT stop the recorder. Relying on it
+  // alone left the microphone live after leaving the tab (this screen stays
+  // mounted, so the unmount cleanup never runs), while simultaneously clearing
+  // the recording-active flag that suppresses AuthGate's re-lock. Backgrounding
+  // from there could throw up the PIN screen over a still-running recording.
+  //
+  // Anything in progress is therefore discarded outright: the transcript the
+  // user could see is gone either way, so keeping the audio would only orphan a
+  // file they can no longer reach.
   useEffect(() => {
-    if (!isFocused) {
-      voiceActions.reset();
-      useRecordingStore.getState().setRecordingActive(false);
+    if (isFocused) return;
+
+    const wasActive =
+      recordingState === "listening" ||
+      recordingState === "recording" ||
+      isPaused;
+
+    if (wasActive) {
+      // cancelRecording unloads the recorder, restores the audio mode and
+      // deletes the partial file.
+      voiceActions.cancelRecording().catch(() => {});
+      setRecordingState("idle");
+      setDuration(0);
+      recordingDurationRef.current = 0;
     }
+
+    voiceActions.reset();
+    useRecordingStore.getState().setRecordingActive(false);
   }, [isFocused]);
 
   // Duration timer
@@ -310,6 +351,11 @@ export default function SpeakScreen() {
       heavyHaptic();
       setRecordingState("listening");
       setDuration(0);
+      // Must be reset alongside the state. The timer that maintains this ref
+      // only starts once recordingState flips to "recording" ~500ms later, so
+      // a recording stopped before the first tick would otherwise be saved
+      // with the PREVIOUS session's duration — corrupting stats and badges.
+      recordingDurationRef.current = 0;
 
       // Signal recording intent BEFORE requesting permission — the OS
       // permission dialog sends the app to background, which would otherwise
@@ -342,6 +388,171 @@ export default function SpeakScreen() {
     }
   };
 
+  /**
+   * Analyse a transcript and route to the reflection flow (or save directly).
+   *
+   * Extracted from stopRecording so the "Try again" action on an analysis
+   * failure re-runs exactly this path instead of forcing the user to re-record
+   * words we already have.
+   */
+  const analyseAndRoute = async (
+    finalTranscript: string,
+    audioUri: string | null,
+    finalDuration: number,
+  ): Promise<void> => {
+    try {
+      // Build personalization context from user's correction history
+      const personalizationContext = buildPersonalizationPrompt();
+
+      // Analyze transcript for emotion suggestions (with personalization bias)
+      const analysis = await analyzeTranscript(
+        finalTranscript,
+        undefined,
+        personalizationContext,
+      );
+
+      setRecordingState("idle");
+
+      const mode = useSettingsStore.getState().emotionReflectionMode;
+      if (mode === "off") {
+        // Skip reflection, create entry directly
+        const entry = await createEntryMutation.mutateAsync({
+          audioUri: audioUri || undefined,
+          transcript: finalTranscript,
+          duration: finalDuration,
+          conversationTopic: selectedTopic,
+          conversationPrompt: currentQuestion,
+          reflectionOverride: {
+            emotions: analysis.emotions,
+            primaryEmotion: analysis.emotions[0] ?? "trust",
+            valence: analysis.valence,
+            arousal: analysis.arousal,
+            alexithymiaFlag: false,
+            distressLevel: analysis.distressLevel,
+            aiTitle: analysis.title,
+            emotionScores: analysis.emotionScores,
+            emotionIntensityLabels: analysis.emotionIntensityLabels,
+            topics: analysis.topics,
+            aiAnalysis: analysis.analysis,
+            aiReflection: analysis.reflection,
+            aiTopThreeEmotions: analysis.aiTopThreeEmotions,
+            aiBlendedEmotions: analysis.aiBlendedEmotions,
+            aiAmbivalenceFlags: analysis.aiAmbivalenceFlags,
+          },
+        });
+        successHaptic();
+        playEntrySavedChime();
+        voiceActions.reset();
+        if (entry?.id) router.push(`/entry-detail?id=${entry.id}`);
+      } else {
+        // Route to hybrid reflection flow
+        useReflectionStore.getState().setPending({
+          transcript: finalTranscript,
+          audioUri: audioUri || undefined,
+          duration: finalDuration,
+          suggestedEmotions: analysis.emotions,
+          suggestedBodySensations: analysis.suggestedBodySensations,
+          initialValence: analysis.valence,
+          initialArousal: analysis.arousal,
+          initialDistress: analysis.distressLevel,
+          conversationTopic: selectedTopic,
+          conversationPrompt: currentQuestion,
+          aiTitle: analysis.title,
+          // Full AI analysis — threaded to createJournalEntry via reflection.tsx
+          emotionScores: analysis.emotionScores,
+          emotionIntensityLabels: analysis.emotionIntensityLabels,
+          emotionIntensity: analysis.emotionIntensity,
+          topics: analysis.topics,
+          aiAnalysis: analysis.analysis,
+          aiReflection: analysis.reflection,
+          aiTopThreeEmotions: analysis.aiTopThreeEmotions,
+          aiBlendedEmotions: analysis.aiBlendedEmotions,
+          aiAmbivalenceFlags: analysis.aiAmbivalenceFlags,
+        });
+        router.push("/reflection");
+      }
+    } catch (error) {
+      console.error("Failed to analyze recording:", error);
+      setRecordingState("idle");
+      errorHaptic();
+      if (error instanceof UsageLimitError) {
+        setNotice({ title: "Monthly limit reached", message: error.message });
+      } else {
+        // The transcript survived; only the emotion analysis failed. Offer a
+        // retry that re-runs analysis on the text we already have rather than
+        // making the user re-record.
+        setNotice({
+          title: "Couldn't analyse that entry",
+          message:
+            "We transcribed your recording but couldn't complete the emotional analysis. This is usually a temporary connection issue.",
+          onRetry: () => {
+            // Re-acquire the re-entrancy lock: stopRecording's `finally` has
+            // already released it by the time this fires, so without this a
+            // double-tap on "Try again" would run two analyses concurrently.
+            if (isAnalyzingRef.current) return;
+            isAnalyzingRef.current = true;
+            setNotice(null);
+            setRecordingState("processing");
+            analyseAndRoute(finalTranscript, audioUri, finalDuration).finally(() => {
+              isAnalyzingRef.current = false;
+            });
+          },
+        });
+      }
+    }
+  };
+
+  /**
+   * Re-transcribe an already-captured recording after a transport/API failure.
+   * The audio is still on disk, so the user's words are not lost.
+   */
+  const retryTranscription = async (
+    audioUri: string | null,
+    finalDuration: number,
+  ): Promise<void> => {
+    if (!audioUri) {
+      setNotice({
+        title: "Recording unavailable",
+        message:
+          "That recording is no longer available to retry. Please record a new entry.",
+      });
+      return;
+    }
+    if (isAnalyzingRef.current) return;
+    isAnalyzingRef.current = true;
+    try {
+      setRecordingState("processing");
+      const result = await transcribeAudioFile(audioUri, "en");
+      const retried = result.transcript;
+      if (retried && retried.trim().length > 0) {
+        await analyseAndRoute(retried, audioUri, finalDuration);
+      } else {
+        setRecordingState("idle");
+        errorHaptic();
+        setNotice({
+          title: "No speech detected",
+          message:
+            "We couldn't hear any speech in that recording. Check that your microphone isn't muted or covered, then try again somewhere quieter.",
+        });
+      }
+    } catch (error) {
+      console.error("Retry transcription failed:", error);
+      setRecordingState("idle");
+      errorHaptic();
+      if (error instanceof UsageLimitError) {
+        setNotice({ title: "Monthly limit reached", message: error.message });
+      } else {
+        setNotice({
+          title: "Transcription failed",
+          message:
+            "We still couldn't turn that recording into text. Please check your connection and try recording again.",
+        });
+      }
+    } finally {
+      isAnalyzingRef.current = false;
+    }
+  };
+
   const stopRecording = async () => {
     // Prevent duplicate calls if user double-taps or timeout retries fire
     if (isAnalyzingRef.current) return;
@@ -368,98 +579,46 @@ export default function SpeakScreen() {
       }
 
       if (finalTranscript && finalTranscript.trim().length > 0) {
-        try {
-          // Build personalization context from user's correction history
-          const personalizationContext = buildPersonalizationPrompt();
-
-          // Analyze transcript for emotion suggestions (with personalization bias)
-          const analysis = await analyzeTranscript(
-            finalTranscript,
-            undefined,
-            personalizationContext,
-          );
-
-          setRecordingState("idle");
-
-          const mode = useSettingsStore.getState().emotionReflectionMode;
-          if (mode === "off") {
-            // Skip reflection, create entry directly
-            const entry = await createEntryMutation.mutateAsync({
-              audioUri: audioUri || undefined,
-              transcript: finalTranscript,
-              duration: finalDuration,
-              conversationTopic: selectedTopic,
-              conversationPrompt: currentQuestion,
-              reflectionOverride: {
-                emotions: analysis.emotions,
-                primaryEmotion: analysis.emotions[0] ?? "trust",
-                valence: analysis.valence,
-                arousal: analysis.arousal,
-                alexithymiaFlag: false,
-                distressLevel: analysis.distressLevel,
-                aiTitle: analysis.title,
-                emotionScores: analysis.emotionScores,
-                emotionIntensityLabels: analysis.emotionIntensityLabels,
-                topics: analysis.topics,
-                aiAnalysis: analysis.analysis,
-                aiReflection: analysis.reflection,
-                aiTopThreeEmotions: analysis.aiTopThreeEmotions,
-                aiBlendedEmotions: analysis.aiBlendedEmotions,
-                aiAmbivalenceFlags: analysis.aiAmbivalenceFlags,
-              },
-            });
-            successHaptic();
-            playEntrySavedChime();
-            voiceActions.reset();
-            if (entry?.id) router.push(`/entry-detail?id=${entry.id}`);
-          } else {
-            // Route to hybrid reflection flow
-            useReflectionStore.getState().setPending({
-              transcript: finalTranscript,
-              audioUri: audioUri || undefined,
-              duration: finalDuration,
-              suggestedEmotions: analysis.emotions,
-              suggestedBodySensations: analysis.suggestedBodySensations,
-              initialValence: analysis.valence,
-              initialArousal: analysis.arousal,
-              initialDistress: analysis.distressLevel,
-              conversationTopic: selectedTopic,
-              conversationPrompt: currentQuestion,
-              aiTitle: analysis.title,
-              // Full AI analysis — threaded to createJournalEntry via reflection.tsx
-              emotionScores: analysis.emotionScores,
-              emotionIntensityLabels: analysis.emotionIntensityLabels,
-              emotionIntensity: analysis.emotionIntensity,
-              topics: analysis.topics,
-              aiAnalysis: analysis.analysis,
-              aiReflection: analysis.reflection,
-              aiTopThreeEmotions: analysis.aiTopThreeEmotions,
-              aiBlendedEmotions: analysis.aiBlendedEmotions,
-              aiAmbivalenceFlags: analysis.aiAmbivalenceFlags,
-            });
-            router.push("/reflection");
-          }
-        } catch (error) {
-          console.error("Failed to analyze recording:", error);
-          if (error instanceof UsageLimitError) setLimitNotice(error.message);
-          setRecordingState("idle");
-          errorHaptic();
-        }
+        await analyseAndRoute(finalTranscript, audioUri, finalDuration);
       } else {
-        // Transcript was empty: Deepgram couldn't detect speech, mic was muted,
-        // or audio format was unsupported. The user just recorded for ≥50 s
-        // and gets nothing — that needs a clear message, not just a buzz.
+        // Transcription succeeded but found no words: mic muted, genuine
+        // silence, or an unsupported audio format. Distinct from a failed
+        // transcription request, which now throws TranscriptionFailedError.
         setRecordingState("idle");
         errorHaptic();
-        setLimitNotice(
-          "We couldn't detect any speech in your recording. Please try again in a quieter environment or check that your microphone is working.",
-        );
+        setNotice({
+          title: "No speech detected",
+          message:
+            "We couldn't hear any speech in that recording. Check that your microphone isn't muted or covered, then try again somewhere quieter.",
+        });
       }
     } catch (error) {
       console.error("Failed to stop recording:", error);
-      if (error instanceof UsageLimitError) setLimitNotice(error.message);
       setRecordingState("idle");
       errorHaptic();
+      if (error instanceof UsageLimitError) {
+        setNotice({ title: "Monthly limit reached", message: error.message });
+      } else if (error instanceof TranscriptionFailedError) {
+        // Not the user's fault and not silence. The audio is still on disk, so
+        // retry re-transcribes the same file instead of discarding their words.
+        setNotice({
+          title: "Transcription failed",
+          message:
+            "Your recording was saved but we couldn't turn it into text. This is usually a connection problem, not something you did.",
+          onRetry: () => {
+            setNotice(null);
+            retryTranscription(error.audioUri, recordingDurationRef.current);
+          },
+        });
+      } else {
+        setNotice({
+          title: "Something went wrong",
+          message:
+            error instanceof Error && error.message
+              ? error.message
+              : "We couldn't finish processing that recording. Please try again.",
+        });
+      }
     } finally {
       isAnalyzingRef.current = false;
     }
@@ -468,6 +627,26 @@ export default function SpeakScreen() {
   const handleMicPress = () => {
     if (recordingState === "idle" || recordingState === "permission_denied") {
       startRecording();
+    }
+  };
+
+  /**
+   * Abandon the in-progress recording. Unloads the recorder, restores the audio
+   * mode and deletes the partial file so it isn't orphaned on disk.
+   */
+  const handleDiscard = async () => {
+    setConfirmDiscard(false);
+    try {
+      await voiceActions.cancelRecording();
+    } catch (error) {
+      console.error("Failed to discard recording:", error);
+    } finally {
+      useRecordingStore.getState().setRecordingActive(false);
+      setRecordingState("idle");
+      setDuration(0);
+      recordingDurationRef.current = 0;
+      voiceActions.reset();
+      tapHaptic();
     }
   };
 
@@ -1057,8 +1236,46 @@ export default function SpeakScreen() {
             /* Recording or Paused — two-button layout */
             <View className="items-center">
               <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 32 }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 24 }}
               >
+                {/* Discard button — the only way to abandon a recording without
+                    saving it. Without this the user's only exits were Save or
+                    leaving the tab. */}
+                <View className="items-center" style={{ gap: 6 }}>
+                  <Pressable
+                    onPress={() => {
+                      tapHaptic();
+                      setConfirmDiscard(true);
+                    }}
+                    disabled={isProcessing}
+                  >
+                    <View
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: 32,
+                        backgroundColor: "rgba(255,255,255,0.10)",
+                        borderWidth: 1.5,
+                        borderColor: "rgba(255,255,255,0.22)",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        ...Shadows.medium,
+                      }}
+                    >
+                      <Trash size={26} color="rgba(255,255,255,0.9)" weight="regular" />
+                    </View>
+                  </Pressable>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.85)",
+                      fontSize: 11,
+                    }}
+                  >
+                    Discard
+                  </Text>
+                </View>
+
                 {/* Pause / Resume button */}
                 <View className="items-center" style={{ gap: 6 }}>
                   <Pressable
@@ -1202,13 +1419,30 @@ export default function SpeakScreen() {
         </Animated.View>
       </View>
 
-      {/* Monthly allowance exhausted — reported by the server */}
+      {/* Recording/analysis failures and the server-reported monthly limit.
+          The title comes from the notice itself so each failure is named
+          accurately, and recoverable ones offer a retry. */}
       <BrandedAlert
-        visible={limitNotice !== null}
+        visible={notice !== null}
         type="error"
-        title="Monthly limit reached"
-        message={limitNotice ?? ""}
-        onClose={() => setLimitNotice(null)}
+        title={notice?.title ?? ""}
+        message={notice?.message ?? ""}
+        confirmLabel={notice?.onRetry ? "Not now" : "OK"}
+        secondaryLabel={notice?.onRetry ? "Try again" : undefined}
+        onSecondary={notice?.onRetry}
+        onClose={() => setNotice(null)}
+      />
+
+      {/* Discard confirmation — destructive, so it is never a single tap */}
+      <BrandedAlert
+        visible={confirmDiscard}
+        type="error"
+        title="Discard this recording?"
+        message="Your recording and everything you've said will be deleted. This can't be undone."
+        secondaryLabel="Discard"
+        onSecondary={handleDiscard}
+        confirmLabel="Keep recording"
+        onClose={() => setConfirmDiscard(false)}
       />
     </View>
   );
