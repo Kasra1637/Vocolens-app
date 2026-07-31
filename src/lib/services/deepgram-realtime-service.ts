@@ -66,24 +66,32 @@ class DeepgramRealtimeService {
   private interimTranscript: string = '';
 
   /**
-   * Get the Deepgram API key from environment
+   * Get the Deepgram API key from environment.
+   *
+   * DISABLED BY DESIGN. This path required a raw Deepgram key to be embedded in
+   * the client bundle (it was passed as a WebSocket subprotocol token), which is
+   * extractable from the shipped app and billable against our account. The key
+   * is no longer injected in app.config.js, so this always returns null and
+   * `isConfigured()` is always false.
+   *
+   * Consequence: callers fall back to the post-recording path, which proxies
+   * audio through the Worker's POST /api/transcribe using the server-side key.
+   * That path is also the one covered by the monthly usage meter — the direct
+   * WebSocket bypassed it entirely.
+   *
+   * To revive realtime streaming, proxy the WebSocket through the Worker rather
+   * than reinstating a client-side key.
    */
   private getApiKey(): string | null {
-    // Primary: Constants.expoConfig.extra (reliable after OTA updates)
-    const fromConstants = Constants.expoConfig?.extra?.EXPO_PUBLIC_DEEPGRAM_API_KEY;
-    if (fromConstants && fromConstants !== 'undefined' && fromConstants !== 'null') {
-      return String(fromConstants).trim();
-    }
-    // Fallback: process.env (works in original build bundle)
-    const apiKeyStr = (process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY ?? '').trim();
-    return (apiKeyStr && apiKeyStr !== 'undefined' && apiKeyStr !== 'null') ? apiKeyStr : null;
+    return null;
   }
 
   /**
-   * Check if Deepgram is configured
+   * Always false — realtime streaming is disabled (see getApiKey).
+   * Callers use the Worker-proxied post-recording transcription instead.
    */
   isConfigured(): boolean {
-    return Boolean(this.getApiKey());
+    return false;
   }
 
   /**

@@ -60,6 +60,7 @@ export function AuthGate({ children }: AuthGateProps) {
   const hasSubscription   = useSubscriptionStore((s) => s.hasSubscription);
   const setSubscription   = useSubscriptionStore((s) => s.setSubscription);
   const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
+  const isEntitlementValid = useSubscriptionStore((s) => s.isEntitlementValid);
 
   const [showSplash,           setShowSplash]           = useState(true);
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
@@ -171,15 +172,24 @@ export function AuthGate({ children }: AuthGateProps) {
       return;
     }
 
-    let confirmedActive = hasSubscription; // cached fallback
+    // Cached fallback, but only while the cache is still inside its grace
+    // window. A cached flag with no (or an expired) verification stamp is not
+    // trusted — see subscription-store.isEntitlementValid.
+    let confirmedActive = isEntitlementValid();
 
     const result = await getProfile();
     if (result.ok) {
       confirmedActive = hasAccessLevel(result.data);
-      if (confirmedActive) setSubscription(true);
-      else clearSubscription();
+      if (confirmedActive) {
+        // Refreshes lastVerifiedAt, restarting the offline grace window.
+        setSubscription(true);
+      } else {
+        clearSubscription();
+      }
     }
-    // If SDK call failed (not activated / network), fall back to cached value
+    // If the SDK call failed (not activated / offline), we keep the cached
+    // value — but only because isEntitlementValid() already bounded how long
+    // that cache stays acceptable.
 
     setSubscriptionVerified(true);
     setAuthenticated(true);
@@ -222,8 +232,9 @@ export function AuthGate({ children }: AuthGateProps) {
     return <OnboardingFlow />;
   }
 
-  // No active subscription
-  if (!hasSubscription) {
+  // No active subscription — or a cached entitlement that has gone too long
+  // without confirmation from Adapty.
+  if (!hasSubscription || !isEntitlementValid()) {
     return <SubscriptionLapsedPaywall />;
   }
 

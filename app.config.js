@@ -84,12 +84,27 @@ export default ({ config }) => ({
     // not the JS value null, so null slips through and produces the header
     // "Authorization: Token null" → Deepgram 401 INVALID_AUTH.
     // undefined is falsy and is caught correctly by the `!apiKey` guard.
-    EXPO_PUBLIC_DEEPGRAM_API_KEY:
-      process.env.EXPO_PUBLIC_DEEPGRAM_API_KEY || undefined,
-    EXPO_PUBLIC_OPENROUTER_API_KEY:
-      process.env.EXPO_PUBLIC_OPENROUTER_API_KEY || undefined,
+    // SECURITY: EXPO_PUBLIC_DEEPGRAM_API_KEY and EXPO_PUBLIC_OPENROUTER_API_KEY
+    // are deliberately NOT injected here.
+    //
+    // Anything placed in `extra` (or read via process.env.EXPO_PUBLIC_*) is
+    // embedded in the shipped bundle and recoverable with `unzip` + `strings`.
+    // Both of those are real, billable provider secrets.
+    //
+    // Neither is needed on the device:
+    //   • Transcription goes through the Worker's POST /api/transcribe, which
+    //     holds DEEPGRAM_API_KEY as a server-side binding.
+    //   • Analysis goes through the Worker's /api/journal/* routes, which hold
+    //     OPENROUTER_API_KEY as a server-side binding.
+    //
+    // Do NOT re-add them. If web realtime streaming is revived later, proxy it
+    // through the Worker instead of shipping the key.
     EXPO_PUBLIC_BACKEND_URL:
       process.env.EXPO_PUBLIC_BACKEND_URL || undefined,
+    // Set to "true" ONLY by the `preview` build profile in eas.json, so the
+    // closed-testing "Skip — I'm a tester" bypass cannot reach production.
+    EXPO_PUBLIC_ALLOW_TESTER_SKIP:
+      process.env.EXPO_PUBLIC_ALLOW_TESTER_SKIP || undefined,
     EXPO_PUBLIC_VOCOLENS_API_KEY:
       process.env.EXPO_PUBLIC_VOCOLENS_API_KEY || undefined,
     // Adapty Public SDK Key (App settings → General → Api keys in the

@@ -20,6 +20,68 @@ import { Platform } from 'react-native';
 
 const PIN_KEY = 'user_pin_code';
 const AUTH_ENABLED_KEY = 'auth_enabled';
+const RECOVERY_KEY = 'pin_recovery_code';
+const THROTTLE_KEY = 'pin_attempt_state';
+
+// ─── Brute-force throttle ──────────────────────────────────────────────────────
+// A 4-digit PIN is only 10,000 combinations, so without a delay anyone holding
+// the device can exhaust it. Attempts are counted in SecureStore (not memory)
+// so force-quitting the app does not reset the penalty.
+//
+// Escalating lockouts, applied from the 5th consecutive failure onward:
+const LOCKOUT_LADDER_MS = [
+  30 * 1000,        // 5th failure  → 30s
+  60 * 1000,        // 6th          → 1 min
+  5 * 60 * 1000,    // 7th          → 5 min
+  15 * 60 * 1000,   // 8th          → 15 min
+  60 * 60 * 1000,   // 9th and up   → 1 hour
+];
+const FREE_ATTEMPTS = 4;
+
+interface AttemptState {
+  failures: number;
+  /** Epoch ms until which verification is refused. */
+  lockedUntil: number;
+}
+
+async function readAttemptState(): Promise<AttemptState> {
+  try {
+    const raw = await secureGetItem(THROTTLE_KEY);
+    if (!raw) return { failures: 0, lockedUntil: 0 };
+    const parsed = JSON.parse(raw);
+    return {
+      failures: Number(parsed?.failures) || 0,
+      lockedUntil: Number(parsed?.lockedUntil) || 0,
+    };
+  } catch {
+    return { failures: 0, lockedUntil: 0 };
+  }
+}
+
+async function writeAttemptState(state: AttemptState): Promise<void> {
+  try {
+    await secureSetItem(THROTTLE_KEY, JSON.stringify(state));
+  } catch (err) {
+    log.warn('could not persist PIN attempt state');
+  }
+}
+
+async function clearAttemptState(): Promise<void> {
+  try {
+    await secureRemoveItem(THROTTLE_KEY);
+  } catch {
+    // non-fatal
+  }
+}
+
+/**
+ * Milliseconds remaining on the current lockout, or 0 if not locked out.
+ * UI can poll this to render a countdown.
+ */
+export async function getPinLockoutRemainingMs(): Promise<number> {
+  const { lockedUntil } = await readAttemptState();
+  return Math.max(0, lockedUntil - Date.now());
+}
 
 // Tagged logger — easy to grep in device logs while preventing PIN leakage.
 const log = {
@@ -302,6 +364,13 @@ export async function setPin(pin: string): Promise<void> {
 
 export async function verifyPin(pin: string): Promise<boolean> {
   try {
+    // Refuse outright while locked out, without touching the stored hash.
+    const state = await readAttemptState();
+    if (state.lockedUntil > Date.now()) {
+      log.warn('verifyPin: refused, lockout active');
+      return false;
+    }
+
     // ALWAYS read from SecureStore — never trust a cached / in-memory copy.
     const storedHash = await secureGetItem(PIN_KEY);
     if (storedHash === null) {
@@ -310,10 +379,99 @@ export async function verifyPin(pin: string): Promise<boolean> {
     }
     // Compare the hash of the entered PIN against the stored hash
     const ok = await verifyPinHash(pin, storedHash);
-    log.info(ok ? 'verifyPin: hash match' : 'verifyPin: hash mismatch');
-    return ok;
+
+    if (ok) {
+      await clearAttemptState();
+      log.info('verifyPin: match');
+      return true;
+    }
+
+    // Escalate the penalty on each consecutive failure.
+    const failures = state.failures + 1;
+    let lockedUntil = 0;
+    if (failures > FREE_ATTEMPTS) {
+      const idx = Math.min(failures - FREE_ATTEMPTS - 1, LOCKOUT_LADDER_MS.length - 1);
+      lockedUntil = Date.now() + LOCKOUT_LADDER_MS[idx];
+    }
+    await writeAttemptState({ failures, lockedUntil });
+    log.warn('verifyPin: mismatch');
+    return false;
   } catch (error) {
     log.error('verifyPin error', error);
+    return false;
+  }
+}
+
+// ─── PIN recovery (fully on-device) ────────────────────────────────────────────
+// Without this, a forgotten PIN + unavailable biometrics meant the ONLY way
+// back in was reinstalling — which destroys every journal entry, because
+// storage is local-only by design.
+//
+// The recovery code is generated on the device, shown to the user once, and
+// only its hash is stored. It is never transmitted anywhere: no email, no
+// server, no account. That keeps the local-first guarantee intact while giving
+// the user a way to rescue their own data.
+
+/** Formats 10 random bytes as a readable code, e.g. "K4RC-8QM2-XT9P". */
+function formatRecoveryCode(bytes: Uint8Array): string {
+  // Crockford-style alphabet: no I, L, O, U — avoids transcription mistakes.
+  const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+  const chars = Array.from(bytes.slice(0, 12)).map((b) => ALPHABET[b % ALPHABET.length]);
+  return `${chars.slice(0, 4).join('')}-${chars.slice(4, 8).join('')}-${chars.slice(8, 12).join('')}`;
+}
+
+/**
+ * Generates a new recovery code, stores only its hash, and returns the
+ * plaintext ONCE for display. The caller must show it to the user immediately —
+ * it cannot be retrieved again.
+ */
+export async function generateRecoveryCode(): Promise<string> {
+  const Crypto = require('expo-crypto');
+  const bytes: Uint8Array = await Crypto.getRandomBytesAsync(12);
+  const code = formatRecoveryCode(bytes);
+  // Reuse the PIN hashing (salted SHA-256) so the code is not stored in clear.
+  const codeHash = await hashPin(code);
+  await secureSetItem(RECOVERY_KEY, codeHash);
+  log.info('recovery code generated');
+  return code;
+}
+
+/** Whether a recovery code has been set up. */
+export async function hasRecoveryCode(): Promise<boolean> {
+  return (await secureGetItem(RECOVERY_KEY)) !== null;
+}
+
+/**
+ * Verifies a recovery code and, on success, clears the PIN and the lockout so
+ * the user can set a new PIN. Returns false on a bad code.
+ *
+ * Deliberately does NOT delete journal data — the whole point is to rescue it.
+ */
+export async function resetPinWithRecoveryCode(code: string): Promise<boolean> {
+  try {
+    const storedHash = await secureGetItem(RECOVERY_KEY);
+    if (storedHash === null) {
+      log.warn('resetPinWithRecoveryCode: no recovery code configured');
+      return false;
+    }
+    const normalised = code.trim().toUpperCase();
+    const ok = await verifyPinHash(normalised, storedHash);
+    if (!ok) {
+      log.warn('resetPinWithRecoveryCode: code mismatch');
+      return false;
+    }
+
+    // Valid code → drop the PIN and the throttle so a new PIN can be set.
+    await secureRemoveItem(PIN_KEY);
+    await secureRemoveItem(AUTH_ENABLED_KEY);
+    await clearAttemptState();
+    // Single-use: force a fresh code alongside the new PIN.
+    await secureRemoveItem(RECOVERY_KEY);
+    mirrorPinStore('clear');
+    log.info('PIN reset via recovery code');
+    return true;
+  } catch (error) {
+    log.error('resetPinWithRecoveryCode error', error);
     return false;
   }
 }
@@ -331,6 +489,8 @@ export async function changePin(oldPin: string, newPin: string): Promise<boolean
 export async function removePin(): Promise<void> {
   await secureRemoveItem(PIN_KEY);
   await secureRemoveItem(AUTH_ENABLED_KEY);
+  await secureRemoveItem(RECOVERY_KEY);
+  await clearAttemptState();
   await clearPinSalt();
   // Keep zustand mirror in sync
   mirrorPinStore('clear');

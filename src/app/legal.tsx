@@ -380,7 +380,7 @@ function PrivacyPolicy({
         </Bullet>
         <Body>
           {
-            "\nAll of this data is stored locally using AsyncStorage on your device. There is no cloud synchronisation, no server-side backup, and no remote access to this data."
+            "\nAll of this data is stored locally on your device. There is no cloud synchronisation of your journal, no server-side backup of your entries, and no remote access to them.\n\nProcessing is a separate matter from storage: to transcribe your voice and analyse it, the recording and transcript must be sent to our processing providers (see \"Data Sent to Third-Party Services\" below). They are relayed, not retained by us. The only thing we keep on our servers is an irreversible hash of a device identifier plus a count of minutes used, so the monthly allowance can be enforced. That record contains none of your journal content."
           }
         </Body>
       </Section>
@@ -432,31 +432,30 @@ function PrivacyPolicy({
             marginTop: 12,
           }}
         >
-          2. OpenAI (Emotional Analysis)
+          2. OpenRouter / OpenAI (Emotional Analysis)
         </Text>
         <Bullet>
-          Both your audio recording and text transcript are sent to our analysis
-          backend for emotional analysis.
+          Your text transcript is sent to our analysis backend for emotional
+          analysis.
         </Bullet>
         <Bullet>
-          Our backend forwards this data to OpenAI's API using the
-          gpt-4o-audio-preview model, which analyses emotions from both your
-          speech characteristics (tone, pacing, vocal cues) and the content of
-          your words simultaneously.
+          Our backend forwards this data to OpenRouter, an AI provider gateway,
+          which routes the request to the underlying language model (currently an
+          OpenAI GPT model). Both OpenRouter and the model provider therefore
+          process this data.
         </Bullet>
         <Bullet>
-          This multimodal analysis enables deeper, more accurate emotion
-          detection than text-only analysis — GPT-4o processes the raw audio and
-          text together to score the 8 core emotions and generate a personalised
-          reflection.
+          The analysis scores the 8 core emotions and generates a personalised
+          reflection from the content of your words.
         </Bullet>
         <Bullet>
-          No user identifiers, account details, or persistent metadata are sent
-          alongside the audio or transcript.
+          No name, email address, or account identifier is sent alongside the
+          transcript. A hashed device identifier is included solely to enforce
+          the monthly usage allowance.
         </Bullet>
         <Bullet>
-          OpenAI's privacy policy governs how they handle audio and text data.
-          See openai.com/privacy.
+          OpenRouter's and the model provider's privacy policies govern how they
+          handle this data. See openrouter.ai/privacy and openai.com/privacy.
         </Bullet>
         <Bullet>
           If the analysis backend is unavailable, the app falls back to
@@ -474,22 +473,30 @@ function PrivacyPolicy({
           HTTPS connection for speech-to-text transcription.
         </Bullet>
         <Bullet>
-          Your audio is also temporarily transmitted to OpenAI's GPT-4o audio
-          model (via our secure analysis backend) so it can analyse vocal
-          characteristics — tone, pitch, pacing, and energy — alongside the
-          transcript text to produce more accurate emotion detection.
+          Emotional analysis is performed on the text transcript. Where vocal
+          analysis is used, the audio is relayed through our backend to the AI
+          provider for that purpose only.
         </Bullet>
         <Bullet>
-          Neither Deepgram nor OpenAI receive any personally identifying
-          information alongside the audio.
+          We do not send your name, email address, or any account identifier
+          alongside the audio. Please note that the recording and transcript are
+          themselves personal data, and each provider's own privacy policy
+          governs how they handle it once received.
         </Bullet>
         <Bullet>
-          We do not store, listen to, or retain your audio recordings on our
-          servers. Audio is processed transiently and discarded.
+          Our backend relays your audio and transcript to these providers
+          without storing or retaining them. We cannot guarantee the retention
+          behaviour of the providers themselves — see their policies, linked
+          above.
         </Bullet>
         <Bullet>
-          The local audio file remains on your device. You can delete it by
-          deleting the journal entry.
+          A request identifier derived from your device is sent with each
+          request so we can enforce the monthly usage allowance. It is stored as
+          an irreversible hash and is never linked to your journal content.
+        </Bullet>
+        <Bullet>
+          The local audio file stays on your device. Deleting the journal entry
+          deletes that file too.
         </Bullet>
         <Bullet>
           Deleting an entry removes the associated audio file from your device.
@@ -649,7 +656,7 @@ function TermsOfService({
         <Bullet>Voice recording and local audio storage</Bullet>
         <Bullet>Speech-to-text transcription via Deepgram</Bullet>
         <Bullet>
-          Emotional analysis (8 core emotion scoring) via OpenAI GPT-4o audio
+          Emotional analysis (8 core emotion scoring) via the AI analysis provider
           model — analyses both vocal tone and transcript content
         </Bullet>
         <Bullet>
@@ -738,7 +745,7 @@ function TermsOfService({
         </Body>
         <Bullet>Deepgram — Speech-to-text transcription (deepgram.com)</Bullet>
         <Bullet>
-          OpenAI GPT-4o — AI emotional analysis from both audio speech
+          OpenRouter (AI provider gateway) — AI emotional analysis from both audio speech
           characteristics and transcript text (openai.com)
         </Bullet>
         <Bullet>Adapty — Subscription management (adapty.io)</Bullet>

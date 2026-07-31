@@ -26,6 +26,7 @@ import Animated, { FadeIn, FadeInDown, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
 import { CaretRight, CaretDown, CaretUp, X, ChatCircle, Shield, Eye, TrendUp, LockOpen, Bell, Star } from "phosphor-react-native";
+import Constants from "expo-constants";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -48,8 +49,17 @@ import { NotificationService } from "@/lib/services/notification-service";
 
 // ── Tester bypass flag ────────────────────────────────────────────────────────
 // Set to `true` while distributing via internal testing on Google Play.
-// Flip to `false` (or remove entirely) before submitting for production.
-const ALLOW_TESTER_SKIP = true;
+// ── Tester bypass ─────────────────────────────────────────────────────────────
+// Needed while Adapty is not live so closed-testing participants can get past
+// the paywall (Google Play requires 12 testers for 14 days before production).
+//
+// Driven by an env var, NOT a hand-edited constant: `eas.json` sets
+// EXPO_PUBLIC_ALLOW_TESTER_SKIP="true" only on the `preview` profile. The
+// `production` profile does not set it, so this is structurally false in a
+// production build and cannot be shipped by forgetting to flip a boolean.
+const ALLOW_TESTER_SKIP =
+  (Constants.expoConfig?.extra?.EXPO_PUBLIC_ALLOW_TESTER_SKIP ??
+    process.env.EXPO_PUBLIC_ALLOW_TESTER_SKIP) === 'true';
 
 // ── Pricing fallbacks (shown when SDK not available) ──────────────────────────
 // These are ONLY used as display fallbacks in the unlikely case where live
@@ -629,7 +639,7 @@ export function PaywallScreen() {
               )}
 
               {/* Tester skip — visible in internal testing builds */}
-              {ALLOW_TESTER_SKIP && !__DEV__ && (
+              {ALLOW_TESTER_SKIP && (
                 <Pressable
                   onPress={() => {
                     tapHaptic();

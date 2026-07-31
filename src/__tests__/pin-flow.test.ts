@@ -29,6 +29,14 @@ jest.mock('expo-secure-store', () => ({
 
 jest.mock('expo-crypto', () => ({
   getRandomBytesAsync: jest.fn(() => Promise.resolve(new Uint8Array(32).fill(42))),
+  // See auth-service.test.ts — pin-hash.ts needs both of these.
+  CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+  digestStringAsync: jest.fn((_algo: string, data: string) =>
+    Promise.resolve(
+      'h' +
+        Array.from(data).reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7).toString(16),
+    ),
+  ),
 }));
 
 // ─── Import under test ────────────────────────────────────────────────────────

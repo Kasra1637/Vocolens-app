@@ -29,6 +29,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
 import { CaretRight, X } from "phosphor-react-native";
+import Constants from "expo-constants";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import {
@@ -48,8 +49,11 @@ import { NotificationService } from "@/lib/services/notification-service";
 
 // ── Tester bypass flag ────────────────────────────────────────────────────────
 // Set to `true` while distributing via internal testing on Google Play.
-// Flip to `false` (or remove entirely) before submitting for production.
-const ALLOW_TESTER_SKIP = true;
+// See PaywallScreen.tsx — gated on the EAS build profile via env var, so it is
+// structurally absent from production builds.
+const ALLOW_TESTER_SKIP =
+  (Constants.expoConfig?.extra?.EXPO_PUBLIC_ALLOW_TESTER_SKIP ??
+    process.env.EXPO_PUBLIC_ALLOW_TESTER_SKIP) === 'true';
 
 // ── Pricing fallbacks ─────────────────────────────────────────────────────────
 // Display fallbacks when the SDK hasn't loaded products. They must NEVER
@@ -488,7 +492,7 @@ export function SubscriptionLapsedPaywall() {
               )}
 
               {/* Tester skip — visible in internal testing builds */}
-              {ALLOW_TESTER_SKIP && !__DEV__ && (
+              {ALLOW_TESTER_SKIP && (
                 <Pressable
                   onPress={() => {
                     tapHaptic();

@@ -37,6 +37,18 @@ jest.mock('expo-secure-store', () => ({
 }));
 jest.mock('expo-crypto', () => ({
   getRandomBytesAsync: jest.fn(() => Promise.resolve(new Uint8Array(32).fill(1))),
+  // pin-hash.ts uses digestStringAsync + CryptoDigestAlgorithm.SHA256. Without
+  // these the PIN suite threw "Cannot read properties of undefined (reading
+  // 'SHA256')" and every auth assertion silently passed against a broken hash.
+  CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+  // Deterministic stand-in for SHA-256: distinct inputs must map to distinct
+  // outputs so hash comparison semantics hold.
+  digestStringAsync: jest.fn((_algo: string, data: string) =>
+    Promise.resolve(
+      'h' +
+        Array.from(data).reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7).toString(16),
+    ),
+  ),
 }));
 
 // ─── Imports (after mocks) ────────────────────────────────────────────────────

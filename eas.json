@@ -12,7 +12,22 @@
       "distribution": "internal",
       "channel": "preview",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_BLINK_PREVIEW_ENABLED": "true", "NPM_FLAGS": "--legacy-peer-deps" }
+      "env": {
+        "EXPO_PUBLIC_BLINK_PREVIEW_ENABLED": "true",
+        "NPM_FLAGS": "--legacy-peer-deps",
+        "EXPO_PUBLIC_ALLOW_TESTER_SKIP": "true"
+      }
+    },
+    "closed-testing": {
+      "extends": "preview",
+      "distribution": "store",
+      "channel": "preview",
+      "android": { "buildType": "app-bundle" },
+      "autoIncrement": true,
+      "env": {
+        "NPM_FLAGS": "--legacy-peer-deps",
+        "EXPO_PUBLIC_ALLOW_TESTER_SKIP": "true"
+      }
     },
     "production": {
       "autoIncrement": true,
