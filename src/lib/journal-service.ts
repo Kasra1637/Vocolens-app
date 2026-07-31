@@ -588,6 +588,13 @@ export interface ReflectionOverride {
   emotionIntensityLabels?: EmotionIntensityLabels;
   /** AI-generated title from the Worker /api/analyze response */
   aiTitle?: string;
+  // ── Full AI analysis fields (threaded from PendingReflection) ──
+  topics?: string[];
+  aiAnalysis?: string;
+  aiReflection?: string;
+  aiTopThreeEmotions?: import("./types").RankedEmotion[];
+  aiBlendedEmotions?: import("./types").BlendedEmotionType[];
+  aiAmbivalenceFlags?: string[];
 }
 
 export async function createJournalEntry(
@@ -682,14 +689,17 @@ export async function createJournalEntry(
       })(),
       emotionScores: reflectionOverride.emotionScores,
       emotionIntensityLabels: reflectionOverride.emotionIntensityLabels,
-      topics: ["reflection"],
+      topics: reflectionOverride.topics ?? ["reflection"],
       title: generatedTitle,
-      analysis: "Journal entry recorded with user reflection.",
-      reflection: undefined,
+      analysis: reflectionOverride.aiAnalysis ?? "Journal entry recorded with user reflection.",
+      reflection: reflectionOverride.aiReflection,
       valence: reflectionOverride.valence,
       arousal: reflectionOverride.arousal,
       suggestedBodySensations: [],
       distressLevel: reflectionOverride.distressLevel,
+      aiTopThreeEmotions: reflectionOverride.aiTopThreeEmotions,
+      aiBlendedEmotions: reflectionOverride.aiBlendedEmotions,
+      aiAmbivalenceFlags: reflectionOverride.aiAmbivalenceFlags,
     };
 
   } else if (preTranscribedText) {
@@ -831,9 +841,35 @@ export async function createJournalEntry(
 }
 
 // Delete entry and update stats
-export function deleteJournalEntry(entryId: string): void {
+export async function deleteJournalEntry(entryId: string): Promise<void> {
   const journalStore = useJournalStore.getState();
+  const entry = journalStore.getEntry(entryId);
+
+  // Delete the audio file from disk so it isn't orphaned.
+  if (entry?.audioUri) {
+    try {
+      await FileSystem.deleteAsync(entry.audioUri, { idempotent: true });
+    } catch {
+      // Non-fatal: the file may have already been cache-purged by the OS.
+    }
+  }
+
   journalStore.deleteEntry(entryId);
+}
+
+/**
+ * Delete all audio files referenced by the current journal entries.
+ * Call this BEFORE clearAllEntries() so the URIs are still accessible.
+ */
+export async function deleteAllAudioFiles(): Promise<void> {
+  const entries = useJournalStore.getState().entries;
+  await Promise.all(
+    entries
+      .filter((e) => e.audioUri)
+      .map((e) =>
+        FileSystem.deleteAsync(e.audioUri!, { idempotent: true }).catch(() => {}),
+      ),
+  );
 }
 
 // Get formatted entries for display

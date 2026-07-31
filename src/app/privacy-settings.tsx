@@ -32,6 +32,7 @@ import useJournalStore from "@/lib/state/journal-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 import useBadgesStore from "@/lib/state/badges-store";
 import { calculateAverageMood } from "@/lib/analytics";
+import { deleteAllAudioFiles } from "@/lib/journal-service";
 import { useAuthStore } from "@/lib/state/auth-store";
 import { removePin } from "@/lib/auth-service";
 import { clearAICache } from "@/lib/ai-emotional-intelligence";
@@ -129,6 +130,7 @@ export default function PrivacySettingsScreen() {
   const confirmDeleteEntries = async () => {
     try {
       warningHaptic();
+      await deleteAllAudioFiles();
       clearAllEntries();
       resetStats();
       // The cached AI analysis is derived from these entries and quotes them,
@@ -146,6 +148,7 @@ export default function PrivacySettingsScreen() {
   const confirmDeleteAccount = async () => {
     try {
       warningHaptic();
+      await deleteAllAudioFiles();
       clearAllEntries();
       resetStats();
       resetBadges();

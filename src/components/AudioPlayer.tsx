@@ -31,6 +31,7 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
   const positionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -106,12 +107,8 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
       startPositionTracking(newSound);
     } catch (error) {
       console.error('[AudioPlayer] Error loading audio:', error);
-      console.error('[AudioPlayer] Audio URI:', audioUri);
-      if (error instanceof Error) {
-        console.error('[AudioPlayer] Error message:', error.message);
-        console.error('[AudioPlayer] Error name:', error.name);
-      }
       errorHaptic();
+      setLoadError('Recording unavailable. The audio file may have been removed.');
     } finally {
       setIsLoading(false);
     }
@@ -208,6 +205,13 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
   }));
 
   if (compact) {
+    if (loadError) {
+      return (
+        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,100,100,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 16 }}>!</Text>
+        </View>
+      );
+    }
     // Compact mode - just a play button
     return (
       <Pressable
@@ -242,6 +246,31 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
   }
 
   // Full player mode
+  if (loadError) {
+    return (
+      <View
+        className="rounded-2xl p-4"
+        style={{
+          backgroundColor: 'rgba(255, 100, 100, 0.08)',
+          borderWidth: 1,
+          borderColor: 'rgba(255, 100, 100, 0.2)',
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: 'Inter_400Regular',
+            color: 'rgba(255, 255, 255, 0.7)',
+            fontSize: 13,
+            textAlign: 'center',
+            lineHeight: 20,
+          }}
+        >
+          {loadError}
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View
       className="rounded-2xl p-4"

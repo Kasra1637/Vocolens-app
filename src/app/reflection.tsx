@@ -146,6 +146,15 @@ export default function ReflectionScreen() {
           alexithymiaFlag: emotions.length === 0,
           distressLevel: distress,
           aiTitle: pending.aiTitle,
+          // Forward the full AI analysis so createJournalEntry preserves it
+          emotionScores: pending.emotionScores,
+          emotionIntensityLabels: pending.emotionIntensityLabels,
+          topics: pending.topics,
+          aiAnalysis: pending.aiAnalysis,
+          aiReflection: pending.aiReflection,
+          aiTopThreeEmotions: pending.aiTopThreeEmotions,
+          aiBlendedEmotions: pending.aiBlendedEmotions,
+          aiAmbivalenceFlags: pending.aiAmbivalenceFlags,
         },
       });
       clearReflection();

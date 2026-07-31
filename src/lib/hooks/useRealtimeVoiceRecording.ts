@@ -448,6 +448,11 @@ export function useRealtimeVoiceRecording(): [
           console.log('[useRealtimeVoiceRecording] Post-recording transcript:', finalTranscript.slice(0, 100));
         } catch (transcribeErr) {
           console.error('[useRealtimeVoiceRecording] Post-recording transcription failed:', transcribeErr);
+          // UsageLimitError must propagate so the calling screen can show the
+          // limit alert rather than silently dropping the recording.
+          if (transcribeErr && (transcribeErr as any).code === 'monthly_limit_reached') {
+            throw transcribeErr;
+          }
           setError(
             transcribeErr instanceof Error ? transcribeErr.message : 'Transcription failed'
           );

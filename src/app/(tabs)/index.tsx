@@ -422,6 +422,14 @@ export default function SpeakScreen() {
                 alexithymiaFlag: false,
                 distressLevel: analysis.distressLevel,
                 aiTitle: analysis.title,
+                emotionScores: analysis.emotionScores,
+                emotionIntensityLabels: analysis.emotionIntensityLabels,
+                topics: analysis.topics,
+                aiAnalysis: analysis.analysis,
+                aiReflection: analysis.reflection,
+                aiTopThreeEmotions: analysis.aiTopThreeEmotions,
+                aiBlendedEmotions: analysis.aiBlendedEmotions,
+                aiAmbivalenceFlags: analysis.aiAmbivalenceFlags,
               },
             });
             successHaptic();
@@ -442,6 +450,16 @@ export default function SpeakScreen() {
               conversationTopic: selectedTopic,
               conversationPrompt: currentQuestion,
               aiTitle: analysis.title,
+              // Full AI analysis — threaded to createJournalEntry via reflection.tsx
+              emotionScores: analysis.emotionScores,
+              emotionIntensityLabels: analysis.emotionIntensityLabels,
+              emotionIntensity: analysis.emotionIntensity,
+              topics: analysis.topics,
+              aiAnalysis: analysis.analysis,
+              aiReflection: analysis.reflection,
+              aiTopThreeEmotions: analysis.aiTopThreeEmotions,
+              aiBlendedEmotions: analysis.aiBlendedEmotions,
+              aiAmbivalenceFlags: analysis.aiAmbivalenceFlags,
             });
             router.push("/reflection");
           }
@@ -452,9 +470,14 @@ export default function SpeakScreen() {
           errorHaptic();
         }
       } else {
-        console.log("No transcript available");
+        // Transcript was empty: Deepgram couldn't detect speech, mic was muted,
+        // or audio format was unsupported. The user just recorded for ≥50 s
+        // and gets nothing — that needs a clear message, not just a buzz.
         setRecordingState("idle");
-        warningHaptic();
+        errorHaptic();
+        setLimitNotice(
+          "We couldn't detect any speech in your recording. Please try again in a quieter environment or check that your microphone is working.",
+        );
       }
     } catch (error) {
       console.error("Failed to stop recording:", error);

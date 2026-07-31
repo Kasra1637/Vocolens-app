@@ -131,7 +131,7 @@ export function useDeleteEntry() {
 
   return useMutation({
     mutationFn: async (entryId: string) => {
-      deleteJournalEntry(entryId);
+      await deleteJournalEntry(entryId);
       return entryId;
     },
     onSuccess: () => {

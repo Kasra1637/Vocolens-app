@@ -68,6 +68,7 @@ import {
 } from "@/lib/state/user-stats-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 import { clearAICache } from "@/lib/ai-emotional-intelligence";
+import { deleteAllAudioFiles } from "@/lib/journal-service";
 import useJournalStore from "@/lib/state/journal-store";
 import useBadgesStore from "@/lib/state/badges-store";
 import usePinStore from "@/lib/state/pin-store";
@@ -354,6 +355,10 @@ export default function SettingsScreen() {
     confirmHaptic();
     setResetModalVisible(false);
     setResetStep(1);
+
+    // Delete all audio recordings from disk BEFORE clearing the entries store
+    // (so the URIs are still available). Non-fatal: files may already be purged.
+    await deleteAllAudioFiles();
 
     // Reset all stores
     useJournalStore.getState().clearAllEntries();
