@@ -68,7 +68,7 @@ export default ({ config }) => ({
   runtimeVersion: '1.0.0',
   updates: {
     url: 'https://u.expo.dev/743d876a-6e89-4b1f-9e42-816a67b84a35',
-    checkAutomatically: 'ON_LAUNCH',
+    checkAutomatically: 'ON_LOAD',
     fallbackToCacheTimeout: 30000,
   },
   extra: {
