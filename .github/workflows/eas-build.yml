@@ -7,6 +7,15 @@ on:
         description: 'Update message'
         required: false
         default: ''
+      branch:
+        description: 'Update branch (main, preview, or development)'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - main
+          - development
 
 concurrency:
   group: eas-update-${{ github.ref }}
@@ -29,15 +38,17 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
 
-      - name: Publish EAS Update to development branch
+      - name: Publish EAS Update
         run: |
           MSG="${{ github.event.inputs.message }}"
           if [ -z "$MSG" ]; then
-            MSG="Push to main: $(git log -1 --pretty=%s)"
+            MSG="Manual OTA update: $(git log -1 --pretty=%s)"
           fi
           eas update \
-            --branch development \
+            --branch ${{ github.event.inputs.branch }} \
             --message "$MSG" \
             --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL }}
+          EXPO_PUBLIC_VOCOLENS_API_KEY: ${{ secrets.EXPO_PUBLIC_VOCOLENS_API_KEY }}
