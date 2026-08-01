@@ -12,7 +12,8 @@
     },
     "android": {
       "package": "com.vocolens.app",
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro"

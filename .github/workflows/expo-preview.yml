@@ -29,7 +29,7 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli@19.0.1
 
-      - name: Publish EAS Update
+      - name: Publish EAS Update to main branch (production)
         run: |
           eas update \
             --branch main \
@@ -37,8 +37,17 @@ jobs:
             --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EXPO_PUBLIC_DEEPGRAM_API_KEY: ${{ secrets.EXPO_PUBLIC_DEEPGRAM_API_KEY }}
-          EXPO_PUBLIC_OPENROUTER_API_KEY: ${{ secrets.EXPO_PUBLIC_OPENROUTER_API_KEY }}
+          EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL }}
+          EXPO_PUBLIC_VOCOLENS_API_KEY: ${{ secrets.EXPO_PUBLIC_VOCOLENS_API_KEY }}
+
+      - name: Publish EAS Update to preview branch (closed-testing)
+        run: |
+          eas update \
+            --branch preview \
+            --message "${{ github.event_name == 'pull_request' && format('PR #{0}: {1}', github.event.pull_request.number, github.event.pull_request.title) || format('Push to main: {0}', github.event.head_commit.message) }}" \
+            --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL }}
           EXPO_PUBLIC_VOCOLENS_API_KEY: ${{ secrets.EXPO_PUBLIC_VOCOLENS_API_KEY }}
 
@@ -53,16 +62,17 @@ jobs:
             const body = [
               `## 📱 OTA Preview Published`,
               ``,
-              `An update has been published to the \`main\` channel.`,
+              `Updates published to both \`main\` and \`preview\` channels.`,
               ``,
               `**To see the changes:**`,
-              `1. Open the **Vocolens** dev build on your phone`,
+              `1. Open the **Vocolens** app on your phone`,
               `2. Force-close the app completely`,
               `3. Re-open it — the update downloads automatically`,
               ``,
               `| | |`,
               `|---|---|`,
               `| **Commit** | \`${sha}\` |`,
+              `| **Channels** | \`main\` (production) + \`preview\` (closed-testing) |`,
               `| **CI run** | [View logs](${runUrl}) |`,
             ].join('\n');
             const { data: comments } = await github.rest.issues.listComments({
