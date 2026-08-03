@@ -6,7 +6,6 @@ import {
   Pressable,
   TextInput,
   Platform,
-  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -70,6 +69,7 @@ import {
 } from "@/lib/types";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { RecommendationCard } from "@/components/RecommendationCard";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 // generateRecommendation removed — recommendation comes from /api/analyze response
 
 // Display types for UI (capitalized versions)
@@ -866,204 +866,27 @@ export default function EntriesScreen() {
         </Animated.View>
       </ScrollView>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
+      {/* Delete Confirmation — canonical ConfirmDialog */}
+      <ConfirmDialog
         visible={deleteModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={handleDeleteCancel}
-      >
-        <View className="flex-1 bg-black/60 items-center justify-center px-6">
-          <View className="rounded-3xl overflow-hidden w-full max-w-sm"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              borderWidth: 2,
-              borderColor: "rgba(255, 255, 255, 0.20)",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.12,
-              shadowRadius: 16,
-            }}
-          >
-            <LinearGradient
-              colors={Gradients.background}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={{
-                padding: 24,
-                borderRadius: 24,
-              }}
-            >
-              <View className="items-center mb-4">
-                <View
-                  className="w-16 h-16 rounded-full items-center justify-center mb-4"
-                  style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
-                >
-                  <Trash size={32} color="#FFFFFF" weight="duotone" />
-                </View>
-                <Text
-                  className="text-2xl font-bold mb-2 text-center"
-                  style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}
-                >
-                  Delete entry?
-                </Text>
-                <Text
-                  className="text-center text-base"
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.8)",
-                    lineHeight: 22,
-                  }}
-                >
-                  This will permanently delete this journal entry. This action
-                  cannot be undone.
-                </Text>
-              </View>
+        icon="trash"
+        title="Delete entry?"
+        message="This will permanently delete this journal entry. This action cannot be undone."
+        confirmLabel="Delete entry"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
 
-              <View style={{ gap: 12 }}>
-                <Pressable
-                  data-testid="confirm-delete-entry-button"
-                  onPress={handleDeleteConfirm}
-                  className="rounded-2xl overflow-hidden"
-                >
-                  <LinearGradient
-                    colors={["#EF4444", "#DC2626"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{ padding: 16, alignItems: "center" }}
-                  >
-                    <Text
-                      className="text-white text-base font-bold"
-                      style={{ fontFamily: "Inter_700Bold" }}
-                    >
-                      Delete entry
-                    </Text>
-                  </LinearGradient>
-                </Pressable>
-
-                <Pressable
-                  data-testid="cancel-delete-entry-button"
-                  onPress={handleDeleteCancel}
-                  className="rounded-2xl py-4 items-center"
-                  style={{
-                    borderWidth: 2,
-                    borderColor: Colors.primary,
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  <Text
-                    className="text-base font-bold"
-                    style={{
-                      fontFamily: "Inter_700Bold",
-                      color: "#FFFFFF",
-                    }}
-                  >
-                    Cancel
-                  </Text>
-                </Pressable>
-              </View>
-            </LinearGradient>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Bulk Delete Confirmation Modal */}
-      <Modal
+      {/* Bulk Delete Confirmation — canonical ConfirmDialog */}
+      <ConfirmDialog
         visible={bulkDeleteModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={handleBulkDeleteCancel}
-      >
-        <View className="flex-1 bg-black/60 items-center justify-center px-6">
-          <View className="rounded-3xl overflow-hidden w-full max-w-sm"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              borderWidth: 2,
-              borderColor: "rgba(255, 255, 255, 0.20)",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.12,
-              shadowRadius: 16,
-            }}
-          >
-            <LinearGradient
-              colors={Gradients.background}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={{
-                padding: 24,
-                borderRadius: 24,
-              }}
-            >
-              <View className="items-center mb-4">
-                <View
-                  className="w-16 h-16 rounded-full items-center justify-center mb-4"
-                  style={{ backgroundColor: "rgba(239, 68, 68, 0.15)" }}
-                >
-                  <Trash size={32} color="#FFFFFF" weight="duotone" />
-                </View>
-                <Text
-                  className="text-2xl font-bold mb-2 text-center"
-                  style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}
-                >
-                  Delete {selectedEntries.size} {selectedEntries.size === 1 ? "entry" : "entries"}?
-                </Text>
-                <Text
-                  className="text-center text-base"
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.8)",
-                    lineHeight: 22,
-                  }}
-                >
-                  This will permanently delete the selected entries. This action cannot be undone.
-                </Text>
-              </View>
-
-              <View style={{ gap: 12 }}>
-                <Pressable
-                  onPress={handleBulkDeleteConfirm}
-                  className="rounded-2xl overflow-hidden"
-                >
-                  <LinearGradient
-                    colors={["#EF4444", "#DC2626"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{ padding: 16, alignItems: "center" }}
-                  >
-                    <Text
-                      className="text-white text-base font-bold"
-                      style={{ fontFamily: "Inter_700Bold" }}
-                    >
-                      Delete {selectedEntries.size} {selectedEntries.size === 1 ? "entry" : "entries"}
-                    </Text>
-                  </LinearGradient>
-                </Pressable>
-
-                <Pressable
-                  onPress={handleBulkDeleteCancel}
-                  className="rounded-2xl py-4 items-center"
-                  style={{
-                    borderWidth: 2,
-                    borderColor: Colors.primary,
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  <Text
-                    className="text-base font-bold"
-                    style={{
-                      fontFamily: "Inter_700Bold",
-                      color: "#FFFFFF",
-                    }}
-                  >
-                    Cancel
-                  </Text>
-                </Pressable>
-              </View>
-            </LinearGradient>
-          </View>
-        </View>
-      </Modal>
+        icon="trash"
+        title={`Delete ${selectedEntries.size} ${selectedEntries.size === 1 ? "entry" : "entries"}?`}
+        message="This will permanently delete the selected entries. This action cannot be undone."
+        confirmLabel={`Delete ${selectedEntries.size} ${selectedEntries.size === 1 ? "entry" : "entries"}`}
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={handleBulkDeleteCancel}
+      />
     </View>
   );
 }

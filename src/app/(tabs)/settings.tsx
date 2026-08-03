@@ -10,7 +10,6 @@ import {
   ScrollView,
   Pressable,
   Modal,
-  Alert,
   Platform,
   Linking,
   Share,
@@ -23,8 +22,8 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { SignOut, Check, X, CaretRight, ArrowsClockwise, ArrowSquareOut } from "phosphor-react-native";
-import { Palette, Bell, Shield, ShieldCheck, Brain, ChartBar, Warning, Trash, DownloadSimple, Crown, Key, Heart, Clock, FileText } from "phosphor-react-native";
+import { Check, X, CaretRight, ArrowsClockwise, ArrowSquareOut } from "phosphor-react-native";
+import { Palette, Bell, Shield, ShieldCheck, Brain, ChartBar, Trash, DownloadSimple, Crown, Key, Heart, Clock, FileText } from "phosphor-react-native";
 import * as Clipboard from "expo-clipboard";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { ExportJournalModal } from "@/components/ExportJournalModal";
@@ -61,6 +60,7 @@ import {
 import { ThemedSwitch } from "@/components/ThemedSwitch";
 import { NotificationService } from "@/lib/services/notification-service";
 import { BrandedAlert } from "@/components/BrandedAlert";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   useUsageMinutes,
   useRemainingMinutes,
@@ -89,7 +89,7 @@ export default function SettingsScreen() {
   const [animationKey, setAnimationKey] = useState(0);
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [resetModalVisible, setResetModalVisible] = useState(false);
@@ -160,7 +160,7 @@ export default function SettingsScreen() {
   });
 
   const showAlert = (
-    type: "success" | "error",
+    type: "success" | "error" | "warning",
     title: string,
     message: string,
   ) => {
@@ -204,10 +204,10 @@ export default function SettingsScreen() {
           setNotificationsEnabled(true);
         }
       } else {
-        Alert.alert(
+        showAlert(
+          "warning",
           "Permission required",
           "Please enable notifications in your device settings to receive daily reminders.",
-          [{ text: "OK" }],
         );
       }
     } else {
@@ -251,7 +251,8 @@ export default function SettingsScreen() {
       default: "https://play.google.com/store/account/subscriptions",
     });
     Linking.openURL(url!).catch(() =>
-      Alert.alert(
+      showAlert(
+        "error",
         "Could not open store",
         "Please open the Google Play Store manually, go to Subscriptions, and cancel Vocolens from there.",
       ),
@@ -271,11 +272,11 @@ export default function SettingsScreen() {
         setSubscriptionModalVisible(false);
       } else {
         errorHaptic();
-        Alert.alert("No active subscription", "We couldn't find an active subscription linked to this account.");
+        showAlert("error", "No active subscription", "We couldn't find an active subscription linked to this account.");
       }
     } else {
       errorHaptic();
-      Alert.alert("Restore failed", "Something went wrong. Please try again.");
+      showAlert("error", "Restore failed", "Something went wrong. Please try again.");
     }
   };
 
@@ -1508,202 +1509,44 @@ export default function SettingsScreen() {
         </View>
       </LinearGradient>
 
-      {/* Sign Out Confirmation Modal */}
-      <Modal
+      {/* Sign Out Confirmation — canonical ConfirmDialog. Signing out is
+          fully recoverable (just re-enter the PIN/onboard again), so it
+          uses the normal theme-colored accent, not red. */}
+      <ConfirmDialog
         visible={signOutModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={cancelSignOut}
-      >
-        <View className="flex-1 bg-black/50 items-center justify-center px-6">
-          <View
-            className="rounded-3xl p-6 w-full max-w-md"
-            style={{
-              backgroundColor: Colors.surfaceHighlight,
-              ...Shadows.large,
-            }}
-          >
-            <View className="items-center mb-4">
-              <View
-                className="w-16 h-16 rounded-full items-center justify-center mb-4"
-                style={{
-                  backgroundColor: isDarkMode
-                    ? "rgba(239, 68, 68, 0.15)"
-                    : "#FEE2E2",
-                }}
-              >
-                <SignOut size={32} color="#DC2626" weight="duotone" />
-              </View>
-              <Text
-                className="text-2xl font-bold mb-2"
-                style={{
-                  fontFamily: "Inter_700Bold",
-                  color: Colors.textPrimary,
-                }}
-              >
-                Sign out
-              </Text>
-              <Text
-                className="text-center text-base"
-                style={{ color: Colors.textSecondary }}
-              >
-                Are you sure you want to sign out? You'll return to the welcome
-                screen.
-              </Text>
-            </View>
+        icon="signOut"
+        title="Sign out"
+        message="Are you sure you want to sign out? You'll return to the welcome screen."
+        confirmLabel="Yes, sign out"
+        onConfirm={confirmSignOut}
+        onCancel={cancelSignOut}
+      />
 
-            <View className="space-y-3">
-              <Pressable
-                onPress={confirmSignOut}
-                className="rounded-3xl overflow-hidden mb-3"
-              >
-                <LinearGradient
-                  colors={["#EF4444", "#DC2626"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ padding: 16, alignItems: "center" }}
-                >
-                  <Text
-                    className="text-white text-lg font-bold"
-                    style={{ fontFamily: "Inter_700Bold" }}
-                  >
-                    Yes, sign out
-                  </Text>
-                </LinearGradient>
-              </Pressable>
-
-              <Pressable
-                onPress={cancelSignOut}
-                className="rounded-3xl py-4 items-center border-2"
-                style={{ borderColor: Colors.primary }}
-              >
-                <Text
-                  className="text-lg font-bold"
-                  style={{ fontFamily: "Inter_700Bold", color: Colors.primary }}
-                >
-                  Cancel
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Reset All Data Confirmation Modal */}
-      <Modal
+      {/* Reset All Data Confirmation — canonical ConfirmDialog, 2-step flow.
+          destructiveness="severe" because this is genuinely permanent,
+          whole-app data loss — the one case that earns a (muted) red accent. */}
+      <ConfirmDialog
         visible={resetModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={cancelReset}
-      >
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
-          <View
-            style={{
-              backgroundColor: THEME_COLORS[selectedTheme].backgroundGradient[1],
-              borderRadius: 24,
-              padding: 24,
-              width: "100%",
-              maxWidth: 400,
-              borderWidth: 2,
-              borderColor: "rgba(255, 255, 255, 0.20)",
-              overflow: "hidden",
-            }}
-          >
-            <View className="items-center mb-4">
-              <View
-                className="w-16 h-16 rounded-full items-center justify-center mb-4"
-                style={{
-                  backgroundColor: hexToRgba(Colors.primary, 0.20),
-                  borderWidth: 1,
-                  borderColor: hexToRgba(Colors.primary, 0.30),
-                }}
-              >
-                <Warning size={32} color="#FFFFFF" weight="duotone" />
-              </View>
-              <Text
-                className="text-2xl font-bold mb-2"
-                style={{
-                  fontFamily: "Inter_700Bold",
-                  color: "#FFFFFF",
-                }}
-              >
-                {resetStep === 1 ? "Reset all data?" : "Are you sure?"}
-              </Text>
-              <Text
-                className="text-center text-base"
-                style={{ color: "rgba(255, 255, 255, 0.75)", lineHeight: 22 }}
-              >
-                {resetStep === 1
-                  ? "This will permanently erase all your journal entries, stats, badges, PIN, and settings."
-                  : "This action cannot be undone. All your data will be permanently deleted and the app will return to its initial state."}
-              </Text>
-            </View>
-
-            {/* Step indicator */}
-            <View className="flex-row justify-center items-center gap-2 mb-4">
-              <View
-                className="w-8 h-1.5 rounded-full"
-                style={{ backgroundColor: Colors.primary }}
-              />
-              <View
-                className="w-8 h-1.5 rounded-full"
-                style={{
-                  backgroundColor:
-                    resetStep === 2 ? Colors.primary : "rgba(255,255,255,0.2)",
-                }}
-              />
-            </View>
-
-            <View className="space-y-3">
-              <Pressable
-                data-testid={
-                  resetStep === 1
-                    ? "confirm-reset-step1-button"
-                    : "confirm-reset-button"
-                }
-                onPress={
-                  resetStep === 1
-                    ? handleResetStep1Confirm
-                    : confirmResetAllData
-                }
-                className="rounded-full py-3 items-center mb-3 active:opacity-80"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.18)",
-                  borderWidth: 1.5,
-                  borderColor: "rgba(255, 255, 255, 0.35)",
-                }}
-              >
-                <Text
-                  className="text-sm text-white"
-                  style={{ fontFamily: "Inter_600SemiBold" }}
-                >
-                  {resetStep === 1
-                    ? "Yes, reset everything"
-                    : "Delete all data now"}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                data-testid="cancel-reset-button"
-                onPress={cancelReset}
-                className="rounded-full py-3 items-center active:opacity-80"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.18)",
-                  borderWidth: 1.5,
-                  borderColor: "rgba(255, 255, 255, 0.35)",
-                }}
-              >
-                <Text
-                  className="text-sm text-white"
-                  style={{ fontFamily: "Inter_600SemiBold" }}
-                >
-                  Cancel
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        icon="warning"
+        destructiveness="severe"
+        steps={[
+          {
+            title: "Reset all data?",
+            message:
+              "This will permanently erase all your journal entries, stats, badges, PIN, and settings.",
+            confirmLabel: "Yes, reset everything",
+          },
+          {
+            title: "Are you sure?",
+            message:
+              "This action cannot be undone. All your data will be permanently deleted and the app will return to its initial state.",
+            confirmLabel: "Delete all data now",
+          },
+        ]}
+        currentStep={resetStep - 1}
+        onConfirm={resetStep === 1 ? handleResetStep1Confirm : confirmResetAllData}
+        onCancel={cancelReset}
+      />
 
       {/* ── Subscription Management Modal ── */}
       <Modal
