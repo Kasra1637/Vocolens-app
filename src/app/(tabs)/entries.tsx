@@ -26,7 +26,6 @@ import {
   Trash,
   X,
   BookOpen,
-  Pulse,
   Microphone,
   CaretUp,
   Tag,
@@ -69,10 +68,7 @@ import {
   formatShortDuration,
   getEmotionSubLabel,
 } from "@/lib/types";
-import { AudioPlayer } from "@/components/AudioPlayer";
-import { RecommendationCard } from "@/components/RecommendationCard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-// generateRecommendation removed — recommendation comes from /api/analyze response
 
 // Display types for UI (capitalized versions)
 type DisplayEmotion =
@@ -1002,26 +998,14 @@ function EntryCard({
   isSelected = false,
   isSelectMode = false,
 }: EntryCardProps) {
-  // ── Recommendation state ───────────────────────────────────────────────────
-  // Recommendation text is always populated from the /api/analyze response's
-  // recommendation field at save time — no separate /api/recommend call needed.
-  const [recommendationText] = useState<string | null>(
-    entry.aiReflection?.trim() || null,
-  );
-  const isGenerating = false;
-
   const updateEntry = useJournalStore((s) => s.updateEntry);
 
   // ── Title display ──────────────────────────────────────────────────────────
-  // Display the AI-generated title stored on the entry.
-  // For legacy entries that still have the generic "Journal Entry" placeholder,
-  // fall back to the first 50 chars of the transcript so they still look meaningful.
   const displayTitle = useMemo(() => {
     const title = entry.title?.trim();
     if (title && !/^(journal entry|untitled|entry|new entry)$/i.test(title)) {
       return title;
     }
-    // Legacy fallback: derive a title from the transcript
     const firstSentence = (entry.transcript || "").split(/[.!?\n]/)[0]?.trim() ?? "";
     if (firstSentence.length > 0) {
       return firstSentence.length > 50
@@ -1036,7 +1020,6 @@ function EntryCard({
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric",
     });
   };
 
@@ -1058,7 +1041,7 @@ function EntryCard({
             borderWidth: 2,
             borderColor: isSelected ? primaryColor : "rgba(255, 255, 255, 0.20)",
             borderRadius: 24,
-            marginBottom: 16,
+            marginBottom: 14,
             overflow: "hidden",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 4 },
@@ -1068,241 +1051,119 @@ function EntryCard({
           },
         ]}
       >
-        <View className="p-5">
-          {/* Header */}
-          <View className="flex-row items-start justify-between mb-2">
-            <View className="flex-1 mr-3">
-              <View className="flex-row items-center" style={{ gap: 8 }}>
-                <Text
-                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
-                  className="text-lg flex-1"
-                  numberOfLines={1}
-                >
-                  {displayTitle}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255, 255, 255, 0.7)",
-                }}
-                className="text-xs"
-              >
-                {formatDate(entry.createdAt)}, {formatTime(entry.createdAt)}
-              </Text>
-            </View>
-          </View>
-
-          {/* Date & Duration */}
-          <View className="flex-row items-center mb-3" style={{ gap: 12 }}>
-            <View className="flex-row items-center">
-              <Clock
-                size={14}
-                color="rgba(255, 255, 255, 0.7)"
-                weight="duotone"
-              />
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255, 255, 255, 0.7)",
-                }}
-                className="text-xs ml-1"
-              >
+        <View style={{ padding: 18 }}>
+          {/* Row 1: Title + Duration */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+            <Text
+              style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16, flex: 1, marginRight: 12 }}
+              numberOfLines={1}
+            >
+              {displayTitle}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Clock size={13} color="rgba(255, 255, 255, 0.6)" weight="duotone" />
+              <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255, 255, 255, 0.6)", fontSize: 12 }}>
                 {formatShortDuration(entry.duration)}
               </Text>
             </View>
-            <View className="flex-row items-center">
-              <Pulse
-                size={14}
-                color="rgba(255, 255, 255, 0.7)"
-                weight="duotone"
-              />
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255, 255, 255, 0.7)",
-                }}
-                className="text-xs ml-1"
-              >
-                {entry.emotionIntensity}% intensity
-              </Text>
-            </View>
           </View>
 
-          {/* Primary Emotion */}
+          {/* Row 2: Date + time */}
+          <Text
+            style={{ fontFamily: "Inter_400Regular", color: "rgba(255, 255, 255, 0.55)", fontSize: 12, marginBottom: 10 }}
+          >
+            {formatDate(entry.createdAt)}, {formatTime(entry.createdAt)}
+          </Text>
+
+          {/* Row 3: Primary emotion pill */}
           {entry.primaryEmotion && (
-            <View className="mb-3">
+            <View style={{ marginBottom: 10 }}>
               <View
-                className="px-3 py-1.5 rounded-full self-start flex-row items-center"
                 style={{
+                  alignSelf: "flex-start",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
+                  borderRadius: 999,
                   backgroundColor: "rgba(255, 255, 255, 0.14)",
                   borderWidth: 1,
                   borderColor: "rgba(255, 255, 255, 0.22)",
                   gap: 6,
                 }}
               >
-                <Text
-                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
-                  className="text-xs"
-                >
-                  {/* Show intensity-adjusted sub-label from saved labels, or compute on-the-fly */}
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 12 }}>
                   {entry.emotionIntensityLabels?.[entry.primaryEmotion] ??
-                    getEmotionSubLabel(
-                      entry.primaryEmotion,
-                      entry.emotionIntensity,
-                    )}
+                    getEmotionSubLabel(entry.primaryEmotion, entry.emotionIntensity)}
                 </Text>
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255,255,255,0.5)",
-                    fontSize: 10,
-                    textTransform: "capitalize",
-                  }}
-                >
+                <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.5)", fontSize: 10, textTransform: "capitalize" }}>
                   {entry.primaryEmotion}
                 </Text>
               </View>
             </View>
           )}
 
-          {/* Conversation Prompt */}
-          {entry.conversationPrompt && (
-            <View className="mb-3">
-              <View
-                className="p-2 rounded-lg"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.12)",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.8)",
-                  }}
-                  className="text-xs italic"
-                  numberOfLines={2}
-                >
-                  "{entry.conversationPrompt}"
-                </Text>
-              </View>
-            </View>
-          )}
+          {/* Row 4: Transcript preview (~80 chars) */}
+          <Text
+            style={{ fontFamily: "Inter_400Regular", color: "rgba(255, 255, 255, 0.85)", fontSize: 14, lineHeight: 21, marginBottom: 10 }}
+            numberOfLines={2}
+          >
+            {entry.transcript && entry.transcript.length > 80
+              ? entry.transcript.slice(0, 80).trimEnd() + "..."
+              : entry.transcript}
+          </Text>
 
-          {/* Transcript Preview */}
-          <View className="mb-3">
-            <Text
-              style={{
-                fontFamily: "Inter_400Regular",
-                color: "#FFFFFF",
-                lineHeight: 22,
-              }}
-              className="text-sm"
-            >
-              {entry.transcript && entry.transcript.length > 60
-                ? entry.transcript.slice(0, 60).trimEnd() + "..."
-                : entry.transcript}
-            </Text>
-          </View>
-
-          {/* Topics */}
+          {/* Row 5: Topics (max 3 pills) */}
           {entry.topics &&
             entry.topics.length > 0 &&
             entry.topics.some((t) => t && t.trim().length > 0) && (
-              <View className="mb-3">
-                <Text
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "rgba(255, 255, 255, 0.8)",
-                  }}
-                  className="text-xs mb-2"
-                >
-                  Topics
-                </Text>
-                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-                  {entry.topics
-                    .slice(0, 3)
-                    .filter((t) => t && t.trim().length > 0)
-                    .map((topic, index) => (
-                      <View
-                        key={index}
-                        className="px-2 py-1 rounded-full"
-                        style={{
-                          backgroundColor: "rgba(255, 255, 255, 0.10)",
-                          borderWidth: 1,
-                          borderColor: "rgba(255, 255, 255, 0.18)",
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "Inter_400Regular",
-                            color: "rgba(255, 255, 255, 0.9)",
-                          }}
-                          className="text-xs capitalize"
-                        >
-                          {topic}
-                        </Text>
-                      </View>
-                    ))}
-                  {entry.topics.filter((t) => t && t.trim().length > 0).length >
-                    3 && (
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                {entry.topics
+                  .slice(0, 3)
+                  .filter((t) => t && t.trim().length > 0)
+                  .map((topic, index) => (
                     <View
-                      className="px-2 py-1 rounded-full"
+                      key={index}
                       style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 999,
                         backgroundColor: "rgba(255, 255, 255, 0.10)",
                         borderWidth: 1,
                         borderColor: "rgba(255, 255, 255, 0.18)",
                       }}
                     >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_400Regular",
-                          color: "rgba(255, 255, 255, 0.9)",
-                        }}
-                        className="text-xs"
-                      >
-                        +
-                        {entry.topics.filter((t) => t && t.trim().length > 0)
-                          .length - 3}
+                      <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255, 255, 255, 0.85)", fontSize: 11, textTransform: "capitalize" }}>
+                        {topic}
                       </Text>
                     </View>
-                  )}
-                </View>
+                  ))}
+                {entry.topics.filter((t) => t && t.trim().length > 0).length > 3 && (
+                  <View
+                    style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 999,
+                      backgroundColor: "rgba(255, 255, 255, 0.10)",
+                      borderWidth: 1,
+                      borderColor: "rgba(255, 255, 255, 0.18)",
+                    }}
+                  >
+                    <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255, 255, 255, 0.85)", fontSize: 11 }}>
+                      +{entry.topics.filter((t) => t && t.trim().length > 0).length - 3}
+                    </Text>
+                  </View>
+                )}
               </View>
             )}
-
-          {/* Recommendation Card (compact inline) */}
-          {entry.transcript && entry.transcript.trim().length > 0 && (
-            <View className="mb-4">
-              <RecommendationCard
-                advice={recommendationText}
-                isGenerating={isGenerating}
-                themeColor={primaryColor}
-                compact
-              />
-            </View>
-          )}
-
-          {/* Audio Player */}
-          {entry.audioUri && (
-            <View className="mb-4">
-              <AudioPlayer
-                audioUri={entry.audioUri}
-                primaryColor={primaryColor}
-                isDarkMode={isDarkMode}
-              />
-            </View>
-          )}
 
           {/* Selection indicator */}
           {isSelectMode && (
             <View
               style={{
                 position: "absolute",
-                top: 16,
-                right: 16,
+                top: 14,
+                right: 14,
                 width: 26,
                 height: 26,
                 borderRadius: 13,
@@ -1319,32 +1180,32 @@ function EntryCard({
             </View>
           )}
 
-          {/* Action row — delete only; whole card is tappable to open */}
+          {/* Action row — "View full analysis" + delete icon */}
           {!isSelectMode && (
-          <View className="flex-row items-center justify-between" style={{ gap: 12 }}>
-            <View
-              className="flex-1 rounded-full py-3 items-center flex-row justify-center"
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.10)",
-                borderWidth: 1.5,
-                borderColor: "rgba(255, 255, 255, 0.22)",
-                gap: 6,
-              }}
-            >
-              <Text
-                style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.85)" }}
-                className="text-sm"
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View
+                style={{
+                  flex: 1,
+                  borderRadius: 999,
+                  paddingVertical: 11,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "rgba(255, 255, 255, 0.10)",
+                  borderWidth: 1.5,
+                  borderColor: "rgba(255, 255, 255, 0.22)",
+                }}
               >
-                View full analysis
-              </Text>
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.85)", fontSize: 13 }}>
+                  View full analysis
+                </Text>
+              </View>
+              <Pressable
+                onPress={(e) => { e.stopPropagation?.(); onDelete(); }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Trash size={20} color="#FFFFFF" weight="duotone" />
+              </Pressable>
             </View>
-            <Pressable
-              onPress={(e) => { e.stopPropagation?.(); onDelete(); }}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Trash size={20} color="#FFFFFF" weight="duotone" />
-            </Pressable>
-          </View>
           )}
         </View>
       </View>
