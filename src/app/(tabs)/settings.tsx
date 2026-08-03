@@ -1238,7 +1238,7 @@ export default function SettingsScreen() {
                   style={{
                     marginHorizontal: 16,
                     marginBottom: 16,
-                    borderRadius: 18,
+                    borderRadius: 50,
                     borderWidth: 2,
                     borderColor: "#FFFFFF",
                     overflow: "hidden",
@@ -1254,7 +1254,7 @@ export default function SettingsScreen() {
                       justifyContent: "center",
                       paddingVertical: 16,
                       paddingHorizontal: 24,
-                      borderRadius: 18,
+                      borderRadius: 50,
                     }}
                   >
                     <Heart size={20} color="#FFFFFF" weight="duotone" />

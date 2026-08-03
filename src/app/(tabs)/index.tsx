@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, Pressable, Dimensions, ScrollView } from "react-native";
+import { View, Text, Pressable, Dimensions, ScrollView, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "expo-router";
@@ -19,6 +19,7 @@ import {
   GearSix,
   WarningCircle,
   Trash,
+  Warning,
 } from "phosphor-react-native";
 import Animated, {
   useAnimatedStyle,
@@ -1433,17 +1434,112 @@ export default function SpeakScreen() {
         onClose={() => setNotice(null)}
       />
 
-      {/* Discard confirmation — destructive, so it is never a single tap */}
-      <BrandedAlert
+      {/* Discard confirmation — matches the "Reset All Data" dialog design */}
+      <Modal
         visible={confirmDiscard}
-        type="warning"
-        title="Discard this recording?"
-        message="Your recording and everything you've said will be deleted. This can't be undone."
-        secondaryLabel="Discard"
-        onSecondary={handleDiscard}
-        confirmLabel="Keep recording"
-        onClose={() => setConfirmDiscard(false)}
-      />
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmDiscard(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.85)", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+          <View
+            style={{
+              backgroundColor: Colors.background || "#121212",
+              borderRadius: 24,
+              padding: 24,
+              width: "100%",
+              maxWidth: 400,
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Icon */}
+            <View style={{ alignItems: "center", marginBottom: 16 }}>
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                  backgroundColor: hexToRgba(Colors.primary, 0.20),
+                  borderWidth: 1,
+                  borderColor: hexToRgba(Colors.primary, 0.30),
+                }}
+              >
+                <Warning size={32} color="#FFFFFF" weight="duotone" />
+              </View>
+
+              {/* Title */}
+              <Text
+                style={{
+                  fontFamily: "Inter_700Bold",
+                  color: "#FFFFFF",
+                  fontSize: 22,
+                  marginBottom: 8,
+                }}
+              >
+                Discard this recording?
+              </Text>
+
+              {/* Message */}
+              <Text
+                style={{
+                  color: "rgba(255, 255, 255, 0.75)",
+                  fontSize: 15,
+                  textAlign: "center",
+                  lineHeight: 22,
+                }}
+              >
+                Your recording and everything you've said will be deleted. This can't be undone.
+              </Text>
+            </View>
+
+            {/* Action buttons */}
+            <View style={{ gap: 12 }}>
+              <Pressable
+                onPress={() => {
+                  tapHaptic();
+                  handleDiscard();
+                }}
+                style={{
+                  borderRadius: 999,
+                  paddingVertical: 14,
+                  alignItems: "center",
+                  backgroundColor: "rgba(255, 255, 255, 0.18)",
+                  borderWidth: 1.5,
+                  borderColor: "rgba(255, 255, 255, 0.35)",
+                }}
+              >
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 14 }}>
+                  Discard
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  tapHaptic();
+                  setConfirmDiscard(false);
+                }}
+                style={{
+                  borderRadius: 999,
+                  paddingVertical: 14,
+                  alignItems: "center",
+                  backgroundColor: "rgba(255, 255, 255, 0.18)",
+                  borderWidth: 1.5,
+                  borderColor: "rgba(255, 255, 255, 0.35)",
+                }}
+              >
+                <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 14 }}>
+                  Keep recording
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
