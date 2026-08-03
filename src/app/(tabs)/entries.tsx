@@ -6,6 +6,7 @@ import {
   Pressable,
   TextInput,
   Platform,
+  BackHandler,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,6 +35,7 @@ import {
 } from "phosphor-react-native";
 import { Funnel } from "phosphor-react-native";
 import Animated, {
+  FadeIn,
   FadeOut,
   useAnimatedStyle,
   useSharedValue,
@@ -308,6 +310,33 @@ export default function EntriesScreen() {
     setSelectedEntries(new Set(filteredEntries.map((e) => e.id)));
   }, [filteredEntries]);
 
+  // The single, canonical way out of selection mode: instantly deselects
+  // everything and exits — no scrolling to find a button, no confirmation
+  // needed since nothing destructive happens here. Used by the top bar's
+  // "Clear" button and by the hardware back button on Android below.
+  const handleClearSelection = useCallback(() => {
+    tapHaptic();
+    setSelectedEntries(new Set());
+    setIsSelectMode(false);
+  }, []);
+
+  // Android hardware/gesture back while in selection mode should clear the
+  // selection and exit selection mode rather than navigating away from the
+  // tab — matching the platform convention for contextual action modes
+  // (e.g. Gmail, Google Photos). We only intercept while selecting; with no
+  // selection active the event passes through to the default behaviour.
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (isSelectMode) {
+        handleClearSelection();
+        return true; // consume — do not navigate away
+      }
+      return false; // no selection active, let the system handle back as usual
+    });
+    return () => subscription.remove();
+  }, [isSelectMode, handleClearSelection]);
+
   const handleBulkDeleteRequest = useCallback(() => {
     warningHaptic();
     setBulkDeleteModalVisible(true);
@@ -349,10 +378,105 @@ export default function EntriesScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
       />
+
+      {/* ── Selection mode top bar ───────────────────────────────────────────
+          Fixed above the scroll content (not inside the ScrollView) so the
+          live count, Clear, and Delete actions are always on-screen the
+          instant selection mode is entered — no scrolling required to reach
+          them, matching standard mobile "contextual action bar" UX. */}
+      {isSelectMode && (
+        <Animated.View
+          entering={FadeIn.duration(180)}
+          exiting={FadeOut.duration(150)}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10,
+            paddingTop: insets.top + 10,
+            paddingBottom: 14,
+            paddingHorizontal: 16,
+            backgroundColor: "rgba(255, 255, 255, 0.12)",
+            borderBottomWidth: 2,
+            borderBottomColor: "rgba(255, 255, 255, 0.20)",
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {/* Clear selection — labelled, not icon-only, so it's
+                discoverable at a glance. Instantly deselects everything and
+                exits selection mode; no confirmation needed since nothing
+                destructive happens here. Does the same thing as the Android
+                hardware back button while selecting, giving iOS an
+                equally-effortless, always-visible way out. */}
+            <Pressable
+              onPress={handleClearSelection}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                borderRadius: 999,
+                backgroundColor: "rgba(255,255,255,0.10)",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.18)",
+              }}
+            >
+              <X size={15} color="#FFFFFF" weight="bold" />
+              <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13 }}>
+                Clear
+              </Text>
+            </Pressable>
+
+            {/* Live selection count — the primary, easy-to-read focal point
+                of the bar, always centred and bold. */}
+            <Text
+              style={{
+                fontFamily: "Inter_700Bold",
+                color: "#FFFFFF",
+                fontSize: 17,
+              }}
+            >
+              {selectedEntries.size} selected
+            </Text>
+
+            {/* Delete — theme-consistent glass pill, disabled state when
+                nothing is selected yet (long-press seeds one selection, so
+                this is mostly a defensive guard). */}
+            <Pressable
+              onPress={handleBulkDeleteRequest}
+              disabled={selectedEntries.size === 0}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.20)" : "rgba(255,255,255,0.08)",
+                borderWidth: 1,
+                borderColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.15)",
+                opacity: selectedEntries.size === 0 ? 0.5 : 1,
+              }}
+            >
+              <Trash size={18} color={selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)"} weight="duotone" />
+            </Pressable>
+          </View>
+        </Animated.View>
+      )}
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
-          paddingTop: insets.top + 16,
+          paddingTop: isSelectMode ? insets.top + 90 : insets.top + 16,
           paddingBottom: insets.bottom + 100,
           paddingHorizontal: 20,
         }}
@@ -763,49 +887,13 @@ export default function EntriesScreen() {
           </View>
         </Animated.View>
 
-        {/* Bulk Action Bar — always visible when entries exist */}
-        {entries.length > 0 && (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: isSelectMode ? "space-between" : "center",
-              marginBottom: 16,
-              paddingHorizontal: 4,
-            }}
-          >
-            {isSelectMode ? (
-              <>
-                <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.55)", fontSize: 13, fontStyle: "italic" }}>
-                  Tap entries to deselect
-                </Text>
-                <Pressable
-                  onPress={handleBulkDeleteRequest}
-                  disabled={selectedEntries.size === 0}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    paddingHorizontal: 16,
-                    paddingVertical: 10,
-                    borderRadius: 14,
-                    backgroundColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.20)" : "rgba(255,255,255,0.08)",
-                    borderWidth: 1,
-                    borderColor: selectedEntries.size > 0 ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.15)",
-                    opacity: selectedEntries.size === 0 ? 0.5 : 1,
-                  }}
-                >
-                  <Trash size={16} color={selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)"} weight="duotone" />
-                  <Text style={{ fontFamily: "Inter_600SemiBold", color: selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)", fontSize: 13 }}>
-                    Delete{selectedEntries.size > 0 ? ` (${selectedEntries.size})` : ""}
-                  </Text>
-                </Pressable>
-              </>
-            ) : (
-              <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 13, fontStyle: "italic" }}>
-                Hold an entry to select &amp; bulk delete
-              </Text>
-            )}
+        {/* Selection hint — shown only outside selection mode; the dedicated
+            top bar below takes over once selection mode is entered. */}
+        {entries.length > 0 && !isSelectMode && (
+          <View style={{ alignItems: "center", marginBottom: 16, paddingHorizontal: 4 }}>
+            <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 13, fontStyle: "italic" }}>
+              Hold an entry to select &amp; bulk delete
+            </Text>
           </View>
         )}
 
@@ -962,7 +1050,7 @@ function EntryCard({
   };
 
   return (
-    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={1000} style={{ activeOpacity: 0.85 }}>
+    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={500} style={{ activeOpacity: 0.85 }}>
       <View
         style={[
           {
