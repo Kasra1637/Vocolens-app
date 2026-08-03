@@ -63,6 +63,8 @@ import {
   EmotionScores,
   getEmotionSubLabel,
   BODY_REGION_EMOJIS,
+  computeBlendedEmotionsFromScores,
+  detectAmbivalenceFromScores,
 } from "@/lib/types";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { RecommendationCard } from "@/components/RecommendationCard";
@@ -704,10 +706,29 @@ export default function EntryDetailScreen() {
                     </View>
                   )}
 
-                  {/* Blended emotions + emotional tension — AI deep-analysis extras */}
+                  {/* Blended emotions + emotional tension — AI deep-analysis
+                      extras. Falls back to deriving these directly from
+                      entry.emotionScores whenever the stored AI arrays are
+                      empty — covers entries saved before this derivation
+                      was added to the analysis pipeline, which otherwise
+                      have sparse/empty aiBlendedEmotions/aiAmbivalenceFlags
+                      baked in from analysis time and can never show these
+                      sections no matter what the current app version does. */}
                   <EmotionBreakdownExtras
-                    aiBlendedEmotions={entry.aiBlendedEmotions}
-                    aiAmbivalenceFlags={entry.aiAmbivalenceFlags}
+                    aiBlendedEmotions={
+                      entry.aiBlendedEmotions?.length
+                        ? entry.aiBlendedEmotions
+                        : entry.emotionScores
+                          ? computeBlendedEmotionsFromScores(entry.emotionScores)
+                          : undefined
+                    }
+                    aiAmbivalenceFlags={
+                      entry.aiAmbivalenceFlags?.length
+                        ? entry.aiAmbivalenceFlags
+                        : entry.emotionScores
+                          ? detectAmbivalenceFromScores(entry.emotionScores)
+                          : undefined
+                    }
                   />
                 </Animated.View>
               )}

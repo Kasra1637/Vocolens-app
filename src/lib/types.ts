@@ -159,6 +159,44 @@ export const OPPOSITE_EMOTION_PAIRS: [EmotionType, EmotionType][] = [
 ];
 
 /**
+ * Derives the full set of qualifying blended-emotion dyads directly from a
+ * scores map. Exported (not just used internally by openrouter-service) so
+ * the UI can also use it as a display-time fallback for entries that were
+ * analyzed before this derivation existed and therefore only have a sparse
+ * AI-reported aiBlendedEmotions array (or none) persisted on the entry.
+ */
+export function computeBlendedEmotionsFromScores(
+  scores: EmotionScores,
+  threshold = 40,
+): BlendedEmotionType[] {
+  const result: BlendedEmotionType[] = [];
+  for (const [blend, [e1, e2]] of Object.entries(BLENDED_EMOTION_LABELS) as [
+    BlendedEmotionType,
+    [EmotionType, EmotionType],
+  ][]) {
+    if ((scores[e1] ?? 0) >= threshold && (scores[e2] ?? 0) >= threshold) {
+      result.push(blend);
+    }
+  }
+  return result;
+}
+
+/**
+ * Derives the full set of ambivalence flags (opposite Plutchik pairs both
+ * elevated) directly from a scores map. Same rationale as
+ * computeBlendedEmotionsFromScores above — used as a UI-side fallback for
+ * entries analyzed before this derivation existed.
+ */
+export function detectAmbivalenceFromScores(
+  scores: EmotionScores,
+  threshold = 35,
+): string[] {
+  return OPPOSITE_EMOTION_PAIRS.filter(
+    ([e1, e2]) => (scores[e1] ?? 0) >= threshold && (scores[e2] ?? 0) >= threshold,
+  ).map(([e1, e2]) => `${e1}↔${e2}`);
+}
+
+/**
  * Returns the Plutchik intensity sub-label for a score 0-100.
  * Uses 3-tier thresholds: low (0-35), mid (36-69), high (70-100).
  */

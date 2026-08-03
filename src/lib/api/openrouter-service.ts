@@ -1,11 +1,9 @@
-import { EmotionType, EmotionScores, EmotionIntensityLabels, RankedEmotion, BlendedEmotionType, BLENDED_EMOTION_LABELS, OPPOSITE_EMOTION_PAIRS, buildIntensityLabels, getIntensityLabel } from "../types";
+import { EmotionType, EmotionScores, EmotionIntensityLabels, RankedEmotion, BlendedEmotionType, buildIntensityLabels, getIntensityLabel, computeBlendedEmotionsFromScores, detectAmbivalenceFromScores } from "../types";
 import { apiFetch } from "./client";
 import { usageLimitErrorFrom } from "./usage-service";
 
-// Internal helpers — not exported (only used by parseResponse)
+// Internal helper — not exported (only used by parseResponse)
 function computeTopThreeEmotions(scores) { return Object.entries(scores).sort(([,a],[,b])=>(b as number)-(a as number)).slice(0,3).map(([emotion,score],i)=>({emotion,score,rank:i+1,intensityLabel:getIntensityLabel(emotion as EmotionType,score as number)})); }
-function computeBlendedEmotions(scores) { const T=40,r=[]; for(const[b,[e1,e2]]of Object.entries(BLENDED_EMOTION_LABELS)){if(scores[e1]>=T&&scores[e2]>=T)r.push(b);} return r; }
-function detectAmbivalence(scores) { return OPPOSITE_EMOTION_PAIRS.filter(([e1,e2])=>scores[e1]>=35&&scores[e2]>=35).map(([e1,e2])=>e1+"↔"+e2); }
 
 function parseResponse(result) {
   const ve=["happiness","sadness","anger","disgust","fear","surprise","trust","anticipation"];
@@ -27,8 +25,8 @@ function parseResponse(result) {
   // underlying scores are always populated and the dyad/opposite-pair
   // formulas are deterministic, computing locally is strictly more complete
   // and stays consistent with what the Top Emotions bars actually show.
-  const bl=computeBlendedEmotions(es);
-  const am=detectAmbivalence(es);
+  const bl=computeBlendedEmotionsFromScores(es);
+  const am=detectAmbivalenceFromScores(es);
   const rt=typeof result.title==="string"?result.title.trim():"";
   const tw=rt.split(/\s+/).filter(Boolean);
   const title=tw.length>=3&&tw.length<=6
