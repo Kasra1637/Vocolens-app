@@ -5,7 +5,7 @@ import { usageLimitErrorFrom } from "./usage-service";
 // Internal helpers — not exported (only used by parseResponse)
 function computeTopThreeEmotions(scores) { return Object.entries(scores).sort(([,a],[,b])=>(b as number)-(a as number)).slice(0,3).map(([emotion,score],i)=>({emotion,score,rank:i+1,intensityLabel:getIntensityLabel(emotion as EmotionType,score as number)})); }
 function computeBlendedEmotions(scores) { const T=40,r=[]; for(const[b,[e1,e2]]of Object.entries(BLENDED_EMOTION_LABELS)){if(scores[e1]>=T&&scores[e2]>=T)r.push(b);} return r; }
-function detectAmbivalence(scores) { return OPPOSITE_EMOTION_PAIRS.filter(([e1,e2])=>scores[e1]>=35&&scores[e2]>=35).map(([e1,e2])=>e1+"<->"+e2); }
+function detectAmbivalence(scores) { return OPPOSITE_EMOTION_PAIRS.filter(([e1,e2])=>scores[e1]>=35&&scores[e2]>=35).map(([e1,e2])=>e1+"↔"+e2); }
 
 function parseResponse(result) {
   const ve=["happiness","sadness","anger","disgust","fear","surprise","trust","anticipation"];
@@ -14,16 +14,21 @@ function parseResponse(result) {
   const em=((result.emotions??[]).filter(e=>ve.includes(e)).slice(0,4));
   if(em.length===0)em.push("happiness");
   const pe=ve.includes(result.primaryEmotion)?result.primaryEmotion:em[0]??"happiness";
-  const vb=Object.keys(BLENDED_EMOTION_LABELS);
   const top=Array.isArray(result.topThreeEmotions)&&result.topThreeEmotions.length>0
     ?result.topThreeEmotions.filter(r=>ve.includes(r.emotion)).slice(0,3).map((r,i)=>({emotion:r.emotion,score:Math.max(0,Math.min(100,Number(r.score)||0)),rank:i+1,intensityLabel:r.intensityLabel||getIntensityLabel(r.emotion,Number(r.score)||0)}))
     :computeTopThreeEmotions(es);
-  const bl=Array.isArray(result.blendedEmotions)&&result.blendedEmotions.length>0
-    ?result.blendedEmotions.filter(b=>vb.includes(b))
-    :computeBlendedEmotions(es);
-  const am=Array.isArray(result.ambivalenceFlags)&&result.ambivalenceFlags.length>0
-    ?result.ambivalenceFlags
-    :detectAmbivalence(es);
+  // Always derive blended emotions and ambivalence flags directly from the
+  // normalized emotionScores (es) rather than trusting the AI's own
+  // blendedEmotions/ambivalenceFlags arrays. The model reliably under-reports
+  // these — it tends to return at most one blended emotion and an empty
+  // ambivalence array even when the scores it itself produced qualify for
+  // more (multiple Plutchik dyads can legitimately co-occur, e.g. Love +
+  // Optimism when happiness/trust/anticipation are all elevated). Since the
+  // underlying scores are always populated and the dyad/opposite-pair
+  // formulas are deterministic, computing locally is strictly more complete
+  // and stays consistent with what the Top Emotions bars actually show.
+  const bl=computeBlendedEmotions(es);
+  const am=detectAmbivalence(es);
   const rt=typeof result.title==="string"?result.title.trim():"";
   const tw=rt.split(/\s+/).filter(Boolean);
   const title=tw.length>=3&&tw.length<=6

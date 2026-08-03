@@ -591,7 +591,14 @@ export default function EntryDetailScreen() {
                         .sort((a, b) => b.score - a.score)
                         .slice(0, 4)
                         .map(({ emotion, score }, rank) => {
-                          const isPrimary = emotion === entry.primaryEmotion;
+                          // PRIMARY must always land on the single most
+                          // intense emotion (rank 0 = the highest score in
+                          // this sorted list) — not on whatever
+                          // entry.primaryEmotion happens to store, which is
+                          // a separately-tracked AI field that can drift
+                          // from the actual emotionScores if the two are
+                          // ever out of sync.
+                          const isPrimary = rank === 0;
                           const barWidth = barContainerWidth > 0 ? (score / 100) * barContainerWidth : 0;
                           const intensityLabel =
                             entry.userOverrideLabels?.[emotion] ??
@@ -634,9 +641,30 @@ export default function EntryDetailScreen() {
                         Detected Emotions
                       </Text>
                       <View style={{ gap: 10 }}>
-                        {entry.emotions.map((emotion, index) => {
-                          const isPrimary = emotion === entry.primaryEmotion;
-                          const intensity = isPrimary ? entry.emotionIntensity : Math.round(entry.emotionIntensity * (0.7 - index * 0.1));
+                        {/* Compute every emotion's intensity first, THEN pick
+                            the most intense one as PRIMARY — rather than
+                            trusting entry.primaryEmotion (a separately
+                            tracked AI field that can drift from these
+                            derived intensities) and computing intensity
+                            around it. */}
+                        {(() => {
+                          const withIntensity = entry.emotions.map((emotion, index) => ({
+                            emotion,
+                            index,
+                            intensity: emotion === entry.primaryEmotion
+                              ? entry.emotionIntensity
+                              : Math.round(entry.emotionIntensity * (0.7 - index * 0.1)),
+                          }));
+                          const mostIntenseEmotion = withIntensity.reduce(
+                            (max, cur) => (cur.intensity > max.intensity ? cur : max),
+                            withIntensity[0],
+                          )?.emotion;
+                          return withIntensity.map(({ emotion, intensity }) => ({
+                            emotion,
+                            intensity,
+                            isPrimary: emotion === mostIntenseEmotion,
+                          }));
+                        })().map(({ emotion, intensity, isPrimary }) => {
                           const barWidth = barContainerWidth > 0 ? (intensity / 100) * barContainerWidth : 0;
                           const subLabel =
                             entry.userOverrideLabels?.[emotion] ??
