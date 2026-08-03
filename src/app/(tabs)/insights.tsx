@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 // writeAsStringAsync, causing the "deprecated" crash on the share button.
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
+import * as Print from "expo-print";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused } from "expo-router";
 import {
@@ -88,7 +89,7 @@ import {
   usePriorityInsights,
   useTriggerDetection,
 } from "@/lib/hooks";
-import { EmotionType } from "@/lib/types";
+import { EmotionType, BODY_REGION_LABELS, BodyRegion } from "@/lib/types";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { hexToRgba } from "@/lib/glass";
 import {
@@ -105,13 +106,157 @@ import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
 
 // ── PDF Report Generator ───────────────────────────────────────────────────────
 
+/** Date-range options for the therapist report. Filtering happens on
+ * entry.createdAt before any stat in the report is computed, so every
+ * section (overview, emotional tone, top emotions, charts, etc.) reflects
+ * only the selected window rather than the user's entire lifetime history. */
+export type ReportRange = "7d" | "30d" | "90d" | "all";
+
+export const REPORT_RANGE_LABELS: Record<ReportRange, string> = {
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+  "90d": "Last 90 days",
+  all: "All time",
+};
+
+function filterEntriesByRange(entries: any[], range: ReportRange): any[] {
+  if (range === "all") return entries;
+  const days = range === "7d" ? 7 : range === "30d" ? 30 : 90;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  return entries.filter((e) => new Date(e.createdAt).getTime() >= cutoff.getTime());
+}
+
+// ── SVG chart builders ──────────────────────────────────────────────────────
+// Rendered as inline <svg> inside the report HTML. expo-print's underlying
+// WebView renders SVG natively, so these produce real vector charts in the
+// exported PDF — not just CSS bars or a table of numbers.
+
+/** Simple line chart of daily average mood (0-100) over the selected range. */
+function buildMoodTrendSvg(entries: any[], color: string): string {
+  const W = 720, H = 200, PAD = 28;
+  if (entries.length < 2) {
+    return `<div style="text-align:center;color:#999;font-size:13px;padding:40px 0">Not enough entries yet to chart a trend for this range.</div>`;
+  }
+  // Bucket entries by calendar day, average valence -> map to 0-100 mood scale.
+  const byDay: Record<string, number[]> = {};
+  entries.forEach((e) => {
+    const day = new Date(e.createdAt).toISOString().slice(0, 10);
+    const mood = ((e.valence ?? 0) + 100) / 2; // -100..100 -> 0..100
+    (byDay[day] ||= []).push(mood);
+  });
+  const days = Object.keys(byDay).sort();
+  const points = days.map((d) => {
+    const vals = byDay[d];
+    return vals.reduce((s, v) => s + v, 0) / vals.length;
+  });
+
+  const stepX = points.length > 1 ? (W - PAD * 2) / (points.length - 1) : 0;
+  const coords = points.map((v, i) => {
+    const x = PAD + i * stepX;
+    const y = PAD + (1 - v / 100) * (H - PAD * 2);
+    return { x, y };
+  });
+  const pathD = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
+  const areaD = `${pathD} L${coords[coords.length - 1].x.toFixed(1)},${H - PAD} L${coords[0].x.toFixed(1)},${H - PAD} Z`;
+
+  // X-axis labels: first, middle, last day only, to avoid overcrowding.
+  const labelIdxs = points.length <= 3
+    ? points.map((_, i) => i)
+    : [0, Math.floor((points.length - 1) / 2), points.length - 1];
+  const fmt = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  const gridLines = [0, 25, 50, 75, 100].map((v) => {
+    const y = PAD + (1 - v / 100) * (H - PAD * 2);
+    return `<line x1="${PAD}" y1="${y}" x2="${W - PAD}" y2="${y}" stroke="#eef0f8" stroke-width="1"/>`;
+  }).join("");
+
+  const dots = coords.map((c) => `<circle cx="${c.x}" cy="${c.y}" r="3" fill="${color}"/>`).join("");
+  const labels = labelIdxs.map((i) => {
+    const x = coords[i].x;
+    return `<text x="${x}" y="${H - 6}" font-size="10" fill="#999" text-anchor="middle">${fmt(days[i])}</text>`;
+  }).join("");
+
+  return `
+  <svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    ${gridLines}
+    <path d="${areaD}" fill="${color}" opacity="0.08"/>
+    <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+    ${labels}
+  </svg>`;
+}
+
+/** Horizontal SVG bar chart for top-emotion frequency (real bars, not CSS divs). */
+function buildEmotionBarChartSvg(topEmotions: [string, number][], total: number, color: string): string {
+  const W = 720, ROW_H = 34, PAD = 8;
+  const maxCount = Math.max(...topEmotions.map(([, c]) => c), 1);
+  const barMaxWidth = W - 180;
+  const rows = topEmotions.map(([name, count], i) => {
+    const y = PAD + i * ROW_H;
+    const barW = Math.max(4, (count / maxCount) * barMaxWidth);
+    const pct = Math.round((count / total) * 100);
+    return `
+      <text x="0" y="${y + 15}" font-size="12" font-weight="600" fill="#1a1a2e" text-transform="capitalize">${name}</text>
+      <rect x="120" y="${y + 4}" width="${barMaxWidth}" height="14" rx="7" fill="${color}" opacity="0.12"/>
+      <rect x="120" y="${y + 4}" width="${barW}" height="14" rx="7" fill="${color}"/>
+      <text x="${120 + barMaxWidth + 10}" y="${y + 15}" font-size="11" fill="#888">${pct}%</text>`;
+  }).join("");
+  const H = PAD * 2 + topEmotions.length * ROW_H;
+  return `
+  <svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;text-transform:capitalize">
+    ${rows}
+  </svg>`;
+}
+
+/** Simple body-region heatmap grid (SVG rects) mirroring the in-app heatmap. */
+function buildBodyHeatmapSvg(entries: any[], color: string): string | null {
+  const raw: Record<string, number> = {};
+  entries.forEach((e) => {
+    (e.bodyRegions || []).forEach((br: any) => {
+      raw[br.region] = (raw[br.region] || 0) + 1;
+    });
+  });
+  const regions = Object.keys(raw);
+  if (regions.length === 0) return null;
+
+  const maxCount = Math.max(...Object.values(raw), 1);
+  const COLS = 4, CELL = 84, GAP = 10;
+  const allRegions: BodyRegion[] = ["head", "face", "neck", "chest", "stomach", "arms", "hands", "legs"];
+  const W = COLS * CELL + (COLS - 1) * GAP;
+  const rows = Math.ceil(allRegions.length / COLS);
+  const H = rows * CELL + (rows - 1) * GAP;
+
+  const cells = allRegions.map((region, i) => {
+    const count = raw[region] || 0;
+    const heat = count / maxCount;
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const x = col * (CELL + GAP);
+    const y = row * (CELL + GAP);
+    const opacity = count === 0 ? 0.05 : Math.max(0.15, heat * 0.85);
+    return `
+      <g>
+        <rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="14" fill="${color}" opacity="${opacity.toFixed(2)}"/>
+        <text x="${x + CELL / 2}" y="${y + CELL / 2 - 4}" font-size="12" font-weight="700" fill="#1a1a2e" text-anchor="middle">${BODY_REGION_LABELS[region]}</text>
+        <text x="${x + CELL / 2}" y="${y + CELL / 2 + 14}" font-size="10" fill="#888" text-anchor="middle">${count} ${count === 1 ? "time" : "times"}</text>
+      </g>`;
+  }).join("");
+
+  return `
+  <svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    ${cells}
+  </svg>`;
+}
+
 async function generateInsightsPDF({
   userName,
   stats,
-  entries,
+  entries: allEntries,
   primaryColor,
   priorityInsights,
   triggerData,
+  range,
 }: {
   userName: string;
   stats: any;
@@ -119,6 +264,7 @@ async function generateInsightsPDF({
   primaryColor: string;
   priorityInsights: any;
   triggerData: any;
+  range: ReportRange;
 }) {
   const now = new Date();
   const reportDate = now.toLocaleDateString("en-US", {
@@ -128,14 +274,16 @@ async function generateInsightsPDF({
     hour: "2-digit", minute: "2-digit",
   });
 
-  // ── Current-period entry counts ──────────────────────────────────────────
-  // Derived from entry timestamps so they always reflect the current week /
-  // month rather than a lifetime running total.
+  // ── Scope every stat in the report to the selected date range ────────────
+  const entries = filterEntriesByRange(allEntries, range);
+  const rangeLabel = REPORT_RANGE_LABELS[range];
+
+  // ── Current-period entry counts (within the report range) ────────────────
   const entriesThisWeek = countEntriesSince(entries, getStartOfWeek(now));
   const entriesThisMonth = countEntriesSince(entries, getStartOfMonth(now));
 
-  // Averaged over the entries themselves rather than read from a running total.
   const averageMood = calculateAverageMood(entries);
+  const totalMinutesInRange = Math.round(entries.reduce((s, e) => s + (e.duration || 0), 0) / 60);
 
   // ── Compute emotion frequencies ──────────────────────────────────────────
   const emotionCounts: Record<string, number> = {};
@@ -146,7 +294,7 @@ async function generateInsightsPDF({
   });
   const topEmotions = Object.entries(emotionCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+    .slice(0, 5) as [string, number][];
 
   // ── Compute valence/arousal averages ─────────────────────────────────────
   const avgValence = entries.length
@@ -175,7 +323,7 @@ async function generateInsightsPDF({
   // ── Distress overview ────────────────────────────────────────────────────
   const highDistress = entries.filter((e) => e.distressLevel === "high").length;
 
-  // ── Recent entries (last 5) ───────────────────────────────────────────────
+  // ── Recent entries (last 5 within range) ──────────────────────────────────
   const recentEntries = [...entries]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
@@ -187,6 +335,13 @@ async function generateInsightsPDF({
   const triggers = triggerData?.triggers?.slice(0, 4) || [];
 
   const col = primaryColor;
+
+  // ── Charts (real SVG visuals, not just tables/CSS bars) ──────────────────
+  const moodTrendSvg = buildMoodTrendSvg(entries, col);
+  const emotionBarChartSvg = topEmotions.length > 0
+    ? buildEmotionBarChartSvg(topEmotions, entries.length, col)
+    : null;
+  const bodyHeatmapSvg = buildBodyHeatmapSvg(entries, col);
 
   const recentRows = recentEntries.map((e) => {
     const d = new Date(e.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -207,12 +362,7 @@ async function generateInsightsPDF({
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Vocolens Insights — ${userName}</title>
   <style>
-    @media print {
-      body { padding: 20px; font-size: 12px; }
-      .no-print { display: none !important; }
-      .page-break { page-break-before: always; }
-      h2 { page-break-after: avoid; }
-    }
+    @page { margin: 24px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
@@ -220,17 +370,24 @@ async function generateInsightsPDF({
       padding: 32px; font-size: 14px; line-height: 1.65;
       max-width: 820px; margin: 0 auto;
     }
+    .page-break { page-break-before: always; }
+    h2 { page-break-after: avoid; }
     /* ── Header ── */
     .header {
       background: linear-gradient(135deg, ${col} 0%, ${col}cc 100%);
       border-radius: 20px; padding: 28px 32px;
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 28px; color: #fff;
+      margin-bottom: 12px; color: #fff;
     }
     .header-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
     .header-sub { font-size: 13px; opacity: 0.85; }
     .header-meta { text-align: right; font-size: 12px; opacity: 0.8; line-height: 1.8; }
     .header-logo { font-size: 20px; font-weight: 800; margin-bottom: 2px; }
+    .range-pill {
+      display: inline-block; background: ${col}0d; border: 1.5px solid ${col}30;
+      color: ${col}; font-size: 12px; font-weight: 700; padding: 6px 14px;
+      border-radius: 999px; margin-bottom: 20px;
+    }
     /* ── Section ── */
     .section {
       background: #fff; border-radius: 16px;
@@ -268,8 +425,6 @@ async function generateInsightsPDF({
     td { padding: 9px 14px; border-bottom: 1px solid #f0f0f8; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:nth-child(even) td { background: #fafbff; }
-    .bar-bg { background: #eef; border-radius: 4px; height: 7px; width: 100%; overflow: hidden; }
-    .bar-fill { background: ${col}; border-radius: 4px; height: 7px; }
     /* ── Insight cards ── */
     .insight {
       border-left: 3px solid ${col}; padding: 12px 16px;
@@ -296,25 +451,18 @@ async function generateInsightsPDF({
       border-radius: 10px; padding: 12px 16px;
       font-size: 13px; margin-top: 12px; color: #7a5c00;
     }
+    /* ── Chart wrapper ── */
+    .chart-wrap { margin-top: 4px; }
+    .chart-caption { font-size: 11px; color: #999; text-align: center; margin-top: 6px; }
     /* ── Footer ── */
     .footer {
       margin-top: 28px; padding-top: 16px;
       border-top: 1px solid #e8eaf0;
       font-size: 11px; color: #aaa; text-align: center; line-height: 1.8;
     }
-    .print-hint {
-      background: ${col}0d; border: 1px dashed ${col}55;
-      border-radius: 10px; padding: 10px 16px;
-      font-size: 12px; color: ${col}; text-align: center;
-      margin-bottom: 20px; font-weight: 600;
-    }
   </style>
 </head>
 <body>
-
-  <div class="print-hint no-print">
-    💡 To save as PDF: tap the share icon in your browser → "Print" → Save as PDF
-  </div>
 
   <!-- Header -->
   <div class="header">
@@ -332,17 +480,26 @@ async function generateInsightsPDF({
     </div>
   </div>
 
+  <div class="range-pill">📅 Report period: ${rangeLabel} · ${entries.length} ${entries.length === 1 ? "entry" : "entries"}</div>
+
   <!-- Overview -->
   <div class="section">
     <h2><span class="icon">📊</span> Overview</h2>
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-val">${stats.totalEntries}</div><div class="stat-lbl">Total Entries</div></div>
+      <div class="stat-card"><div class="stat-val">${entries.length}</div><div class="stat-lbl">Entries in Range</div></div>
       <div class="stat-card"><div class="stat-val">${stats.currentStreak}</div><div class="stat-lbl">Current Streak (days)</div></div>
       <div class="stat-card"><div class="stat-val">${stats.longestStreak}</div><div class="stat-lbl">Best Streak (days)</div></div>
       <div class="stat-card"><div class="stat-val">${entriesThisWeek}</div><div class="stat-lbl">This Week</div></div>
       <div class="stat-card"><div class="stat-val">${entriesThisMonth}</div><div class="stat-lbl">This Month</div></div>
-      <div class="stat-card"><div class="stat-val">${Math.round(stats.totalDuration / 60)}</div><div class="stat-lbl">Total Minutes</div></div>
+      <div class="stat-card"><div class="stat-val">${totalMinutesInRange}</div><div class="stat-lbl">Minutes in Range</div></div>
     </div>
+  </div>
+
+  <!-- Mood Trend Chart -->
+  <div class="section">
+    <h2><span class="icon">📈</span> Mood Trend — ${rangeLabel}</h2>
+    <div class="chart-wrap">${moodTrendSvg}</div>
+    <div class="chart-caption">Daily average mood, scaled 0 (unpleasant) to 100 (pleasant)</div>
   </div>
 
   <!-- Emotional Tone -->
@@ -356,21 +513,19 @@ async function generateInsightsPDF({
     ${highDistress > 0 ? `<div class="alert">⚠️ High distress recorded in <strong>${highDistress}</strong> ${highDistress === 1 ? "entry" : "entries"}</div>` : ""}
   </div>
 
-  ${topEmotions.length > 0 ? `
-  <!-- Top Emotions -->
+  ${emotionBarChartSvg ? `
+  <!-- Top Emotions Chart -->
   <div class="section">
     <h2><span class="icon">💜</span> Top Emotions</h2>
-    <table>
-      <thead><tr><th>Emotion</th><th>Frequency</th><th style="width:35%">Prevalence</th></tr></thead>
-      <tbody>
-        ${topEmotions.map(([name, count]) => `
-        <tr>
-          <td style="text-transform:capitalize;font-weight:600">${name}</td>
-          <td>${count} ${count === 1 ? "entry" : "entries"}</td>
-          <td><div class="bar-bg"><div class="bar-fill" style="width:${Math.round((count / entries.length) * 100)}%"></div></div></td>
-        </tr>`).join("")}
-      </tbody>
-    </table>
+    <div class="chart-wrap">${emotionBarChartSvg}</div>
+  </div>` : ""}
+
+  ${bodyHeatmapSvg ? `
+  <!-- Body Sensation Heatmap -->
+  <div class="section page-break">
+    <h2><span class="icon">🧠</span> Body Sensation Map</h2>
+    <div class="chart-wrap">${bodyHeatmapSvg}</div>
+    <div class="chart-caption">How often each body region was tagged during this period</div>
   </div>` : ""}
 
   <!-- Time of Day -->
@@ -418,20 +573,32 @@ async function generateInsightsPDF({
 
   <div class="footer">
     Generated by <strong>Vocolens</strong> on ${reportDate} at ${reportTime}<br>
-    This report is confidential and intended for personal health tracking and professional consultation only.<br>
-    To save as PDF: open in browser → File → Print → Save as PDF
+    Report period: ${rangeLabel}. This report is confidential and intended for personal health tracking and professional consultation only.
   </div>
 
 </body>
 </html>`;
 
-  const cacheDir = FileSystem.cacheDirectory;
-  if (!cacheDir) {
-    throw new Error("File system not available on this device.");
+  // ── Render to a real PDF file via expo-print ──────────────────────────────
+  // expo-print is a NATIVE module — it only works on a build that has it
+  // compiled in. Devices running an older AAB (built before this feature
+  // shipped) received this code via OTA update, but their native binary
+  // never linked expo-print, so Print.printToFileAsync() throws there.
+  // Fall back to the previous HTML-file approach in that case so the
+  // feature degrades gracefully instead of crashing — real PDF generation
+  // takes over automatically once the user is on a build compiled with
+  // expo-print (i.e. after the next native/App-Store build).
+  try {
+    const { uri } = await Print.printToFileAsync({ html, base64: false });
+    return { uri, isPdf: true };
+  } catch (err) {
+    console.warn("[Insights] expo-print unavailable, falling back to HTML export:", err);
+    const cacheDir = FileSystem.cacheDirectory;
+    if (!cacheDir) throw new Error("File system not available on this device.");
+    const fallbackUri = `${cacheDir}vocolens-insights-${Date.now()}.html`;
+    await FileSystem.writeAsStringAsync(fallbackUri, html, { encoding: FileSystem.EncodingType.UTF8 });
+    return { uri: fallbackUri, isPdf: false };
   }
-  const fileUri = `${cacheDir}vocolens-insights-${Date.now()}.html`;
-  await FileSystem.writeAsStringAsync(fileUri, html, { encoding: FileSystem.EncodingType.UTF8 });
-  return fileUri;
 }
 
 // Core emotions with icons and emojis - 8 Plutchik emotions
@@ -769,6 +936,7 @@ function InsightsContent({
 
   const [shareToast, setShareToast] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [reportRange, setReportRange] = useState<ReportRange>("30d");
 
   if (!fontsLoaded) {
     return (
@@ -800,23 +968,26 @@ function InsightsContent({
     setShareModalVisible(false);
     try {
       setIsGeneratingPDF(true);
-      const uri = await generateInsightsPDF({
+      const result = await generateInsightsPDF({
         userName: user.name,
         stats,
         entries,
         primaryColor: Colors.primary,
         priorityInsights,
         triggerData,
+        range: reportRange,
       });
-      if (!uri) {
+      if (!result?.uri) {
         setIsGeneratingPDF(false);
         return;
       }
-      await Sharing.shareAsync(uri, {
-        mimeType: "text/html",
-        dialogTitle: "Share Vocolens Insights Report",
-        UTI: "public.html",
-      });
+      const { uri, isPdf } = result;
+      await Sharing.shareAsync(uri, isPdf
+        ? { mimeType: "application/pdf", dialogTitle: "Share Vocolens Insights Report", UTI: "com.adobe.pdf" }
+        : { mimeType: "text/html", dialogTitle: "Share Vocolens Insights Report", UTI: "public.html" });
+      // Clean up the generated file now that the share sheet has closed —
+      // it contains personal health data and shouldn't linger in cache.
+      FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
     } catch (err: any) {
       // silent
     } finally {
@@ -1135,11 +1306,57 @@ function InsightsContent({
                 fontSize: 14,
                 textAlign: "center",
                 lineHeight: 21,
-                marginBottom: 24,
+                marginBottom: 20,
               }}
             >
-              Generate a personalized emotional wellness report to share with your doctor, counselor, or therapist.
+              Generate a personalized emotional wellness PDF to share with your doctor, counselor, or therapist.
             </Text>
+
+            {/* Date range selector */}
+            <Text
+              style={{
+                fontFamily: "Inter_600SemiBold",
+                color: "rgba(255,255,255,0.55)",
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+                marginBottom: 10,
+              }}
+            >
+              Report period
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+              {(Object.keys(REPORT_RANGE_LABELS) as ReportRange[]).map((r) => {
+                const selected = reportRange === r;
+                return (
+                  <Pressable
+                    key={r}
+                    onPress={() => {
+                      selectionHaptic();
+                      setReportRange(r);
+                    }}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      backgroundColor: selected ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)",
+                      borderWidth: 1,
+                      borderColor: selected ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.15)",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: selected ? "Inter_600SemiBold" : "Inter_400Regular",
+                        color: "#FFFFFF",
+                        fontSize: 12,
+                      }}
+                    >
+                      {REPORT_RANGE_LABELS[r]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
 
             {/* Share button */}
             <Pressable
@@ -1170,7 +1387,7 @@ function InsightsContent({
                     fontSize: 16,
                   }}
                 >
-                  Share report
+                  Share PDF report
                 </Text>
               </LinearGradient>
             </Pressable>
