@@ -9,12 +9,12 @@ import React from 'react';
 import { View, Text, Modal, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { tapHaptic, successHaptic, errorHaptic } from '@/lib/haptics';
-import { CheckCircle, WarningCircle } from 'phosphor-react-native';
+import { CheckCircle, WarningCircle, Trash } from 'phosphor-react-native';
 import useOnboardingStore from '@/lib/state/onboarding-store';
 import useSettingsStore from '@/lib/state/settings-store';
 import { getThemeColors } from '@/lib/theme';
 
-type AlertType = 'success' | 'error';
+type AlertType = 'success' | 'error' | 'warning';
 
 interface BrandedAlertProps {
   visible: boolean;
@@ -91,13 +91,15 @@ export function BrandedAlert({
               <View
                 className="w-20 h-20 rounded-full items-center justify-center"
                 style={{
-                  backgroundColor: type === 'success'
-                    ? `${themeColors.primary}20`
-                    : isDarkMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.15)'
+                  backgroundColor: type === 'error'
+                    ? isDarkMode ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.15)'
+                    : `${themeColors.primary}20`
                 }}
               >
                 {type === 'success' ? (
                   <CheckCircle size={40} color={themeColors.primary} weight="duotone" />
+                ) : type === 'warning' ? (
+                  <Trash size={40} color={themeColors.primary} weight="duotone" />
                 ) : (
                   <WarningCircle size={40} color="#EF4444" weight="duotone" />
                 )}

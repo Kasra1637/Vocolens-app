@@ -561,7 +561,7 @@ export default function EntryDetailScreen() {
             }}
           >
             <View style={{ padding: 20 }}>
-              {/* Header row — PRIMARY badge always shown here, at the very top of the section, regardless of collapse state */}
+              {/* Header row */}
               <View className="flex-row items-center justify-between" style={{ marginBottom: sectionEmotions ? 16 : 0 }}>
                 <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
                   <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
@@ -570,16 +570,6 @@ export default function EntryDetailScreen() {
                   <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
                     Emotion Breakdown
                   </Text>
-                  {entry.emotionScores && (
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Text style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.7)", fontSize: 9 }}>TOP 4</Text>
-                    </View>
-                  )}
-                  <View style={{ marginLeft: "auto", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                    <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 9 }}>
-                      PRIMARY · {entry.primaryEmotion.toUpperCase()}
-                    </Text>
-                  </View>
                 </View>
                 {sectionEmotions
                   ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} style={{ marginLeft: 8 }} />

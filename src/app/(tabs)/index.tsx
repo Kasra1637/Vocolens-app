@@ -1436,7 +1436,7 @@ export default function SpeakScreen() {
       {/* Discard confirmation — destructive, so it is never a single tap */}
       <BrandedAlert
         visible={confirmDiscard}
-        type="error"
+        type="warning"
         title="Discard this recording?"
         message="Your recording and everything you've said will be deleted. This can't be undone."
         secondaryLabel="Discard"
