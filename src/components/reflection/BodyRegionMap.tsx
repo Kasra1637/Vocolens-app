@@ -32,11 +32,10 @@ export default function BodyRegionMap({ selected, onChange }: Props) {
   );
 
   const ROWS: BodyRegion[][] = [
-    ["head"],
-    ["face", "neck"],
-    ["chest", "stomach"],
-    ["arms", "hands"],
-    ["legs"],
+    ["head", "face"],
+    ["neck", "chest"],
+    ["stomach", "arms"],
+    ["hands", "legs"],
   ];
 
   return (
