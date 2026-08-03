@@ -1,18 +1,23 @@
 /**
  * EmotionBreakdownCard
- * Displays the Claude 3.7 Sonnet Plutchik deep analysis:
- *   - Top-3 ranked emotions with intensity badges (Ecstasy / Joy / Serenity…)
+ *
+ * Renders the AI's Plutchik deep-analysis "extras" that are not already
+ * shown by the Top Emotions bars in the collapsible "Emotion Breakdown"
+ * section on the entry-detail screen:
  *   - Blended emotion badges (Love, Awe, Remorse…)
- *   - Ambivalence flags (Joy↔Sadness…)
+ *   - Ambivalence flags (happiness↔sadness…)
+ *
+ * This component is meant to be nested INSIDE that collapsible section
+ * (not rendered as its own standalone card) — it intentionally has no
+ * header or background of its own so it reads as a continuation of the
+ * "Emotion Breakdown" section rather than a second, duplicate section.
  *
  * ai* fields are AI-baseline only — user corrections never touch them.
  */
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Animated, { FadeInUp } from "react-native-reanimated";
-import { RankedEmotion, BlendedEmotionType, EmotionType } from "@/lib/types";
-import { hexToRgba } from "@/lib/glass";
+import { BlendedEmotionType } from "@/lib/types";
 
 // ── White-only palette (all badges/text white per design spec) ────────────────
 
@@ -20,18 +25,6 @@ const WHITE_BADGE = {
   bg: "rgba(255, 255, 255, 0.12)",
   border: "rgba(255, 255, 255, 0.25)",
   text: "#FFFFFF",
-};
-
-// Keep type-safe lookup shapes but all values are white
-const EMOTION_COLORS: Record<EmotionType, { bg: string; border: string; text: string }> = {
-  happiness:    WHITE_BADGE,
-  trust:        WHITE_BADGE,
-  fear:         WHITE_BADGE,
-  surprise:     WHITE_BADGE,
-  sadness:      WHITE_BADGE,
-  disgust:      WHITE_BADGE,
-  anger:        WHITE_BADGE,
-  anticipation: WHITE_BADGE,
 };
 
 const BLEND_COLORS: Record<BlendedEmotionType, { bg: string; border: string; text: string }> = {
@@ -44,35 +37,6 @@ const BLEND_COLORS: Record<BlendedEmotionType, { bg: string; border: string; tex
   Contempt:       WHITE_BADGE,
   Aggressiveness: WHITE_BADGE,
 };
-
-const RANK_LABELS: Record<1 | 2 | 3, string> = { 1: "1st", 2: "2nd", 3: "3rd" };
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function RankedEmotionRow({ item }: { item: RankedEmotion }) {
-  const colors = EMOTION_COLORS[item.emotion];
-  const barWidth = `${item.score}%` as `${number}%`;
-
-  return (
-    <View style={styles.rankedRow}>
-      {/* Rank badge */}
-      <View style={[styles.rankBadge, { backgroundColor: colors.bg, borderColor: colors.border }]}>
-        <Text style={[styles.rankBadgeText, { color: colors.text }]}>{RANK_LABELS[item.rank]}</Text>
-      </View>
-
-      {/* Label + bar */}
-      <View style={styles.rankedMid}>
-        <View style={styles.rankedLabelRow}>
-          <Text style={[styles.intensityLabel, { color: "#FFFFFF" }]}>{item.intensityLabel}</Text>
-          <Text style={styles.rankedScore}>{item.score}</Text>
-        </View>
-        <View style={styles.barTrack}>
-          <View style={[styles.barFill, { width: barWidth, backgroundColor: "rgba(255,255,255,0.85)" }]} />
-        </View>
-      </View>
-    </View>
-  );
-}
 
 function Badge({
   label,
@@ -95,43 +59,21 @@ function Badge({
 // ── Main component ────────────────────────────────────────────────────────────
 
 interface Props {
-  aiTopThreeEmotions?: RankedEmotion[];
   aiBlendedEmotions?: BlendedEmotionType[];
   aiAmbivalenceFlags?: string[];
-  themeColor?: string;
 }
 
 export default function EmotionBreakdownCard({
-  aiTopThreeEmotions,
   aiBlendedEmotions,
   aiAmbivalenceFlags,
-  themeColor = "#a78bfa",
 }: Props) {
-  const hasTop3 = aiTopThreeEmotions && aiTopThreeEmotions.length > 0;
   const hasBlended = aiBlendedEmotions && aiBlendedEmotions.length > 0;
   const hasAmbivalence = aiAmbivalenceFlags && aiAmbivalenceFlags.length > 0;
 
-  if (!hasTop3 && !hasBlended && !hasAmbivalence) return null;
+  if (!hasBlended && !hasAmbivalence) return null;
 
   return (
-    <Animated.View entering={FadeInUp.delay(200).duration(600)} style={[styles.card, { backgroundColor: hexToRgba(themeColor, 0.1), borderColor: hexToRgba(themeColor, 0.15) }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={[styles.headerDot, { backgroundColor: themeColor }]} />
-        <Text style={styles.headerTitle}>Emotion Breakdown</Text>
-        <Text style={styles.headerSub}>Claude 3.7 Sonnet analysis</Text>
-      </View>
-
-      {/* Top 3 ranked emotions */}
-      {hasTop3 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Top Emotions</Text>
-          {aiTopThreeEmotions!.map((item) => (
-            <RankedEmotionRow key={item.emotion} item={item} />
-          ))}
-        </View>
-      )}
-
+    <View style={styles.wrapper}>
       {/* Blended emotions */}
       {hasBlended && (
         <View style={styles.section}>
@@ -165,40 +107,18 @@ export default function EmotionBreakdownCard({
           </Text>
         </View>
       )}
-    </Animated.View>
+    </View>
   );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 18,
-    marginBottom: 16,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-    gap: 8,
-  },
-  headerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  headerTitle: {
-    fontFamily: "Inter_700Bold",
-    color: "#FFFFFF",
-    fontSize: 15,
-    flex: 1,
-  },
-  headerSub: {
-    fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.4)",
-    fontSize: 11,
+  wrapper: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.1)",
   },
   section: {
     marginBottom: 14,
@@ -211,57 +131,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 10,
   },
-  // Ranked row
-  rankedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    gap: 10,
-  },
-  rankBadge: {
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    minWidth: 36,
-    alignItems: "center",
-  },
-  rankBadgeText: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  rankedMid: {
-    flex: 1,
-  },
-  rankedLabelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    marginBottom: 4,
-  },
-  intensityLabel: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
-  },
-  rankedScore: {
-    fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.4)",
-    fontSize: 12,
-  },
-  barTrack: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    overflow: "hidden",
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: 2,
-    opacity: 0.7,
-  },
-  // Badges
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",

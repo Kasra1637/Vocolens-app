@@ -66,7 +66,7 @@ import {
 } from "@/lib/types";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { RecommendationCard } from "@/components/RecommendationCard";
-import EmotionBreakdownCard from "@/components/EmotionBreakdownCard";
+import EmotionBreakdownExtras from "@/components/EmotionBreakdownCard";
 import EmotionCorrectionModal from "@/components/EmotionCorrectionModal";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { queryKeys } from "@/lib/hooks";
@@ -545,18 +545,6 @@ export default function EntryDetailScreen() {
         )}
 
 
-        {/* ── EmotionBreakdownCard (Claude 3.7 Sonnet deep analysis) ─────── */}
-        {(entry.aiTopThreeEmotions?.length || entry.aiBlendedEmotions?.length || entry.aiAmbivalenceFlags?.length) ? (
-          <View style={{ marginBottom: 4 }}>
-            <EmotionBreakdownCard
-              aiTopThreeEmotions={entry.aiTopThreeEmotions}
-              aiBlendedEmotions={entry.aiBlendedEmotions}
-              aiAmbivalenceFlags={entry.aiAmbivalenceFlags}
-              themeColor={Colors.primary}
-            />
-          </View>
-        ) : null}
-
         {/* ── Emotion Breakdown — collapsible ─────────────────────────────── */}
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={{ marginBottom: 16 }}>
           <Pressable
@@ -573,9 +561,9 @@ export default function EntryDetailScreen() {
             }}
           >
             <View style={{ padding: 20 }}>
-              {/* Header row */}
+              {/* Header row — PRIMARY badge always shown here, at the very top of the section, regardless of collapse state */}
               <View className="flex-row items-center justify-between" style={{ marginBottom: sectionEmotions ? 16 : 0 }}>
-                <View className="flex-row items-center" style={{ gap: 8 }}>
+                <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
                   <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
                     <BarChart2 size={16} color="#FFFFFF" strokeWidth={2} />
                   </View>
@@ -587,10 +575,15 @@ export default function EntryDetailScreen() {
                       <Text style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.7)", fontSize: 9 }}>TOP 4</Text>
                     </View>
                   )}
+                  <View style={{ marginLeft: "auto", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
+                    <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 9 }}>
+                      PRIMARY · {entry.primaryEmotion.toUpperCase()}
+                    </Text>
+                  </View>
                 </View>
                 {sectionEmotions
-                  ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-                  : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+                  ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} style={{ marginLeft: 8 }} />
+                  : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} style={{ marginLeft: 8 }} />}
               </View>
 
 
@@ -691,6 +684,12 @@ export default function EntryDetailScreen() {
                       </View>
                     </View>
                   )}
+
+                  {/* Blended emotions + emotional tension — AI deep-analysis extras */}
+                  <EmotionBreakdownExtras
+                    aiBlendedEmotions={entry.aiBlendedEmotions}
+                    aiAmbivalenceFlags={entry.aiAmbivalenceFlags}
+                  />
                 </Animated.View>
               )}
             </View>
