@@ -1446,15 +1446,6 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
               <View className="flex-row items-center justify-between mb-1.5">
                 <Text
                   style={{
-                    fontFamily: "Inter_500Medium",
-                    color: "#FFFFFF",
-                    fontSize: 14,
-                  }}
-                >
-                  Monthly minutes
-                </Text>
-                <Text
-                  style={{
                     fontFamily: "Inter_700Bold",
                     color: isAtLimit
                       ? "#FF8080"
@@ -1464,16 +1455,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
                     fontSize: 14,
                   }}
                 >
-                  {Math.floor(user.usageMinutes)}{" "}
-                  <Text
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      color: "rgba(255,255,255,0.5)",
-                      fontSize: 11,
-                    }}
-                  >
-                    / {USAGE_LIMIT_MINUTES} min
-                  </Text>
+                  Monthly minutes
                 </Text>
               </View>
               {/* Animated usage bar */}

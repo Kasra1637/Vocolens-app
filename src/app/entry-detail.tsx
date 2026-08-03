@@ -68,6 +68,7 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { RecommendationCard } from "@/components/RecommendationCard";
 import EmotionBreakdownExtras from "@/components/EmotionBreakdownCard";
 import EmotionCorrectionModal from "@/components/EmotionCorrectionModal";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { queryKeys } from "@/lib/hooks";
 import { analyzeWithOpenRouter } from "@/lib/api/openrouter-service";
@@ -930,53 +931,16 @@ export default function EntryDetailScreen() {
       </ScrollView>
 
 
-      {/* ── Delete Confirmation Modal ─────────────────────────────────────── */}
-      <Modal visible={showDeleteModal} animationType="fade" transparent onRequestClose={handleDeleteCancel}>
-        <View className="flex-1 bg-black/60 items-center justify-center px-6">
-          <Animated.View
-            entering={FadeIn.duration(200)}
-            className="rounded-3xl overflow-hidden w-full max-w-sm"
-            style={{
-              backgroundColor: GLASS_BG,
-              borderWidth: 2,
-              borderColor: GLASS_BORDER,
-            }}
-          >
-            <LinearGradient
-              colors={Gradients.background}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={{ padding: 24, borderRadius: 24 }}
-            >
-              <View className="items-center" style={{ marginBottom: 20 }}>
-                <View className="w-16 h-16 rounded-full items-center justify-center" style={{ backgroundColor: "rgba(239,68,68,0.15)", marginBottom: 16 }}>
-                  <Trash2 size={32} color="#EF4444" strokeWidth={2} />
-                </View>
-                <Text className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}>
-                  Delete Entry?
-                </Text>
-                <Text className="text-center text-base" style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.8)", lineHeight: 22 }}>
-                  This will permanently delete this journal entry. This action cannot be undone.
-                </Text>
-              </View>
-              <View style={{ gap: 12 }}>
-                <Pressable onPress={handleDeleteConfirm} className="rounded-2xl overflow-hidden">
-                  <LinearGradient colors={["#EF4444", "#DC2626"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ padding: 16, alignItems: "center" }}>
-                    <Text className="text-white text-base font-bold" style={{ fontFamily: "Inter_700Bold" }}>Delete Entry</Text>
-                  </LinearGradient>
-                </Pressable>
-                <Pressable
-                  onPress={handleDeleteCancel}
-                  className="rounded-2xl py-4 items-center"
-                  style={{ borderWidth: 2, borderColor: Colors.primary, backgroundColor: "transparent" }}
-                >
-                  <Text className="text-base font-bold" style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}>Cancel</Text>
-                </Pressable>
-              </View>
-            </LinearGradient>
-          </Animated.View>
-        </View>
-      </Modal>
+      {/* ── Delete Confirmation — canonical ConfirmDialog ─────────────── */}
+      <ConfirmDialog
+        visible={showDeleteModal}
+        icon="trash"
+        title="Delete entry?"
+        message="This will permanently delete this journal entry. This action cannot be undone."
+        confirmLabel="Delete entry"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
 
       {/* ── Refine Analysis Modal ─────────────────────────────────────────── */}
       {entry && (
