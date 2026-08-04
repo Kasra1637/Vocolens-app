@@ -76,20 +76,24 @@ function getCurrentMonth(): string {
  * server reports fractional minutes, that made the two disagree: 0.4 minutes of
  * real usage rendered as "0 / 300 min used" *and* "299 min remaining", so the
  * home screen appeared to withhold a minute the settings screen said was
- * unspent. Flooring once and subtracting removes the contradiction, and never
- * overstates what the user has spent.
+ * unspent.
+ *
+ * `used` is rounded UP (not down), not just to keep the two figures
+ * consistent, but because flooring made any recording under a minute
+ * invisible: a 20s save (0.33 min) floored to "0 / 300 used" — indistinguishable
+ * from a fresh install that had never recorded anything. Rounding up means any
+ * real usage moves the displayed count by at least 1 minute immediately after
+ * saving, while a genuine zero (no entries yet) still correctly shows 0.
  */
 export function usageDisplayMinutes(usedMinutes: number): {
   used: number;
   remaining: number;
 } {
   const clamped = Math.min(Math.max(usedMinutes, 0), USAGE_LIMIT_MINUTES);
-  const used = Math.floor(clamped);
+  const used = Math.ceil(clamped);
   return {
     used,
-    // Only ever 0 when the allowance is genuinely exhausted — flooring `used`
-    // must not make a user with seconds left believe they have none.
-    remaining: clamped >= USAGE_LIMIT_MINUTES ? 0 : USAGE_LIMIT_MINUTES - used,
+    remaining: Math.max(0, USAGE_LIMIT_MINUTES - used),
   };
 }
 
