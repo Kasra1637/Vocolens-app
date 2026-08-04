@@ -12,6 +12,11 @@
  * header or background of its own so it reads as a continuation of the
  * "Emotion Breakdown" section rather than a second, duplicate section.
  *
+ * IMPORTANT: This component ALWAYS renders both sections — it never
+ * returns null. When no qualifying data exists, a placeholder is shown
+ * so that Blended Emotions and Emotional Tension are permanently visible
+ * inside the Emotion Breakdown card on every journal entry.
+ *
  * ai* fields are AI-baseline only — user corrections never touch them.
  */
 
@@ -70,43 +75,47 @@ export default function EmotionBreakdownCard({
   const hasBlended = aiBlendedEmotions && aiBlendedEmotions.length > 0;
   const hasAmbivalence = aiAmbivalenceFlags && aiAmbivalenceFlags.length > 0;
 
-  if (!hasBlended && !hasAmbivalence) return null;
-
   return (
     <View style={styles.wrapper}>
-      {/* Blended emotions */}
-      {hasBlended && (
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Blended Emotions</Text>
+      {/* Blended emotions — always shown */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Blended Emotions</Text>
+        {hasBlended ? (
           <View style={styles.badgeRow}>
             {aiBlendedEmotions!.map((blend) => {
               const c = BLEND_COLORS[blend];
               return <Badge key={blend} label={blend} bg={c.bg} border={c.border} textColor={c.text} />;
             })}
           </View>
-        </View>
-      )}
+        ) : (
+          <Text style={styles.emptyNote}>No blended emotions detected in this entry</Text>
+        )}
+      </View>
 
-      {/* Ambivalence flags */}
-      {hasAmbivalence && (
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Emotional Tension</Text>
-          <View style={styles.badgeRow}>
-            {aiAmbivalenceFlags!.map((flag) => (
-              <Badge
-                key={flag}
-                label={flag}
-                bg="rgba(255,255,255,0.12)"
-                border="rgba(255,255,255,0.25)"
-                textColor="#FFFFFF"
-              />
-            ))}
+      {/* Emotional tension — always shown */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Emotional Tension</Text>
+        {hasAmbivalence ? (
+          <View>
+            <View style={styles.badgeRow}>
+              {aiAmbivalenceFlags!.map((flag) => (
+                <Badge
+                  key={flag}
+                  label={flag}
+                  bg="rgba(255,255,255,0.12)"
+                  border="rgba(255,255,255,0.25)"
+                  textColor="#FFFFFF"
+                />
+              ))}
+            </View>
+            <Text style={styles.ambivalenceNote}>
+              Opposing emotions detected simultaneously
+            </Text>
           </View>
-          <Text style={styles.ambivalenceNote}>
-            Opposing emotions detected simultaneously
-          </Text>
-        </View>
-      )}
+        ) : (
+          <Text style={styles.emptyNote}>No opposing emotions detected in this entry</Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -151,5 +160,11 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.4)",
     fontSize: 11,
     marginTop: 6,
+  },
+  emptyNote: {
+    fontFamily: "Inter_400Regular",
+    color: "rgba(255,255,255,0.35)",
+    fontSize: 12,
+    fontStyle: "italic",
   },
 });
