@@ -23,7 +23,7 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { Check, X, CaretRight, ArrowsClockwise, ArrowSquareOut } from "phosphor-react-native";
-import { Palette, Bell, Shield, ShieldCheck, Brain, ChartBar, Trash, DownloadSimple, Crown, Key, Heart, Clock, FileText } from "phosphor-react-native";
+import { Palette, Bell, Shield, ShieldCheck, Brain, ChartBar, DownloadSimple, Crown, Key, Heart, Clock, FileText } from "phosphor-react-native";
 import * as Clipboard from "expo-clipboard";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
 import { ExportJournalModal } from "@/components/ExportJournalModal";
@@ -66,13 +66,8 @@ import useUserStatsStore, {
   usageDisplayMinutes,
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
-import { clearAICache } from "@/lib/ai-emotional-intelligence";
-import { deleteAllAudioFiles } from "@/lib/journal-service";
 import useJournalStore from "@/lib/state/journal-store";
 import useBadgesStore from "@/lib/state/badges-store";
-import usePinStore from "@/lib/state/pin-store";
-import useBiometricStore from "@/lib/state/biometric-store";
-import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import {
   restorePurchases,
@@ -91,8 +86,6 @@ export default function SettingsScreen() {
   const [alertType, setAlertType] = useState<"success" | "error" | "warning">("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [resetModalVisible, setResetModalVisible] = useState(false);
-  const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
@@ -305,12 +298,6 @@ export default function SettingsScreen() {
     setChangePinVisible(false);
   };
 
-  const handleResetAllData = () => {
-    warningHaptic();
-    setResetStep(1);
-    setResetModalVisible(true);
-  };
-
   // ── Share App handlers ──────────────────────────────────────────────────────
   const [shareUnavailable, setShareUnavailable] = useState(false);
 
@@ -343,56 +330,6 @@ export default function SettingsScreen() {
     } catch {
       // silent
     }
-  };
-
-  const handleResetStep1Confirm = () => {
-    warningHaptic();
-    setResetStep(2);
-  };
-
-  const confirmResetAllData = async () => {
-    confirmHaptic();
-    setResetModalVisible(false);
-    setResetStep(1);
-
-    // Delete all audio recordings from disk BEFORE clearing the entries store
-    // (so the URIs are still available). Non-fatal: files may already be purged.
-    await deleteAllAudioFiles();
-
-    // Reset all stores
-    useJournalStore.getState().clearAllEntries();
-    useBadgesStore.getState().resetBadges();
-    useUserStatsStore.getState().resetStats();
-    useSettingsStore.getState().resetSettings();
-    usePinStore.getState().clearPin();
-    useBiometricStore.getState().disableBiometric();
-    useEmotionCorrectionStore.getState().clearCorrections();
-    useSubscriptionStore.getState().clearSubscription();
-
-    // Drop the persisted AI analysis too — it's derived from the entries we
-    // just deleted and quotes them in its evidence strings.
-    await clearAICache();
-
-    // Clear PIN from secure storage (non-blocking)
-    try {
-      await removePin();
-    } catch (err) {
-      console.warn(
-        "Failed to remove PIN from secure storage during reset:",
-        err,
-      );
-      // Continue with reset — redirect is more important than clean secure store
-    }
-
-    // Reset onboarding last (redirects to welcome)
-    useOnboardingStore.getState().resetOnboarding();
-    router.replace("/(tabs)");
-  };
-
-  const cancelReset = () => {
-    tapHaptic();
-    setResetModalVisible(false);
-    setResetStep(1);
   };
 
   if (!fontsLoaded) {
@@ -1421,91 +1358,8 @@ export default function SettingsScreen() {
               </View>
             </Animated.View>
 
-            {/* ── Reset All Data (separate container) ── */}
-            <Animated.View key={`s-reset-${animationKey}`} entering={ENTER_6} className="mb-6">
-              <View
-                className="rounded-3xl overflow-hidden"
-                style={{
-                  backgroundColor: surfaceBg,
-                  borderWidth: 2,
-                  borderColor: "rgba(239, 68, 68, 0.35)",
-                }}
-              >
-                {/* Section header */}
-                <View
-                  className="flex-row items-center px-5 pt-5 pb-4"
-                  style={{
-                    borderBottomWidth: 1,
-                    borderBottomColor: "rgba(255, 255, 255, 0.12)",
-                  }}
-                >
-                  <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
-                    <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                    <Trash size={24} color="#FFFFFF" weight="duotone" />
-                  </View>
-                  <Text
-                    
-                    style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
-                  >
-                    Reset all data
-                  </Text>
-                </View>
-
-                <View className="p-5">
-                  <Text
-                    style={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      fontSize: 14,
-                      marginBottom: 16,
-                      lineHeight: 19,
-                    }}
-                  >
-                    This will permanently delete all your journal entries,
-                    stats, badges, PIN, and settings. The app will return to its
-                    initial state.
-                  </Text>
-                  <Pressable
-                    data-testid="reset-all-data-button"
-                    onPress={handleResetAllData}
-                    style={{
-                      width: "100%",
-                      borderRadius: 50,
-                      borderWidth: 2,
-                      borderColor: "#EF4444",
-                      overflow: "hidden",
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 8 },
-                      shadowOpacity: 0.25,
-                      shadowRadius: 16,
-                      elevation: Platform.OS === "android" ? 0 : 8,
-                    }}
-                    android_ripple={{ color: "rgba(255,255,255,0.2)" }}
-                  >
-                    <LinearGradient
-                      colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 1 }}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingVertical: 16,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#FFFFFF",
-                          fontFamily: "Inter_700Bold",
-                          fontSize: 18,
-                        }}
-                      >
-                        Erase everything
-                      </Text>
-                    </LinearGradient>
-                  </Pressable>
-                </View>
-              </View>
-            </Animated.View>
+            {/* ── Reset All Data section removed — functionality is available
+                via Privacy & security > Data & account > Delete Account. ── */}
           </ScrollView>
         </View>
       </LinearGradient>
@@ -1521,32 +1375,6 @@ export default function SettingsScreen() {
         confirmLabel="Yes, sign out"
         onConfirm={confirmSignOut}
         onCancel={cancelSignOut}
-      />
-
-      {/* Reset All Data Confirmation — canonical ConfirmDialog, 2-step flow.
-          destructiveness="severe" because this is genuinely permanent,
-          whole-app data loss — the one case that earns a (muted) red accent. */}
-      <ConfirmDialog
-        visible={resetModalVisible}
-        icon="warning"
-        destructiveness="severe"
-        steps={[
-          {
-            title: "Reset all data?",
-            message:
-              "This will permanently erase all your journal entries, stats, badges, PIN, and settings.",
-            confirmLabel: "Yes, reset everything",
-          },
-          {
-            title: "Are you sure?",
-            message:
-              "This action cannot be undone. All your data will be permanently deleted and the app will return to its initial state.",
-            confirmLabel: "Delete all data now",
-          },
-        ]}
-        currentStep={resetStep - 1}
-        onConfirm={resetStep === 1 ? handleResetStep1Confirm : confirmResetAllData}
-        onCancel={cancelReset}
       />
 
       {/* ── Subscription Management Modal ── */}
