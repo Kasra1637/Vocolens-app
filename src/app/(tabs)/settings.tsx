@@ -1105,103 +1105,6 @@ export default function SettingsScreen() {
                   </View>
                 </Pressable>
 
-                {/* Privacy & Security — also the entry point for data export
-                    and account deletion (required to be reachable in-app). */}
-                <Pressable
-                  onPress={() => {
-                    tapHaptic();
-                    router.push("/privacy-settings");
-                  }}
-                  className="p-5 active:opacity-70"
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        overflow: "hidden",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        marginRight: 14,
-                      }}
-                    >
-                      <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                      <ShieldCheck size={24} color="#FFFFFF" weight="duotone" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "#FFFFFF",
-                          fontSize: 15,
-                          marginBottom: 2,
-                        }}
-                      >
-                        Privacy &amp; security
-                      </Text>
-                      <Text
-                        style={{
-                          color: "rgba(255, 255, 255, 0.7)",
-                          fontSize: 14,
-                        }}
-                      >
-                        Export your data, delete entries or account
-                      </Text>
-                    </View>
-                    <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
-                  </View>
-                </Pressable>
-
-                {/* Privacy Policy & Terms — must be reachable in-app for store
-                    compliance. The real content lives in src/app/legal.tsx. */}
-                <Pressable
-                  onPress={() => {
-                    tapHaptic();
-                    router.push("/legal");
-                  }}
-                  className="p-5 active:opacity-70"
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 22,
-                        overflow: "hidden",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        marginRight: 14,
-                      }}
-                    >
-                      <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                      <FileText size={24} color="#FFFFFF" weight="duotone" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "#FFFFFF",
-                          fontSize: 15,
-                          marginBottom: 2,
-                        }}
-                      >
-                        Privacy Policy &amp; Terms
-                      </Text>
-                      <Text
-                        style={{
-                          color: "rgba(255, 255, 255, 0.7)",
-                          fontSize: 14,
-                        }}
-                      >
-                        How your data is handled
-                      </Text>
-                    </View>
-                    <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
-                  </View>
-                </Pressable>
               </View>
             </Animated.View>
 
@@ -1408,6 +1311,106 @@ export default function SettingsScreen() {
                           }}
                         >
                           Get your journal entries as a PDF archive with audio files organized by date
+                        </Text>
+                      </View>
+                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                    </View>
+                  </Pressable>
+
+                  {/* Divider */}
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: 'rgba(255,255,255,0.12)',
+                      marginBottom: 20,
+                    }}
+                  />
+
+                  {/* Data & Account — moved here from "Emotion reflection" (was
+                      mislabeled "Privacy & security", duplicating this card's
+                      own name). Entry point for data export and account
+                      deletion (required to be reachable in-app). */}
+                  <Pressable
+                    onPress={() => {
+                      tapHaptic();
+                      router.push("/privacy-settings");
+                    }}
+                    className="active:opacity-70"
+                    style={{ marginBottom: 20 }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 14 }}>
+                        <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                        <ShieldCheck size={24} color="#FFFFFF" weight="duotone" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontFamily: "Inter_600SemiBold",
+                            color: "#FFFFFF",
+                            fontSize: 15,
+                            marginBottom: 2,
+                          }}
+                        >
+                          Data &amp; account
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: 'Inter_400Regular',
+                            color: "rgba(255, 255, 255, 0.55)",
+                            fontSize: 14,
+                          }}
+                        >
+                          Export your data, delete entries or account
+                        </Text>
+                      </View>
+                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                    </View>
+                  </Pressable>
+
+                  {/* Divider */}
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: 'rgba(255,255,255,0.12)',
+                      marginBottom: 20,
+                    }}
+                  />
+
+                  {/* Privacy Policy & Terms — moved here from "Emotion
+                      reflection". Must be reachable in-app for store
+                      compliance. The real content lives in src/app/legal.tsx. */}
+                  <Pressable
+                    onPress={() => {
+                      tapHaptic();
+                      router.push("/legal");
+                    }}
+                    className="active:opacity-70"
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 14 }}>
+                        <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
+                        <FileText size={24} color="#FFFFFF" weight="duotone" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontFamily: "Inter_600SemiBold",
+                            color: "#FFFFFF",
+                            fontSize: 15,
+                            marginBottom: 2,
+                          }}
+                        >
+                          Privacy Policy &amp; Terms
+                        </Text>
+                        <Text
+                          style={{
+                            fontFamily: 'Inter_400Regular',
+                            color: "rgba(255, 255, 255, 0.55)",
+                            fontSize: 14,
+                          }}
+                        >
+                          How your data is handled
                         </Text>
                       </View>
                       <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
