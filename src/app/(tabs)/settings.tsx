@@ -61,12 +61,11 @@ import { ThemedSwitch } from "@/components/ThemedSwitch";
 import { NotificationService } from "@/lib/services/notification-service";
 import { BrandedAlert } from "@/components/BrandedAlert";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import {
+import useUserStatsStore, {
   useUsageMinutes,
-  useRemainingMinutes,
+  usageDisplayMinutes,
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
-import useUserStatsStore from "@/lib/state/user-stats-store";
 import { clearAICache } from "@/lib/ai-emotional-intelligence";
 import { deleteAllAudioFiles } from "@/lib/journal-service";
 import useJournalStore from "@/lib/state/journal-store";
@@ -130,12 +129,11 @@ export default function SettingsScreen() {
   const setEmotionReflectionMode = useSettingsStore(
     (s) => s.setEmotionReflectionMode,
   );
-  // Usage tracking
+  // Usage tracking. `usageMinutes` counts only audio that became a saved entry,
+  // so a fresh install with no entries reads 0 / 300.
   const usageMinutes = useUsageMinutes();
-  const remainingMinutes = useRemainingMinutes();
   const usagePct = Math.min(1, usageMinutes / USAGE_LIMIT_MINUTES);
-  const usageMinutesDisplay = Math.floor(usageMinutes);
-  const remainingMinutesDisplay = Math.max(0, Math.floor(remainingMinutes));
+  const { used: usageMinutesDisplay } = usageDisplayMinutes(usageMinutes);
   const isNearLimit = usagePct >= 0.8;
   const isAtLimit = usagePct >= 1;
 

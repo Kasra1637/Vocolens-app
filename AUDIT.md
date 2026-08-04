@@ -199,6 +199,13 @@ everything is discarded with no explanation and no retry — while the server ha
 `useRealtimeVoiceRecording.ts:449-455`, so the dedicated limit alert never fires
 for the transcription step.
 
+> **Metering half fixed.** `/api/transcribe` now only *reserves* the measured
+> duration and returns a ticket; `/api/usage/commit` charges it once the entry
+> has actually been saved (`createJournalEntry`). Silent recordings get no ticket
+> at all, and reservations for abandoned flows expire uncharged. Discarded
+> recordings therefore no longer consume the allowance — the symptom was a fresh
+> install reporting 297 of 300 minutes remaining with zero entries.
+
 ### 9. Audio recordings are never deleted — growth, orphans, and a privacy gap
 There is exactly one `deleteAsync` in `src/`, and it is for temp export files:
 ```
@@ -286,6 +293,12 @@ All readable via Console.app / `adb logcat`. Add
 The deployed Worker stores usage in D1 keyed on a SHA-256 of the device id
 (Android SSAID / iOS IDFV — chosen specifically to survive reinstall). There is
 **no delete/purge endpoint**:
+
+> **Partly addressed.** The subject is now a per-install UUID in AsyncStorage
+> (`src/lib/device-id.ts`), not a hardware identifier, so uninstalling the app
+> orphans the row rather than binding it to the handset forever — and a new
+> install starts from a full allowance. A `DELETE /api/usage` endpoint is still
+> missing, so the orphaned row itself is not removed on account deletion.
 ```
 $ grep -niE "delete|purge|erase" backend/src/worker.js
 >>> NO deletion endpoint in the deployed Worker <<<

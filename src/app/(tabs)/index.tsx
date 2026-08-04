@@ -73,8 +73,8 @@ import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import {
   useUsageMinutes,
-  useRemainingMinutes,
   useIsAtLimit,
+  usageDisplayMinutes,
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
 import { hexToRgba } from "@/lib/glass";
@@ -191,12 +191,16 @@ export default function SpeakScreen() {
   const Gradients = getThemeGradients(selectedTheme, isDarkMode);
   const Shadows = getThemeShadows(selectedTheme);
 
-  // Usage limit tracking
+  // Usage limit tracking. `usageMinutes` counts only audio that became a saved
+  // entry, so a fresh install reads the full allowance until the first save.
   const usageMinutes = useUsageMinutes();
-  const remainingMinutes = useRemainingMinutes();
   const isAtLimit = useIsAtLimit();
   const usagePct = Math.min(1, usageMinutes / USAGE_LIMIT_MINUTES);
   const isNearLimit = usagePct >= 0.8 && !isAtLimit;
+  // Whole minutes for the copy below, derived so this screen and the settings
+  // screen can never quote different numbers for the same balance.
+  const { remaining: remainingMinutesDisplay } =
+    usageDisplayMinutes(usageMinutes);
 
   // Shown when the *server* rejects a request because the allowance is spent.
   // This can happen mid-flow (the recording itself pushed the user over, or
@@ -926,7 +930,7 @@ export default function SpeakScreen() {
                   >
                     {isAtLimit
                       ? `You've used all ${USAGE_LIMIT_MINUTES} minutes this month. Resets next month.`
-                      : `${Math.floor(remainingMinutes)} minutes remaining of your ${USAGE_LIMIT_MINUTES}-minute monthly plan.`}
+                      : `${remainingMinutesDisplay} minutes remaining of your ${USAGE_LIMIT_MINUTES}-minute monthly plan.`}
                   </Text>
                 </View>
               </View>
@@ -1399,7 +1403,7 @@ export default function SpeakScreen() {
                   ? "Please wait..."
                   : isAtLimit
                     ? "Monthly limit reached"
-                    : `Tap to start · ${Math.floor(remainingMinutes)} min left`}
+                    : `Tap to start · ${remainingMinutesDisplay} min left`}
               </Text>
               {!isProcessing && !isAtLimit && (
                 <Text

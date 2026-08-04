@@ -31,7 +31,7 @@ import { analyzeWithOpenRouter, generateRecommendation } from "./api/openrouter-
 // Use legacy subpath — v55's top-level export no longer includes
 // `EncodingType.Base64`, so the audio-to-base64 conversion crashes without this.
 import * as FileSystem from "expo-file-system/legacy";
-import { syncUsageFromBackend } from "./api/usage-service";
+import { commitUsageForAudio } from "./api/usage-service";
 import { buildPersonalizationPrompt } from "./personalization";
 
 /**
@@ -768,12 +768,19 @@ export async function createJournalEntry(
   // stats.totalEntries to evaluate the "first entry" and entry-count badges.
   userStatsStore.incrementEntries();
   userStatsStore.addDuration(duration);
-  // The 300-minute monthly cap is metered server-side, inside /api/transcribe,
-  // from the audio duration Deepgram actually measured. We deliberately do NOT
-  // report a client-measured duration here — that would double-count against
-  // the server's meter and would be trivially falsifiable anyway.
-  // Refresh the local display mirror from the authoritative balance instead.
-  syncUsageFromBackend().catch(() => {});
+  // ── Charge the monthly allowance ────────────────────────────────────────
+  // Deliberately placed AFTER addEntry above: the 300-minute allowance is
+  // described to the user as minutes of journalling, so it may only be spent by
+  // a recording that actually became an entry. /api/transcribe merely reserved
+  // the duration Deepgram measured; this redeems that reservation. Recordings
+  // that were transcribed but abandoned (empty transcript, reflection screen
+  // backed out of, failed analysis, retried upload) are never committed, so
+  // their reservations expire and cost the user nothing.
+  //
+  // We still don't send a duration — the seconds live server-side, so this
+  // cannot under-report. Fire-and-forget, and non-throwing by contract: an entry
+  // the user has already saved must never fail over a usage counter.
+  commitUsageForAudio(audioUri).catch(() => {});
   userStatsStore.updateStreak(entry.createdAt);
   // Average mood and top emotions are no longer accumulated here. They are
   // computed from the entries on read (analytics.ts), which removes the ordering

@@ -4,6 +4,7 @@ import { apiFetch } from './client';
 import { getDeviceId } from '../device-id';
 import {
   applyServerUsage,
+  rememberUsageTicket,
   usageLimitErrorFrom,
   UsageLimitError,
 } from './usage-service';
@@ -12,6 +13,12 @@ export interface TranscriptionResult {
   transcript: string;
   confidence: number;
   duration: number;
+  /**
+   * Handle for the minutes the Worker reserved for this audio. Charged only once
+   * the entry is saved — see `commitUsageForAudio`. Null when there was nothing
+   * to reserve (silent recording).
+   */
+  usageTicket?: string | null;
 }
 
 export async function transcribeAudio(
@@ -42,13 +49,20 @@ export async function transcribeAudio(
   const data = await response.json();
   if (!data.success) throw new Error(data.error || 'Transcription failed');
 
-  // The server returns the authoritative balance it just metered.
+  // The authoritative balance, still counting saved entries only — this call
+  // reserved minutes but did not spend them.
   applyServerUsage(data.usage);
+
+  // Hold the reservation against this recording so saving the entry can charge
+  // it. A retry below replaces this ticket, so a re-uploaded file is charged
+  // once rather than once per attempt.
+  rememberUsageTicket(audioUri, data.usageTicket);
 
   return {
     transcript: data.transcript || '',
     confidence: data.confidence || 0,
     duration: data.duration || 0,
+    usageTicket: data.usageTicket ?? null,
   };
 }
 

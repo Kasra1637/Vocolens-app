@@ -6,7 +6,8 @@
  *   GET  /health                        health ping
  *   GET  /api/journal/status            connection status
  *   GET  /api/usage/status              server-authoritative monthly balance
- *   POST /api/transcribe                Deepgram STT (meters audio minutes)
+ *   POST /api/usage/commit              charge a saved entry's audio minutes
+ *   POST /api/transcribe                Deepgram STT (reserves audio minutes)
  *   POST /api/analyze                   analyse transcript
  *   POST /api/journal/analyze           alias for /api/analyze
  *   POST /api/recommend                 recommendation card
@@ -83,9 +84,41 @@ function stripFences(str) {
 //     the same atomic UPDATE. No cron job to fail.
 //   * If metering is unavailable we fail CLOSED (503). An outage must not
 //     silently become unlimited free usage.
+//
+// ── The charge is two-phase: reserve on transcribe, commit on save ───────────
+//
+// The allowance is described to the user as the minutes of voice journalling
+// they get each month, so it must only be spent by recordings that actually
+// became a journal entry. Charging at transcription time broke that promise,
+// because a transcript can be produced and then never saved:
+//
+//     empty transcript ("no speech detected")   → entry dropped
+//     user backs out of the reflection screen   → nothing saved
+//     emotion analysis fails and isn't retried  → nothing saved
+//     transport error → "Try again" re-uploads  → same audio charged twice
+//
+// Each of those cost the user ~1 minute of allowance (the UI nudges toward
+// recordings of at least 50s), which is why a brand-new install that had never
+// saved an entry could already report 297 of 300 minutes remaining.
+//
+// Now /api/transcribe only RESERVES the duration — it writes it to
+// `usage_pending` and returns an opaque ticket — and /api/usage/commit converts
+// that reservation into a real charge once the app has persisted the entry. The
+// duration still comes from Deepgram, never from the client; the client only
+// gets to say *whether* a reservation became an entry, not how long it was.
+//
+// Unredeemed reservations expire (PENDING_TTL_SECONDS) and are purged, so an
+// abandoned recording eventually costs nothing. Until they expire they still
+// count toward the cap, so "never commit" cannot be used to transcribe for free.
 
 const USAGE_LIMIT_MINUTES = 300;
 const USAGE_LIMIT_SECONDS = USAGE_LIMIT_MINUTES * 60;
+
+// How long a reservation stays redeemable — and stays counted against the cap.
+// Long enough to cover the reflection flow (record → analyse → reflect → save)
+// plus a slow network, short enough that abandoned recordings are refunded
+// promptly. Also bounds how much a client can transcribe without ever saving.
+const PENDING_TTL_SECONDS = 2 * 60 * 60; // 2 hours
 
 /** Every endpoint that costs money, and is therefore subject to the cap. */
 const PAID_PATHS = new Set([
@@ -196,8 +229,92 @@ async function addUsage(env, subjectHash, period, seconds, nowIso) {
   };
 }
 
-/** The usage shape returned to the app. Minutes, rounded to 2dp. */
-function usagePayload(periodSeconds, lifetimeSeconds, period) {
+/**
+ * Reserves `seconds` against the caller without charging them yet, returning the
+ * ticket that /api/usage/commit redeems.
+ *
+ * The ticket is generated here rather than accepted from the client so it cannot
+ * be forged, guessed, or aimed at another subject's balance.
+ */
+async function reserveUsage(env, subjectHash, period, seconds, now) {
+  const ticket = crypto.randomUUID();
+  await env.DB.prepare(
+    `INSERT INTO usage_pending
+       (ticket, subject_hash, period, seconds, created_at, expires_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+  )
+    .bind(
+      ticket,
+      subjectHash,
+      period,
+      seconds,
+      now.toISOString(),
+      new Date(now.getTime() + PENDING_TTL_SECONDS * 1000).toISOString()
+    )
+    .run();
+  return ticket;
+}
+
+/**
+ * Seconds reserved but not yet committed, ignoring expired reservations.
+ *
+ * Counted toward the cap (but NOT toward the figure shown to the user) so that
+ * abandoning recordings can't be used to transcribe past the limit.
+ */
+async function readPendingSeconds(env, subjectHash, period, nowIso) {
+  const row = await env.DB.prepare(
+    `SELECT COALESCE(SUM(seconds), 0) AS pending_seconds
+       FROM usage_pending
+      WHERE subject_hash = ?1 AND period = ?2 AND expires_at > ?3`
+  )
+    .bind(subjectHash, period, nowIso)
+    .first();
+  return Number(row?.pending_seconds) || 0;
+}
+
+/**
+ * Redeems a reservation, returning the seconds to charge — or null if the
+ * ticket is unknown, already redeemed, expired, or belongs to another subject.
+ *
+ * The DELETE is the claim: only the request that actually removes the row gets
+ * the seconds back, so a duplicate or concurrent commit of the same ticket is
+ * naturally idempotent and cannot double-charge.
+ */
+async function redeemPendingTicket(env, subjectHash, ticket, nowIso) {
+  const row = await env.DB.prepare(
+    `DELETE FROM usage_pending
+      WHERE ticket = ?1 AND subject_hash = ?2 AND expires_at > ?3
+      RETURNING seconds`
+  )
+    .bind(ticket, subjectHash, nowIso)
+    .first();
+  if (!row) return null;
+  return Number(row.seconds) || 0;
+}
+
+/** Best-effort cleanup of reservations that were never redeemed. */
+async function purgeExpiredPending(env, nowIso) {
+  try {
+    await env.DB.prepare("DELETE FROM usage_pending WHERE expires_at <= ?1")
+      .bind(nowIso)
+      .run();
+  } catch (err) {
+    // Cosmetic only — expired rows are already excluded from every read.
+    console.warn("[usage] pending purge failed:", err && err.message);
+  }
+}
+
+/**
+ * The usage shape returned to the app. Minutes, rounded to 2dp.
+ *
+ * `monthlyMinutesUsed` counts COMMITTED seconds only — i.e. audio that became a
+ * saved journal entry — because that is the number the app shows the user, and
+ * showing minutes for recordings they discarded is exactly the bug this
+ * two-phase design fixes. `isAtLimit` additionally accounts for live
+ * reservations, so enforcement stays tight even though the displayed figure is
+ * conservative. `pendingMinutes` is exposed for support/debugging.
+ */
+function usagePayload(periodSeconds, lifetimeSeconds, period, pendingSeconds = 0) {
   const round = (n) => Math.round(n * 100) / 100;
   const usedMinutes = periodSeconds / 60;
   return {
@@ -205,7 +322,8 @@ function usagePayload(periodSeconds, lifetimeSeconds, period) {
     totalMinutesUsed: round(lifetimeSeconds / 60),
     limitMinutes: USAGE_LIMIT_MINUTES,
     remainingMinutes: Math.max(0, round(USAGE_LIMIT_MINUTES - usedMinutes)),
-    isAtLimit: periodSeconds >= USAGE_LIMIT_SECONDS,
+    pendingMinutes: round(pendingSeconds / 60),
+    isAtLimit: periodSeconds + pendingSeconds >= USAGE_LIMIT_SECONDS,
     period,
     resetsAt: nextPeriodResetIso(period),
   };
@@ -235,10 +353,16 @@ async function checkUsageAllowed(request, env) {
 
   const subjectHash = await hashSubject(resolveSubject(request));
   const period = currentPeriod();
+  const nowIso = new Date().toISOString();
 
   let usage;
+  let pendingSeconds;
   try {
     usage = await readUsage(env, subjectHash, period);
+    // Reservations from recordings that were transcribed but not yet saved.
+    // Included here (but not in the displayed total) so an abandoned-recording
+    // loop can't spend past the cap.
+    pendingSeconds = await readPendingSeconds(env, subjectHash, period, nowIso);
   } catch (err) {
     // Fail closed: we cannot prove the caller is under their cap.
     console.error("[usage] lookup failed:", err && err.message);
@@ -255,7 +379,7 @@ async function checkUsageAllowed(request, env) {
     };
   }
 
-  if (usage.periodSeconds >= USAGE_LIMIT_SECONDS) {
+  if (usage.periodSeconds + pendingSeconds >= USAGE_LIMIT_SECONDS) {
     return {
       response: json(
         {
@@ -267,7 +391,8 @@ async function checkUsageAllowed(request, env) {
           usage: usagePayload(
             usage.periodSeconds,
             usage.lifetimeSeconds,
-            period
+            period,
+            pendingSeconds
           ),
         },
         402,
@@ -276,7 +401,7 @@ async function checkUsageAllowed(request, env) {
     };
   }
 
-  return { subjectHash, period, usage };
+  return { subjectHash, period, usage, pendingSeconds };
 }
 
 const ANALYSIS_PROMPT = `You are the core AI engine for Vocolens, an expert emotional intelligence analyst specialising in Plutchik's Wheel of Emotions.
@@ -392,13 +517,28 @@ async function handleUsageStatus(request, env) {
 
   const subjectHash = await hashSubject(resolveSubject(request));
   const period = currentPeriod();
+  const nowIso = new Date().toISOString();
 
   try {
     const usage = await readUsage(env, subjectHash, period);
+    const pendingSeconds = await readPendingSeconds(
+      env,
+      subjectHash,
+      period,
+      nowIso
+    );
+    // A fresh install has no row at all, so this is the request that makes the
+    // app show the full 300 minutes. Nothing here creates a row — reading a
+    // balance must never cost the user anything.
     return json(
       {
         success: true,
-        ...usagePayload(usage.periodSeconds, usage.lifetimeSeconds, period),
+        ...usagePayload(
+          usage.periodSeconds,
+          usage.lifetimeSeconds,
+          period,
+          pendingSeconds
+        ),
       },
       200,
       request
@@ -409,6 +549,120 @@ async function handleUsageStatus(request, env) {
       {
         error: "usage_metering_unavailable",
         message: "Usage metering is temporarily unavailable.",
+      },
+      503,
+      request
+    );
+  }
+}
+
+/**
+ * POST /api/usage/commit — charge a reservation now that the entry is saved.
+ *
+ * Called by the app immediately after a journal entry has been persisted. The
+ * body carries only the ticket; the seconds come from the reservation this
+ * Worker wrote, so the client cannot influence the amount.
+ *
+ * Deliberately NOT in PAID_PATHS:
+ *   * it spends nothing, so gating it would be pointless, and
+ *   * the entry whose audio pushed the user over the cap must still be
+ *     chargeable — gating would leave that final recording permanently
+ *     uncharged.
+ *
+ * Unknown/expired/already-redeemed tickets are not an error: the caller may be
+ * retrying, and the outcome it wants (the ticket is not outstanding, here is the
+ * balance) is already true.
+ */
+async function handleUsageCommit(request, env) {
+  if (!env.DB) {
+    console.error("[usage] D1 binding 'DB' is missing — cannot commit");
+    return json(
+      {
+        error: "usage_metering_unavailable",
+        message: "Usage metering is temporarily unavailable.",
+      },
+      503,
+      request
+    );
+  }
+
+  let body = null;
+  try {
+    body = await request.json();
+  } catch {
+    // Handled by the ticket validation below.
+  }
+
+  const ticket = typeof body?.ticket === "string" ? body.ticket.trim() : "";
+  if (!ticket || ticket.length > 100) {
+    return json({ error: "ticket is required" }, 400, request);
+  }
+
+  const subjectHash = await hashSubject(resolveSubject(request));
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const period = currentPeriod(now);
+
+  try {
+    const seconds = await redeemPendingTicket(env, subjectHash, ticket, nowIso);
+
+    if (seconds === null) {
+      const usage = await readUsage(env, subjectHash, period);
+      const pendingSeconds = await readPendingSeconds(
+        env,
+        subjectHash,
+        period,
+        nowIso
+      );
+      return json(
+        {
+          success: true,
+          committed: false,
+          ...usagePayload(
+            usage.periodSeconds,
+            usage.lifetimeSeconds,
+            period,
+            pendingSeconds
+          ),
+        },
+        200,
+        request
+      );
+    }
+
+    // Charged to the period it is committed in, so addUsage's rollover handles
+    // the rare reservation that straddles a month boundary.
+    const updated = await addUsage(env, subjectHash, period, seconds, nowIso);
+    const pendingSeconds = await readPendingSeconds(
+      env,
+      subjectHash,
+      period,
+      nowIso
+    );
+
+    // Cheap piggy-backed cleanup; failures here are logged, not surfaced.
+    await purgeExpiredPending(env, nowIso);
+
+    return json(
+      {
+        success: true,
+        committed: true,
+        ...usagePayload(
+          updated.periodSeconds,
+          updated.lifetimeSeconds,
+          period,
+          pendingSeconds
+        ),
+      },
+      200,
+      request
+    );
+  } catch (err) {
+    console.error("[usage] commit failed:", err && err.message);
+    return json(
+      {
+        error: "usage_commit_failed",
+        message: "Could not record usage for that entry.",
       },
       503,
       request
@@ -467,35 +721,58 @@ async function handleTranscribe(request, env, gate) {
   const confidence = alt?.confidence || 0;
   const duration = data?.metadata?.duration || 0;
 
-  // ── Meter the audio we just paid for ──────────────────────────────────────
+  // ── Reserve the audio we just processed ───────────────────────────────────
   // `duration` is Deepgram's own measurement of the decoded audio, so it cannot
-  // be understated by a modified client. Clamped so one malformed response
-  // can't corrupt the balance.
+  // be understated by a modified client. Clamped so one malformed response can't
+  // corrupt the balance.
   const billableSeconds = Math.min(
     Math.max(Number(duration) || 0, 0),
     MAX_AUDIO_SECONDS
   );
 
-  let usage = null;
-  try {
-    const updated = await addUsage(
-      env,
-      gate.subjectHash,
-      gate.period,
-      billableSeconds,
-      new Date().toISOString()
-    );
-    usage = usagePayload(updated.periodSeconds, updated.lifetimeSeconds, gate.period);
-  } catch (err) {
-    // The spend already happened; don't fail the user's request over a write
-    // blip. This under-counts, so it's logged loudly for reconciliation.
-    console.error(
-      "[usage] FAILED to record " + billableSeconds + "s:",
-      err && err.message
-    );
+  // Nothing was said, so there is nothing the user can save — the app reports
+  // "No speech detected" and drops the recording. Reserving here would bill the
+  // user for a recording that cannot become an entry, so skip it entirely.
+  const canBecomeEntry = transcript.trim().length > 0 && billableSeconds > 0;
+
+  let usageTicket = null;
+  let pendingSeconds = gate.pendingSeconds || 0;
+  if (canBecomeEntry) {
+    try {
+      usageTicket = await reserveUsage(
+        env,
+        gate.subjectHash,
+        gate.period,
+        billableSeconds,
+        new Date()
+      );
+      pendingSeconds += billableSeconds;
+    } catch (err) {
+      // Don't fail the user's request over a metering write blip — their words
+      // matter more than the counter. This under-counts, so log it loudly for
+      // reconciliation.
+      console.error(
+        "[usage] FAILED to reserve " + billableSeconds + "s:",
+        err && err.message
+      );
+    }
   }
 
-  return json({ success: true, transcript, confidence, duration, usage }, 200, request);
+  // The balance reported here still reflects committed (saved) minutes only, so
+  // the app's display does not move until POST /api/usage/commit redeems the
+  // ticket above.
+  const usage = usagePayload(
+    gate.usage.periodSeconds,
+    gate.usage.lifetimeSeconds,
+    gate.period,
+    pendingSeconds
+  );
+
+  return json(
+    { success: true, transcript, confidence, duration, usage, usageTicket },
+    200,
+    request
+  );
 }
 
 async function handleAnalyze(request, env) {
@@ -769,11 +1046,20 @@ export default {
       return json({ error: "Not found" }, 404, request);
     }
 
+    // ── Usage commit ────────────────────────────────────────────────────────
+    // Redeems a /api/transcribe reservation once the app has saved the entry.
+    // Handled before the cap gate below because it spends nothing, and because
+    // the recording that took the user over the limit must still be chargeable.
+    if (path === "/api/usage/commit") {
+      return await handleUsageCommit(request, env);
+    }
+
     // ── Monthly cap ─────────────────────────────────────────────────────────
     // Every endpoint below spends money (Deepgram audio or OpenRouter tokens),
     // so all of them are gated on the caller's remaining allowance. Only
-    // /api/transcribe adds to the balance — the audio duration is the billed
-    // unit — but once the cap is hit, nothing paid is served.
+    // /api/transcribe reserves against the balance — the audio duration is the
+    // billed unit, charged on save — but once the cap is hit, nothing paid is
+    // served.
     if (PAID_PATHS.has(path)) {
       const gate = await checkUsageAllowed(request, env);
       if (gate.response) return gate.response;

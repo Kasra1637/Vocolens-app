@@ -25,7 +25,8 @@ distinction isn't rediscovered from scratch each time.
 | GET | `/`, `/health` | none | liveness |
 | GET | `/api/journal/status` | none | reports whether the OpenRouter key is configured |
 | GET | `/api/usage/status` | `X-Api-Key` | authoritative monthly balance |
-| POST | `/api/transcribe` | `X-Api-Key` | Deepgram `nova-2` STT — **meters usage** |
+| POST | `/api/usage/commit` | `X-Api-Key` | redeems a reservation once an entry is saved — **charges usage** |
+| POST | `/api/transcribe` | `X-Api-Key` | Deepgram `nova-2` STT — **reserves usage** |
 | POST | `/api/analyze`, `/api/journal/analyze` | `X-Api-Key` | emotion analysis |
 | POST | `/api/recommend`, `/api/journal/recommendation` | `X-Api-Key` | advice generation |
 | POST | `/api/journal/weekly-reflection` | `X-Api-Key` | weekly digest |
@@ -90,28 +91,86 @@ wrangler d1 execute vocolens-usage --remote --file=./schema.sql
 | Concern | Implementation |
 |---|---|
 | **What is billed** | `metadata.duration` from Deepgram's response — the actual decoded audio length, measured server-side inside `handleTranscribe`. |
-| **Why not the client's number** | A modified client would report `0`. The app no longer sends a duration at all, and there is deliberately **no** `POST /api/usage/record` endpoint. |
+| **When it is billed** | Only when the recording becomes a **saved journal entry**. See [Charged on save](#charged-on-save-not-on-transcribe) below. |
+| **Why not the client's number** | A modified client would report `0`. The app never sends a duration — it only redeems an opaque ticket, so it can say *whether* a recording was saved, never *how long* it was. |
 | **Where it's checked** | `checkUsageAllowed()`, invoked from the router for every path in `PAID_PATHS`. The check runs **before** the upstream call, so a capped user costs nothing. |
-| **What's blocked at the cap** | All seven paid endpoints (transcribe + every OpenRouter route), with `402` and `{"error":"monthly_limit_reached"}`. Only `/api/transcribe` *adds* to the balance. |
-| **Storage** | D1 (`DB` binding), table `usage`. See `schema.sql` for why D1 rather than KV. |
+| **What's blocked at the cap** | All seven paid endpoints (transcribe + every OpenRouter route), with `402` and `{"error":"monthly_limit_reached"}`. `/api/usage/commit` is **not** gated: it spends nothing, and the entry that took the user over the cap must still be chargeable. |
+| **Storage** | D1 (`DB` binding), tables `usage` (charged) and `usage_pending` (reserved). See `schema.sql`. |
 | **Monthly reset** | Derived, not scheduled. Each row stores the `period` (`YYYY-MM`, UTC) its counter belongs to; a request in a new period resets `period_seconds` as part of the same atomic `UPDATE`. No cron job that can fail. |
-| **Concurrency** | Increment and rollover happen in a single `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`, so simultaneous requests cannot lose each other's writes. |
-| **Privacy** | Only a SHA-256 `subject_hash` is stored, never a raw device id. |
-| **Survives reinstall / cleared data** | Yes. State lives in D1, keyed on a platform identity that sits outside app storage (Android SSAID / iOS IDFV). The app pulls the real balance on launch and on foreground, so wiping local storage changes nothing. |
+| **Concurrency** | Increment and rollover happen in a single `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`, so simultaneous requests cannot lose each other's writes. Commit claims its reservation with `DELETE ... RETURNING`, so a replayed or concurrent commit cannot double-charge. |
+| **Privacy** | Only a SHA-256 `subject_hash` is stored, never a raw install id. |
+| **Survives reinstall / cleared data** | **No, deliberately.** The subject is a per-install UUID in AsyncStorage, so a fresh install starts from a full 300 minutes. See [Identity](#identity-per-install-not-per-handset). |
 
 `GET /api/usage/status` (requires `X-Api-Key`) returns the authoritative
-balance, including `resetsAt`, and is what the app renders.
+balance, including `resetsAt`, and is what the app renders. It is read-only —
+opening the app can never consume allowance.
+
+### Charged on save, not on transcribe
+
+Transcribing and saving are separate steps, and a transcript can be produced and
+then never become an entry: the transcript comes back empty ("no speech
+detected"), the user backs out of the reflection screen, emotion analysis fails,
+or a transport error makes the app re-upload the same audio. Charging inside
+`/api/transcribe` meant each of those permanently spent ~1 minute of allowance
+(the UI nudges toward recordings of ≥50 s) — so a brand-new install that had
+never saved an entry could already report **297 of 300 minutes remaining**.
+
+So the charge is two-phase:
+
+1. `POST /api/transcribe` writes the Deepgram-measured duration to
+   `usage_pending` and returns `usageTicket`. `usage.period_seconds` is untouched,
+   so the balance the app displays does not move. A silent recording gets **no**
+   ticket, since it cannot become an entry.
+2. `POST /api/usage/commit` with `{ "ticket": "..." }` redeems that reservation
+   once the app has persisted the entry, moving the seconds into `usage`.
+
+Properties worth knowing:
+
+* **Reservations expire** after `PENDING_TTL_SECONDS` (2 h) and are purged, so an
+  abandoned recording eventually costs nothing.
+* **Live reservations still count toward the cap.** `monthlyMinutesUsed` (what the
+  user sees) counts charged minutes only, while `isAtLimit` counts charged +
+  reserved. That keeps "never commit" from becoming unlimited free transcription,
+  at the cost of the two figures diverging briefly. `pendingMinutes` is returned
+  for support/debugging.
+* **Unknown, expired, or already-redeemed tickets are not errors.** Commit returns
+  `200` with `committed: false` and the current balance, so the app can retry
+  safely.
+* **A failed commit under-counts, in the user's favour.** That is the intended
+  direction to fail: an entry the user has already saved must never break because
+  a counter could not be updated.
+
+### Identity: per-install, not per-handset
+
+The subject was previously derived from Android SSAID / iOS IDFV precisely
+*because* those survive uninstall and "clear app data". That made the allowance
+unresettable, but it also meant a genuinely fresh install inherited every minute
+ever charged against that handset — a phone that had the app installed, used, and
+removed showed the next install a partly-spent allowance it could not explain.
+
+`src/lib/device-id.ts` now uses a random UUID in AsyncStorage, which lives in the
+app sandbox and is removed with the app. SecureStore is avoided on purpose: iOS
+Keychain items can outlive the app that wrote them, which would reintroduce the
+same inheritance.
+
+The trade-off is explicit — reinstalling grants a fresh allowance. The cap is cost
+control, not DRM, and penalising every new owner of a second-hand phone to
+inconvenience a determined reinstaller is the wrong trade. The real fix is a
+server-side account or verified subscription id as the subject, which the opaque
+`subject_hash` already allows without a migration.
 
 ### Residual gaps — please read
 
 These are **not** fixed by this change and need product decisions:
 
-1. **Cross-device is not enforced.** There is no server-side account: auth is a
+1. **Cross-install is not enforced.** There is no server-side account: auth is a
    local PIN/biometric, and Adapty is in mock mode with `identifyUser()` never
-   called. Metering is therefore per-device, and a user with a second phone gets
-   a second allowance. The schema stores an opaque `subject_hash` specifically so
-   the subject can be switched from a device id to an account/subscription id
-   later with no migration — that swap is the real fix.
+   called. Metering is therefore per-install, so a user with a second phone — or
+   one who reinstalls — gets a second allowance. This is now a deliberate,
+   documented trade rather than an accident (see
+   [Identity](#identity-per-install-not-per-handset)). The schema stores an opaque
+   `subject_hash` specifically so the subject can be switched to an
+   account/subscription id later with no migration — that swap is the real fix.
 
 2. **The web build bypasses metering entirely.**
    `src/lib/services/deepgram-realtime-service.ts` opens a WebSocket **straight
@@ -122,26 +181,41 @@ These are **not** fixed by this change and need product decisions:
    web build as uncapped.
 
 3. **`X-Device-Id` is client-supplied and `X-Api-Key` is a single shared secret**
-   baked into the bundle. A determined user can rotate device ids to mint fresh
+   baked into the bundle. A determined user can rotate install ids to mint fresh
    allowances. Meaningful hardening requires per-user credentials (see #1);
    short of that, the IP fallback in `resolveSubject()` limits casual abuse.
+
+   Note the IP fallback is a *shared* bucket: every caller that sends no or a
+   malformed `X-Device-Id` from the same address is metered together. The app
+   always sends a valid id (it generates one locally even if storage fails), so
+   this should not be reached in practice — but a client that stops sending the
+   header would see minutes it did not spend, pooled from others behind the same
+   NAT.
 
 4. **Overshoot is bounded, not eliminated.** The true audio length is only known
    after Deepgram responds, so a session that starts under the cap may finish
    over it. `MAX_AUDIO_SECONDS` (30 min) bounds the worst case per request.
 
+5. **Uncommitted reservations count against the cap for up to 2 h.** A user who
+   transcribes repeatedly without saving can be refused before the displayed
+   figure reaches 300. This is the deliberate cost-control side of the two-phase
+   charge; shortening `PENDING_TTL_SECONDS` narrows the window but leaves less
+   slack for a slow reflection flow.
+
 ## Consolidation plan
 
 Target end state: `worker.js` is the only backend, and the Hono app is deleted.
 
-1. Create a KV namespace (or D1 table) for usage and add the binding to
-   `wrangler.toml`.
-2. Port `/api/usage/record` and `/api/usage/status` from `src/routes/usage.ts`
-   into `worker.js`, backed by that store. Keep `USAGE_LIMIT_MINUTES = 300`.
-   Prefer a UTC month key (`YYYY-MM`) for the rollover, matching the existing
-   client logic.
-3. Verify against the deployed Worker that both endpoints return 200 and that
-   the client stops logging `[UsageService] Backend record failed: 404`.
+1. ~~Create a KV namespace (or D1 table) for usage and add the binding to
+   `wrangler.toml`.~~ **Done** — D1 `vocolens-usage`, bound as `DB`.
+2. ~~Port `/api/usage/record` and `/api/usage/status` from `src/routes/usage.ts`
+   into `worker.js`.~~ **Done differently, on purpose.** `worker.js` owns
+   `/api/usage/status`, and there is deliberately **no** `/api/usage/record`:
+   accepting a client-reported duration would let a modified client report `0`.
+   Usage is measured from Deepgram's own `metadata.duration` and charged via
+   `/api/usage/commit`. Do not resurrect `/record`. `USAGE_LIMIT_MINUTES = 300`
+   and the UTC `YYYY-MM` rollover are as specified.
+3. ~~Verify both endpoints return 200.~~ **Done.**
 4. Port anything else still wanted from the Hono app — most notably
    `analyzeTranscriptWithRetry`'s 3-attempt retry and the `audioBase64`
    multimodal path, neither of which `worker.js` has. Note that the Hono

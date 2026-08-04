@@ -10,11 +10,17 @@ export const USAGE_LIMIT_MINUTES = 300;
  * Local mirror of the usage allowance — for DISPLAY ONLY.
  *
  * The 300-minute monthly cap is enforced by the backend (see
- * backend/src/worker.js), which meters the real audio duration Deepgram
- * measured. This copy exists so the UI can render a progress bar without a
+ * backend/src/worker.js), which measures the real audio duration Deepgram
+ * reported. This copy exists so the UI can render a progress bar without a
  * round-trip; it is refreshed from GET /api/usage/status via
  * `setUsageFromServer`. Never treat it as authoritative — it lives in
  * AsyncStorage and can be edited or wiped by the user.
+ *
+ * What the mirrored figure counts: minutes the server has CHARGED, i.e. audio
+ * that became a saved journal entry. Recordings that were transcribed and then
+ * abandoned are held as server-side reservations and expire without ever being
+ * charged, which is why a fresh install with no entries correctly shows the full
+ * 300 minutes.
  */
 interface UsageStats {
   totalMinutesUsed: number;      // lifetime total
@@ -31,7 +37,6 @@ interface UserStatsStore {
   // Actions
   incrementEntries: () => void;
   addDuration: (seconds: number) => void;
-  addUsageSeconds: (seconds: number) => void;
   setUsageFromServer: (usage: {
     monthlyMinutesUsed: number;
     totalMinutesUsed?: number;
@@ -63,6 +68,31 @@ function getCurrentMonth(): string {
   return new Date().toISOString().slice(0, 7); // "YYYY-MM"
 }
 
+/**
+ * Whole-minute figures for the UI, derived from one another so that "X used" and
+ * "Y left" always add up to the limit.
+ *
+ * Each screen used to floor `used` and `remaining` independently. Because the
+ * server reports fractional minutes, that made the two disagree: 0.4 minutes of
+ * real usage rendered as "0 / 300 min used" *and* "299 min remaining", so the
+ * home screen appeared to withhold a minute the settings screen said was
+ * unspent. Flooring once and subtracting removes the contradiction, and never
+ * overstates what the user has spent.
+ */
+export function usageDisplayMinutes(usedMinutes: number): {
+  used: number;
+  remaining: number;
+} {
+  const clamped = Math.min(Math.max(usedMinutes, 0), USAGE_LIMIT_MINUTES);
+  const used = Math.floor(clamped);
+  return {
+    used,
+    // Only ever 0 when the allowance is genuinely exhausted — flooring `used`
+    // must not make a user with seconds left believe they have none.
+    remaining: clamped >= USAGE_LIMIT_MINUTES ? 0 : USAGE_LIMIT_MINUTES - used,
+  };
+}
+
 const useUserStatsStore = create<UserStatsStore>()(
   persist(
     (set, get) => ({
@@ -89,24 +119,14 @@ const useUserStatsStore = create<UserStatsStore>()(
         }));
       },
 
-      addUsageSeconds: (seconds) => {
-        const minutes = seconds / 60;
-        const currentMonth = getCurrentMonth();
-        set((state) => {
-          const prevUsage = state.usage ?? DEFAULT_USAGE;
-          // Reset monthly counter if we have crossed into a new calendar month
-          const isNewMonth = prevUsage.lastResetMonth !== currentMonth;
-          const prevMonthly = isNewMonth ? 0 : prevUsage.monthlyMinutesUsed;
-          return {
-            usage: {
-              totalMinutesUsed: prevUsage.totalMinutesUsed + minutes,
-              monthlyMinutesUsed: prevMonthly + minutes,
-              lastResetMonth: currentMonth,
-            },
-            lastUpdated: new Date().toISOString(),
-          };
-        });
-      },
+      // NOTE: there is deliberately no `addUsageSeconds` here.
+      //
+      // A client-side incrementer existed for a while with no callers, left over
+      // from when the app metered its own usage. Wiring it back up would double
+      // count against the server's meter and, worse, would charge minutes at
+      // recording time — the exact behaviour that made a user who had saved
+      // nothing appear to have spent minutes. Usage only ever arrives here from
+      // the server, via `setUsageFromServer`.
 
       /**
        * Overwrites the local usage mirror with the server's authoritative

@@ -141,10 +141,14 @@ export default function RootLayout() {
   }, []);
 
   // ── Usage allowance: reconcile with the server ─────────────────────────────
-  // The 300-minute monthly cap is owned by the backend. Pulling the real
-  // balance on launch (and whenever the app is foregrounded) means a fresh
-  // install, a device with cleared app data, or locally edited storage all
-  // converge on the server's figure instead of starting from zero.
+  // The 300-minute monthly cap is owned by the backend, so the real balance is
+  // pulled on launch and whenever the app is foregrounded — that way locally
+  // edited storage, a new billing period, or minutes spent between sessions all
+  // converge on the server's figure.
+  //
+  // A fresh install has no server-side record yet, so this returns 0 used / 300
+  // remaining. It only ever reads; nothing about opening the app can consume the
+  // allowance.
   useEffect(() => {
     syncUsageFromBackend().catch(() => {});
 

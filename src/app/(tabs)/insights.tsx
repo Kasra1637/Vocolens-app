@@ -72,10 +72,9 @@ import useJournalStore, {
   getStartOfWeek,
 } from "@/lib/state/journal-store";
 import { calculateAverageMood } from "@/lib/analytics";
-import useUserStatsStore from "@/lib/state/user-stats-store";
-import {
+import useUserStatsStore, {
   useUsageMinutes,
-  useRemainingMinutes,
+  usageDisplayMinutes,
   USAGE_LIMIT_MINUTES,
 } from "@/lib/state/user-stats-store";
 import useBadgesStore from "@/lib/state/badges-store";
@@ -719,7 +718,6 @@ function InsightsContent({
   const entries = useJournalStore((s) => s.entries);
   const stats = useUserStatsStore((s) => s.stats);
   const usageMinutes = useUsageMinutes();
-  const remainingMinutes = useRemainingMinutes();
   const getAllBadges = useBadgesStore((s) => s.getAllBadges);
 
   // Get mood trend data using React Query
@@ -964,7 +962,6 @@ function InsightsContent({
     streak: stats.currentStreak,
     nextBadge,
     usageMinutes,
-    remainingMinutes,
   };
 
   const handleSharePDF = () => {
@@ -1434,8 +1431,8 @@ interface WelcomeSectionProps {
       name: string;
       progress: number;
     };
+    /** Minutes charged this month — saved entries only. */
     usageMinutes: number;
-    remainingMinutes: number;
   };
   totalEntries: number;
 }
@@ -1448,6 +1445,11 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   const usagePct = Math.min(1, user.usageMinutes / USAGE_LIMIT_MINUTES);
   const isNearLimit = usagePct >= 0.8 && usagePct < 1;
   const isAtLimit = usagePct >= 1;
+  // Derived from the same used-minutes figure as every other screen, so the
+  // "min remaining" copy here always agrees with the home and settings screens.
+  const { remaining: remainingMinutesDisplay } = usageDisplayMinutes(
+    user.usageMinutes,
+  );
   const greeting = React.useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return `Good morning, ${user.name}!`;
@@ -1716,7 +1718,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
               >
                 {isAtLimit
                   ? "Limit reached · Resets next month"
-                  : `${Math.floor(user.remainingMinutes)} min remaining this month`}
+                  : `${remainingMinutesDisplay} min remaining this month`}
               </Text>
             </View>
           </View>

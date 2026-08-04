@@ -1,44 +1,64 @@
 /**
- * Stable install identity, used as the subject for server-side usage metering.
+ * Install identity, used as the subject for server-side usage metering.
  *
- * The 300-minute monthly cap is enforced in the Worker and keyed on this value,
- * so it needs to be as durable as the platform allows:
+ * The 300-minute monthly allowance is keyed on this value, so what this file
+ * chooses decides who inherits whose minutes.
  *
- *   Android — `Application.getAndroidId()` (SSAID). Scoped to the app signing
- *     key + user, and crucially it lives OUTSIDE app storage, so it survives
- *     both "clear app data" and a reinstall. Only a factory reset changes it.
+ * ── Why this is install-scoped, not device-scoped ────────────────────────────
  *
- *   iOS — `Application.getIosIdForVendorAsync()` (IDFV). Stable for the vendor
- *     and survives a reinstall as long as at least one app from the same vendor
- *     remains installed; otherwise it is regenerated.
+ * This used to prefer hardware-derived identifiers — Android SSAID
+ * (`Application.getAndroidId()`) and iOS IDFV — precisely *because* they survive
+ * uninstalling the app, clearing app data, and reinstalling. That made the
+ * allowance impossible to reset by reinstalling, but it also meant a genuinely
+ * fresh install inherited every minute ever metered against that handset. A
+ * phone that had the app installed, used, and removed showed the next install
+ * something like 297 of 300 minutes remaining, with no entries and no way for
+ * the user to explain or clear it.
  *
- *   Fallback — a random UUID persisted in SecureStore (iOS Keychain / Android
- *     Keystore-backed), which also survives "clear app data" on iOS.
+ * A random UUID in AsyncStorage is used instead: AsyncStorage lives inside the
+ * app's sandbox, so uninstalling the app takes the id with it and the next
+ * install starts from a clean 300 minutes. It is still stable for the life of
+ * the install, which is what metering actually needs.
  *
- * Previously this logic lived inline in usage-service.ts as
- * `Application.getAndroidId?.() ?? ... ?? 'unknown-device'`. `getAndroidId` is
- * Android-only, so on iOS every single install resolved to the *same* literal
- * `'unknown-device'` — meaning all iOS users would have shared one usage
- * counter. That is fixed here.
+ * SecureStore is deliberately NOT used for this. On iOS, Keychain items can
+ * outlive the app that wrote them, which would reintroduce exactly the
+ * inheritance problem above. The legacy Keychain entry is cleared on first run
+ * (see `discardLegacyIdentity`) so no residue is left behind.
  *
- * NOTE ON SCOPE: this is a per-device identity, not a per-person one. A user who
- * switches to a new phone starts a fresh allowance. Closing that gap requires a
- * real server-side account (or a verified subscription id) to meter against;
- * the Worker's schema stores an opaque subject hash precisely so that the
- * subject can be swapped to an account id later without a migration.
+ * ── The trade-off, stated plainly ───────────────────────────────────────────
+ *
+ * Reinstalling now grants a fresh allowance. That is accepted deliberately: the
+ * cap is cost control, not DRM, and punishing every honest new owner of a
+ * second-hand or hand-me-down phone to inconvenience a determined reinstaller is
+ * the wrong trade. Closing that gap properly needs a real server-side account or
+ * a verified subscription id to meter against — the Worker stores an opaque
+ * subject hash precisely so the subject can become an account id later without a
+ * data migration.
  */
 
-import { Platform } from 'react-native';
-import * as Application from 'expo-application';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
+import * as SecureStore from 'expo-secure-store';
 
-const FALLBACK_KEY = 'vocolens_install_id';
+const INSTALL_ID_KEY = 'vocolens_install_id';
+
+/**
+ * Where the pre-install-scoped fallback id was kept. Only read to delete it —
+ * see the SecureStore note in the file header.
+ */
+const LEGACY_SECURE_STORE_KEY = 'vocolens_install_id';
 
 /** Server-side validation requires >= 8 chars from [A-Za-z0-9._:-]. */
 const VALID_ID = /^[A-Za-z0-9._:-]{8,200}$/;
 
 let cached: string | null = null;
+/**
+ * Shared in-flight resolution. `getDeviceId` is called from `apiFetch`, so
+ * several requests can race on the very first launch; without this each would
+ * generate its own UUID and the last write would win, splitting one install's
+ * usage across several subjects.
+ */
+let inFlight: Promise<string> | null = null;
 
 function isUsable(value: unknown): value is string {
   return (
@@ -49,56 +69,85 @@ function isUsable(value: unknown): value is string {
   );
 }
 
-/** Reads, or lazily creates, the persisted fallback UUID. */
-async function getOrCreateFallbackId(): Promise<string> {
+/**
+ * Removes the id the previous implementation kept in SecureStore.
+ *
+ * On iOS that entry can survive the app being deleted, so leaving it in place
+ * would let a future reader resurrect a previous install's metering subject.
+ * Best-effort and non-fatal — it is cleanup, not a dependency.
+ */
+async function discardLegacyIdentity(): Promise<void> {
   try {
-    const existing = await SecureStore.getItemAsync(FALLBACK_KEY);
+    await SecureStore.deleteItemAsync(LEGACY_SECURE_STORE_KEY);
+  } catch {
+    // SecureStore unavailable (e.g. web) or nothing stored — nothing to do.
+  }
+}
+
+function generateId(): string {
+  try {
+    const uuid = Crypto.randomUUID();
+    if (isUsable(uuid)) return uuid;
+  } catch {
+    // Native crypto unavailable — fall through to the arithmetic path below.
+  }
+  // Last resort. Only reached if expo-crypto is unavailable; still unique enough
+  // to keep this install's usage separate from other installs.
+  return (
+    'inst-' +
+    Date.now().toString(36) +
+    '-' +
+    Math.random().toString(36).slice(2, 12)
+  );
+}
+
+/** Reads, or lazily creates, the persisted install id. */
+async function loadOrCreateInstallId(): Promise<string> {
+  try {
+    const existing = await AsyncStorage.getItem(INSTALL_ID_KEY);
     if (isUsable(existing)) return existing;
   } catch {
-    // SecureStore unavailable (e.g. web) — fall through and generate.
+    // Storage unreadable — fall through and generate a session-only id.
   }
 
-  const generated = Crypto.randomUUID();
+  const generated = generateId();
   try {
-    await SecureStore.setItemAsync(FALLBACK_KEY, generated);
+    await AsyncStorage.setItem(INSTALL_ID_KEY, generated);
   } catch {
-    // Non-fatal: we still return a usable id for this session. It won't be
-    // stable across restarts, which the server tolerates (it falls back to
-    // metering by IP for ids it can't trust).
+    // Non-fatal: the id still works for this session. It won't survive a
+    // restart, which the server tolerates — an unrecognised subject simply
+    // starts with a full allowance rather than being denied.
   }
+
+  // A newly minted id means this is a first run (or storage was cleared), which
+  // is the right moment to drop the old SecureStore entry.
+  discardLegacyIdentity().catch(() => {});
+
   return generated;
 }
 
 /**
- * Resolves the device id used as the `X-Device-Id` header.
- * Cached after the first successful resolution.
+ * Resolves the id sent as the `X-Device-Id` header, creating and persisting one
+ * on first use. Cached for the lifetime of the process.
  */
 export async function getDeviceId(): Promise<string> {
   if (cached) return cached;
+  if (inFlight) return inFlight;
 
-  try {
-    if (Platform.OS === 'android') {
-      const androidId = Application.getAndroidId?.();
-      if (isUsable(androidId)) {
-        cached = androidId;
-        return cached;
-      }
-    } else if (Platform.OS === 'ios') {
-      const idfv = await Application.getIosIdForVendorAsync?.();
-      if (isUsable(idfv)) {
-        cached = idfv;
-        return cached;
-      }
-    }
-  } catch {
-    // Native module threw — use the persisted fallback below.
-  }
+  inFlight = loadOrCreateInstallId()
+    .then((id) => {
+      cached = id;
+      return id;
+    })
+    .finally(() => {
+      inFlight = null;
+    });
 
-  cached = await getOrCreateFallbackId();
-  return cached;
+  return inFlight;
 }
 
 /** Test seam / used when the persisted id is intentionally rotated. */
 export function resetDeviceIdCache(): void {
   cached = null;
+  inFlight = null;
 }
