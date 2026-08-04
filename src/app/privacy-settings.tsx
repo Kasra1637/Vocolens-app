@@ -1,15 +1,32 @@
 /**
- * Privacy Settings Screen
+ * Privacy Settings Screen — "Manage Your Data"
  *
  * Allows users to:
  * - Export their journal data
  * - Delete all entries
  * - Delete their account
- * - Change PIN
+ *
+ * Design: rebuilt to match the app-wide glassmorphic card system used on the
+ * Settings tab (surfaceBg/borderColor glass cards, circular duotone icon chips
+ * with a diagonal highlight gradient, phosphor-react-native icons) instead of
+ * the older lucide + tinted-primary-color look this screen used to have.
+ *
+ * PIN gate: Delete All Entries and Delete Account are gated behind the same
+ * full-screen PinEntryScreen ("Enter Your PIN") used by the Settings tab's
+ * Change PIN flow, so the "enter your PIN" moment looks identical everywhere
+ * in the app — including the create/confirm dot-and-keypad treatment.
  */
 
 import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, Alert, Modal } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Alert,
+  Modal,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,12 +44,7 @@ import * as Sharing from "expo-sharing";
 // broke the data export entirely. Every other FileSystem consumer in the app
 // also imports from /legacy — keep them consistent.
 import * as FileSystem from "expo-file-system/legacy";
-import {
-  Download,
-  Trash2,
-  ChevronLeft,
-  AlertCircle,
-} from "lucide-react-native";
+import { CaretLeft, DownloadSimple, Trash, Warning } from "phosphor-react-native";
 import useJournalStore from "@/lib/state/journal-store";
 import useUserStatsStore from "@/lib/state/user-stats-store";
 import useBadgesStore from "@/lib/state/badges-store";
@@ -41,11 +53,16 @@ import { deleteAllAudioFiles } from "@/lib/journal-service";
 import { useAuthStore } from "@/lib/state/auth-store";
 import { removePin } from "@/lib/auth-service";
 import { clearAICache } from "@/lib/ai-emotional-intelligence";
-import { PinEntryModal } from "@/components/PinEntryModal";
+import { PinEntryScreen } from "@/components/PinEntryScreen";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
-import { getThemeColors, getThemeGradients, BorderRadius } from "@/lib/theme";
-import { hexToRgba } from "@/lib/glass";
+import { getThemeColors, getThemeGradients } from "@/lib/theme";
+
+// ── Shared glass tokens — exact match to the Settings tab's card system ──────
+const surfaceBg = "rgba(255, 255, 255, 0.14)";
+const borderColor = "rgba(255, 255, 255, 0.25)";
+const destructiveBorderColor = "rgba(239, 68, 68, 0.35)";
 
 export default function PrivacySettingsScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
@@ -114,11 +131,13 @@ export default function PrivacySettingsScreen() {
   };
 
   const handleDeleteEntries = () => {
+    tapHaptic();
     setDeleteAction("entries");
     setShowPinVerify(true);
   };
 
   const handleDeleteAccount = () => {
+    tapHaptic();
     setDeleteAction("account");
     setShowPinVerify(true);
   };
@@ -184,49 +203,67 @@ export default function PrivacySettingsScreen() {
       />
 
       <SafeAreaView edges={["top"]} className="flex-1">
-        {/* Header */}
-        <View className="px-6 pt-2 pb-4">
-          <View
-            className="flex-row items-center justify-center"
-            style={{ minHeight: 44 }}
+        {/* Header — small glass back button + centered title, matching the
+            rest of the app's secondary screens (e.g. My Feedback History). */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingTop: 14,
+            paddingBottom: 14,
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(255, 255, 255, 0.12)",
+          }}
+        >
+          <Pressable
+            onPress={() => {
+              tapHaptic();
+              router.back();
+            }}
+            className="active:opacity-70"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              borderWidth: 2,
+              borderColor: "rgba(255, 255, 255, 0.20)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <Pressable
-              onPress={() => {
-                tapHaptic();
-                router.back();
+            <CaretLeft size={20} color="#FFFFFF" weight="bold" />
+          </Pressable>
+
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text
+              style={{
+                fontFamily: "Fraunces_700Bold",
+                fontSize: 18,
+                color: "#FFFFFF",
               }}
-              className="absolute left-0 active:opacity-60"
-              style={{ padding: 4 }}
             >
-              <ChevronLeft size={28} color="#FFFFFF" />
-            </Pressable>
-            <View className="items-center">
-              <Text
-                style={{
-                  fontFamily: "Fraunces_700Bold",
-                  fontSize: 22,
-                  color: "#FFFFFF",
-                }}
-              >
-                Privacy & Security
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.7)",
-                  marginTop: 2,
-                }}
-              >
-                Manage your data
-              </Text>
-            </View>
+              Privacy & Security
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 12,
+                color: "rgba(255,255,255,0.55)",
+                marginTop: 2,
+              }}
+            >
+              Manage your data
+            </Text>
           </View>
+
+          <View style={{ width: 36 }} />
         </View>
 
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Export Data */}
@@ -235,67 +272,78 @@ export default function PrivacySettingsScreen() {
             className="mb-4"
           >
             <View
+              className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: hexToRgba(themeColors.primary, 0.1),
-                borderWidth: 1,
-                borderColor: hexToRgba(themeColors.primary, 0.15),
-                borderRadius: BorderRadius.xlarge,
+                backgroundColor: surfaceBg,
+                borderWidth: 2,
+                borderColor: borderColor,
               }}
             >
-              <View className="p-5">
-                <View className="flex-row items-center mb-3">
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: BorderRadius.medium,
-                      backgroundColor: hexToRgba(themeColors.primary, 0.15),
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 12,
-                    }}
-                  >
-                    <Download size={20} color="#FFFFFF" strokeWidth={2} />
-                  </View>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_700Bold",
-                      fontSize: 17,
-                      color: "#FFFFFF",
-                      flex: 1,
-                    }}
-                  >
-                    Export Your Data
-                  </Text>
+              {/* Section header */}
+              <View
+                className="flex-row items-center px-5 pt-5 pb-4"
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "rgba(255, 255, 255, 0.12)",
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    overflow: "hidden",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                  className="mr-3"
+                >
+                  <LinearGradient
+                    colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+                  />
+                  <DownloadSimple size={24} color="#FFFFFF" weight="duotone" />
                 </View>
+                <Text
+                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
+                >
+                  Export Your Data
+                </Text>
+              </View>
+
+              <View className="p-5">
                 <Text
                   style={{
                     fontFamily: "Inter_400Regular",
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.75)",
-                    lineHeight: 22,
-                    marginBottom: 16,
+                    fontSize: 14,
+                    color: "rgba(255,255,255,0.7)",
+                    lineHeight: 21,
+                    marginBottom: 18,
                   }}
                 >
                   Download all your journal entries, statistics, and
                   achievements as a JSON file.
                 </Text>
                 <Pressable
+                  data-testid="export-data-button"
                   onPress={handleExportData}
                   className="active:opacity-70"
                   style={{
-                    backgroundColor: hexToRgba(themeColors.primary, 0.2),
-                    borderWidth: 1,
-                    borderColor: hexToRgba(themeColors.primary, 0.25),
-                    borderRadius: BorderRadius.medium,
-                    paddingVertical: 12,
+                    backgroundColor: "rgba(255, 255, 255, 0.18)",
+                    borderWidth: 1.5,
+                    borderColor: "rgba(255, 255, 255, 0.35)",
+                    borderRadius: 999,
+                    paddingVertical: 14,
                     alignItems: "center",
                   }}
                 >
                   <Text
                     style={{
                       fontFamily: "Inter_600SemiBold",
-                      fontSize: 14,
+                      fontSize: 15,
                       color: "#FFFFFF",
                     }}
                   >
@@ -312,72 +360,100 @@ export default function PrivacySettingsScreen() {
             className="mb-4"
           >
             <View
+              className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: hexToRgba(themeColors.primary, 0.1),
-                borderWidth: 1,
-                borderColor: hexToRgba(themeColors.primary, 0.15),
-                borderRadius: BorderRadius.xlarge,
+                backgroundColor: surfaceBg,
+                borderWidth: 2,
+                borderColor: destructiveBorderColor,
               }}
             >
-              <View className="p-5">
-                <View className="flex-row items-center mb-3">
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: BorderRadius.medium,
-                      backgroundColor: hexToRgba(themeColors.primary, 0.15),
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 12,
-                    }}
-                  >
-                    <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
-                  </View>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_700Bold",
-                      fontSize: 17,
-                      color: "#FFFFFF",
-                      flex: 1,
-                    }}
-                  >
-                    Delete All Entries
-                  </Text>
+              {/* Section header */}
+              <View
+                className="flex-row items-center px-5 pt-5 pb-4"
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "rgba(255, 255, 255, 0.12)",
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    overflow: "hidden",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                  className="mr-3"
+                >
+                  <LinearGradient
+                    colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+                  />
+                  <Trash size={24} color="#FFFFFF" weight="duotone" />
                 </View>
+                <Text
+                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
+                >
+                  Delete All Entries
+                </Text>
+              </View>
+
+              <View className="p-5">
                 <Text
                   style={{
                     fontFamily: "Inter_400Regular",
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.75)",
-                    lineHeight: 22,
-                    marginBottom: 16,
+                    fontSize: 14,
+                    color: "rgba(255,255,255,0.7)",
+                    lineHeight: 21,
+                    marginBottom: 18,
                   }}
                 >
                   Permanently delete all your journal entries and reset your
                   statistics. Your account and PIN will remain active.
                 </Text>
                 <Pressable
+                  data-testid="delete-entries-button"
                   onPress={handleDeleteEntries}
-                  className="active:opacity-70"
+                  className="active:opacity-80"
                   style={{
-                    backgroundColor: hexToRgba(themeColors.primary, 0.2),
-                    borderWidth: 1,
-                    borderColor: hexToRgba(themeColors.primary, 0.25),
-                    borderRadius: BorderRadius.medium,
-                    paddingVertical: 12,
-                    alignItems: "center",
+                    width: "100%",
+                    borderRadius: 50,
+                    borderWidth: 2,
+                    borderColor: "#EF4444",
+                    overflow: "hidden",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 16,
+                    elevation: Platform.OS === "android" ? 0 : 8,
                   }}
+                  android_ripple={{ color: "rgba(255,255,255,0.2)" }}
                 >
-                  <Text
+                  <LinearGradient
+                    colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
                     style={{
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 14,
-                      color: "#FFFFFF",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 16,
                     }}
                   >
-                    Delete All Entries
-                  </Text>
+                    <Text
+                      style={{
+                        color: "#FFFFFF",
+                        fontFamily: "Inter_700Bold",
+                        fontSize: 16,
+                      }}
+                    >
+                      Delete All Entries
+                    </Text>
+                  </LinearGradient>
                 </Pressable>
               </View>
             </View>
@@ -386,46 +462,56 @@ export default function PrivacySettingsScreen() {
           {/* Delete Account */}
           <Animated.View entering={FadeInDown.delay(180).duration(500)}>
             <View
+              className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: hexToRgba(themeColors.primary, 0.1),
-                borderWidth: 1,
-                borderColor: hexToRgba(themeColors.primary, 0.15),
-                borderRadius: BorderRadius.xlarge,
+                backgroundColor: surfaceBg,
+                borderWidth: 2,
+                borderColor: destructiveBorderColor,
               }}
             >
-              <View className="p-5">
-                <View className="flex-row items-center mb-3">
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: BorderRadius.medium,
-                      backgroundColor: hexToRgba(themeColors.primary, 0.15),
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 12,
-                    }}
-                  >
-                    <AlertCircle size={20} color="#FFFFFF" strokeWidth={2} />
-                  </View>
-                  <Text
-                    style={{
-                      fontFamily: "Inter_700Bold",
-                      fontSize: 17,
-                      color: "#FFFFFF",
-                      flex: 1,
-                    }}
-                  >
-                    Delete Account
-                  </Text>
+              {/* Section header */}
+              <View
+                className="flex-row items-center px-5 pt-5 pb-4"
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "rgba(255, 255, 255, 0.12)",
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    overflow: "hidden",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                  className="mr-3"
+                >
+                  <LinearGradient
+                    colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+                  />
+                  <Warning size={24} color="#FFFFFF" weight="duotone" />
                 </View>
+                <Text
+                  style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
+                >
+                  Delete Account
+                </Text>
+              </View>
+
+              <View className="p-5">
                 <Text
                   style={{
                     fontFamily: "Inter_400Regular",
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.75)",
-                    lineHeight: 22,
-                    marginBottom: 16,
+                    fontSize: 14,
+                    color: "rgba(255,255,255,0.7)",
+                    lineHeight: 21,
+                    marginBottom: 18,
                   }}
                 >
                   Permanently delete your account, all entries, statistics,
@@ -433,26 +519,44 @@ export default function PrivacySettingsScreen() {
                   undone.
                 </Text>
                 <Pressable
+                  data-testid="delete-account-button"
                   onPress={handleDeleteAccount}
-                  className="active:opacity-70"
+                  className="active:opacity-80"
                   style={{
-                    backgroundColor: hexToRgba(themeColors.primary, 0.2),
-                    borderWidth: 1,
-                    borderColor: hexToRgba(themeColors.primary, 0.25),
-                    borderRadius: BorderRadius.medium,
-                    paddingVertical: 12,
-                    alignItems: "center",
+                    width: "100%",
+                    borderRadius: 50,
+                    borderWidth: 2,
+                    borderColor: "#EF4444",
+                    overflow: "hidden",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 16,
+                    elevation: Platform.OS === "android" ? 0 : 8,
                   }}
+                  android_ripple={{ color: "rgba(255,255,255,0.2)" }}
                 >
-                  <Text
+                  <LinearGradient
+                    colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
                     style={{
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 14,
-                      color: "#FFFFFF",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 16,
                     }}
                   >
-                    Delete Account
-                  </Text>
+                    <Text
+                      style={{
+                        color: "#FFFFFF",
+                        fontFamily: "Inter_700Bold",
+                        fontSize: 16,
+                      }}
+                    >
+                      Delete Account
+                    </Text>
+                  </LinearGradient>
                 </Pressable>
               </View>
             </View>
@@ -460,203 +564,52 @@ export default function PrivacySettingsScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Delete Entries Confirmation Modal */}
-      <Modal
+      {/* Delete Entries Confirmation — canonical ConfirmDialog, same
+          component/style used for Settings' "Reset all data". Severe because
+          this is genuinely permanent data loss. */}
+      <ConfirmDialog
         visible={showDeleteConfirm}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setShowDeleteConfirm(false)}
-      >
-        <View
-          className="flex-1 items-center justify-center p-6"
-          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-        >
-          <View
-            style={{
-              backgroundColor: themeColors.surface,
-              borderWidth: 1,
-              borderColor: hexToRgba(themeColors.primary, 0.15),
-              borderRadius: BorderRadius.xxlarge,
-              padding: 24,
-              width: "100%",
-              maxWidth: 360,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "Inter_700Bold",
-                fontSize: 20,
-                color: "#FFFFFF",
-                marginBottom: 10,
-              }}
-            >
-              Delete All Entries?
-            </Text>
-            <Text
-              style={{
-                fontFamily: "Inter_400Regular",
-                fontSize: 14,
-                color: "rgba(255,255,255,0.75)",
-                lineHeight: 22,
-                marginBottom: 24,
-              }}
-            >
-              This will permanently delete all your journal entries and reset
-              your statistics. Your account will remain active. This action
-              cannot be undone.
-            </Text>
-            <View style={{ gap: 10 }}>
-              <Pressable
-                onPress={confirmDeleteEntries}
-                className="active:opacity-70"
-                style={{
-                  backgroundColor: "rgba(239,68,68,0.4)",
-                  borderWidth: 1,
-                  borderColor: "rgba(239,68,68,0.6)",
-                  borderRadius: BorderRadius.medium,
-                  paddingVertical: 14,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    fontSize: 15,
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Delete All Entries
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setShowDeleteConfirm(false)}
-                className="active:opacity-70"
-                style={{
-                  backgroundColor: hexToRgba(themeColors.primary, 0.12),
-                  borderWidth: 1,
-                  borderColor: hexToRgba(themeColors.primary, 0.15),
-                  borderRadius: BorderRadius.medium,
-                  paddingVertical: 14,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    fontSize: 15,
-                    color: "rgba(255,255,255,0.85)",
-                  }}
-                >
-                  Cancel
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Delete Account Confirmation Modal */}
-      <Modal
-        visible={showDeleteAccountConfirm}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setShowDeleteAccountConfirm(false)}
-      >
-        <View
-          className="flex-1 items-center justify-center p-6"
-          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-        >
-          <View
-            style={{
-              backgroundColor: themeColors.surface,
-              borderWidth: 1,
-              borderColor: "rgba(239,68,68,0.35)",
-              borderRadius: BorderRadius.xxlarge,
-              padding: 24,
-              width: "100%",
-              maxWidth: 360,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "Inter_700Bold",
-                fontSize: 20,
-                color: "#FCA5A5",
-                marginBottom: 10,
-              }}
-            >
-              Delete Account?
-            </Text>
-            <Text
-              style={{
-                fontFamily: "Inter_400Regular",
-                fontSize: 14,
-                color: "rgba(255,255,255,0.75)",
-                lineHeight: 22,
-                marginBottom: 24,
-              }}
-            >
-              This will permanently delete your account, all entries,
-              statistics, achievements, and security settings. You will need to
-              set up a new PIN to use the app again. This action cannot be
-              undone.
-            </Text>
-            <View style={{ gap: 10 }}>
-              <Pressable
-                onPress={confirmDeleteAccount}
-                className="active:opacity-70"
-                style={{
-                  backgroundColor: "rgba(239,68,68,0.4)",
-                  borderWidth: 1,
-                  borderColor: "rgba(239,68,68,0.6)",
-                  borderRadius: BorderRadius.medium,
-                  paddingVertical: 14,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    fontSize: 15,
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Delete Everything
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setShowDeleteAccountConfirm(false)}
-                className="active:opacity-70"
-                style={{
-                  backgroundColor: hexToRgba(themeColors.primary, 0.12),
-                  borderWidth: 1,
-                  borderColor: hexToRgba(themeColors.primary, 0.15),
-                  borderRadius: BorderRadius.medium,
-                  paddingVertical: 14,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    fontSize: 15,
-                    color: "rgba(255,255,255,0.85)",
-                  }}
-                >
-                  Cancel
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* PIN Verification Modal */}
-      <PinEntryModal
-        visible={showPinVerify}
-        onSuccess={handlePinVerified}
-        onDismiss={() => setShowPinVerify(false)}
+        icon="trash"
+        destructiveness="severe"
+        title="Delete all entries?"
+        message="This will permanently delete all your journal entries and reset your statistics. Your account will remain active. This action cannot be undone."
+        confirmLabel="Delete All Entries"
+        onConfirm={confirmDeleteEntries}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
+
+      {/* Delete Account Confirmation — canonical ConfirmDialog. */}
+      <ConfirmDialog
+        visible={showDeleteAccountConfirm}
+        icon="warning"
+        destructiveness="severe"
+        title="Delete account?"
+        message="This will permanently delete your account, all entries, statistics, achievements, and security settings. You will need to set up a new PIN to use the app again. This action cannot be undone."
+        confirmLabel="Delete Everything"
+        onConfirm={confirmDeleteAccount}
+        onCancel={() => setShowDeleteAccountConfirm(false)}
+      />
+
+      {/* PIN Verification — the exact same full-screen PinEntryScreen used by
+          Settings > Change PIN, so "Enter Your PIN" looks identical wherever
+          it appears in the app (icon circle, Fraunces heading, animated dot
+          row, circular PinKeypad). */}
+      <Modal
+        visible={showPinVerify}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setShowPinVerify(false)}
+      >
+        <View style={{ flex: 1 }}>
+          <PinEntryScreen
+            mode="verify"
+            title="Enter Your PIN"
+            subtitle="Confirm your PIN to continue."
+            onSuccess={handlePinVerified}
+            onBack={() => setShowPinVerify(false)}
+          />
+        </View>
+      </Modal>
     </View>
   );
 }
