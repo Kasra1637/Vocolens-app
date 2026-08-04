@@ -173,6 +173,21 @@ function resolveSubject(request) {
   return "ip:" + ip;
 }
 
+/**
+ * True when `err` is D1 reporting that `usage_pending` doesn't exist yet —
+ * i.e. schema.sql's migration hasn't been applied to this database.
+ *
+ * Distinguished from other DB errors so a forgotten migration degrades the
+ * two-phase reservation tracking rather than taking down every paid endpoint.
+ * The core `usage` table and cap enforcement don't depend on `usage_pending`
+ * at all, so there's no reason a missing *optional* table should 503 every
+ * transcription.
+ */
+function isMissingPendingTable(err) {
+  const msg = String((err && err.message) || "");
+  return /no such table/i.test(msg) && /usage_pending/i.test(msg);
+}
+
 /** SHA-256 hex, so D1 never stores a raw device identifier. */
 async function hashSubject(subject) {
   const digest = await crypto.subtle.digest(
@@ -262,32 +277,57 @@ async function reserveUsage(env, subjectHash, period, seconds, now) {
  * abandoning recordings can't be used to transcribe past the limit.
  */
 async function readPendingSeconds(env, subjectHash, period, nowIso) {
-  const row = await env.DB.prepare(
-    `SELECT COALESCE(SUM(seconds), 0) AS pending_seconds
-       FROM usage_pending
-      WHERE subject_hash = ?1 AND period = ?2 AND expires_at > ?3`
-  )
-    .bind(subjectHash, period, nowIso)
-    .first();
-  return Number(row?.pending_seconds) || 0;
+  try {
+    const row = await env.DB.prepare(
+      `SELECT COALESCE(SUM(seconds), 0) AS pending_seconds
+         FROM usage_pending
+        WHERE subject_hash = ?1 AND period = ?2 AND expires_at > ?3`
+    )
+      .bind(subjectHash, period, nowIso)
+      .first();
+    return Number(row?.pending_seconds) || 0;
+  } catch (err) {
+    // See isMissingPendingTable: schema.sql hasn't been migrated onto this
+    // database yet. Treat as "nothing pending" rather than failing the
+    // request — the committed `usage` table (and the cap check against it)
+    // is unaffected, so this only means abandoned-but-unsaved recordings
+    // aren't counted against the cap until the migration runs.
+    if (isMissingPendingTable(err)) {
+      console.warn(
+        "[usage] usage_pending table missing — run schema.sql migration. Treating pending as 0."
+      );
+      return 0;
+    }
+    throw err;
+  }
 }
 
 /**
  * Redeems a reservation, returning the seconds to charge — or null if the
- * ticket is unknown, already redeemed, expired, or belongs to another subject.
+ * ticket is unknown, already redeemed, expired, belongs to another subject, or
+ * `usage_pending` doesn't exist yet on this database.
  *
  * The DELETE is the claim: only the request that actually removes the row gets
  * the seconds back, so a duplicate or concurrent commit of the same ticket is
  * naturally idempotent and cannot double-charge.
  */
 async function redeemPendingTicket(env, subjectHash, ticket, nowIso) {
-  const row = await env.DB.prepare(
-    `DELETE FROM usage_pending
-      WHERE ticket = ?1 AND subject_hash = ?2 AND expires_at > ?3
-      RETURNING seconds`
-  )
-    .bind(ticket, subjectHash, nowIso)
-    .first();
+  let row;
+  try {
+    row = await env.DB.prepare(
+      `DELETE FROM usage_pending
+        WHERE ticket = ?1 AND subject_hash = ?2 AND expires_at > ?3
+        RETURNING seconds`
+    )
+      .bind(ticket, subjectHash, nowIso)
+      .first();
+  } catch (err) {
+    // See isMissingPendingTable. There is no reservation to redeem if the
+    // table storing reservations doesn't exist — treated the same as an
+    // unknown ticket (below), not as a failure, so a save doesn't error out.
+    if (isMissingPendingTable(err)) return null;
+    throw err;
+  }
   if (!row) return null;
   return Number(row.seconds) || 0;
 }
@@ -300,7 +340,11 @@ async function purgeExpiredPending(env, nowIso) {
       .run();
   } catch (err) {
     // Cosmetic only — expired rows are already excluded from every read.
-    console.warn("[usage] pending purge failed:", err && err.message);
+    // Suppress the expected "missing table" case (see isMissingPendingTable)
+    // so a forgotten migration doesn't spam this on every commit.
+    if (!isMissingPendingTable(err)) {
+      console.warn("[usage] pending purge failed:", err && err.message);
+    }
   }
 }
 
