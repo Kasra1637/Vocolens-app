@@ -32,26 +32,47 @@ jobs:
 
       - name: Publish EAS Update to main branch (production)
         run: |
+          # Build a safe single-line message from the commit/PR metadata.
+          # The full commit message is passed via env var (never interpolated
+          # into the shell command) so special characters cannot break syntax.
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            MSG="PR #${PR_NUMBER}: ${PR_TITLE}"
+          else
+            MSG="Push to main: $(printf '%s' "$COMMIT_MSG" | head -n1)"
+          fi
           eas update \
             --branch main \
-            --message "${{ github.event_name == 'pull_request' && format('PR #{0}: {1}', github.event.pull_request.number, github.event.pull_request.title) || format('Push to main: {0}', github.event.head_commit.message) }}" \
+            --message "$MSG" \
             --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL }}
           EXPO_PUBLIC_VOCOLENS_API_KEY: ${{ secrets.EXPO_PUBLIC_VOCOLENS_API_KEY }}
+          EVENT_NAME: ${{ github.event_name }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
 
       - name: Publish EAS Update to preview branch (closed-testing)
         run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            MSG="PR #${PR_NUMBER}: ${PR_TITLE}"
+          else
+            MSG="Push to main: $(printf '%s' "$COMMIT_MSG" | head -n1)"
+          fi
           eas update \
             --branch preview \
-            --message "${{ github.event_name == 'pull_request' && format('PR #{0}: {1}', github.event.pull_request.number, github.event.pull_request.title) || format('Push to main: {0}', github.event.head_commit.message) }}" \
+            --message "$MSG" \
             --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL }}
           EXPO_PUBLIC_VOCOLENS_API_KEY: ${{ secrets.EXPO_PUBLIC_VOCOLENS_API_KEY }}
           EXPO_PUBLIC_ALLOW_TESTER_SKIP: "true"
+          EVENT_NAME: ${{ github.event_name }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
 
       - name: Comment on PR with preview info
         if: github.event_name == 'pull_request'
