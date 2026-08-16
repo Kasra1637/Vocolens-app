@@ -29,7 +29,6 @@ import { BiometricLockScreen } from './BiometricLockScreen';
 import { BiometricUnlockCelebration } from './BiometricUnlockCelebration';
 import { SubscriptionLapsedPaywall } from './SubscriptionLapsedPaywall';
 import { FirstLaunchCelebration } from './FirstLaunchCelebration';
-import { SplashScreen } from './onboarding/SplashScreen';
 import {
   configureAdapty,
   getProfile,
@@ -62,7 +61,6 @@ export function AuthGate({ children }: AuthGateProps) {
   const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
   const isEntitlementValid = useSubscriptionStore((s) => s.isEntitlementValid);
 
-  const [showSplash,           setShowSplash]           = useState(true);
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
 
   // Track whether we should show the unlock celebration overlay.
@@ -214,15 +212,6 @@ export function AuthGate({ children }: AuthGateProps) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0F0E1A' }}>
         <ActivityIndicator size="large" color="#9333ea" />
-      </View>
-    );
-  }
-
-  // Splash on every launch
-  if (showSplash) {
-    return (
-      <View style={{ flex: 1 }}>
-        <SplashScreen onDone={() => setShowSplash(false)} />
       </View>
     );
   }
