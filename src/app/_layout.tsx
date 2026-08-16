@@ -175,11 +175,14 @@ export default function RootLayout() {
     Fraunces_700Bold,
   });
 
+  // Hide the native splash screen only after BOTH fonts are loaded AND the OTA
+  // update check has completed. This prevents a blank white frame between the
+  // native splash dismissal and the first React render.
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if ((fontsLoaded || fontError) && isUpdateReady) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, isUpdateReady]);
 
   if (!fontsLoaded && !fontError) {
     return null;

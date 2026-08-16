@@ -22,7 +22,13 @@ export default ({ config }) => ({
   scheme: 'vocolens',
   version: '1.0.0',
   orientation: 'portrait',
+  icon: './assets/images/icon.png',
   userInterfaceStyle: 'automatic',
+  splash: {
+    image: './assets/images/icon.png',
+    resizeMode: 'contain',
+    backgroundColor: '#0F0E1A',
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.vocolens.app',
@@ -32,6 +38,10 @@ export default ({ config }) => ({
     softwareKeyboardLayoutMode: 'pan',
     permissions: ['RECORD_AUDIO'],
     versionCode: 3,
+    adaptiveIcon: {
+      foregroundImage: './assets/images/icon.png',
+      backgroundColor: '#0F0E1A',
+    },
   },
   web: {
     bundler: 'metro',
