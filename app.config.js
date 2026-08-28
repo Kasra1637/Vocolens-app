@@ -37,7 +37,7 @@ export default ({ config }) => ({
     package: 'com.vocolens.app',
     softwareKeyboardLayoutMode: 'pan',
     permissions: ['RECORD_AUDIO'],
-    versionCode: 3,
+    versionCode: 4,
     adaptiveIcon: {
       foregroundImage: './assets/images/icon.png',
       backgroundColor: '#0F0E1A',
