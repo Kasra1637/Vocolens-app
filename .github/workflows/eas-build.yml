@@ -16,6 +16,15 @@ on:
           - preview
           - main
           - development
+      environment:
+        description: 'EAS environment to source env vars from (SDK 55+ requires this on eas update)'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+          - development
 
 concurrency:
   group: eas-update-${{ github.ref }}
@@ -46,10 +55,16 @@ jobs:
           fi
           eas update \
             --branch ${{ github.event.inputs.branch }} \
+            --environment ${{ github.event.inputs.environment }} \
             --message "$MSG" \
             --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # NOTE: --environment above tells EAS to pull EXPO_PUBLIC_* vars
+          # (including EXPO_PUBLIC_ADAPTY_KEY) from the EAS-hosted
+          # Environment Variables for that environment. The vars below are
+          # a fallback only used if this repo's EAS project does NOT have
+          # them configured as EAS-hosted vars for the chosen environment.
           EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL }}
           EXPO_PUBLIC_VOCOLENS_API_KEY: ${{ secrets.EXPO_PUBLIC_VOCOLENS_API_KEY }}
           # Only include tester-skip flag when publishing to preview channel
