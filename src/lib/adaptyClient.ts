@@ -38,6 +38,7 @@ import type {
   AdaptyPaywall,
   AdaptyPaywallProduct,
   AdaptyPurchaseResult,
+  AdaptyMockConfig,
 } from "react-native-adapty";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -72,6 +73,87 @@ function getAdaptyKey(): string {
 /** True until a real EXPO_PUBLIC_ADAPTY_KEY is configured. */
 export const isUsingMockMode = (): boolean => getAdaptyKey() === PLACEHOLDER_ADAPTY_KEY;
 
+/**
+ * Mock products for local/tester purchase testing (no Adapty dashboard, no
+ * App Store/Play Store setup needed).
+ *
+ * WHY THIS EXISTS: Adapty's built-in mock mode, when given no `mockConfig`,
+ * fabricates its own default products with vendor ids like
+ * "mock.product.annual" / "mock.product.monthly" (see the SDK's
+ * `createMockProducts()`). This app's paywalls look products up by THIS
+ * app's real vendor ids (PRODUCT_ID_MONTHLY / _THREE_MONTH / _YEARLY below —
+ * "monthly" | "three_month" | "yearly"). Those never match the SDK's
+ * defaults, so `findProductById()` always returns null and every purchase
+ * attempt hits the "Products Unavailable" guard — with no dashboard,
+ * network, or Google Play account involved at all.
+ *
+ * The SDK's mock store keys `products` by paywall *variation id*, not by
+ * placement id. Since we never override the mock paywall itself (no
+ * `paywalls` entry below), the SDK's `createMockPaywall()` always assigns
+ * the fixed variation id "mock_variation_id" — so that's the key to target.
+ * See react-native-adapty's `src/mock/mock-store.ts#getPaywallProducts` and
+ * `src/mock/mock-data.ts#createMockPaywall`.
+ */
+const MOCK_VARIATION_ID = "mock_variation_id";
+
+const MOCK_ADAPTY_CONFIG: AdaptyMockConfig = {
+  products: {
+    [MOCK_VARIATION_ID]: [
+      {
+        vendorProductId: "monthly",
+        adaptyId: "mock.adapty.monthly",
+        localizedTitle: "Premium Monthly",
+        localizedDescription: "Get premium access for 1 month",
+        paywallName: "main_paywall",
+        paywallABTestName: "main_paywall",
+        variationId: MOCK_VARIATION_ID,
+        accessLevelId: ADAPTY_ACCESS_LEVEL,
+        productType: "subscription",
+        price: { amount: 9.99, currencyCode: "USD", currencySymbol: "$", localizedString: "$9.99" },
+        paywallProductIndex: 0,
+        subscription: {
+          subscriptionPeriod: { numberOfUnits: 1, unit: "month" },
+          localizedSubscriptionPeriod: "1 month",
+        },
+      } as AdaptyPaywallProduct,
+      {
+        vendorProductId: "three_month",
+        adaptyId: "mock.adapty.three_month",
+        localizedTitle: "Premium Quarterly",
+        localizedDescription: "Get premium access for 3 months",
+        paywallName: "main_paywall",
+        paywallABTestName: "main_paywall",
+        variationId: MOCK_VARIATION_ID,
+        accessLevelId: ADAPTY_ACCESS_LEVEL,
+        productType: "subscription",
+        price: { amount: 24.99, currencyCode: "USD", currencySymbol: "$", localizedString: "$24.99" },
+        paywallProductIndex: 1,
+        subscription: {
+          subscriptionPeriod: { numberOfUnits: 3, unit: "month" },
+          localizedSubscriptionPeriod: "3 months",
+        },
+      } as AdaptyPaywallProduct,
+      {
+        vendorProductId: "yearly",
+        adaptyId: "mock.adapty.yearly",
+        localizedTitle: "Premium Yearly",
+        localizedDescription: "Get premium access for 1 year",
+        paywallName: "main_paywall",
+        paywallABTestName: "main_paywall",
+        variationId: MOCK_VARIATION_ID,
+        accessLevelId: ADAPTY_ACCESS_LEVEL,
+        productType: "subscription",
+        price: { amount: 79.99, currencyCode: "USD", currencySymbol: "$", localizedString: "$79.99" },
+        paywallProductIndex: 2,
+        subscription: {
+          subscriptionPeriod: { numberOfUnits: 1, unit: "year" },
+          localizedSubscriptionPeriod: "1 year",
+        },
+      } as AdaptyPaywallProduct,
+    ],
+  },
+};
+
 // ── Result type ────────────────────────────────────────────────────────────────
 export type AdaptyGuardReason = "not_configured" | "sdk_error";
 export type AdaptyResult<T> =
@@ -99,8 +181,13 @@ export const configureAdapty = (): void => {
     // Force mock mode explicitly. Adapty auto-enables mock only in Expo Go
     // and Web — this makes behavior consistent in native dev/prod builds
     // too, until a real EXPO_PUBLIC_ADAPTY_KEY is provided.
+    //
+    // MOCK_ADAPTY_CONFIG overrides the SDK's default mock products with ones
+    // whose vendorProductId matches this app's real product ids (monthly /
+    // three_month / yearly) — see the comment above MOCK_ADAPTY_CONFIG for
+    // why this is required for a mock purchase to work at all.
     try {
-      adapty.enableMock();
+      adapty.enableMock(MOCK_ADAPTY_CONFIG);
     } catch (e: any) {
       if (__DEV__) console.log(`${LOG} enableMock failed:`, e?.message ?? e);
     }
