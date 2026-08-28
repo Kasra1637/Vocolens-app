@@ -64,9 +64,13 @@ export const PRODUCT_ID_YEARLY = "yearly";
 const PLACEHOLDER_ADAPTY_KEY = "PLACEHOLDER_ADAPTY_PUBLIC_KEY";
 
 function getAdaptyKey(): string {
+  // process.env.EXPO_PUBLIC_ADAPTY_KEY is inlined by Metro at bundle time —
+  // this works for BOTH native builds AND OTA updates (eas update). Check it
+  // first so an OTA-published key takes priority over a stale/missing value
+  // baked into the native binary's Constants.expoConfig.extra.
   const key =
-    Constants.expoConfig?.extra?.EXPO_PUBLIC_ADAPTY_KEY ||
-    process.env.EXPO_PUBLIC_ADAPTY_KEY;
+    process.env.EXPO_PUBLIC_ADAPTY_KEY ||
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_ADAPTY_KEY;
   return key && key !== "null" && key !== "undefined" ? key : PLACEHOLDER_ADAPTY_KEY;
 }
 

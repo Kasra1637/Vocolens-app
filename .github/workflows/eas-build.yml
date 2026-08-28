@@ -65,6 +65,7 @@ jobs:
           # Environment Variables for that environment. The vars below are
           # a fallback only used if this repo's EAS project does NOT have
           # them configured as EAS-hosted vars for the chosen environment.
+          EXPO_PUBLIC_ADAPTY_KEY: ${{ secrets.EXPO_PUBLIC_ADAPTY_KEY }}
           EXPO_PUBLIC_BACKEND_URL: ${{ secrets.EXPO_PUBLIC_BACKEND_URL }}
           EXPO_PUBLIC_VOCOLENS_API_KEY: ${{ secrets.EXPO_PUBLIC_VOCOLENS_API_KEY }}
           # Only include tester-skip flag when publishing to preview channel
