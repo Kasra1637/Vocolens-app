@@ -1532,30 +1532,18 @@ export default function SettingsScreen() {
                 >
                   <ArrowsClockwise size={17} color="#FFFFFF" weight="duotone" />
                 </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      color: "#FFFFFF",
-                      fontSize: 15,
-                      marginBottom: 2,
-                    }}
-                  >
-                    {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      color: "rgba(255,255,255,0.55)",
-                      fontSize: 12,
-                    }}
-                  >
-                    Reactivate a subscription linked to this account
-                  </Text>
-                </View>
-                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" style={{ flexShrink: 0 }} />
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#FFFFFF",
+                    fontSize: 15,
+                    flex: 1,
+                  }}
+                >
+                  {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
+                </Text>
+                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
               </Pressable>
 
               {/* Cancel subscription — opens store */}
@@ -1582,30 +1570,18 @@ export default function SettingsScreen() {
                 >
                   <ArrowSquareOut size={17} color="#F87171" weight="duotone" />
                 </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      color: "#F87171",
-                      fontSize: 15,
-                      marginBottom: 2,
-                    }}
-                  >
-                    Cancel subscription
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      color: "rgba(255,255,255,0.55)",
-                      fontSize: 12,
-                    }}
-                  >
-                    Opens Google Play · cancel from your subscriptions list
-                  </Text>
-                </View>
-                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" style={{ flexShrink: 0 }} />
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#F87171",
+                    fontSize: 15,
+                    flex: 1,
+                  }}
+                >
+                  Cancel subscription
+                </Text>
+                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
               </Pressable>
             </View>
 
@@ -1619,9 +1595,7 @@ export default function SettingsScreen() {
                 lineHeight: 16,
               }}
             >
-              Subscriptions are managed through the{" "}
-              {Platform.OS === "ios" ? "App Store" : "Google Play Store"}.{"\n"}
-              Cancelling stops future renewals — access continues until the current period ends.
+              Managed via {Platform.OS === "ios" ? "App Store" : "Google Play"}. Cancel anytime — access stays until period ends.
             </Text>
           </LinearGradient>
         </View>
