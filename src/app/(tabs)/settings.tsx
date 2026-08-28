@@ -1532,8 +1532,9 @@ export default function SettingsScreen() {
                 >
                   <ArrowsClockwise size={17} color="#FFFFFF" weight="duotone" />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
+                    numberOfLines={1}
                     style={{
                       fontFamily: "Inter_600SemiBold",
                       color: "#FFFFFF",
@@ -1544,6 +1545,7 @@ export default function SettingsScreen() {
                     {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
                   </Text>
                   <Text
+                    numberOfLines={1}
                     style={{
                       fontFamily: "Inter_400Regular",
                       color: "rgba(255,255,255,0.55)",
@@ -1553,7 +1555,7 @@ export default function SettingsScreen() {
                     Reactivate a subscription linked to this account
                   </Text>
                 </View>
-                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" style={{ flexShrink: 0 }} />
               </Pressable>
 
               {/* Cancel subscription — opens store */}
@@ -1580,8 +1582,9 @@ export default function SettingsScreen() {
                 >
                   <ArrowSquareOut size={17} color="#F87171" weight="duotone" />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
+                    numberOfLines={1}
                     style={{
                       fontFamily: "Inter_600SemiBold",
                       color: "#F87171",
@@ -1592,6 +1595,7 @@ export default function SettingsScreen() {
                     Cancel subscription
                   </Text>
                   <Text
+                    numberOfLines={1}
                     style={{
                       fontFamily: "Inter_400Regular",
                       color: "rgba(255,255,255,0.55)",
@@ -1601,7 +1605,7 @@ export default function SettingsScreen() {
                     Opens Google Play · cancel from your subscriptions list
                   </Text>
                 </View>
-                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" style={{ flexShrink: 0 }} />
               </Pressable>
             </View>
 
