@@ -1502,7 +1502,7 @@ export default function SettingsScreen() {
                 borderWidth: 1,
                 borderColor: "rgba(255,255,255,0.14)",
                 overflow: "hidden",
-                marginBottom: 16,
+                marginBottom: 14,
               }}
             >
               {/* Restore purchases */}
@@ -1512,13 +1512,15 @@ export default function SettingsScreen() {
                 style={({ pressed }) => ({
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingHorizontal: 18,
-                  paddingVertical: 17,
+                  minHeight: 64,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
                   borderBottomWidth: 1,
                   borderBottomColor: "rgba(255,255,255,0.10)",
                   opacity: pressed || isRestoringInSettings ? 0.6 : 1,
                 })}
               >
+                <CaretRight size={16} color="rgba(255,255,255,0.30)" weight="bold" />
                 <View
                   style={{
                     width: 36,
@@ -1527,23 +1529,35 @@ export default function SettingsScreen() {
                     backgroundColor: hexToRgba(Colors.primary, 0.20),
                     alignItems: "center",
                     justifyContent: "center",
-                    marginRight: 14,
+                    marginLeft: 10,
+                    marginRight: 12,
                   }}
                 >
                   <ArrowsClockwise size={17} color="#FFFFFF" weight="duotone" />
                 </View>
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "#FFFFFF",
-                    fontSize: 15,
-                    flex: 1,
-                  }}
-                >
-                  {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
-                </Text>
-                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#FFFFFF",
+                      fontSize: 15,
+                    }}
+                  >
+                    {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.50)",
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    Recover a plan you already paid for
+                  </Text>
+                </View>
               </Pressable>
 
               {/* Cancel subscription — opens store */}
@@ -1552,11 +1566,13 @@ export default function SettingsScreen() {
                 style={({ pressed }) => ({
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingHorizontal: 18,
-                  paddingVertical: 17,
+                  minHeight: 64,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
+                <CaretRight size={16} color="rgba(255,255,255,0.30)" weight="bold" />
                 <View
                   style={{
                     width: 36,
@@ -1565,23 +1581,35 @@ export default function SettingsScreen() {
                     backgroundColor: "rgba(239,68,68,0.18)",
                     alignItems: "center",
                     justifyContent: "center",
-                    marginRight: 14,
+                    marginLeft: 10,
+                    marginRight: 12,
                   }}
                 >
                   <ArrowSquareOut size={17} color="#F87171" weight="duotone" />
                 </View>
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontFamily: "Inter_600SemiBold",
-                    color: "#F87171",
-                    fontSize: 15,
-                    flex: 1,
-                  }}
-                >
-                  Cancel subscription
-                </Text>
-                <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      color: "#F87171",
+                      fontSize: 15,
+                    }}
+                  >
+                    Cancel subscription
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      color: "rgba(255,255,255,0.50)",
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    Opens Google Play to stop renewal
+                  </Text>
+                </View>
               </Pressable>
             </View>
 
@@ -1593,9 +1621,12 @@ export default function SettingsScreen() {
                 fontSize: 11,
                 textAlign: "center",
                 lineHeight: 16,
+                paddingHorizontal: 4,
+                paddingBottom: Math.max(insets.bottom, 8),
               }}
             >
-              Managed via {Platform.OS === "ios" ? "App Store" : "Google Play"}. Cancel anytime — access stays until period ends.
+              Managed via {Platform.OS === "ios" ? "App Store" : "Google Play"}.{"\n"}
+              Cancel anytime — access stays until period ends.
             </Text>
           </LinearGradient>
         </View>
