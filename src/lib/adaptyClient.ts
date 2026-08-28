@@ -51,7 +51,7 @@ export const ADAPTY_ACCESS_LEVEL = "premium";
  * placement IDs you create there.
  */
 export const PLACEMENT_MAIN_PAYWALL = "main_paywall";
-export const PLACEMENT_ONBOARDING_PAYWALL = "onboarding_paywall";
+export const PLACEMENT_ONBOARDING_PAYWALL = "main_paywall";
 
 /** Vendor product ids — must match products created in App Store Connect / Google Play + mapped in Adapty. */
 export const PRODUCT_ID_MONTHLY = "monthly";
