@@ -4,9 +4,25 @@
  * Flow:
  *  1. Show splash on every launch
  *  2. Onboarding not done → OnboardingFlow (paywall embedded as step 23)
- *  3. Onboarding done, no active subscription → SubscriptionLapsedPaywall
+ *  3. Onboarding done, no active subscription:
+ *       - Never subscribed before (no plan history) → PaywallScreen directly
+ *       - Previously subscribed, now lapsed/expired → SubscriptionLapsedPaywall
  *  4. Lock enabled but not unlocked this session → BiometricLockScreen
  *  5. All good → show app
+ *
+ * Never-subscribed vs. lapsed
+ * ---------------------------
+ * The app has no accounts or authentication (by design, for privacy), so
+ * `hasCompletedOnboarding` lives in device-local AsyncStorage rather than
+ * being tied to a specific person. That flag can end up `true` for someone
+ * who has never actually subscribed — e.g. stale storage left behind by a
+ * previous install/tester on the same device. Showing "Your subscription has
+ * ended" to a user who never had one is a confusing, false message. We use
+ * subscription-store's `hasEverSubscribed` — a one-way flag that, unlike
+ * `hasSubscription`/`planType`/`lastVerifiedAt`, is never reset by
+ * `clearSubscription()` on expiry — to tell a never-subscribed user (route to
+ * the first-time paywall) apart from a genuinely lapsed one (route to the
+ * win-back screen).
  *
  * Security:
  *  - AppState listener re-locks the session when the app goes to background,
@@ -24,7 +40,7 @@ import useOnboardingStore from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
 import useRecordingStore from '@/lib/state/recording-store';
 import useSubscriptionStore from '@/lib/state/subscription-store';
-import { OnboardingFlow } from './onboarding';
+import { OnboardingFlow, PaywallScreen } from './onboarding';
 import { BiometricLockScreen } from './BiometricLockScreen';
 import { BiometricUnlockCelebration } from './BiometricUnlockCelebration';
 import { SubscriptionLapsedPaywall } from './SubscriptionLapsedPaywall';
@@ -60,6 +76,7 @@ export function AuthGate({ children }: AuthGateProps) {
   const setSubscription   = useSubscriptionStore((s) => s.setSubscription);
   const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
   const isEntitlementValid = useSubscriptionStore((s) => s.isEntitlementValid);
+  const hasEverSubscribed  = useSubscriptionStore((s) => s.hasEverSubscribed);
 
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
 
@@ -224,6 +241,13 @@ export function AuthGate({ children }: AuthGateProps) {
   // No active subscription — or a cached entitlement that has gone too long
   // without confirmation from Adapty.
   if (!hasSubscription || !isEntitlementValid()) {
+    // Someone who has never actually subscribed should never see a "your
+    // subscription has ended" message — route them to a first-time offer
+    // instead. Only genuinely lapsed/expired subscribers see the win-back
+    // screen.
+    if (!hasEverSubscribed) {
+      return <PaywallScreen />;
+    }
     return <SubscriptionLapsedPaywall />;
   }
 

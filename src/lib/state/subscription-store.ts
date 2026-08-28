@@ -41,6 +41,16 @@ interface SubscriptionState {
   planType: SubscriptionPlan | null;
   /** Epoch ms when Adapty last confirmed this entitlement. 0 = never. */
   lastVerifiedAt: number;
+  /**
+   * True once the user has ever held a confirmed subscription. Unlike
+   * `hasSubscription` / `planType` / `lastVerifiedAt`, this is NEVER reset by
+   * `clearSubscription()` — it is a one-way flag that distinguishes a
+   * genuinely lapsed/expired subscriber (this stays true) from someone who
+   * has never subscribed at all (this stays false). Used to decide whether a
+   * user with no active subscription should see the win-back
+   * "SubscriptionLapsedPaywall" or a first-time "PaywallScreen" offer.
+   */
+  hasEverSubscribed: boolean;
 
   setSubscription: (hasSubscription: boolean, planType?: SubscriptionPlan | null) => void;
   clearSubscription: () => void;
@@ -60,6 +70,7 @@ const useSubscriptionStore = create<SubscriptionState>()(
       hasSubscription: false,
       planType: null,
       lastVerifiedAt: 0,
+      hasEverSubscribed: false,
 
       // Any write of a positive entitlement is, by definition, a fresh
       // confirmation — it comes either from a completed purchase, a successful
@@ -69,6 +80,9 @@ const useSubscriptionStore = create<SubscriptionState>()(
           hasSubscription,
           planType,
           lastVerifiedAt: hasSubscription ? Date.now() : 0,
+          // One-way: once true (a real entitlement was confirmed), it never
+          // flips back, regardless of later expiry/cancellation.
+          hasEverSubscribed: hasSubscription ? true : get().hasEverSubscribed,
         }),
 
       clearSubscription: () =>
@@ -88,7 +102,7 @@ const useSubscriptionStore = create<SubscriptionState>()(
     {
       name: 'subscription-store',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 2,
+      version: 3,
       migrate: (persisted: any, version: number) => {
         const source = (persisted ?? {}) as Record<string, unknown>;
         // v0/v1 → v2: add lastVerifiedAt. Existing subscribers are given a fresh
@@ -100,12 +114,32 @@ const useSubscriptionStore = create<SubscriptionState>()(
             hasSubscription,
             planType: (source.planType as SubscriptionPlan | null) ?? null,
             lastVerifiedAt: hasSubscription ? Date.now() : 0,
+            // Unknown history at this point — see v2 → v3 step below, which
+            // also runs for anyone migrating straight from v0/v1.
+            hasEverSubscribed: Boolean(source.planType) || hasSubscription,
+          };
+        }
+        if (version < 3) {
+          // v2 → v3: backfill the one-way flag. We can't know true history
+          // from a v2 record, but a non-null planType or a non-zero
+          // lastVerifiedAt is strong evidence the user held a subscription
+          // at some point — safer to assume "has subscribed" than to
+          // misroute a real lapsed subscriber to onboarding.
+          return {
+            hasSubscription: Boolean(source.hasSubscription ?? false),
+            planType: (source.planType as SubscriptionPlan | null) ?? null,
+            lastVerifiedAt: Number(source.lastVerifiedAt) || 0,
+            hasEverSubscribed:
+              Boolean(source.hasSubscription) ||
+              Boolean(source.planType) ||
+              Boolean(Number(source.lastVerifiedAt)),
           };
         }
         return {
           hasSubscription: Boolean(source.hasSubscription ?? false),
           planType: (source.planType as SubscriptionPlan | null) ?? null,
           lastVerifiedAt: Number(source.lastVerifiedAt) || 0,
+          hasEverSubscribed: Boolean(source.hasEverSubscribed ?? false),
         };
       },
     },
