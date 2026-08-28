@@ -22,7 +22,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { Check, X, CaretRight, ArrowsClockwise, ArrowSquareOut } from "phosphor-react-native";
+import { Check, X, CaretRight } from "phosphor-react-native";
 import { Palette, Bell, Shield, ShieldCheck, Brain, ChartBar, DownloadSimple, Crown, Key, Heart, Clock, FileText } from "phosphor-react-native";
 import * as Clipboard from "expo-clipboard";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
@@ -1494,7 +1494,12 @@ export default function SettingsScreen() {
               </Text>
             </View>
 
-            {/* Action rows */}
+            {/* Action links — deliberately simple: one Pressable, one root
+                Text node per row (with nested spans for the two-tone
+                label). No icon circles, no multi-child flex rows — that
+                structure was rendering blank on-device across several
+                attempts, so this sidesteps it entirely rather than
+                debugging further. */}
             <View
               style={{
                 backgroundColor: "rgba(255,255,255,0.08)",
@@ -1510,106 +1515,40 @@ export default function SettingsScreen() {
                 onPress={handleRestoreInSettings}
                 disabled={isRestoringInSettings}
                 style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  minHeight: 64,
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
+                  paddingHorizontal: 18,
+                  paddingVertical: 16,
                   borderBottomWidth: 1,
                   borderBottomColor: "rgba(255,255,255,0.10)",
                   opacity: pressed || isRestoringInSettings ? 0.6 : 1,
                 })}
               >
-                <CaretRight size={16} color="rgba(255,255,255,0.30)" weight="bold" />
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: hexToRgba(Colors.primary, 0.20),
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginLeft: 10,
-                    marginRight: 12,
-                  }}
-                >
-                  <ArrowsClockwise size={17} color="#FFFFFF" weight="duotone" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      color: "#FFFFFF",
-                      fontSize: 15,
-                    }}
-                  >
+                <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 20 }}>
+                  <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}>
                     {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
                   </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      color: "rgba(255,255,255,0.50)",
-                      fontSize: 12,
-                      marginTop: 2,
-                    }}
-                  >
-                    Recover a plan you already paid for
+                  <Text style={{ color: "rgba(255,255,255,0.55)" }}>
+                    {"  —  recover a plan you already paid for →"}
                   </Text>
-                </View>
+                </Text>
               </Pressable>
 
               {/* Cancel subscription — opens store */}
               <Pressable
                 onPress={handleCancelSubscription}
                 style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  minHeight: 64,
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
+                  paddingHorizontal: 18,
+                  paddingVertical: 16,
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
-                <CaretRight size={16} color="rgba(255,255,255,0.30)" weight="bold" />
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: "rgba(239,68,68,0.18)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginLeft: 10,
-                    marginRight: 12,
-                  }}
-                >
-                  <ArrowSquareOut size={17} color="#F87171" weight="duotone" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: "Inter_600SemiBold",
-                      color: "#F87171",
-                      fontSize: 15,
-                    }}
-                  >
+                <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 20 }}>
+                  <Text style={{ fontFamily: "Inter_600SemiBold", color: "#F87171" }}>
                     Cancel subscription
                   </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      color: "rgba(255,255,255,0.50)",
-                      fontSize: 12,
-                      marginTop: 2,
-                    }}
-                  >
-                    Opens Google Play to stop renewal
+                  <Text style={{ color: "rgba(255,255,255,0.55)" }}>
+                    {"  —  opens Google Play to stop renewal →"}
                   </Text>
-                </View>
+                </Text>
               </Pressable>
             </View>
 
