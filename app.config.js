@@ -17,7 +17,10 @@
 
 export default ({ config }) => ({
   ...config,
-  name: 'vocolens',
+  // Display name shown under the home-screen icon. `slug` stays lowercase
+  // (it's the Expo project identifier, not user-facing) — only `name` needs
+  // the capitalized brand form.
+  name: 'Vocolens',
   slug: 'vocolens',
   scheme: 'vocolens',
   version: '1.0.0',
