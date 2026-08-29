@@ -50,6 +50,7 @@ import {
   getProfile,
   hasAccessLevel,
   addProfileListener,
+  getPlanTypeFromProfile,
 } from '@/lib/adaptyClient';
 import { NotificationService } from '@/lib/services/notification-service';
 
@@ -175,7 +176,7 @@ export function AuthGate({ children }: AuthGateProps) {
   useEffect(() => {
     const removeListener = addProfileListener((profile) => {
       const active = hasAccessLevel(profile);
-      if (active) setSubscription(true);
+      if (active) setSubscription(true, getPlanTypeFromProfile(profile));
       else clearSubscription();
     });
     return removeListener;
@@ -197,7 +198,9 @@ export function AuthGate({ children }: AuthGateProps) {
       confirmedActive = hasAccessLevel(result.data);
       if (confirmedActive) {
         // Refreshes lastVerifiedAt, restarting the offline grace window.
-        setSubscription(true);
+        // Also re-derives planType from the profile so re-verification
+        // doesn't silently wipe it back to null on every launch.
+        setSubscription(true, getPlanTypeFromProfile(result.data));
       } else {
         clearSubscription();
       }

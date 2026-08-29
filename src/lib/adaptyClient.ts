@@ -282,6 +282,28 @@ export function findProductById(
   return products?.find((p) => p.vendorProductId === vendorProductId) ?? null;
 }
 
+/**
+ * Derive this app's local plan-type label ("yearly" | "quarterly" | "monthly")
+ * from an Adapty profile's active access level, by matching its
+ * `vendorProductId` against PRODUCT_ID_YEARLY / _THREE_MONTH / _MONTHLY.
+ *
+ * WHY THIS EXISTS: subscription-store's `planType` must reflect the plan the
+ * user actually holds, but every app-launch re-verification only knows
+ * whether the "premium" access level is active — not which product granted
+ * it — unless it reads this field off the profile. Without this, callers
+ * were passing no plan type to `setSubscription()`, silently resetting
+ * `planType` to null on every launch (see AuthGate.checkAuthStatus).
+ */
+export function getPlanTypeFromProfile(
+  profile: AdaptyProfile | null | undefined,
+): "yearly" | "quarterly" | "monthly" | null {
+  const vendorProductId = profile?.accessLevels?.[ADAPTY_ACCESS_LEVEL]?.vendorProductId;
+  if (vendorProductId === PRODUCT_ID_YEARLY) return "yearly";
+  if (vendorProductId === PRODUCT_ID_THREE_MONTH) return "quarterly";
+  if (vendorProductId === PRODUCT_ID_MONTHLY) return "monthly";
+  return null;
+}
+
 /** Discriminated purchase outcome — mirrors AdaptyPurchaseResult but narrowed for callers. */
 export type PurchaseOutcome =
   | { type: "success"; profile: AdaptyProfile }

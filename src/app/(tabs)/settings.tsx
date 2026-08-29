@@ -72,6 +72,7 @@ import useSubscriptionStore from "@/lib/state/subscription-store";
 import {
   restorePurchases,
   hasAccessLevel,
+  getPlanTypeFromProfile,
 } from "@/lib/adaptyClient";
 import { removePin, changePin } from "@/lib/auth-service";
 import { hexToRgba } from "@/lib/glass";
@@ -258,7 +259,7 @@ export default function SettingsScreen() {
     if (result.ok) {
       if (hasAccessLevel(result.data)) {
         successHaptic();
-        setSubscription(true, planType ?? undefined);
+        setSubscription(true, getPlanTypeFromProfile(result.data) ?? planType ?? undefined);
         showAlert("success", "Subscription restored", "Your subscription has been restored successfully.");
         setSubscriptionModalVisible(false);
       } else {
@@ -1484,22 +1485,23 @@ export default function SettingsScreen() {
               >
                 {hasSubscription
                   ? planType === "yearly"
-                    ? "Yearly Pro · $79.99 / year  ·  3-day free trial"
+                    ? "Yearly Pro · $79.99/year · 3-day free trial"
                     : planType === "quarterly"
                       ? "Quarterly Pro · $24.99 every 3 months"
                       : planType === "monthly"
-                        ? "Monthly Pro · $9.99 / month"
+                        ? "Monthly Pro · $9.99/month"
                         : "Pro Plan — active"
                   : "No active subscription"}
               </Text>
             </View>
 
-            {/* Action links — deliberately simple: one Pressable, one root
-                Text node per row (with nested spans for the two-tone
-                label). No icon circles, no multi-child flex rows — that
-                structure was rendering blank on-device across several
-                attempts, so this sidesteps it entirely rather than
-                debugging further. */}
+            {/* Action links — plain text links only, per feedback. Each is
+                two STACKED Text elements (title + caption) rather than one
+                wrapped multi-span paragraph — nested inline spans with an
+                em dash + arrow were wrapping unpredictably and clipping
+                against the row's rounded corners on-device. Generous
+                vertical padding and no overflow:hidden on the row itself
+                (only the outer card clips corners) so nothing gets cut off. */}
             <View
               style={{
                 backgroundColor: "rgba(255,255,255,0.08)",
@@ -1516,19 +1518,31 @@ export default function SettingsScreen() {
                 disabled={isRestoringInSettings}
                 style={({ pressed }) => ({
                   paddingHorizontal: 18,
-                  paddingVertical: 16,
+                  paddingTop: 16,
+                  paddingBottom: 14,
                   borderBottomWidth: 1,
                   borderBottomColor: "rgba(255,255,255,0.10)",
                   opacity: pressed || isRestoringInSettings ? 0.6 : 1,
                 })}
               >
-                <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 20 }}>
-                  <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}>
-                    {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
-                  </Text>
-                  <Text style={{ color: "rgba(255,255,255,0.55)" }}>
-                    {"  —  recover a plan you already paid for →"}
-                  </Text>
+                <Text
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#FFFFFF",
+                    fontSize: 15,
+                  }}
+                >
+                  {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255,255,255,0.50)",
+                    fontSize: 12,
+                    marginTop: 3,
+                  }}
+                >
+                  Recover a plan you already paid for
                 </Text>
               </Pressable>
 
@@ -1537,17 +1551,29 @@ export default function SettingsScreen() {
                 onPress={handleCancelSubscription}
                 style={({ pressed }) => ({
                   paddingHorizontal: 18,
-                  paddingVertical: 16,
+                  paddingTop: 14,
+                  paddingBottom: 16,
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
-                <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 20 }}>
-                  <Text style={{ fontFamily: "Inter_600SemiBold", color: "#F87171" }}>
-                    Cancel subscription
-                  </Text>
-                  <Text style={{ color: "rgba(255,255,255,0.55)" }}>
-                    {"  —  opens Google Play to stop renewal →"}
-                  </Text>
+                <Text
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    color: "#F87171",
+                    fontSize: 15,
+                  }}
+                >
+                  Cancel subscription
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255,255,255,0.50)",
+                    fontSize: 12,
+                    marginTop: 3,
+                  }}
+                >
+                  Opens Google Play to stop renewal
                 </Text>
               </Pressable>
             </View>
