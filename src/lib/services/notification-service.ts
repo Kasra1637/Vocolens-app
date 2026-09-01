@@ -43,24 +43,44 @@ export interface NotificationMessage {
 
 export const NOTIFICATION_MESSAGES: NotificationMessage[] = [
   {
-    title: '🪞 How are you actually feeling?',
-    body: 'Speak it out — even 60 seconds helps you name what\'s going on inside.',
+    title: '🎙️ 60 seconds. That\'s it.',
+    body: 'No typing, no overthinking — just talk.',
   },
   {
-    title: '🎙️ Your feelings have something to say',
-    body: 'Open Vocolens and let your voice do the thinking.',
+    title: '🪞 Name it to tame it',
+    body: 'Speak what you\'re feeling — Vocolens helps make sense of the rest.',
   },
   {
-    title: '💭 Check in with yourself',
-    body: 'A quick voice note today builds a clearer picture of your week.',
+    title: '🌊 Overwhelm builds quietly',
+    body: 'Catch it early. Talk it out with Vocolens.',
   },
   {
-    title: '🌊 What\'s sitting with you right now?',
-    body: 'Say it out loud — the AI will help you make sense of it.',
+    title: '💭 Something on your mind?',
+    body: 'A quick voice note can untangle more than you\'d expect.',
   },
   {
-    title: '🔥 You\'ve been consistent',
-    body: 'Keep your streak alive. One voice note, that\'s all it takes.',
+    title: '✨ Your journal\'s ready',
+    body: 'Whenever you are. No pressure, no prep.',
+  },
+  {
+    title: '🔍 What\'s underneath today?',
+    body: 'Speak it out loud and see what Vocolens notices.',
+  },
+  {
+    title: '🌿 A moment for yourself',
+    body: 'Just a minute of talking can shift your whole day.',
+  },
+  {
+    title: '🔥 You\'ve kept your streak going',
+    body: 'That\'s real. Keep it up with today\'s check-in.',
+  },
+  {
+    title: '📈 Consistency is the insight',
+    body: 'Your streak is showing you patterns. Keep going.',
+  },
+  {
+    title: '👋 Quick check-in',
+    body: 'How\'s today actually going? Say it out loud.',
   },
 ];
 
