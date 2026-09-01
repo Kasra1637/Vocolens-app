@@ -39,7 +39,12 @@ export default ({ config }) => ({
   android: {
     package: 'com.vocolens.app',
     softwareKeyboardLayoutMode: 'pan',
-    permissions: ['RECORD_AUDIO'],
+    // POST_NOTIFICATIONS is required on Android 13+ (API 33) for the app to
+    // be allowed to show notifications at all — without it, the OS silently
+    // blocks every scheduled notification with no error and no prompt. This
+    // was missing, which is why daily-reminder notifications never appeared
+    // despite scheduling succeeding without errors.
+    permissions: ['RECORD_AUDIO', 'POST_NOTIFICATIONS'],
     versionCode: 7,
     adaptiveIcon: {
       foregroundImage: './assets/images/icon.png',
@@ -69,6 +74,17 @@ export default ({ config }) => ({
       },
     ],
     'expo-updates',
+    // Registers expo-notifications' own config plugin, which wires up the
+    // native Android manifest entries this feature needs (in addition to
+    // the explicit POST_NOTIFICATIONS permission above). Previously absent
+    // — daily-reminder notifications were scheduled without error but never
+    // actually shown by the OS.
+    [
+      'expo-notifications',
+      {
+        color: '#9370DB',
+      },
+    ],
     // react-native-adapty ships an Expo config plugin. `replaceAndroidBackupConfig`
     // lets Adapty manage the Android Auto Backup manifest entry — required
     // because this project also uses expo-secure-store, which otherwise

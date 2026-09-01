@@ -13,7 +13,8 @@
     "android": {
       "package": "com.vocolens.app",
       "softwareKeyboardLayoutMode": "pan",
-      "versionCode": 2
+      "versionCode": 2,
+      "permissions": ["RECORD_AUDIO", "POST_NOTIFICATIONS"]
     },
     "web": {
       "bundler": "metro"
@@ -41,6 +42,12 @@
         }
       ],
       "expo-updates",
+      [
+        "expo-notifications",
+        {
+          "color": "#9370DB"
+        }
+      ],
       [
         "react-native-adapty",
         {
