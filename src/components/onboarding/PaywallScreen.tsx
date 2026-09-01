@@ -102,7 +102,7 @@ function TrialTimeline({
     {
       Icon: Bell,
       title: `Day ${TRIAL_DAYS - 1}`,
-      description: "We'll remind you before your trial ends — no surprises",
+      description: `We'll send one reminder 24 hours before you're charged ${yearlyPrice}/yr`,
     },
     {
       Icon: Star,
@@ -377,21 +377,26 @@ export function PaywallScreen() {
 
   // ── Grant access helper ─────────────────────────────────────────────────────
   // `profile` is the just-updated Adapty profile from the purchase result —
-  // used to read the REAL trial-expiry timestamp for the two trial reminder
-  // notifications below. Previously both were always called with `null`,
+  // used to read the REAL trial-expiry timestamp for the trial reminder
+  // notification below. Previously this was always called with `null`,
   // which ignores Adapty's actual trial end date and falls back to a fixed
-  // "2 days from now" / "68 hours from now" estimate — only accurate if the
-  // trial started at the exact instant grantAccess() runs. Since purchase
-  // network round-trips add real delay, that estimate can drift enough for
-  // the "ends tomorrow" reminder to fire on the wrong day.
+  // "2 days from now" estimate — only accurate if the trial started at the
+  // exact instant grantAccess() runs. Since purchase network round-trips add
+  // real delay, that estimate can drift enough for the "ends tomorrow"
+  // reminder to fire on the wrong day.
+  //
+  // Only ONE trial reminder is scheduled (24h before charge) — the earlier
+  // second "4 hours before" reminder was removed. A single, clearly-timed
+  // notification with the exact charge amount and date reads as transparent;
+  // stacking two, with the second landing right before the charge, reads as
+  // pressure and increases refund/complaint risk without adding real value.
   const grantAccess = (plan: PlanKey, profile?: AdaptyProfile) => {
     successHaptic();
     setSubscription(true, plan === "three_month" ? "quarterly" : plan);
     if (plan === "yearly") {
       const expiresAt = profile?.accessLevels?.[ADAPTY_ACCESS_LEVEL]?.expiresAt;
       const expiresAtIso = expiresAt ? new Date(expiresAt).toISOString() : null;
-      try { NotificationService.scheduleTrialDay2Reminder(expiresAtIso); } catch {}
-      try { NotificationService.scheduleTrialEndReminder(expiresAtIso); } catch {}
+      try { NotificationService.scheduleTrialDay2Reminder(expiresAtIso, yearlyPrice); } catch {}
     }
     setShowExitModal(false);
     nextStep();

@@ -367,20 +367,30 @@ export class NotificationService {
   }
 
   /**
-   * Schedule a "trial ends tomorrow" notification — fires on Day 2 of the
-   * 3-day yearly-plan trial (i.e. 1 day before the trial converts to a paid
-   * subscription).
+   * Schedule the SINGLE trial-conversion reminder — fires 24 hours before
+   * the 3-day yearly-plan trial converts to a paid subscription.
+   *
+   * This is intentionally the only trial-related notification. A second
+   * "few hours before" reminder was removed: one clearly-timed notice with
+   * the exact charge amount and date is transparent; a second one landing
+   * right before the charge reads as pressure rather than a helpful
+   * reminder, and adds refund/complaint risk without real benefit.
    *
    * `expirationDate` should be the REAL trial-expiry timestamp from Adapty
    * (the purchased product's access level `expiresAt`, as an ISO string —
-   * see PaywallScreen.tsx's handleCTA, which now threads this through from
-   * the Adapty purchase result instead of always passing null). If it's
-   * null/invalid, falls back to an estimate of 2 days from now, which only
-   * matches reality if the trial started at the exact moment this method
-   * is called.
+   * see PaywallScreen.tsx's grantAccess, which threads this through from
+   * the Adapty purchase result). If it's null/invalid, falls back to an
+   * estimate of 2 days from now, which only matches reality if the trial
+   * started at the exact moment this method is called.
+   *
+   * `yearlyPrice` should be the localized price string shown on the
+   * paywall (e.g. "$79.99") — included in the notification body so the
+   * user sees the exact charge amount and date upfront rather than a vague
+   * "ends soon". Falls back to a price-less phrasing if omitted.
    */
   static async scheduleTrialDay2Reminder(
     expirationDate?: string | null,
+    yearlyPrice?: string | null,
   ): Promise<string | null> {
     const N = getNotifications();
     if (!N) return null;
@@ -390,16 +400,22 @@ export class NotificationService {
       if (!granted) return null;
 
       let triggerDate: Date;
+      let chargeDate: Date;
 
       if (expirationDate) {
         const expiry = new Date(expirationDate);
-        // 1 day before expiry
-        triggerDate = isNaN(expiry.getTime())
-          ? new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // fallback: 2 days from now
-          : new Date(expiry.getTime() - 1 * 24 * 60 * 60 * 1000);
+        if (isNaN(expiry.getTime())) {
+          triggerDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000); // fallback: 2 days from now
+          chargeDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+        } else {
+          // 1 day (24h) before expiry
+          triggerDate = new Date(expiry.getTime() - 1 * 24 * 60 * 60 * 1000);
+          chargeDate = expiry;
+        }
       } else {
         // No expiration date — assume 3-day trial started now, fire at Day 2
         triggerDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+        chargeDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
       }
 
       // Don't schedule if trigger is in the past
@@ -407,10 +423,18 @@ export class NotificationService {
 
       ensureHandlerConfigured();
 
+      const formattedChargeDate = chargeDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      const body = yearlyPrice
+        ? `You'll be charged ${yearlyPrice} for your yearly plan on ${formattedChargeDate} unless you cancel. Keep checking in with Vocolens, or manage your subscription anytime in Settings.`
+        : `Your yearly plan starts on ${formattedChargeDate} unless you cancel. Keep checking in with Vocolens, or manage your subscription anytime in Settings.`;
+
       const id = await N.scheduleNotificationAsync({
         content: {
-          title: '🎙️ One day left on your free trial',
-          body: "You've already started building a clearer picture of how you feel. Keep it going — your trial wraps up tomorrow.",
+          title: '🎙️ Your trial ends tomorrow',
+          body,
           sound: 'default',
           data: { type: 'trial-day2-reminder' },
         },
@@ -421,64 +445,11 @@ export class NotificationService {
       });
 
       console.log(
-        `[NotificationService] Scheduled Day 2 trial reminder for ${triggerDate.toISOString()} (id: ${id})`,
+        `[NotificationService] Scheduled trial-conversion reminder for ${triggerDate.toISOString()} (id: ${id})`,
       );
       return id;
     } catch (error) {
       console.error('[NotificationService] scheduleTrialDay2Reminder error:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Schedule a "trial ending in a few hours" notification, timed 4 hours
-   * before the trial converts to a paid subscription.
-   *
-   * `rcExpirationDate` should be the REAL trial-expiry timestamp from
-   * Adapty (see scheduleTrialDay2Reminder's doc comment above — same
-   * wiring applies here).
-   */
-  static async scheduleTrialEndReminder(
-    rcExpirationDate?: string | null,
-  ): Promise<string | null> {
-    const N = getNotifications();
-    if (!N) return null;
-
-    try {
-      const { granted } = await this.checkPermissions();
-      if (!granted) return null;
-
-      let triggerDate: Date;
-
-      if (rcExpirationDate) {
-        const expiry = new Date(rcExpirationDate);
-        triggerDate = isNaN(expiry.getTime())
-          ? new Date(Date.now() + 68 * 60 * 60 * 1000)
-          : new Date(expiry.getTime() - 4 * 60 * 60 * 1000);
-      } else {
-        triggerDate = new Date(Date.now() + 68 * 60 * 60 * 1000);
-      }
-
-      if (triggerDate.getTime() <= Date.now()) return null;
-
-      ensureHandlerConfigured();
-
-      const id = await N.scheduleNotificationAsync({
-        content: {
-          title: '⏳ Your trial wraps up in a few hours',
-          body: "Don't lose your streak or your insights — stay subscribed to keep checking in with Vocolens.",
-          sound: 'default',
-          data: { type: 'trial-end-reminder' },
-        },
-        trigger: {
-          type: (N as any).SchedulableTriggerInputTypes?.DATE ?? 'date',
-          date: triggerDate,
-        },
-      });
-
-      return id;
-    } catch (error) {
-      console.error('[NotificationService] scheduleTrialEndReminder error:', error);
       return null;
     }
   }
