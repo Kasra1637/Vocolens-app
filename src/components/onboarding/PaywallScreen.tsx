@@ -39,11 +39,13 @@ import {
   makePurchase,
   restorePurchases,
   hasAccessLevel,
+  ADAPTY_ACCESS_LEVEL,
   PLACEMENT_ONBOARDING_PAYWALL,
   PRODUCT_ID_MONTHLY,
   PRODUCT_ID_THREE_MONTH,
   PRODUCT_ID_YEARLY,
 } from "@/lib/adaptyClient";
+import type { AdaptyProfile } from "react-native-adapty";
 import type { AdaptyPaywallProduct } from "react-native-adapty";
 import { NotificationService } from "@/lib/services/notification-service";
 
@@ -336,7 +338,7 @@ export function PaywallScreen() {
     setIsPurchasing(false);
 
     if (result.ok && result.data.type === "success" && hasAccessLevel(result.data.profile)) {
-      grantAccess(selectedPlan);
+      grantAccess(selectedPlan, result.data.profile);
     } else if (result.ok && result.data.type === "user_cancelled") {
       errorHaptic();
     } else if (!result.ok && result.reason === "sdk_error") {
@@ -364,7 +366,7 @@ export function PaywallScreen() {
     setIsPurchasingMonthly(false);
 
     if (result.ok && result.data.type === "success" && hasAccessLevel(result.data.profile)) {
-      grantAccess("monthly");
+      grantAccess("monthly", result.data.profile);
     } else if (result.ok && result.data.type === "user_cancelled") {
       errorHaptic();
     } else if (!result.ok && result.reason === "sdk_error") {
@@ -374,12 +376,22 @@ export function PaywallScreen() {
   };
 
   // ── Grant access helper ─────────────────────────────────────────────────────
-  const grantAccess = (plan: PlanKey) => {
+  // `profile` is the just-updated Adapty profile from the purchase result —
+  // used to read the REAL trial-expiry timestamp for the two trial reminder
+  // notifications below. Previously both were always called with `null`,
+  // which ignores Adapty's actual trial end date and falls back to a fixed
+  // "2 days from now" / "68 hours from now" estimate — only accurate if the
+  // trial started at the exact instant grantAccess() runs. Since purchase
+  // network round-trips add real delay, that estimate can drift enough for
+  // the "ends tomorrow" reminder to fire on the wrong day.
+  const grantAccess = (plan: PlanKey, profile?: AdaptyProfile) => {
     successHaptic();
     setSubscription(true, plan === "three_month" ? "quarterly" : plan);
     if (plan === "yearly") {
-      try { NotificationService.scheduleTrialDay2Reminder(null); } catch {}
-      try { NotificationService.scheduleTrialEndReminder(null); } catch {}
+      const expiresAt = profile?.accessLevels?.[ADAPTY_ACCESS_LEVEL]?.expiresAt;
+      const expiresAtIso = expiresAt ? new Date(expiresAt).toISOString() : null;
+      try { NotificationService.scheduleTrialDay2Reminder(expiresAtIso); } catch {}
+      try { NotificationService.scheduleTrialEndReminder(expiresAtIso); } catch {}
     }
     setShowExitModal(false);
     nextStep();

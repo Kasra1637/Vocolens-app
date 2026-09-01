@@ -367,9 +367,17 @@ export class NotificationService {
   }
 
   /**
-   * Schedule a "Your trial ends tomorrow" notification — fires on Day 2 of a 3-day trial.
-   * If an expiration date is provided, fires 1 day before expiry.
-   * Otherwise falls back to 2 days from now (= Day 2 of a 3-day trial).
+   * Schedule a "trial ends tomorrow" notification — fires on Day 2 of the
+   * 3-day yearly-plan trial (i.e. 1 day before the trial converts to a paid
+   * subscription).
+   *
+   * `expirationDate` should be the REAL trial-expiry timestamp from Adapty
+   * (the purchased product's access level `expiresAt`, as an ISO string —
+   * see PaywallScreen.tsx's handleCTA, which now threads this through from
+   * the Adapty purchase result instead of always passing null). If it's
+   * null/invalid, falls back to an estimate of 2 days from now, which only
+   * matches reality if the trial started at the exact moment this method
+   * is called.
    */
   static async scheduleTrialDay2Reminder(
     expirationDate?: string | null,
@@ -401,8 +409,8 @@ export class NotificationService {
 
       const id = await N.scheduleNotificationAsync({
         content: {
-          title: 'Your free trial ends tomorrow',
-          body: "You're making great progress. Keep your journal going — continue your subscription to stay on track.",
+          title: '🎙️ One day left on your free trial',
+          body: "You've already started building a clearer picture of how you feel. Keep it going — your trial wraps up tomorrow.",
           sound: 'default',
           data: { type: 'trial-day2-reminder' },
         },
@@ -422,6 +430,14 @@ export class NotificationService {
     }
   }
 
+  /**
+   * Schedule a "trial ending in a few hours" notification, timed 4 hours
+   * before the trial converts to a paid subscription.
+   *
+   * `rcExpirationDate` should be the REAL trial-expiry timestamp from
+   * Adapty (see scheduleTrialDay2Reminder's doc comment above — same
+   * wiring applies here).
+   */
   static async scheduleTrialEndReminder(
     rcExpirationDate?: string | null,
   ): Promise<string | null> {
@@ -449,8 +465,8 @@ export class NotificationService {
 
       const id = await N.scheduleNotificationAsync({
         content: {
-          title: 'Your free trial ends soon',
-          body: 'Your 3-day trial wraps up in a few hours. Stay subscribed to keep journaling.',
+          title: '⏳ Your trial wraps up in a few hours',
+          body: "Don't lose your streak or your insights — stay subscribed to keep checking in with Vocolens.",
           sound: 'default',
           data: { type: 'trial-end-reminder' },
         },
