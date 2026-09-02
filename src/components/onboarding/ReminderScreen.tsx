@@ -16,7 +16,7 @@
  */
 
 import React, { useEffect } from "react";
-import { View, Text, Pressable, Platform } from "react-native";
+import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -31,10 +31,11 @@ import Animated, {
 } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { successHaptic, tapHaptic } from "@/lib/haptics";
-import { Bell, ChevronRight } from "lucide-react-native";
+import { Bell } from "lucide-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
+import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 
 
@@ -216,64 +217,18 @@ export function ReminderScreen() {
               <AnimatedBell primaryColor={themeColors.primary} />
             </Animated.View>
 
-            {/* CTA */}
+            {/* CTA — uses the shared OnboardingCTAButton (pill shape, theme
+                border color) so it matches every other onboarding screen's
+                primary button, instead of the previous hand-rolled
+                rounded-rectangle with a plain white border. */}
             <Animated.View
               entering={FadeIn.delay(500).duration(600).easing(SOFT)}
               style={{ alignItems: "center" }}
             >
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.75)",
-                  fontFamily: "Inter_400Regular",
-                  fontSize: 13,
-                  textAlign: "center",
-                  marginBottom: 16,
-                  letterSpacing: 0.2,
-                }}
-              >
-                ✔ No Payment Due Now.
-              </Text>
-
-              <Pressable
+              <OnboardingCTAButton
+                label="Continue"
                 onPress={handleContinue}
-                style={{
-                  width: "100%",
-                  borderRadius: 18,
-                  borderWidth: 2,
-                  borderColor: "#FFFFFF",
-                  overflow: "hidden",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 16,
-                  elevation: Platform.OS === "android" ? 0 : 8,
-                }}
-                android_ripple={{ color: "rgba(255,255,255,0.2)" }}
-              >
-                <LinearGradient
-                  colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    paddingVertical: 16,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontFamily: "Inter_700Bold",
-                      fontSize: 18,
-                      marginRight: 6,
-                    }}
-                  >
-                    Continue
-                  </Text>
-                  <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
-                </LinearGradient>
-              </Pressable>
+              />
             </Animated.View>
 
             {/* Remaining space goes to bottom */}
