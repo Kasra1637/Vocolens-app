@@ -23,7 +23,6 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Alert,
   Modal,
   Platform,
 } from "react-native";
@@ -55,6 +54,7 @@ import { removePin } from "@/lib/auth-service";
 import { clearAICache } from "@/lib/ai-emotional-intelligence";
 import { PinEntryScreen } from "@/components/PinEntryScreen";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { BrandedAlert } from "@/components/BrandedAlert";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import useBiometricStore from "@/lib/state/biometric-store";
@@ -75,6 +75,7 @@ export default function PrivacySettingsScreen() {
   const [deleteAction, setDeleteAction] = useState<
     "entries" | "account" | null
   >(null);
+  const [alert, setAlert] = useState<{ type: "success" | "error" | "warning"; title: string; message: string } | null>(null);
 
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const isDarkMode = useSettingsStore((s) => s.isDarkMode);
@@ -129,11 +130,11 @@ export default function PrivacySettingsScreen() {
         });
         successHaptic();
       } else {
-        Alert.alert("Success", `Data exported to: ${fileName}`);
+        setAlert({ type: "success", title: "Success", message: `Data exported to: ${fileName}` });
       }
     } catch (error) {
       console.error("Export error:", error);
-      Alert.alert("Error", "Failed to export data");
+      setAlert({ type: "error", title: "Error", message: "Failed to export data" });
       errorHaptic();
     }
   };
@@ -169,10 +170,10 @@ export default function PrivacySettingsScreen() {
       // so it must not outlive them.
       await clearAICache();
       setShowDeleteConfirm(false);
-      Alert.alert("Success", "All journal entries have been deleted");
+      setAlert({ type: "success", title: "Success", message: "All journal entries have been deleted" });
     } catch (error) {
       console.error("Delete error:", error);
-      Alert.alert("Error", "Failed to delete entries");
+      setAlert({ type: "error", title: "Error", message: "Failed to delete entries" });
       errorHaptic();
     }
   };
@@ -217,7 +218,7 @@ export default function PrivacySettingsScreen() {
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Delete account error:", error);
-      Alert.alert("Error", "Failed to delete account");
+      setAlert({ type: "error", title: "Error", message: "Failed to delete account" });
       errorHaptic();
     }
   };
@@ -621,6 +622,14 @@ export default function PrivacySettingsScreen() {
         confirmLabel="Delete Everything"
         onConfirm={confirmDeleteAccount}
         onCancel={() => setShowDeleteAccountConfirm(false)}
+      />
+
+      <BrandedAlert
+        visible={alert !== null}
+        type={alert?.type ?? "success"}
+        title={alert?.title ?? ""}
+        message={alert?.message ?? ""}
+        onClose={() => setAlert(null)}
       />
 
       {/* PIN Verification — the exact same full-screen PinEntryScreen used by

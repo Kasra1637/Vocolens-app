@@ -12,14 +12,13 @@
  *  4. Export Feedback as CSV button
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   Share,
-  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -39,6 +38,7 @@ import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store"
 import { getThemeColors, getThemeGradients, BorderRadius } from "@/lib/theme";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
+import { BrandedAlert } from "@/components/BrandedAlert";
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import {
   useFonts,
@@ -105,6 +105,8 @@ export default function CorrectionHistoryScreen() {
   const topPattern = userBias.patterns[0] ?? null;
   const recentFeedback = corrections.slice(0, 20);
 
+  const [alert, setAlert] = useState<{ type: "success" | "error" | "warning"; title: string; message: string } | null>(null);
+
   const handleExportCSV = useCallback(async () => {
     successHaptic();
     const headers =
@@ -130,7 +132,7 @@ export default function CorrectionHistoryScreen() {
         title: "My Feedback History — Vocolens",
       });
     } catch {
-      Alert.alert("Export failed", "Could not share the CSV file.");
+      setAlert({ type: "error", title: "Export failed", message: "Could not share the CSV file." });
     }
   }, [corrections]);
 
@@ -463,6 +465,14 @@ export default function CorrectionHistoryScreen() {
         )}
 
       </ScrollView>
+
+      <BrandedAlert
+        visible={alert !== null}
+        type={alert?.type ?? "error"}
+        title={alert?.title ?? ""}
+        message={alert?.message ?? ""}
+        onClose={() => setAlert(null)}
+      />
     </View>
   );
 }

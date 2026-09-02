@@ -14,7 +14,6 @@ import {
   Pressable,
   Platform,
   ScrollView,
-  Alert,
   Modal,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -236,6 +235,7 @@ function TimeWheelPicker({ value, onChange, primaryColor }: TimeWheelPickerProps
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
+import { BrandedAlert } from "@/components/BrandedAlert";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 function getNotificationService() {
@@ -295,6 +295,7 @@ export function NotificationPreferencesScreen() {
   );
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [enableNotifications, setEnableNotifications] = useState(true);
+  const [permissionAlertVisible, setPermissionAlertVisible] = useState(false);
   const [selectedDays, setSelectedDays] = useState<Set<DayOfWeek>>(
     new Set(EVERYDAY),
   );
@@ -402,11 +403,7 @@ export function NotificationPreferencesScreen() {
       if (status.granted) {
         setEnableNotifications(true);
       } else {
-        Alert.alert(
-          "Permission Required",
-          "Please enable notifications in your device settings to receive daily reminders.",
-          [{ text: "OK" }],
-        );
+        setPermissionAlertVisible(true);
       }
     } else {
       setEnableNotifications(false);
@@ -893,6 +890,14 @@ export function NotificationPreferencesScreen() {
           </View>
         </Modal>
       )}
+
+      <BrandedAlert
+        visible={permissionAlertVisible}
+        type="warning"
+        title="Permission Required"
+        message="Please enable notifications in your device settings to receive daily reminders."
+        onClose={() => setPermissionAlertVisible(false)}
+      />
     </View>
   );
 }

@@ -14,7 +14,6 @@ import {
   Text,
   Pressable,
   ActivityIndicator,
-  Alert,
   Platform,
   Modal,
   BackHandler,
@@ -31,6 +30,7 @@ import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
+import { BrandedAlert } from "@/components/BrandedAlert";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import {
   configureAdapty,
@@ -378,6 +378,15 @@ export function PaywallScreen() {
   const [showTrialReminderModal, setShowTrialReminderModal] = useState(false);
   const [pendingTrialExpiryIso,  setPendingTrialExpiryIso]  = useState<string | null>(null);
 
+  // ── Branded alert (replaces native Alert.alert so notices share the app's
+  //    unified popup design) ─────────────────────────────────────────────────
+  const [alert, setAlert] = useState<{ type: "success" | "error" | "warning"; title: string; message: string } | null>(null);
+  const showAlert = (
+    type: "success" | "error" | "warning",
+    title: string,
+    message: string,
+  ) => setAlert({ type, title, message });
+
   // ── Load products from Adapty ───────────────────────────────────────────────
   useEffect(() => {
     trackEvent("paywall_shown", { screen: "onboarding", default_plan: "yearly" });
@@ -430,7 +439,8 @@ export function PaywallScreen() {
 
     if (!pkg) {
       errorHaptic();
-      Alert.alert(
+      showAlert(
+        "error",
         "Products Unavailable",
         "We couldn't load subscription options. Please check your connection and try again.",
       );
@@ -447,7 +457,7 @@ export function PaywallScreen() {
       errorHaptic();
     } else if (!result.ok && result.reason === "sdk_error") {
       errorHaptic();
-      Alert.alert("Payment Error", "Something went wrong. Please try again.");
+      showAlert("error", "Payment Error", "Something went wrong. Please try again.");
     }
   };
 
@@ -458,7 +468,8 @@ export function PaywallScreen() {
 
     if (!monthlyPkg) {
       errorHaptic();
-      Alert.alert(
+      showAlert(
+        "error",
         "Products Unavailable",
         "We couldn't load subscription options. Please check your connection and try again.",
       );
@@ -475,7 +486,7 @@ export function PaywallScreen() {
       errorHaptic();
     } else if (!result.ok && result.reason === "sdk_error") {
       errorHaptic();
-      Alert.alert("Payment Error", "Something went wrong. Please try again.");
+      showAlert("error", "Payment Error", "Something went wrong. Please try again.");
     }
   };
 
@@ -586,10 +597,10 @@ export function PaywallScreen() {
       nextStep();
     } else if (result.ok) {
       errorHaptic();
-      Alert.alert("No Active Subscription", "We couldn't find an active subscription to restore.");
+      showAlert("warning", "No Active Subscription", "We couldn't find an active subscription to restore.");
     } else {
       errorHaptic();
-      Alert.alert("Restore Failed", "Something went wrong. Please try again.");
+      showAlert("error", "Restore Failed", "Something went wrong. Please try again.");
     }
   };
 
@@ -849,6 +860,14 @@ export function PaywallScreen() {
         onDecline={() => { setShowExitModal(false); prevStep(); }}
         isPurchasing={isPurchasingMonthly}
         monthlyPrice={monthlyPrice}
+      />
+
+      <BrandedAlert
+        visible={alert !== null}
+        type={alert?.type ?? "error"}
+        title={alert?.title ?? ""}
+        message={alert?.message ?? ""}
+        onClose={() => setAlert(null)}
       />
     </View>
   );
