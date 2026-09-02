@@ -45,7 +45,15 @@ export default ({ config }) => ({
     // was missing, which is why daily-reminder notifications never appeared
     // despite scheduling succeeding without errors.
     permissions: ['RECORD_AUDIO', 'POST_NOTIFICATIONS'],
-    versionCode: 7,
+    // Manually incremented, NOT auto-incremented. eas.json's autoIncrement:true
+    // does not work reliably with a dynamic app.config.js (a .js file, not
+    // .json) — EAS CLI cannot parse/rewrite JS to persist the bump, so it was
+    // silently re-reading this same hardcoded value on every build, always
+    // bumping 7 -> 8 in-memory for that one build only, never saving 8 back
+    // here. Every build therefore produced versionCode 8 again and again,
+    // causing repeated "Version code already used" upload rejections.
+    // Bump this by hand before every new production build from now on.
+    versionCode: 10,
     adaptiveIcon: {
       foregroundImage: './assets/images/icon.png',
       backgroundColor: '#0F0E1A',
