@@ -266,6 +266,87 @@ function MonthlyExitModal({
   );
 }
 
+// ── Trial-charge reminder opt-in modal ─────────────────────────────────────────
+// Shown right after a successful Yearly-plan purchase, ONLY if the OS
+// notification permission hasn't already been explicitly denied. This is
+// deliberately separate from the daily-reminder permission ask earlier in
+// onboarding (NotificationPreferencesScreen) — a user may decline daily
+// journaling nudges but still want a single, one-time heads-up before their
+// trial converts to a paid charge. Framing it as its own narrow, one-time ask
+// gives it a fair chance independent of whatever they decided about daily
+// reminders.
+//
+// If permission was already granted (e.g. they said yes to daily reminders),
+// this modal is skipped entirely and the reminder is scheduled immediately —
+// no need to ask twice.
+//
+// If permission was already denied at the OS level, this modal is also
+// skipped — re-showing the OS prompt is not possible once truly denied, so
+// asking again here would set an expectation this build cannot fulfill.
+function TrialReminderOptInModal({
+  visible,
+  themeColors,
+  onEnable,
+  onDecline,
+}: {
+  visible: boolean;
+  themeColors: (typeof THEME_COLORS)[keyof typeof THEME_COLORS];
+  onEnable: () => void;
+  onDecline: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent>
+      <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.6)" }}>
+        <LinearGradient
+          colors={[themeColors.gradientStart, themeColors.gradientEnd]}
+          style={{ borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 }}
+        >
+          <View style={{ alignItems: "center", marginBottom: 16 }}>
+            <View
+              style={{
+                width: 60, height: 60, borderRadius: 30,
+                backgroundColor: "rgba(255,255,255,0.14)",
+                borderWidth: 1, borderColor: "rgba(255,255,255,0.25)",
+                alignItems: "center", justifyContent: "center", marginBottom: 14,
+              }}
+            >
+              <Bell size={28} color="#FFFFFF" weight="duotone" />
+            </View>
+            <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 20, textAlign: "center" }}>
+              Get a heads-up before you're charged?
+            </Text>
+          </View>
+
+          <Text style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 21, marginBottom: 24, textAlign: "center" }}>
+            We'll send just one reminder, 24 hours before your trial ends — no daily nudges, just this.
+          </Text>
+
+          <Pressable
+            onPress={onEnable}
+            style={{ borderRadius: 18, borderWidth: 2, borderColor: themeColors.secondary, overflow: "hidden", marginBottom: 12 }}
+          >
+            <LinearGradient
+              colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
+              start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+              style={{ paddingVertical: 15, alignItems: "center" }}
+            >
+              <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 16 }}>
+                Yes, remind me
+              </Text>
+            </LinearGradient>
+          </Pressable>
+
+          <Pressable onPress={onDecline} style={{ alignItems: "center", paddingTop: 4 }}>
+            <Text style={{ color: "rgba(255,255,255,0.40)", fontFamily: "Inter_400Regular", fontSize: 13 }}>
+              No thanks
+            </Text>
+          </Pressable>
+        </LinearGradient>
+      </View>
+    </Modal>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export function PaywallScreen() {
   const selectedTheme  = useOnboardingStore((s) => s.selectedTheme);
@@ -287,6 +368,15 @@ export function PaywallScreen() {
   const [isRestoring,        setIsRestoring]         = useState(false);
   const [showExitModal,      setShowExitModal]       = useState(false);
   const [showMorePlans,      setShowMorePlans]       = useState(false);
+
+  // ── Trial-charge reminder opt-in (yearly plan only) ─────────────────────────
+  // Holds the real trial-expiry ISO string between the purchase succeeding
+  // and the user responding to TrialReminderOptInModal (or it being skipped
+  // entirely), so scheduleTrialDay2Reminder() always gets the accurate date
+  // regardless of which path (immediate schedule / modal accept / decline)
+  // is taken.
+  const [showTrialReminderModal, setShowTrialReminderModal] = useState(false);
+  const [pendingTrialExpiryIso,  setPendingTrialExpiryIso]  = useState<string | null>(null);
 
   // ── Load products from Adapty ───────────────────────────────────────────────
   useEffect(() => {
@@ -390,15 +480,82 @@ export function PaywallScreen() {
   // notification with the exact charge amount and date reads as transparent;
   // stacking two, with the second landing right before the charge, reads as
   // pressure and increases refund/complaint risk without adding real value.
+  //
+  // For the yearly plan specifically, this reminder must have a real chance
+  // of reaching the user REGARDLESS of whatever they decided about DAILY
+  // journaling reminders earlier in onboarding — declining daily nudges
+  // shouldn't silently forfeit this one, separate, one-time "you're about to
+  // be charged" heads-up. See handleYearlyTrialReminder below for how that's
+  // handled without re-showing an OS prompt that was already truly denied.
   const grantAccess = (plan: PlanKey, profile?: AdaptyProfile) => {
     successHaptic();
     setSubscription(true, plan === "three_month" ? "quarterly" : plan);
+    setShowExitModal(false);
+
     if (plan === "yearly") {
       const expiresAt = profile?.accessLevels?.[ADAPTY_ACCESS_LEVEL]?.expiresAt;
       const expiresAtIso = expiresAt ? new Date(expiresAt).toISOString() : null;
-      try { NotificationService.scheduleTrialDay2Reminder(expiresAtIso, yearlyPrice); } catch {}
+      // Deliberately not awaited here — grantAccess stays synchronous;
+      // handleYearlyTrialReminder itself decides when to call nextStep()
+      // once permission has been resolved one way or another (immediately,
+      // via the opt-in modal, or skipped if truly denied).
+      handleYearlyTrialReminder(expiresAtIso);
+    } else {
+      // Monthly / quarterly have no trial — nothing to remind about, proceed
+      // immediately as before.
+      nextStep();
     }
-    setShowExitModal(false);
+  };
+
+  // ── Yearly-plan trial reminder: request permission independent of the
+  //    earlier daily-reminder ask ───────────────────────────────────────────
+  // Checks current OS notification permission WITHOUT prompting
+  // (checkPermissions), then:
+  //   - "granted"     → already allowed (e.g. said yes to daily reminders
+  //                      earlier) — schedule immediately, no extra prompt.
+  //   - "denied"      → truly denied at the OS level already. No app can
+  //                      re-trigger that system prompt once denied, so
+  //                      asking again here would promise something this
+  //                      build cannot deliver — skip silently and proceed.
+  //   - "undetermined" → never actually answered a real OS prompt yet (e.g.
+  //                      they left daily reminders off without ever seeing
+  //                      the system dialog). Show our own narrowly-scoped
+  //                      opt-in modal, framed around just this one reminder,
+  //                      before triggering the real permission request.
+  const handleYearlyTrialReminder = async (expiresAtIso: string | null) => {
+    setPendingTrialExpiryIso(expiresAtIso);
+    try {
+      const { status } = await NotificationService.checkPermissions();
+      if (status === "granted") {
+        try { await NotificationService.scheduleTrialDay2Reminder(expiresAtIso, yearlyPrice); } catch {}
+        nextStep();
+      } else if (status === "denied") {
+        nextStep();
+      } else {
+        setShowTrialReminderModal(true);
+      }
+    } catch {
+      nextStep();
+    }
+  };
+
+  const handleTrialReminderOptInEnable = async () => {
+    tapHaptic();
+    setShowTrialReminderModal(false);
+    try {
+      const { granted } = await NotificationService.requestPermissions();
+      if (granted) {
+        await NotificationService.scheduleTrialDay2Reminder(pendingTrialExpiryIso, yearlyPrice);
+      }
+    } catch {
+      // no-op — proceed regardless, this reminder is best-effort
+    }
+    nextStep();
+  };
+
+  const handleTrialReminderOptInDecline = () => {
+    tapHaptic();
+    setShowTrialReminderModal(false);
     nextStep();
   };
 
@@ -675,6 +832,13 @@ export function PaywallScreen() {
           </View>
         </SafeAreaView>
       </LinearGradient>
+
+      <TrialReminderOptInModal
+        visible={showTrialReminderModal}
+        themeColors={themeColors}
+        onEnable={handleTrialReminderOptInEnable}
+        onDecline={handleTrialReminderOptInDecline}
+      />
 
       <MonthlyExitModal
         visible={showExitModal}

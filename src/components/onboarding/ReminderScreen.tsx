@@ -269,7 +269,7 @@ export function ReminderScreen() {
                       marginRight: 6,
                     }}
                   >
-                    Continue for Free
+                    Continue
                   </Text>
                   <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
                 </LinearGradient>
