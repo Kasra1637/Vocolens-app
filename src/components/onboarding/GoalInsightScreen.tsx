@@ -25,7 +25,6 @@ import { Target } from "lucide-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   GoalType,
-  GoalBlockerType,
 } from "@/lib/state/onboarding-store";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
@@ -38,13 +37,6 @@ const GOAL_LABELS: Record<GoalType, string> = {
   "goal-setting": "Finding direction",
   "self-reflection": "Self-reflection",
   "decision-making": "Thinking clearly",
-};
-
-const BLOCKER_LABELS: Record<GoalBlockerType, string> = {
-  "lack-of-time": "Lack of time",
-  "self-doubt": "Self-doubt",
-  "lack-of-consistency": "Lack of consistency",
-  "not-sure-how": "Not sure how",
 };
 
 const GOAL_INSIGHT_MESSAGES: Record<GoalType, string> = {
@@ -62,7 +54,6 @@ export function GoalInsightScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
   const prevStep = useOnboardingStore((s) => s.prevStep);
   const selectedGoal = useOnboardingStore((s) => s.selectedGoal);
-  const selectedGoalBlocker = useOnboardingStore((s) => s.selectedGoalBlocker);
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const themeColors = THEME_COLORS[selectedTheme];
@@ -103,9 +94,6 @@ export function GoalInsightScreen() {
   };
 
   const goalLabel = selectedGoal ? GOAL_LABELS[selectedGoal] : "Your Goal";
-  const blockerLabel = selectedGoalBlocker
-    ? BLOCKER_LABELS[selectedGoalBlocker]
-    : "";
   const insightMessage = selectedGoal
     ? GOAL_INSIGHT_MESSAGES[selectedGoal]
     : "";
@@ -118,7 +106,7 @@ export function GoalInsightScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={26} />
+        <ProgressBar currentStep={currentStep} totalSteps={25} />
 
         <SafeAreaView className="flex-1">
           <BackButton onPress={handleBack} show={currentStep > 0} />

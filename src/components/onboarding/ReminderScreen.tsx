@@ -183,7 +183,7 @@ export function ReminderScreen() {
         end={{ x: 0.3, y: 1 }}
         style={{ flex: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={26} />
+        <ProgressBar currentStep={currentStep} totalSteps={25} />
 
         <SafeAreaView style={{ flex: 1 }}>
           <BackButton onPress={handleBack} show={currentStep > 0} />

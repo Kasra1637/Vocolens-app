@@ -1,14 +1,18 @@
 /**
  * Onboarding Flow Component
  *
- * Main container that manages the 26-screen onboarding flow.
+ * Main container that manages the 25-screen onboarding flow.
+ *
+ * Flow rhythm: every question screen is followed by an Insight screen that
+ * reflects the answer back. Keep that alternation — stacking two questions
+ * in a row is what makes the funnel start to feel like a form.
  *
  * IMPORTANT: the step map below is the source of truth for two other things
  * that must be kept in sync whenever a screen is added or removed:
  *   1. `nextStep()`'s upper clamp in lib/state/onboarding-store.ts — must be
- *      the LAST index here (currently 25).
+ *      the LAST index here (currently 24).
  *   2. Every screen's `<ProgressBar totalSteps={...} />` — must be the TOTAL
- *      number of screens here (currently 26). A mismatch makes the bar jump
+ *      number of screens here (currently 25). A mismatch makes the bar jump
  *      backwards mid-flow.
  *
  * Step map:
@@ -22,22 +26,23 @@
  *  7  MoodFollowUpScreen
  *  8  MoodInsightScreen
  *  9  GoalSelectionScreen
- *  10 GoalBlockerScreen
- *  11 GoalInsightScreen
- *  12 ReflectionFeelingsScreen
- *  13 JournalingFrequencyInsightScreen
- *  14 SelfAwarenessScreen
- *  15 SelfAwarenessInsightScreen
- *  16 ProcessingStyleScreen
- *  17 ProcessingStyleInsightScreen
- *  18 AppFeelingScreen
- *  19 NotificationPreferencesScreen
- *  20 PrivacyPermissionsScreen
- *  21 AccountPreparationScreen
- *  22 FreeTrialPreviewScreen
- *  23 ReminderScreen
- *  24 PaywallScreen
- *  25 BiometricSetupScreen
+ *  10 GoalInsightScreen
+ *  11 ReflectionFeelingsScreen
+ *  12 JournalingFrequencyInsightScreen
+ *  13 SelfAwarenessScreen
+ *  14 SelfAwarenessInsightScreen
+ *  15 ProcessingStyleScreen
+ *  16 ProcessingStyleInsightScreen
+ *  17 AppFeelingScreen
+ *  18 NotificationPreferencesScreen
+ *  19 PrivacyPermissionsScreen
+ *  20 AccountPreparationScreen
+ *  21 FreeTrialPreviewScreen
+ *  22 ReminderScreen
+ *  23 PaywallScreen
+ *  24 BiometricSetupScreen
+ *
+ * Not in the flow: GoalBlockerScreen (see the note in the switch below).
  */
 
 import React from 'react';
@@ -85,26 +90,28 @@ export function OnboardingFlow() {
       case 7:  return <MoodFollowUpScreen />;
       case 8:  return <MoodInsightScreen />;
       case 9:  return <GoalSelectionScreen />;
-      // GoalBlockerScreen was imported/exported but missing from this switch,
-      // so it never rendered — leaving GoalInsightScreen (which reads
-      // selectedGoalBlocker to build its personalised message) with a
-      // permanently empty blocker label for every user.
-      case 10: return <GoalBlockerScreen />;
-      case 11: return <GoalInsightScreen />;
-      case 12: return <ReflectionFeelingsScreen />;
-      case 13: return <JournalingFrequencyInsightScreen />;
-      case 14: return <SelfAwarenessScreen />;
-      case 15: return <SelfAwarenessInsightScreen />;
-      case 16: return <ProcessingStyleScreen />;
-      case 17: return <ProcessingStyleInsightScreen />;
-      case 18: return <AppFeelingScreen />;
-      case 19: return <NotificationPreferencesScreen />;
-      case 20: return <PrivacyPermissionsScreen />;
-      case 21: return <AccountPreparationScreen />;
-      case 22: return <FreeTrialPreviewScreen />;
-      case 23: return <ReminderScreen />;
-      case 24: return <PaywallScreen />;
-      case 25: return <BiometricSetupScreen />;
+      // NOTE: GoalBlockerScreen is intentionally NOT in this flow.
+      // It asks a second question immediately after GoalSelectionScreen,
+      // which breaks the question -> validation cadence the rest of the
+      // funnel follows (every question is followed by an Insight screen that
+      // reflects the answer back). Two questions back-to-back is where the
+      // flow starts to feel like a form. The component is kept in the repo in
+      // case that beat is ever wanted somewhere that preserves the rhythm.
+      case 10: return <GoalInsightScreen />;
+      case 11: return <ReflectionFeelingsScreen />;
+      case 12: return <JournalingFrequencyInsightScreen />;
+      case 13: return <SelfAwarenessScreen />;
+      case 14: return <SelfAwarenessInsightScreen />;
+      case 15: return <ProcessingStyleScreen />;
+      case 16: return <ProcessingStyleInsightScreen />;
+      case 17: return <AppFeelingScreen />;
+      case 18: return <NotificationPreferencesScreen />;
+      case 19: return <PrivacyPermissionsScreen />;
+      case 20: return <AccountPreparationScreen />;
+      case 21: return <FreeTrialPreviewScreen />;
+      case 22: return <ReminderScreen />;
+      case 23: return <PaywallScreen />;
+      case 24: return <BiometricSetupScreen />;
       default: return <WelcomeScreen />;
     }
   };
