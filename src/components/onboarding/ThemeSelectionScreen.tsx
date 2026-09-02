@@ -121,15 +121,29 @@ export function ThemeSelectionScreen() {
     }
   }, []);
 
+  // Fires on onMomentumScrollEnd — the ONE moment scrolling is guaranteed to
+  // have truly, fully settled, whether that scroll was a user swipe or a
+  // tap-triggered animated scrollTo (goToIndex). This is now the single
+  // source of truth for both clearing isProgrammaticScrollRef AND for the
+  // final activeIndex/theme — it always recomputes from the real settled
+  // position rather than trusting a timer, so it can't be released too
+  // early (before a slower device's scroll animation actually finishes) and
+  // can't be fooled by an intermediate mid-animation position.
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (isProgrammaticScrollRef.current) return;
+      const wasProgrammatic = isProgrammaticScrollRef.current;
+      isProgrammaticScrollRef.current = false;
       const raw     = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
       const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
       if (clamped !== activeIndex) {
         setActiveIndex(clamped);
         setSelectedTheme(THEMES[clamped]);
-        selectHaptic();
+        // Avoid a redundant second haptic tick right after goToIndex already
+        // fired one for a tap-driven scroll that settled where expected —
+        // only buzz here for swipes, or for a tap that (rarely) settled
+        // somewhere other than its original target (e.g. interrupted by a
+        // manual swipe mid-animation).
+        if (!wasProgrammatic) selectHaptic();
       }
     },
     [activeIndex],
@@ -168,18 +182,20 @@ export function ThemeSelectionScreen() {
   const goToIndex = useCallback((index: number) => {
     const clamped = Math.max(0, Math.min(index, THEMES.length - 1));
     if (clamped === activeIndex) return;
-    // Block the scroll-position-derived handlers for the duration of the
-    // animated scroll, then release them — RN's default animated scrollTo
-    // duration is ~300ms; 400ms gives a safe margin so we never resume
-    // tracking scroll position before the carousel has actually settled.
+    // Block the scroll-position-derived handlers until the scroll animation
+    // actually reports completion via onMomentumScrollEnd (handleScroll) —
+    // deliberately NOT a fixed timer. A timer can expire before a slower
+    // device's scroll animation has really finished, letting a stray
+    // mid-animation position slip through and overwrite the index/theme we
+    // set here — which is exactly what produced the mismatch between the
+    // visible orb (already on the new theme) and the checkmark/background
+    // gradient (still reflecting the old one, because activeIndex got
+    // reverted moments after being set correctly).
     isProgrammaticScrollRef.current = true;
     scrollRef.current?.scrollTo({ x: clamped * SCREEN_WIDTH, animated: true });
     setActiveIndex(clamped);
     setSelectedTheme(THEMES[clamped]);
     selectHaptic();
-    setTimeout(() => {
-      isProgrammaticScrollRef.current = false;
-    }, 400);
   }, [activeIndex]);
 
   const handleTapLeftArrow  = () => goToIndex(activeIndex - 1);
