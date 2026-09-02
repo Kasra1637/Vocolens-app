@@ -1,24 +1,21 @@
 /**
  * ReminderScreen
  *
- * "We'll remind you 24 hours before you're charged."
+ * "We'll remind you before your trial ends."
  *
  * Re-inserted into the onboarding flow (was previously coded but not wired
  * into index.tsx's step switch — orphaned by an earlier step renumbering).
- * Now sits right after FreeTrialPreviewScreen ("try Vocolens for free") and
+ * Sits right after FreeTrialPreviewScreen ("try Vocolens for free") and
  * right before PaywallScreen — the natural beat between "here's what you get
- * for free" and "here's the plan, pick one": a clear, standalone promise
- * about exactly when and how much the user will be reminded before any
- * charge, so that promise isn't only visible on the paywall's Yearly-plan
- * timeline (easy to miss if a user views/selects a different plan first).
+ * for free" and "here's the plan, pick one".
  *
- * Copy is kept consistent with:
- *   - PaywallScreen's TrialTimeline "Day 2" step
- *   - notification-service.ts's scheduleTrialDay2Reminder() notification body
- * Both state the same "24 hours before charge, exact price" promise.
+ * Deliberately reminder-only: no price shown here. Pricing lives on the
+ * paywall itself (PaywallScreen's TrialTimeline) and in the actual
+ * trial-day2 reminder notification — this screen's only job is to promise
+ * that a reminder will come before the trial ends.
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View, Text, Pressable, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -39,20 +36,6 @@ import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
-import {
-  configureAdapty,
-  getPaywallProducts,
-  findProductById,
-  PLACEMENT_ONBOARDING_PAYWALL,
-  PRODUCT_ID_YEARLY,
-} from "@/lib/adaptyClient";
-import type { AdaptyPaywallProduct } from "react-native-adapty";
-
-// Display fallback only, shown while/if the live SDK price hasn't loaded yet.
-// Matches PaywallScreen's YEARLY_PRICE fallback — never used to unlock or
-// charge anything, purely cosmetic text on this informational screen.
-const YEARLY_PRICE_FALLBACK = "$79.99";
-const TRIAL_DAYS = 3;
 
 
 // ── Animated Bell ─────────────────────────────────────────────────────────────
@@ -179,21 +162,6 @@ export function ReminderScreen() {
 
   const themeColors = THEME_COLORS[selectedTheme];
 
-  const [yearlyPkg, setYearlyPkg] = useState<AdaptyPaywallProduct | null>(null);
-  const yearlyPrice = yearlyPkg?.price?.localizedString ?? YEARLY_PRICE_FALLBACK;
-
-  // Fetch the live yearly price so this screen states the exact same amount
-  // the paywall will show a moment later — same product/placement lookup
-  // PaywallScreen itself uses, so the numbers can never drift apart.
-  useEffect(() => {
-    configureAdapty();
-    (async () => {
-      const result = await getPaywallProducts(PLACEMENT_ONBOARDING_PAYWALL);
-      if (!result.ok) return;
-      setYearlyPkg(findProductById(result.data.products, PRODUCT_ID_YEARLY));
-    })();
-  }, []);
-
   const handleContinue = () => {
     playClickSound();
     successHaptic();
@@ -236,27 +204,7 @@ export function ReminderScreen() {
                   letterSpacing: 0.2,
                 }}
               >
-                {"We'll remind you\n24 hours before you're charged."}
-              </Text>
-            </Animated.View>
-
-            {/* Exact price + trial length — states the same numbers the
-                paywall and the actual trial-reminder notification will use,
-                so nothing here can read as vague or surprise the user later. */}
-            <Animated.View
-              entering={FadeIn.delay(120).duration(600).easing(SOFT)}
-              style={{ alignItems: "center", marginTop: 10 }}
-            >
-              <Text
-                style={{
-                  fontFamily: "Inter_600SemiBold",
-                  color: "rgba(255,255,255,0.85)",
-                  fontSize: 15,
-                  textAlign: "center",
-                  letterSpacing: 0.2,
-                }}
-              >
-                {`${yearlyPrice}/yr after your ${TRIAL_DAYS}-day free trial`}
+                {"We'll remind you\nbefore your trial ends."}
               </Text>
             </Animated.View>
 
