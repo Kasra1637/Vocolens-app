@@ -32,6 +32,10 @@ const analyzeSchema = z.object({
   transcript: z.string().min(1, "Transcript is required"),
   // Optional base64-encoded WAV audio for prosody analysis via GPT-4o audio model
   audioBase64: z.string().optional(),
+  // Per-user personalization suffix built from their emotion-correction
+  // history — injected into the analysis prompt so detection adapts to the
+  // user over time. Optional (absent for users with no corrections yet).
+  personalizationContext: z.string().optional(),
 });
 
 journalRouter.post("/analyze", async (c) => {
@@ -47,7 +51,7 @@ journalRouter.post("/analyze", async (c) => {
     return c.json({ error: parsed.error.issues[0]?.message ?? "Validation failed" }, 400);
   }
 
-  const { transcript, audioBase64 } = parsed.data;
+  const { transcript, audioBase64, personalizationContext } = parsed.data;
 
   if (!isOpenRouterConfigured()) {
     return c.json(
@@ -57,7 +61,7 @@ journalRouter.post("/analyze", async (c) => {
   }
 
   try {
-    const result = await analyzeTranscriptWithRetry(transcript, 3, audioBase64);
+    const result = await analyzeTranscriptWithRetry(transcript, 3, audioBase64, personalizationContext);
     console.log("Chart Data Updated");
     return c.json({ success: true, data: result });
   } catch (error) {

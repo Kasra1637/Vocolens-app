@@ -101,6 +101,11 @@ app.post("/api/recommend", async (c) => {
 const analyzeSchema = z.object({
   transcript: z.string().min(1, "Transcript is required"),
   audioBase64: z.string().optional(),
+  // Per-user personalization suffix built from their emotion-correction
+  // history (see frontend buildPersonalizationPrompt). Injected into the
+  // analysis prompt so detection accuracy adapts to each user over time.
+  // Optional — absent for brand-new users with no corrections yet.
+  personalizationContext: z.string().optional(),
 });
 
 app.post("/api/analyze", async (c) => {
@@ -110,7 +115,7 @@ app.post("/api/analyze", async (c) => {
   if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? "Validation failed" }, 400);
   if (!isOpenRouterConfigured()) return c.json({ error: "OpenRouter API key not configured" }, 503);
   try {
-    const result = await analyzeTranscriptWithRetry(parsed.data.transcript, 3, parsed.data.audioBase64);
+    const result = await analyzeTranscriptWithRetry(parsed.data.transcript, 3, parsed.data.audioBase64, parsed.data.personalizationContext);
     return c.json({ success: true, data: result });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Analysis failed";
