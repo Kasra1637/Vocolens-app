@@ -414,6 +414,20 @@ export function NotificationPreferencesScreen() {
   };
 
   // ---------- continue ----------
+  // `enableNotifications` defaults to true (see useState above), and the OS
+  // permission prompt was previously ONLY triggered by handleToggleNotifications
+  // — which only runs if the user explicitly taps the toggle. A user who just
+  // picks days/time and taps Continue without ever touching the toggle would
+  // never see the permission prompt at all: scheduleWeeklyNotifications()
+  // internally calls checkPermissions() (read-only, never prompts), silently
+  // returns an empty list if permission was never granted, and no error is
+  // shown. That matches exactly what was reported — days/time selected,
+  // Continue tapped, no permission popup, no notifications ever scheduled.
+  //
+  // Fix: explicitly call requestPermissions() (which shows the OS prompt)
+  // here whenever the user is continuing with notifications enabled, before
+  // attempting to schedule — regardless of whether they ever touched the
+  // toggle.
   const handleContinue = async () => {
     playClickSound();
     confirmHaptic();
@@ -427,13 +441,18 @@ export function NotificationPreferencesScreen() {
     });
 
     if (enableNotifications && daysArray.length > 0) {
-      const ids = await getNotificationService().scheduleWeeklyNotifications(
-        timeString,
-        daysArray,
-      );
-      console.log(
-        `Scheduled ${ids.length} notifications for ${daysArray.join(", ")} at ${timeString} (${timezone})`,
-      );
+      const { granted } = await getNotificationService().requestPermissions();
+      if (granted) {
+        const ids = await getNotificationService().scheduleWeeklyNotifications(
+          timeString,
+          daysArray,
+        );
+        console.log(
+          `Scheduled ${ids.length} notifications for ${daysArray.join(", ")} at ${timeString} (${timezone})`,
+        );
+      } else {
+        console.warn('[NotificationPreferences] Notification permission not granted — skipping schedule.');
+      }
     } else {
       await getNotificationService().cancelAllNotifications();
     }
