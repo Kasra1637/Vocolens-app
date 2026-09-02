@@ -228,7 +228,7 @@ export default function ReflectionScreen() {
               { backgroundColor: hexToRgba(Colors.primary, 0.12) },
             ]}
           >
-            <Text style={s.white}>Go Home</Text>
+            <Text style={s.white}>Go home</Text>
           </Pressable>
         </View>
       </View>

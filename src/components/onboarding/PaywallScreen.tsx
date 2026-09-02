@@ -251,7 +251,7 @@ function MonthlyExitModal({
             >
               {isPurchasing
                 ? <ActivityIndicator color="#FFFFFF" size="small" />
-                : <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 16 }}>Start Monthly Plan</Text>}
+                : <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 16 }}>Start monthly plan</Text>}
             </LinearGradient>
           </Pressable>
 
@@ -783,7 +783,7 @@ export function PaywallScreen() {
                               ? "Continue with quarterly"
                               : "Continue with monthly"}
                         </Text>
-                        <CaretRight size={20} color="#FFFFFF" weight="bold" />
+                        <CaretRight size={20} color="#FFFFFF" weight="regular" />
                       </>}
                 </LinearGradient>
               </Pressable>

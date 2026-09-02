@@ -1126,7 +1126,7 @@ export function FreeTrialPreviewScreen() {
                   >
                     Try for $0.00
                   </Text>
-                  <CaretRight size={20} color="#FFFFFF" weight="bold" />
+                  <CaretRight size={20} color="#FFFFFF" weight="regular" />
                 </LinearGradient>
               </Pressable>
             </Animated.View>

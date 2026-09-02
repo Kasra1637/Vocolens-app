@@ -141,7 +141,7 @@ export function WelcomeScreen() {
               pointerEvents={currentPhase === "ready" ? "auto" : "none"}
             >
               <OnboardingCTAButton
-                label="Start Journaling Free"
+                label="Start journaling free"
                 onPress={handleGetStarted}
                 paddingVertical={18}
                 fontSize={18}

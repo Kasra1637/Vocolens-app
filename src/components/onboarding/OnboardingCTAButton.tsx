@@ -15,7 +15,7 @@ interface OnboardingCTAButtonProps {
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  /** Override the right-side icon. Defaults to ChevronRight. Pass null to hide. */
+  /** Override the right-side icon. Defaults to a CaretRight. Pass null to hide. */
   icon?: React.ReactNode | null;
   /** Vertical padding inside the button. Defaults to 16. */
   paddingVertical?: number;
@@ -33,7 +33,7 @@ export function OnboardingCTAButton({
   label,
   onPress,
   disabled = false,
-  icon = <CaretRight size={20} color="#FFFFFF" weight="bold" />,
+  icon = <CaretRight size={20} color="#FFFFFF" weight="regular" />,
   paddingVertical = 16,
   fontSize = 18,
   borderColor: customBorderColor,

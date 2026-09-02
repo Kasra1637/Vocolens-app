@@ -40,7 +40,7 @@ import {
   Heart as HeartFace,
   ShareNetwork,
 } from "phosphor-react-native";
-import { Trophy, TrendUp, Sparkle, Clock, Brain, ChartBar } from "phosphor-react-native";
+import { Trophy, TrendUp, Sparkle, Clock, Brain, ChartBar, CaretDown } from "phosphor-react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -1062,15 +1062,18 @@ function InsightsContent({
               alignItems: "center",
             }}
           >
-            <Text
-              style={{
-                fontFamily: "Inter_600SemiBold",
-                fontSize: 14,
-                color: "#FFFFFF",
-              }}
-            >
-              Explore deeper ↓
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text
+                style={{
+                  fontFamily: "Inter_600SemiBold",
+                  fontSize: 14,
+                  color: "#FFFFFF",
+                }}
+              >
+                Explore deeper
+              </Text>
+              <CaretDown size={14} color="#FFFFFF" weight="regular" />
+            </View>
             <Text
               style={{
                 fontFamily: "Inter_400Regular",

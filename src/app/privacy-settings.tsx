@@ -267,7 +267,7 @@ export default function PrivacySettingsScreen() {
               justifyContent: "center",
             }}
           >
-            <CaretLeft size={20} color="#FFFFFF" weight="bold" />
+            <CaretLeft size={20} color="#FFFFFF" weight="regular" />
           </Pressable>
 
           <View style={{ flex: 1, alignItems: "center" }}>
@@ -381,7 +381,7 @@ export default function PrivacySettingsScreen() {
                       color: "#FFFFFF",
                     }}
                   >
-                    Export Data
+                    Export data
                   </Text>
                 </Pressable>
               </View>
@@ -485,7 +485,7 @@ export default function PrivacySettingsScreen() {
                         fontSize: 16,
                       }}
                     >
-                      Delete All Entries
+                      Delete all entries
                     </Text>
                   </LinearGradient>
                 </Pressable>
@@ -588,7 +588,7 @@ export default function PrivacySettingsScreen() {
                         fontSize: 16,
                       }}
                     >
-                      Delete Account
+                      Delete account
                     </Text>
                   </LinearGradient>
                 </Pressable>
@@ -607,7 +607,7 @@ export default function PrivacySettingsScreen() {
         destructiveness="severe"
         title="Delete all entries?"
         message="This will permanently delete all your journal entries and reset your statistics. Your account will remain active. This action cannot be undone."
-        confirmLabel="Delete All Entries"
+        confirmLabel="Delete all entries"
         onConfirm={confirmDeleteEntries}
         onCancel={() => setShowDeleteConfirm(false)}
       />
@@ -619,7 +619,7 @@ export default function PrivacySettingsScreen() {
         destructiveness="severe"
         title="Delete account?"
         message={`This will permanently delete your account, all entries, statistics, achievements, and security settings, and reset the app to a fresh install. You will need to set up a new PIN to use the app again. This action cannot be undone.\n\nThis does not cancel an active ${Platform.OS === "ios" ? "App Store" : "Google Play"} subscription — manage or cancel that separately in the ${Platform.OS === "ios" ? "App Store" : "Play Store"}.`}
-        confirmLabel="Delete Everything"
+        confirmLabel="Delete everything"
         onConfirm={confirmDeleteAccount}
         onCancel={() => setShowDeleteAccountConfirm(false)}
       />
