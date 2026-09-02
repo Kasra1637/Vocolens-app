@@ -298,9 +298,35 @@ export function getPlanTypeFromProfile(
   profile: AdaptyProfile | null | undefined,
 ): "yearly" | "quarterly" | "monthly" | null {
   const vendorProductId = profile?.accessLevels?.[ADAPTY_ACCESS_LEVEL]?.vendorProductId;
+  if (!vendorProductId) return null;
+
+  // Exact match against this app's configured vendor ids.
   if (vendorProductId === PRODUCT_ID_YEARLY) return "yearly";
   if (vendorProductId === PRODUCT_ID_THREE_MONTH) return "quarterly";
   if (vendorProductId === PRODUCT_ID_MONTHLY) return "monthly";
+
+  // Keyword fallback. Store-side product ids are frequently namespaced —
+  // e.g. "vocolens_yearly", "com.vocolens.app.monthly", "sub_3month" — in
+  // which case the exact comparisons above all miss and this function used to
+  // return null. That null then propagated into setSubscription(), wiping a
+  // previously-known planType on every launch and leaving the Settings
+  // subscription row stuck on the generic "Pro Plan — active" label. Matching
+  // on the interval keyword recovers the plan for those ids without needing
+  // the constants to be an exact mirror of the store configuration.
+  const id = vendorProductId.toLowerCase();
+  if (id.includes("year") || id.includes("annual")) return "yearly";
+  if (
+    id.includes("three_month") ||
+    id.includes("three-month") ||
+    id.includes("3month") ||
+    id.includes("3_month") ||
+    id.includes("3-month") ||
+    id.includes("quarter")
+  ) {
+    return "quarterly";
+  }
+  if (id.includes("month")) return "monthly";
+
   return null;
 }
 

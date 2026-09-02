@@ -1495,13 +1495,10 @@ export default function SettingsScreen() {
               </Text>
             </View>
 
-            {/* Action links — plain text links only, per feedback. Each is
-                two STACKED Text elements (title + caption) rather than one
-                wrapped multi-span paragraph — nested inline spans with an
-                em dash + arrow were wrapping unpredictably and clipping
-                against the row's rounded corners on-device. Generous
-                vertical padding and no overflow:hidden on the row itself
-                (only the outer card clips corners) so nothing gets cut off. */}
+            {/* Action links — label only, no captions. Each row is a single
+                line of text, so padding is symmetric (16 top/bottom) and
+                equal on both rows, giving the divider between them even
+                breathing room on each side. */}
             <View
               style={{
                 backgroundColor: "rgba(255,255,255,0.08)",
@@ -1518,8 +1515,7 @@ export default function SettingsScreen() {
                 disabled={isRestoringInSettings}
                 style={({ pressed }) => ({
                   paddingHorizontal: 18,
-                  paddingTop: 16,
-                  paddingBottom: 14,
+                  paddingVertical: 16,
                   borderBottomWidth: 1,
                   borderBottomColor: "rgba(255,255,255,0.10)",
                   opacity: pressed || isRestoringInSettings ? 0.6 : 1,
@@ -1534,16 +1530,6 @@ export default function SettingsScreen() {
                 >
                   {isRestoringInSettings ? "Restoring…" : "Restore purchases"}
                 </Text>
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255,255,255,0.50)",
-                    fontSize: 12,
-                    marginTop: 3,
-                  }}
-                >
-                  Recover a plan you already paid for
-                </Text>
               </Pressable>
 
               {/* Cancel subscription — opens store */}
@@ -1551,8 +1537,7 @@ export default function SettingsScreen() {
                 onPress={handleCancelSubscription}
                 style={({ pressed }) => ({
                   paddingHorizontal: 18,
-                  paddingTop: 14,
-                  paddingBottom: 16,
+                  paddingVertical: 16,
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
@@ -1564,16 +1549,6 @@ export default function SettingsScreen() {
                   }}
                 >
                   Cancel subscription
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255,255,255,0.50)",
-                    fontSize: 12,
-                    marginTop: 3,
-                  }}
-                >
-                  Opens Google Play to stop renewal
                 </Text>
               </Pressable>
             </View>

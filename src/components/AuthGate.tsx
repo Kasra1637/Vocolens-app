@@ -78,6 +78,9 @@ export function AuthGate({ children }: AuthGateProps) {
   const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
   const isEntitlementValid = useSubscriptionStore((s) => s.isEntitlementValid);
   const hasEverSubscribed  = useSubscriptionStore((s) => s.hasEverSubscribed);
+  // Used as the fallback when planType can't be derived from the Adapty
+  // profile — see checkAuthStatus.
+  const planType           = useSubscriptionStore((s) => s.planType);
 
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
 
@@ -176,8 +179,15 @@ export function AuthGate({ children }: AuthGateProps) {
   useEffect(() => {
     const removeListener = addProfileListener((profile) => {
       const active = hasAccessLevel(profile);
-      if (active) setSubscription(true, getPlanTypeFromProfile(profile));
-      else clearSubscription();
+      if (active) {
+        // Same "unknown != none" reasoning as in checkAuthStatus above: read
+        // the latest stored planType directly (rather than closing over it)
+        // since this listener is registered once and must not go stale.
+        const stored = useSubscriptionStore.getState().planType;
+        setSubscription(true, getPlanTypeFromProfile(profile) ?? stored);
+      } else {
+        clearSubscription();
+      }
     });
     return removeListener;
   }, []);
@@ -198,9 +208,12 @@ export function AuthGate({ children }: AuthGateProps) {
       confirmedActive = hasAccessLevel(result.data);
       if (confirmedActive) {
         // Refreshes lastVerifiedAt, restarting the offline grace window.
-        // Also re-derives planType from the profile so re-verification
-        // doesn't silently wipe it back to null on every launch.
-        setSubscription(true, getPlanTypeFromProfile(result.data));
+        // planType falls back to whatever is already stored when it can't be
+        // derived — a failed derivation means "unknown", not "no plan", and
+        // overwriting a known plan with null was leaving the Settings
+        // subscription row permanently showing the generic "Pro Plan —
+        // active" instead of the actual interval.
+        setSubscription(true, getPlanTypeFromProfile(result.data) ?? planType);
       } else {
         clearSubscription();
       }
