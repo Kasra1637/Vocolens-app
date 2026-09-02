@@ -24,12 +24,6 @@ export type GoalType =
   | "self-reflection"
   | "decision-making";
 
-export type GoalBlockerType =
-  | "lack-of-time"
-  | "self-doubt"
-  | "lack-of-consistency"
-  | "not-sure-how";
-
 export type MoodFollowUpType =
   | "small-win"
   | "supportive-friend"
@@ -208,7 +202,6 @@ interface OnboardingState {
   selectedMood: MoodType | null;
   selectedMoodFollowUp: MoodFollowUpType | null;
   selectedGoal: GoalType | null;
-  selectedGoalBlocker: GoalBlockerType | null;
   selectedJournalingGain: JournalingGainType | null;
   selectedReflectionFeeling: ReflectionFeelingType | null;
   selectedJournalingFrequency: JournalingFrequencyType | null;
@@ -230,7 +223,6 @@ interface OnboardingState {
   setSelectedMood: (mood: MoodType) => void;
   setSelectedMoodFollowUp: (followUp: MoodFollowUpType) => void;
   setSelectedGoal: (goal: GoalType) => void;
-  setSelectedGoalBlocker: (blocker: GoalBlockerType) => void;
   setSelectedJournalingGain: (gain: JournalingGainType) => void;
   setSelectedReflectionFeeling: (feeling: ReflectionFeelingType) => void;
   setJournalingFrequency: (frequency: JournalingFrequencyType) => void;
@@ -257,7 +249,6 @@ const useOnboardingStore = create<OnboardingState>()(
       selectedMood: null,
       selectedMoodFollowUp: null,
       selectedGoal: null,
-      selectedGoalBlocker: null,
       selectedJournalingGain: null,
       selectedReflectionFeeling: null,
       selectedJournalingFrequency: null,
@@ -286,8 +277,6 @@ const useOnboardingStore = create<OnboardingState>()(
       setSelectedMoodFollowUp: (followUp) =>
         set({ selectedMoodFollowUp: followUp }),
       setSelectedGoal: (goal) => set({ selectedGoal: goal }),
-      setSelectedGoalBlocker: (blocker) =>
-        set({ selectedGoalBlocker: blocker }),
       setSelectedJournalingGain: (gain) =>
         set({ selectedJournalingGain: gain }),
       setSelectedReflectionFeeling: (feeling) =>
@@ -322,7 +311,6 @@ const useOnboardingStore = create<OnboardingState>()(
           selectedMood: null,
           selectedMoodFollowUp: null,
           selectedGoal: null,
-          selectedGoalBlocker: null,
           selectedJournalingGain: null,
           selectedReflectionFeeling: null,
           selectedJournalingFrequency: null,
@@ -353,7 +341,6 @@ const useOnboardingStore = create<OnboardingState>()(
             selectedMood: persisted?.selectedMood ?? null,
             selectedMoodFollowUp: persisted?.selectedMoodFollowUp ?? null,
             selectedGoal: persisted?.selectedGoal ?? null,
-            selectedGoalBlocker: persisted?.selectedGoalBlocker ?? null,
             selectedJournalingGain: persisted?.selectedJournalingGain ?? null,
             selectedReflectionFeeling: persisted?.selectedReflectionFeeling ?? null,
             selectedJournalingFrequency: persisted?.selectedJournalingFrequency ?? null,
@@ -375,7 +362,6 @@ const useOnboardingStore = create<OnboardingState>()(
         selectedMood: state.selectedMood,
         selectedMoodFollowUp: state.selectedMoodFollowUp,
         selectedGoal: state.selectedGoal,
-        selectedGoalBlocker: state.selectedGoalBlocker,
         selectedJournalingGain: state.selectedJournalingGain,
         selectedReflectionFeeling: state.selectedReflectionFeeling,
         selectedJournalingFrequency: state.selectedJournalingFrequency,

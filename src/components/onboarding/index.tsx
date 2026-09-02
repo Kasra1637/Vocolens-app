@@ -42,7 +42,9 @@
  *  23 PaywallScreen
  *  24 BiometricSetupScreen
  *
- * Not in the flow: GoalBlockerScreen (see the note in the switch below).
+ * Every screen file in this folder is used by the switch below — there are no
+ * orphans. If you add a screen, add it to the step map AND the switch, and
+ * update the two counts noted above.
  */
 
 import React from 'react';
@@ -58,7 +60,6 @@ import { MoodSelectionScreen } from './MoodSelectionScreen';
 import { MoodFollowUpScreen } from './MoodFollowUpScreen';
 import { MoodInsightScreen } from './MoodInsightScreen';
 import { GoalSelectionScreen } from './GoalSelectionScreen';
-import { GoalBlockerScreen } from './GoalBlockerScreen';
 import { GoalInsightScreen } from './GoalInsightScreen';
 import { ReflectionFeelingsScreen } from './ReflectionFeelingsScreen';
 import { JournalingFrequencyInsightScreen } from './JournalingFrequencyInsightScreen';
@@ -90,13 +91,6 @@ export function OnboardingFlow() {
       case 7:  return <MoodFollowUpScreen />;
       case 8:  return <MoodInsightScreen />;
       case 9:  return <GoalSelectionScreen />;
-      // NOTE: GoalBlockerScreen is intentionally NOT in this flow.
-      // It asks a second question immediately after GoalSelectionScreen,
-      // which breaks the question -> validation cadence the rest of the
-      // funnel follows (every question is followed by an Insight screen that
-      // reflects the answer back). Two questions back-to-back is where the
-      // flow starts to feel like a form. The component is kept in the repo in
-      // case that beat is ever wanted somewhere that preserves the rhythm.
       case 10: return <GoalInsightScreen />;
       case 11: return <ReflectionFeelingsScreen />;
       case 12: return <JournalingFrequencyInsightScreen />;
@@ -133,7 +127,6 @@ export { MoodSelectionScreen } from './MoodSelectionScreen';
 export { MoodFollowUpScreen } from './MoodFollowUpScreen';
 export { MoodInsightScreen } from './MoodInsightScreen';
 export { GoalSelectionScreen } from './GoalSelectionScreen';
-export { GoalBlockerScreen } from './GoalBlockerScreen';
 export { GoalInsightScreen } from './GoalInsightScreen';
 export { ReflectionFeelingsScreen } from './ReflectionFeelingsScreen';
 export { JournalingFrequencyInsightScreen } from './JournalingFrequencyInsightScreen';
