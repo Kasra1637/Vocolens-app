@@ -1,7 +1,15 @@
 /**
  * Onboarding Flow Component
  *
- * Main container that manages the 25-screen onboarding flow.
+ * Main container that manages the 26-screen onboarding flow.
+ *
+ * IMPORTANT: the step map below is the source of truth for two other things
+ * that must be kept in sync whenever a screen is added or removed:
+ *   1. `nextStep()`'s upper clamp in lib/state/onboarding-store.ts — must be
+ *      the LAST index here (currently 25).
+ *   2. Every screen's `<ProgressBar totalSteps={...} />` — must be the TOTAL
+ *      number of screens here (currently 26). A mismatch makes the bar jump
+ *      backwards mid-flow.
  *
  * Step map:
  *  0  WelcomeScreen
@@ -19,18 +27,17 @@
  *  12 ReflectionFeelingsScreen
  *  13 JournalingFrequencyInsightScreen
  *  14 SelfAwarenessScreen
- *  15 SelfAwarenessInsightScreen  ← NEW
+ *  15 SelfAwarenessInsightScreen
  *  16 ProcessingStyleScreen
- *  17 ProcessingStyleInsightScreen  ← NEW
+ *  17 ProcessingStyleInsightScreen
  *  18 AppFeelingScreen
- *  17 NotificationPreferencesScreen
- *  18 LanguageSelectionScreen
- *  19 PrivacyPermissionsScreen
- *  20 AccountPreparationScreen
- *  21 FreeTrialPreviewScreen
- *  22 ReminderScreen          ← re-inserted (was coded but not wired in)
- *  23 PaywallScreen
- *  24 BiometricSetupScreen
+ *  19 NotificationPreferencesScreen
+ *  20 PrivacyPermissionsScreen
+ *  21 AccountPreparationScreen
+ *  22 FreeTrialPreviewScreen
+ *  23 ReminderScreen
+ *  24 PaywallScreen
+ *  25 BiometricSetupScreen
  */
 
 import React from 'react';
@@ -78,21 +85,26 @@ export function OnboardingFlow() {
       case 7:  return <MoodFollowUpScreen />;
       case 8:  return <MoodInsightScreen />;
       case 9:  return <GoalSelectionScreen />;
-      case 10: return <GoalInsightScreen />;
-      case 11: return <ReflectionFeelingsScreen />;
-      case 12: return <JournalingFrequencyInsightScreen />;
-      case 13: return <SelfAwarenessScreen />;
-      case 14: return <SelfAwarenessInsightScreen />;
-      case 15: return <ProcessingStyleScreen />;
-      case 16: return <ProcessingStyleInsightScreen />;
-      case 17: return <AppFeelingScreen />;
-      case 18: return <NotificationPreferencesScreen />;
-      case 19: return <PrivacyPermissionsScreen />;
-      case 20: return <AccountPreparationScreen />;
-      case 21: return <FreeTrialPreviewScreen />;
-      case 22: return <ReminderScreen />;
-      case 23: return <PaywallScreen />;
-      case 24: return <BiometricSetupScreen />;
+      // GoalBlockerScreen was imported/exported but missing from this switch,
+      // so it never rendered — leaving GoalInsightScreen (which reads
+      // selectedGoalBlocker to build its personalised message) with a
+      // permanently empty blocker label for every user.
+      case 10: return <GoalBlockerScreen />;
+      case 11: return <GoalInsightScreen />;
+      case 12: return <ReflectionFeelingsScreen />;
+      case 13: return <JournalingFrequencyInsightScreen />;
+      case 14: return <SelfAwarenessScreen />;
+      case 15: return <SelfAwarenessInsightScreen />;
+      case 16: return <ProcessingStyleScreen />;
+      case 17: return <ProcessingStyleInsightScreen />;
+      case 18: return <AppFeelingScreen />;
+      case 19: return <NotificationPreferencesScreen />;
+      case 20: return <PrivacyPermissionsScreen />;
+      case 21: return <AccountPreparationScreen />;
+      case 22: return <FreeTrialPreviewScreen />;
+      case 23: return <ReminderScreen />;
+      case 24: return <PaywallScreen />;
+      case 25: return <BiometricSetupScreen />;
       default: return <WelcomeScreen />;
     }
   };

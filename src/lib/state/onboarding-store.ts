@@ -305,8 +305,12 @@ const useOnboardingStore = create<OnboardingState>()(
       setNotificationPreferences: (preferences) =>
         set({ notificationPreferences: preferences }),
       setCurrentStep: (step) => set({ currentStep: step }),
+      // Upper clamp MUST equal the last index in the step map in
+      // components/onboarding/index.tsx (currently 25 = BiometricSetupScreen).
+      // If a screen is added/removed there, update this too or the final
+      // screen(s) become unreachable.
       nextStep: () =>
-        set((state) => ({ currentStep: Math.min(state.currentStep + 1, 24) })),
+        set((state) => ({ currentStep: Math.min(state.currentStep + 1, 25) })),
       prevStep: () =>
         set((state) => ({ currentStep: Math.max(state.currentStep - 1, 0) })),
       resetOnboarding: () =>

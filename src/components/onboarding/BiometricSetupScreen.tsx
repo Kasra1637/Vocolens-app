@@ -170,7 +170,7 @@ export function BiometricSetupScreen() {
         end={{ x: 0, y: 1 }}
         style={{ flex: 1 }}
       >
-        <ProgressBar currentStep={currentStep} totalSteps={23} />
+        <ProgressBar currentStep={currentStep} totalSteps={26} />
 
         <SafeAreaView style={{ flex: 1 }}>
           <View
