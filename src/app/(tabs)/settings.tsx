@@ -22,7 +22,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { Check, X, CaretRight } from "phosphor-react-native";
+import { Check, X, CaretRight, ArrowsClockwise, XCircle } from "phosphor-react-native";
 import { Palette, Bell, Shield, ShieldCheck, Brain, ChartBar, DownloadSimple, Crown, Key, Heart, Clock, FileText } from "phosphor-react-native";
 import * as Clipboard from "expo-clipboard";
 import { TimeWheelPicker } from "@/components/TimeWheelPicker";
@@ -1432,7 +1432,11 @@ export default function SettingsScreen() {
                     justifyContent: "center",
                   }}
                 >
-                  <Crown size={18} color="#FFFFFF" weight="duotone" />
+                  {/* weight="regular" (not duotone) — duotone paints a
+                      second, semi-transparent fill behind the glyph, which
+                      read as a stray/extra colour layer inside the crown and
+                      around the X. Regular is a clean single-tone glyph. */}
+                  <Crown size={18} color="#FFFFFF" weight="regular" />
                 </View>
                 <Text
                   style={{
@@ -1448,7 +1452,7 @@ export default function SettingsScreen() {
                 onPress={() => setSubscriptionModalVisible(false)}
                 hitSlop={12}
               >
-                <X size={22} color="rgba(255,255,255,0.55)" weight="duotone" />
+                <X size={22} color="rgba(255,255,255,0.55)" weight="regular" />
               </Pressable>
             </View>
 
@@ -1495,24 +1499,32 @@ export default function SettingsScreen() {
               </Text>
             </View>
 
-            {/* Action links — each in its OWN pill, stacked with a gap
-                between them (rather than sharing one pill split by a
-                divider). Same rounded-pill styling on both. */}
-            <View style={{ gap: 12, marginBottom: 14 }}>
+            {/* Action buttons — each in its own pill, stacked with a gap.
+                Restore = neutral primary (leading refresh icon, centered
+                label). Cancel = destructive, tinted red so it's clearly the
+                heavier action without shouting. Both are full-width, same
+                height, centered content, with a leading icon for scannability
+                — more orderly than left-aligned bare text links. */}
+            <View style={{ gap: 12, marginBottom: 16 }}>
               {/* Restore purchases */}
               <Pressable
                 onPress={handleRestoreInSettings}
                 disabled={isRestoringInSettings}
                 style={({ pressed }) => ({
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  borderRadius: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 9,
+                  backgroundColor: "rgba(255,255,255,0.10)",
+                  borderRadius: 14,
                   borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.14)",
-                  paddingHorizontal: 18,
-                  paddingVertical: 16,
+                  borderColor: "rgba(255,255,255,0.18)",
+                  paddingVertical: 15,
+                  paddingHorizontal: 16,
                   opacity: pressed || isRestoringInSettings ? 0.6 : 1,
                 })}
               >
+                <ArrowsClockwise size={18} color="#FFFFFF" weight="regular" />
                 <Text
                   style={{
                     fontFamily: "Inter_600SemiBold",
@@ -1528,15 +1540,20 @@ export default function SettingsScreen() {
               <Pressable
                 onPress={handleCancelSubscription}
                 style={({ pressed }) => ({
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  borderRadius: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 9,
+                  backgroundColor: "rgba(248,113,113,0.12)",
+                  borderRadius: 14,
                   borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.14)",
-                  paddingHorizontal: 18,
-                  paddingVertical: 16,
+                  borderColor: "rgba(248,113,113,0.35)",
+                  paddingVertical: 15,
+                  paddingHorizontal: 16,
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
+                <XCircle size={18} color="#F87171" weight="regular" />
                 <Text
                   style={{
                     fontFamily: "Inter_600SemiBold",

@@ -200,19 +200,7 @@ export class NotificationService {
         final = status;
       }
 
-      if (Platform.OS === 'android') {
-        try {
-          await N.setNotificationChannelAsync('daily-reminders', {
-            name: 'Daily Journaling Reminders',
-            importance: N.AndroidImportance.HIGH,
-            sound: 'default',
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#9370DB',
-          });
-        } catch {
-          // Channel setup is not critical — keep going
-        }
-      }
+      await this.ensureAndroidChannel();
 
       return {
         granted: final === 'granted',
@@ -242,6 +230,30 @@ export class NotificationService {
     }
   }
 
+  // ── Android channel ─────────────────────────────────────────────────────
+  // Idempotent — safe to call repeatedly (setNotificationChannelAsync just
+  // updates an existing channel). Extracted so EVERY scheduling path ensures
+  // the channel exists, not only requestPermissions(): on Android 8+ a
+  // scheduled notification whose channelId has no matching channel is
+  // silently dropped, and paths like AuthGate.rescheduleFromPreferences and
+  // the settings time-change re-schedule don't call requestPermissions first.
+  static async ensureAndroidChannel(): Promise<void> {
+    if (Platform.OS !== 'android') return;
+    const N = getNotifications();
+    if (!N) return;
+    try {
+      await N.setNotificationChannelAsync('daily-reminders', {
+        name: 'Daily Journaling Reminders',
+        importance: N.AndroidImportance.HIGH,
+        sound: 'default',
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#9370DB',
+      });
+    } catch {
+      // Channel setup is not critical — keep going
+    }
+  }
+
   // ── Scheduling ────────────────────────────────────────────────────────────
 
   static async scheduleWeeklyNotifications(
@@ -266,6 +278,8 @@ export class NotificationService {
       }
 
       ensureHandlerConfigured();
+      // Guarantee the Android channel exists before scheduling against it.
+      await this.ensureAndroidChannel();
       await this.cancelAllNotifications();
 
       if (days.length === 0) return [];
@@ -291,10 +305,21 @@ export class NotificationService {
             },
           },
           trigger: {
+            // Modern expo-notifications (SDK 52+) trigger shape. The old
+            // `{ weekday, hour, minute, repeats: true }` object is no longer
+            // honored — scheduleNotificationAsync still returned an id (so it
+            // looked scheduled and logged success), but the OS never
+            // registered a repeating alarm, so the notification silently
+            // never fired. `type: WEEKLY` is the current recurring-weekly form.
+            type: (N as any).SchedulableTriggerInputTypes?.WEEKLY ?? 'weekly',
             weekday,
             hour: hours,
             minute: minutes,
-            repeats: true,
+            // channelId MUST be set here on Android. The channel is created in
+            // requestPermissions() AND ensureAndroidChannel() below, but a
+            // scheduled notification that doesn't reference a valid channel is
+            // silently dropped on Android 8+ (API 26+).
+            channelId: 'daily-reminders',
           } as any,
         });
 
