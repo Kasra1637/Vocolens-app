@@ -8,7 +8,7 @@
  * Access level: "premium"
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -393,15 +393,29 @@ export function PaywallScreen() {
     })();
   }, []);
 
-  // ── Android hardware back → show exit modal ─────────────────────────────────
+  // Back always just goes back. The monthly exit-offer popup that used to
+  // appear on back/exit was removed per product decision — tapping back
+  // should never surface the "see monthly plan" modal. Defined here (above
+  // the hardware-back effect that depends on it) and memoised so the effect
+  // isn't re-subscribed every render.
+  const handleBack = useCallback(() => {
+    playClickSound(); tapHaptic();
+    trackEvent("paywall_back");
+    prevStep();
+  }, [playClickSound, prevStep]);
+
+  // ── Android hardware back → go back ─────────────────────────────────────────
+  // Previously this intercepted the hardware back to show the monthly
+  // exit-offer modal; that popup was removed, so hardware back now simply
+  // steps back through onboarding like the on-screen back button.
   useEffect(() => {
     if (Platform.OS !== "android") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (!showExitModal) setShowExitModal(true);
+      handleBack();
       return true;
     });
     return () => sub.remove();
-  }, [showExitModal]);
+  }, [handleBack]);
 
   // ── Purchase selected plan ────────────────────────────────────────────────
   const handleCTA = async () => {
@@ -576,18 +590,6 @@ export function PaywallScreen() {
     } else {
       errorHaptic();
       Alert.alert("Restore Failed", "Something went wrong. Please try again.");
-    }
-  };
-
-  const handleBack = () => {
-    playClickSound(); tapHaptic();
-    trackEvent("paywall_back");
-    // If user hasn't expanded plans yet, show exit modal with monthly offer.
-    // Otherwise just go back.
-    if (!showMorePlans) {
-      setShowExitModal(true);
-    } else {
-      prevStep();
     }
   };
 

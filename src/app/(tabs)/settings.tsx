@@ -1495,29 +1495,21 @@ export default function SettingsScreen() {
               </Text>
             </View>
 
-            {/* Action links — label only, no captions. Each row is a single
-                line of text, so padding is symmetric (16 top/bottom) and
-                equal on both rows, giving the divider between them even
-                breathing room on each side. */}
-            <View
-              style={{
-                backgroundColor: "rgba(255,255,255,0.08)",
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.14)",
-                overflow: "hidden",
-                marginBottom: 14,
-              }}
-            >
+            {/* Action links — each in its OWN pill, stacked with a gap
+                between them (rather than sharing one pill split by a
+                divider). Same rounded-pill styling on both. */}
+            <View style={{ gap: 12, marginBottom: 14 }}>
               {/* Restore purchases */}
               <Pressable
                 onPress={handleRestoreInSettings}
                 disabled={isRestoringInSettings}
                 style={({ pressed }) => ({
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.14)",
                   paddingHorizontal: 18,
                   paddingVertical: 16,
-                  borderBottomWidth: 1,
-                  borderBottomColor: "rgba(255,255,255,0.10)",
                   opacity: pressed || isRestoringInSettings ? 0.6 : 1,
                 })}
               >
@@ -1536,6 +1528,10 @@ export default function SettingsScreen() {
               <Pressable
                 onPress={handleCancelSubscription}
                 style={({ pressed }) => ({
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.14)",
                   paddingHorizontal: 18,
                   paddingVertical: 16,
                   opacity: pressed ? 0.6 : 1,
