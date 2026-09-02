@@ -1462,9 +1462,17 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
   }, [user.name]);
 
   // Dynamic subline that rotates every app open — never the same twice in a row
+  // When the user has never recorded an entry, the Insights screen has no
+  // data to show yet — so instead of a rotating "here's what your voice
+  // revealed" line (which would be false), point them to the first action.
+  const hasEntries = totalEntries > 0;
+
   const [subline, setSubline] = React.useState("");
 
   React.useEffect(() => {
+    // No entries yet → don't rotate; the empty-state message below is shown.
+    if (!hasEntries) return;
+
     const SUBLINES = [
       "Here's what your voice revealed about you.",
       "Your emotions have been speaking. Let's listen.",
@@ -1489,7 +1497,13 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
         setSubline(SUBLINES[0]);
       }
     })();
-  }, []);
+  }, [hasEntries]);
+
+  // Empty-state message (no trailing period, by request) shown only when
+  // there are no recordings yet; otherwise the rotating subline is used.
+  const displaySubline = hasEntries
+    ? subline
+    : "Record your first entry to see your insights";
 
   React.useEffect(() => {
     progressWidth.value = withSpring(user.nextBadge.progress * 100, {
@@ -1558,7 +1572,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
           }}
           className="mb-5"
         >
-          {subline}
+          {displaySubline}
         </Text>
       </View>
 
