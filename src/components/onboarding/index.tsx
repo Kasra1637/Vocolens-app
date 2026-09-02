@@ -28,7 +28,7 @@
  *  19 PrivacyPermissionsScreen
  *  20 AccountPreparationScreen
  *  21 FreeTrialPreviewScreen
- *  22 ReminderScreen
+ *  22 ReminderScreen          ← re-inserted (was coded but not wired in)
  *  23 PaywallScreen
  *  24 BiometricSetupScreen
  */
@@ -59,6 +59,7 @@ import { NotificationPreferencesScreen } from './NotificationPreferencesScreen';
 import { PrivacyPermissionsScreen } from './PrivacyPermissionsScreen';
 import { AccountPreparationScreen } from './AccountPreparationScreen';
 import { FreeTrialPreviewScreen } from './FreeTrialPreviewScreen';
+import { ReminderScreen } from './ReminderScreen';
 import { PaywallScreen } from './PaywallScreen';
 import { BiometricSetupScreen } from './BiometricSetupScreen';
 
@@ -89,8 +90,9 @@ export function OnboardingFlow() {
       case 19: return <PrivacyPermissionsScreen />;
       case 20: return <AccountPreparationScreen />;
       case 21: return <FreeTrialPreviewScreen />;
-      case 22: return <PaywallScreen />;
-      case 23: return <BiometricSetupScreen />;
+      case 22: return <ReminderScreen />;
+      case 23: return <PaywallScreen />;
+      case 24: return <BiometricSetupScreen />;
       default: return <WelcomeScreen />;
     }
   };
