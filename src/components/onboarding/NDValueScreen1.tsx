@@ -91,7 +91,7 @@ export function NDValueScreen1() {
             {/* Headline */}
             <Animated.View
               entering={FadeIn.duration(900).delay(120).easing(SOFT)}
-              style={{ alignItems: "center", marginBottom: 6 }}
+              style={{ alignItems: "center", marginBottom: 24 }}
             >
               <Text
                 style={{
@@ -105,24 +105,6 @@ export function NDValueScreen1() {
                 }}
               >
                 Sound familiar?
-              </Text>
-            </Animated.View>
-
-            {/* Subheadline */}
-            <Animated.View
-              entering={FadeIn.duration(900).delay(220).easing(SOFT)}
-              style={{ alignItems: "center", marginBottom: 24 }}
-            >
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.72)",
-                  fontSize: 15,
-                  textAlign: "center",
-                  lineHeight: 23,
-                }}
-              >
-                These might feel familiar
               </Text>
             </Animated.View>
 
