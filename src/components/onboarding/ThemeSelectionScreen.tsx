@@ -384,29 +384,41 @@ export function ThemeSelectionScreen() {
               </Animated.View>
             </View>
 
-            {/* Dots + Continue */}
+            {/* Dots + Continue — lifted off the bottom edge so the block sits
+                higher and doesn't crowd the gesture bar / nav bar. */}
             <Animated.View
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
-              style={{ alignItems: "center", gap: 10, paddingBottom: 8 }}
+              style={{ alignItems: "center", gap: 18, paddingBottom: 28 }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-                {THEMES.map((theme, i) => (
-                  <Pressable
-                    key={theme}
-                    onPress={() => goToIndex(i)}
-                    hitSlop={10}
-                  >
-                    <View
-                      style={{
-                        width: i === activeIndex ? 26 : 7,
-                        height: 7,
-                        borderRadius: 3.5,
-                        backgroundColor:
-                          i === activeIndex ? "#FFFFFF" : "rgba(255,255,255,0.32)",
-                      }}
-                    />
-                  </Pressable>
-                ))}
+              {/* Page dots — the active one becomes a soft pill, inactive ones
+                  are small, low-contrast circles. Slightly larger gap and a
+                  dimmer inactive state read as more refined than uniform,
+                  high-contrast dots. */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                {THEMES.map((theme, i) => {
+                  const isActive = i === activeIndex;
+                  return (
+                    <Pressable
+                      key={theme}
+                      onPress={() => goToIndex(i)}
+                      hitSlop={12}
+                      // Generous vertical padding keeps the tap target
+                      // comfortable without enlarging the visible dot.
+                      style={{ paddingVertical: 6, paddingHorizontal: 2 }}
+                    >
+                      <View
+                        style={{
+                          width: isActive ? 22 : 6,
+                          height: 6,
+                          borderRadius: 3,
+                          backgroundColor: isActive
+                            ? "#FFFFFF"
+                            : "rgba(255,255,255,0.28)",
+                        }}
+                      />
+                    </Pressable>
+                  );
+                })}
               </View>
               <View style={{ width: "100%" }}>
                 <OnboardingCTAButton
