@@ -286,7 +286,7 @@ export default function EmotionCorrectionModal({
                 borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)",
                 alignItems: "center", justifyContent: "center" }}
             >
-              <CaretLeft size={20} color="#FFFFFF" weight="duotone" />
+              <CaretLeft size={20} color="#FFFFFF" weight="regular" />
             </Pressable>
           ) : (
             <Pressable
@@ -296,7 +296,7 @@ export default function EmotionCorrectionModal({
                 borderWidth: 2, borderColor: "rgba(255, 255, 255, 0.20)",
                 alignItems: "center", justifyContent: "center" }}
             >
-              <X size={20} color="#FFFFFF" weight="duotone" />
+              <X size={20} color="#FFFFFF" weight="regular" />
             </Pressable>
           )}
 
@@ -464,17 +464,17 @@ export default function EmotionCorrectionModal({
               </Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
                 <ReasonChip label="Wrong label"
-                  icon={<Tag size={13} color="#FFFFFF" weight="duotone" />}
+                  icon={<Tag size={13} color="#FFFFFF" weight="regular" />}
                   active={correctionType === "label"}
                   onPress={() => { tapHaptic(); setCorrectionType("label"); }}
                   primaryColor={Colors.primary} />
                 <ReasonChip label="Wrong intensity"
-                  icon={<Sliders size={13} color="#FFFFFF" weight="duotone" />}
+                  icon={<Sliders size={13} color="#FFFFFF" weight="regular" />}
                   active={correctionType === "intensity"}
                   onPress={() => { tapHaptic(); setCorrectionType("intensity"); }}
                   primaryColor={Colors.primary} />
                 <ReasonChip label="Context"
-                  icon={<ChatTeardropText size={13} color="#FFFFFF" weight="duotone" />}
+                  icon={<ChatTeardropText size={13} color="#FFFFFF" weight="regular" />}
                   active={correctionType === "context"}
                   onPress={() => { tapHaptic(); setCorrectionType("context"); }}
                   primaryColor={Colors.primary} />

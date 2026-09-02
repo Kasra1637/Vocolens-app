@@ -161,7 +161,7 @@ export function TriggerInsightCard({ trigger, index = 0, onPress }: TriggerInsig
                 }}
               >
                 <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                <CategoryIcon size={24} color="#FFFFFF" weight="duotone" />
+                <CategoryIcon size={24} color="#FFFFFF" weight="regular" />
               </View>
 
               <View style={{ flex: 1 }}>
@@ -306,7 +306,7 @@ export function TriggerEmptyState({ currentEntries, minRequired }: TriggerEmptyS
             marginBottom: 16,
           }}
         >
-          <Sparkle size={22} color="#FFFFFF" weight="duotone" />
+          <Sparkle size={22} color="#FFFFFF" weight="regular" />
         </View>
 
         <Text
@@ -382,7 +382,7 @@ export function TriggerSectionHeader({ timeWindow, onTimeWindowChange }: Trigger
           }}
         >
           <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-          <Lightning size={24} color="#FFFFFF" weight="duotone" />
+          <Lightning size={24} color="#FFFFFF" weight="regular" />
         </View>
         <View>
           <Text

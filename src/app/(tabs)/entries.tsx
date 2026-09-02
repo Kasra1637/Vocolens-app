@@ -463,7 +463,7 @@ export default function EntriesScreen() {
                 opacity: selectedEntries.size === 0 ? 0.5 : 1,
               }}
             >
-              <Trash size={18} color={selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)"} weight="duotone" />
+              <Trash size={18} color={selectedEntries.size > 0 ? "#F87171" : "rgba(255,255,255,0.5)"} weight="regular" />
             </Pressable>
           </View>
         </Animated.View>
@@ -542,7 +542,7 @@ export default function EntriesScreen() {
               <View className="flex-row items-center mb-3">
                 <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 10 }}>
                   <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                  <Funnel size={24} color="#FFFFFF" weight="duotone" />
+                  <Funnel size={24} color="#FFFFFF" weight="regular" />
                 </View>
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -561,7 +561,7 @@ export default function EntriesScreen() {
                   borderColor: "rgba(255, 255, 255, 0.15)",
                 }}
               >
-                <MagnifyingGlass size={18} color="#FFFFFF" weight="duotone" />
+                <MagnifyingGlass size={18} color="#FFFFFF" weight="regular" />
                 <TextInput
                   className="flex-1 ml-3"
                   style={{
@@ -576,7 +576,7 @@ export default function EntriesScreen() {
                 />
                 {searchQuery.length > 0 && (
                   <Pressable onPress={() => setSearchQuery("")}>
-                    <X size={18} color="#FFFFFF" weight="duotone" />
+                    <X size={18} color="#FFFFFF" weight="regular" />
                   </Pressable>
                 )}
               </View>
@@ -605,7 +605,7 @@ export default function EntriesScreen() {
                   >
                     {selectedSort}
                   </Text>
-                  <CaretDown size={14} color="#FFFFFF" weight="duotone" />
+                  <CaretDown size={14} color="#FFFFFF" weight="regular" />
                 </Pressable>
 
                 {/* Emotion Filter */}
@@ -632,7 +632,7 @@ export default function EntriesScreen() {
                       ? `${selectedEmotions.length} Emotion${selectedEmotions.length > 1 ? "s" : ""}`
                       : "Emotions"}
                   </Text>
-                  <CaretDown size={14} color="#FFFFFF" weight="duotone" />
+                  <CaretDown size={14} color="#FFFFFF" weight="regular" />
                 </Pressable>
               </View>
 
@@ -662,7 +662,7 @@ export default function EntriesScreen() {
                       ? `${selectedTopics.length} Topic${selectedTopics.length > 1 ? "s" : ""}`
                       : "Topics"}
                   </Text>
-                  <CaretDown size={14} color="#FFFFFF" weight="duotone" />
+                  <CaretDown size={14} color="#FFFFFF" weight="regular" />
                 </Pressable>
 
                 {/* Duration Filter */}
@@ -687,7 +687,7 @@ export default function EntriesScreen() {
                   >
                     {selectedDuration === "Any" ? "Duration" : DURATION_FILTERS.find(d => d.value === selectedDuration)?.label}
                   </Text>
-                  <CaretDown size={14} color="#FFFFFF" weight="duotone" />
+                  <CaretDown size={14} color="#FFFFFF" weight="regular" />
                 </Pressable>
               </View>
 
@@ -1061,7 +1061,7 @@ function EntryCard({
               {displayTitle}
             </Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Clock size={13} color="rgba(255, 255, 255, 0.6)" weight="duotone" />
+              <Clock size={13} color="rgba(255, 255, 255, 0.6)" weight="regular" />
               <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255, 255, 255, 0.6)", fontSize: 12 }}>
                 {formatShortDuration(entry.duration)}
               </Text>
@@ -1203,7 +1203,7 @@ function EntryCard({
                 onPress={(e) => { e.stopPropagation?.(); onDelete(); }}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Trash size={20} color="#FFFFFF" weight="duotone" />
+                <Trash size={20} color="#FFFFFF" weight="regular" />
               </Pressable>
             </View>
           )}

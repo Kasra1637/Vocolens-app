@@ -229,7 +229,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
             }}
           >
             <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-            <Scan size={24} color="#FFFFFF" weight="duotone" />
+            <Scan size={24} color="#FFFFFF" weight="regular" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.title}>Body sensation map</Text>
@@ -295,7 +295,7 @@ export default function BodyHeatmapCard({ entries, primaryColor }: Props) {
           <View style={s.svgWrap}>
             <Svg width={VW} height={VH} viewBox={`0 0 ${VW} ${VH}`}>
               {/* Silhouette — always visible at low opacity */}
-              <G opacity={0.22} stroke="white" weight="duotone" fill="none">
+              <G opacity={0.22} stroke="white" weight="regular" fill="none">
                 <Ellipse cx={CX} cy={22} rx={20} ry={22} />
                 <Rect x={CX - 8} y={64} width={16} height={14} rx={6} />
                 <Rect x={CX - 28} y={78} width={56} height={85} rx={14} />

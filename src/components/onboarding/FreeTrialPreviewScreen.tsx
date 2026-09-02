@@ -208,7 +208,7 @@ function InsightChip({ label, delay }: { label: string; delay: number }) {
       <Sparkle
         size={10}
         color="#FFFFFF"
-        weight="duotone"
+        weight="regular"
         style={{ marginRight: 3 }}
       />
       <Text
@@ -566,7 +566,7 @@ export function FreeTrialPreviewScreen() {
                               <Sparkle
                                 size={11}
                                 color="#FFFFFF"
-                                weight="duotone"
+                                weight="regular"
                               />
                               <Text
                                 style={{
@@ -590,7 +590,7 @@ export function FreeTrialPreviewScreen() {
                                 paddingVertical: 2,
                               }}
                             >
-                              <RadioButton size={8} color="#FFFFFF" weight="duotone" />
+                              <RadioButton size={8} color="#FFFFFF" weight="regular" />
                               <Text
                                 style={{
                                   fontFamily: "Inter_500Medium",
@@ -658,7 +658,7 @@ export function FreeTrialPreviewScreen() {
                               <Pause
                                 size={18}
                                 color="#FFFFFF"
-                                weight="duotone"
+                                weight="regular"
                               />
                             </View>
                             <Text
@@ -689,7 +689,7 @@ export function FreeTrialPreviewScreen() {
                               <Check
                                 size={22}
                                 color="#FFFFFF"
-                                weight="duotone"
+                                weight="regular"
                               />
                             </LinearGradient>
                             <Text
@@ -741,7 +741,7 @@ export function FreeTrialPreviewScreen() {
                             <ArrowLeft
                               size={12}
                               color="#FFFFFF"
-                              weight="duotone"
+                              weight="regular"
                             />
                           </View>
                         </View>
@@ -786,7 +786,7 @@ export function FreeTrialPreviewScreen() {
                             <Calendar
                               size={9}
                               color="rgba(255,255,255,0.8)"
-                              weight="duotone"
+                              weight="regular"
                             />
                             <Text
                               style={{
@@ -808,7 +808,7 @@ export function FreeTrialPreviewScreen() {
                             <Clock
                               size={9}
                               color="rgba(255,255,255,0.8)"
-                              weight="duotone"
+                              weight="regular"
                             />
                             <Text
                               style={{
@@ -830,7 +830,7 @@ export function FreeTrialPreviewScreen() {
                             <Pulse
                               size={9}
                               color="rgba(255,255,255,0.8)"
-                              weight="duotone"
+                              weight="regular"
                             />
                             <Text
                               style={{
@@ -866,7 +866,7 @@ export function FreeTrialPreviewScreen() {
                             <SpeakerHigh
                               size={10}
                               color="#FFFFFF"
-                              weight="duotone"
+                              weight="regular"
                             />
                             <Text
                               style={{
@@ -922,7 +922,7 @@ export function FreeTrialPreviewScreen() {
                             <ChartBarHorizontal
                               size={10}
                               color="#FFFFFF"
-                              weight="duotone"
+                              weight="regular"
                             />
                             <Text
                               style={{
@@ -1004,7 +1004,7 @@ export function FreeTrialPreviewScreen() {
                               marginBottom: 4,
                             }}
                           >
-                            <Target size={10} color="#FFFFFF" weight="duotone" />
+                            <Target size={10} color="#FFFFFF" weight="regular" />
                             <Text
                               style={{
                                 fontFamily: "Inter_600SemiBold",
@@ -1072,7 +1072,7 @@ export function FreeTrialPreviewScreen() {
                 <Check
                   size={14}
                   color="#FFFFFF"
-                  weight="duotone"
+                  weight="regular"
                   style={{ marginRight: 6 }}
                 />
                 <Text

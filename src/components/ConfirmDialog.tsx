@@ -152,7 +152,7 @@ export function ConfirmDialog({
                 borderColor: hexToRgba(accentColor, 0.30),
               }}
             >
-              <IconComponent size={32} color="#FFFFFF" weight="duotone" />
+              <IconComponent size={32} color="#FFFFFF" weight="regular" />
             </View>
 
             {/* Title */}

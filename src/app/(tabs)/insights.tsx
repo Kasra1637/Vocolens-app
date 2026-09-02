@@ -1197,7 +1197,7 @@ function InsightsContent({
         {isGeneratingPDF ? (
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
-          <ShareNetwork size={17} color="#FFFFFF" weight="duotone" />
+          <ShareNetwork size={17} color="#FFFFFF" weight="regular" />
         )}
       </Pressable>
 
@@ -1287,7 +1287,7 @@ function InsightsContent({
                   justifyContent: "center",
                 }}
               >
-                <ShareNetwork size={24} color="#FFFFFF" weight="duotone" />
+                <ShareNetwork size={24} color="#FFFFFF" weight="regular" />
               </View>
             </View>
 
@@ -1630,7 +1630,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
           <View className="flex-row items-center">
             <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
               <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-              <Trophy size={24} color="#FFFFFF" weight="duotone" />
+              <Trophy size={24} color="#FFFFFF" weight="regular" />
             </View>
             <View className="flex-1">
               <Text
@@ -1668,7 +1668,7 @@ function WelcomeSection({ user, totalEntries }: WelcomeSectionProps) {
           <View className="flex-row items-center">
             <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
               <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-              <Clock size={24} color="#FFFFFF" weight="duotone" />
+              <Clock size={24} color="#FFFFFF" weight="regular" />
             </View>
             <View className="flex-1">
               <View className="flex-row items-center justify-between mb-1.5">
@@ -1805,7 +1805,7 @@ function EmotionSelector({
                       backgroundColor: "transparent",
                     }}
                   >
-                    <FaceIcon size={20} color="#FFFFFF" weight="duotone" />
+                    <FaceIcon size={20} color="#FFFFFF" weight="regular" />
                     <Text
                       style={{
                         fontFamily: "Inter_500Medium",
@@ -1866,7 +1866,7 @@ function SentimentTimeline({
           <View className="flex-row items-center">
             <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 10 }}>
               <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-              <TrendUp size={24} color="#FFFFFF" weight="duotone" />
+              <TrendUp size={24} color="#FFFFFF" weight="regular" />
             </View>
             <Text
               style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -2011,7 +2011,7 @@ function SentimentTimeline({
             <ChartBar
               size={40}
               color="rgba(255, 255, 255, 0.5)"
-              weight="duotone"
+              weight="regular"
             />
             <Text
               style={{
@@ -2383,7 +2383,7 @@ function EmotionalThemes({ themes }: EmotionalThemesProps) {
         <View className="flex-row items-center mb-4">
           <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
             <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-            <Sparkle size={24} color="#FFFFFF" weight="duotone" />
+            <Sparkle size={24} color="#FFFFFF" weight="regular" />
           </View>
           <View>
             <Text
@@ -2550,7 +2550,7 @@ function TimeOfDayPatterns({ patterns }: TimeOfDayPatternsProps) {
         <View className="flex-row items-center mb-4">
           <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
             <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-            <Clock size={24} color="#FFFFFF" weight="duotone" />
+            <Clock size={24} color="#FFFFFF" weight="regular" />
           </View>
           <View>
             <Text
@@ -2637,7 +2637,7 @@ function TimeOfDayCard({ pattern }: TimeOfDayCardProps) {
           }}
         >
           <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-          <Icon size={24} color="#FFFFFF" weight="duotone" />
+          <Icon size={24} color="#FFFFFF" weight="regular" />
         </View>
         <Text
           style={{
@@ -2762,7 +2762,7 @@ function DeepInsightsSection({ insights }: DeepInsightsSectionProps) {
           <View className="flex-row items-center mb-2">
             <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
               <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-              <Brain size={24} color="#FFFFFF" weight="duotone" />
+              <Brain size={24} color="#FFFFFF" weight="regular" />
             </View>
             <View>
               <Text

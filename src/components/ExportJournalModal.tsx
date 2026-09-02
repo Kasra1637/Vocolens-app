@@ -134,14 +134,14 @@ export function ExportJournalModal({ visible, onClose, onSuccess, onError }: Exp
                   justifyContent: 'center',
                 }}
               >
-                <DownloadSimple size={18} color="#FFFFFF" weight="duotone" />
+                <DownloadSimple size={18} color="#FFFFFF" weight="regular" />
               </View>
               <Text style={{ fontFamily: 'Fraunces_700Bold', color: '#FFFFFF', fontSize: 22 }}>
                 Export Journals
               </Text>
             </View>
             <Pressable onPress={handleClose} hitSlop={12} disabled={isExporting}>
-              <X size={22} color="rgba(255,255,255,0.55)" weight="duotone" />
+              <X size={22} color="rgba(255,255,255,0.55)" weight="regular" />
             </Pressable>
           </View>
 
@@ -200,14 +200,14 @@ export function ExportJournalModal({ visible, onClose, onSuccess, onError }: Exp
                   marginBottom: 10,
                 }}
               >
-                <Calendar size={16} color="rgba(255,255,255,0.6)" weight="duotone" />
+                <Calendar size={16} color="rgba(255,255,255,0.6)" weight="regular" />
                 <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 13, marginLeft: 10, flex: 1 }}>
                   From
                 </Text>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 14 }}>
                   {format(startDate, 'MMM d, yyyy')}
                 </Text>
-                <CaretRight size={16} color="rgba(255,255,255,0.35)" weight="duotone" style={{ marginLeft: 8 }} />
+                <CaretRight size={16} color="rgba(255,255,255,0.35)" weight="regular" style={{ marginLeft: 8 }} />
               </Pressable>
 
               {/* End date */}
@@ -224,14 +224,14 @@ export function ExportJournalModal({ visible, onClose, onSuccess, onError }: Exp
                   paddingVertical: 14,
                 }}
               >
-                <Calendar size={16} color="rgba(255,255,255,0.6)" weight="duotone" />
+                <Calendar size={16} color="rgba(255,255,255,0.6)" weight="regular" />
                 <Text style={{ fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.6)', fontSize: 13, marginLeft: 10, flex: 1 }}>
                   To
                 </Text>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 14 }}>
                   {format(endDate, 'MMM d, yyyy')}
                 </Text>
-                <CaretRight size={16} color="rgba(255,255,255,0.35)" weight="duotone" style={{ marginLeft: 8 }} />
+                <CaretRight size={16} color="rgba(255,255,255,0.35)" weight="regular" style={{ marginLeft: 8 }} />
               </Pressable>
 
               {showStartPicker && (
@@ -330,7 +330,7 @@ export function ExportJournalModal({ visible, onClose, onSuccess, onError }: Exp
                   borderColor: 'rgba(255,255,255,0.25)',
                 }}
               >
-                <DownloadSimple size={18} color="#FFFFFF" weight="duotone" style={{ marginRight: 10 }} />
+                <DownloadSimple size={18} color="#FFFFFF" weight="regular" style={{ marginRight: 10 }} />
                 <Text style={{ fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 16 }}>
                   Export & Download
                 </Text>

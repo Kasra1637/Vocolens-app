@@ -106,7 +106,7 @@ export function MoodStoryTimeline({
             }}
           >
             <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-            <BookOpen size={24} color="#FFFFFF" weight="duotone" />
+            <BookOpen size={24} color="#FFFFFF" weight="regular" />
           </View>
           <View>
             <Text
@@ -773,7 +773,7 @@ function EmotionStoryCard({
               <Path
                 d={sparkPath}
                 stroke={`url(#sg-${emotion})`}
-                weight="duotone"
+                weight="regular"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"

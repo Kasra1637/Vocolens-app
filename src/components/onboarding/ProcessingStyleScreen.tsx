@@ -172,7 +172,7 @@ export function ProcessingStyleScreen() {
                                 left: 0, right: 0, top: 0, bottom: 0,
                               }}
                             />
-                            <Icon size={24} color="#FFFFFF" weight="duotone" />
+                            <Icon size={24} color="#FFFFFF" weight="regular" />
                           </View>
                           <Text
                             style={{

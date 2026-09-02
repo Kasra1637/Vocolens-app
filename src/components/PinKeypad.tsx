@@ -138,8 +138,8 @@ function KeypadButton({
   const isDigit = !isBack && !isOk;
 
   const content = (() => {
-    if (isBack) return <Backspace size={22} color="#FFFFFF" weight="duotone" />;
-    if (isOk)   return <Check  size={22} color="#FFFFFF" weight="duotone" />;
+    if (isBack) return <Backspace size={22} color="#FFFFFF" weight="regular" />;
+    if (isOk)   return <Check  size={22} color="#FFFFFF" weight="regular" />;
     return <Text style={styles.digitText}>{label}</Text>;
   })();
 

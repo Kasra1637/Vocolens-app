@@ -139,7 +139,7 @@ function TrialTimeline({
                 justifyContent: "center",
               }}
             >
-              <step.Icon size={14} color="#FFFFFF" weight="duotone" />
+              <step.Icon size={14} color="#FFFFFF" weight="regular" />
             </View>
             {idx < steps.length - 1 && (
               <View
@@ -211,7 +211,7 @@ function MonthlyExitModal({
               Not ready to commit?
             </Text>
             <Pressable onPress={onDecline} hitSlop={12}>
-              <X size={22} color="rgba(255,255,255,0.6)" weight="duotone" />
+              <X size={22} color="rgba(255,255,255,0.6)" weight="regular" />
             </Pressable>
           </View>
 
@@ -310,7 +310,7 @@ function TrialReminderOptInModal({
                 alignItems: "center", justifyContent: "center", marginBottom: 14,
               }}
             >
-              <Bell size={28} color="#FFFFFF" weight="duotone" />
+              <Bell size={28} color="#FFFFFF" weight="regular" />
             </View>
             <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 20, textAlign: "center" }}>
               Get a heads-up before you're charged?
@@ -644,7 +644,7 @@ export function PaywallScreen() {
                     <View key={idx} style={{ flexDirection: "row", alignItems: "center" }}>
                       <View style={{ width: 32, height: 32, borderRadius: 16, overflow: "hidden", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
                         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                        <item.Icon size={14} color="#FFFFFF" weight="duotone" />
+                        <item.Icon size={14} color="#FFFFFF" weight="regular" />
                       </View>
                       <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.88)", fontSize: 14, lineHeight: 19, flex: 1 }}>{item.text}</Text>
                     </View>
@@ -749,8 +749,8 @@ export function PaywallScreen() {
                   {showMorePlans ? "See yearly plan" : "See other plans"}
                 </Text>
                 {showMorePlans
-                  ? <CaretUp size={16} color="rgba(255,255,255,0.55)" weight="duotone" />
-                  : <CaretDown size={16} color="rgba(255,255,255,0.55)" weight="duotone" />}
+                  ? <CaretUp size={16} color="rgba(255,255,255,0.55)" weight="regular" />
+                  : <CaretDown size={16} color="rgba(255,255,255,0.55)" weight="regular" />}
               </Pressable>
             </Animated.View>
 

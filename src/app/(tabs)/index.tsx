@@ -842,7 +842,7 @@ export default function SpeakScreen() {
                   <WarningCircle
                     size={20}
                     color="#FFFFFF"
-                    weight="duotone"
+                    weight="regular"
                     style={{ marginRight: 12, marginTop: 2 }}
                   />
                   <View className="flex-1">
@@ -867,7 +867,7 @@ export default function SpeakScreen() {
                         style={{ backgroundColor: "#EF4444" }}
                       >
                         <View className="flex-row items-center">
-                          <GearSix size={14} color="#FFFFFF" weight="duotone" />
+                          <GearSix size={14} color="#FFFFFF" weight="regular" />
                           <Text
                             style={{
                               fontFamily: "Inter_600SemiBold",
@@ -976,7 +976,7 @@ export default function SpeakScreen() {
                   <WarningCircle
                     size={20}
                     color="#F59E0B"
-                    weight="duotone"
+                    weight="regular"
                     style={{ marginRight: 12, marginTop: 2 }}
                   />
                   <View className="flex-1">
@@ -1018,7 +1018,7 @@ export default function SpeakScreen() {
             >
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center">
-                  <Sparkle size={16} color="#FFFFFF" weight="duotone" />
+                  <Sparkle size={16} color="#FFFFFF" weight="regular" />
                   <Text
                     style={{
                       fontFamily: "Inter_600SemiBold",
@@ -1088,7 +1088,7 @@ export default function SpeakScreen() {
               contentContainerStyle={{ paddingBottom: 10 }}
             >
               <View className="flex-row items-center mb-3">
-                <Sparkle size={16} color="#FFFFFF" weight="duotone" />
+                <Sparkle size={16} color="#FFFFFF" weight="regular" />
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
                   className="text-sm ml-2"

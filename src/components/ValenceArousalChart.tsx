@@ -374,7 +374,7 @@ export default function ValenceArousalChart({
             }}
           >
             <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-            <Pulse size={24} color="#FFFFFF" weight="duotone" />
+            <Pulse size={24} color="#FFFFFF" weight="regular" />
           </View>
           <View>
             <Text
@@ -786,7 +786,7 @@ function ChartSvg({
         x2={half}
         y2={chartSize}
         stroke="rgba(255,255,255,0.15)"
-        weight="duotone"
+        weight="regular"
         strokeDasharray="4,4"
       />
       <Line
@@ -795,7 +795,7 @@ function ChartSvg({
         x2={chartSize}
         y2={half}
         stroke="rgba(255,255,255,0.15)"
-        weight="duotone"
+        weight="regular"
         strokeDasharray="4,4"
       />
 
@@ -812,7 +812,7 @@ function ChartSvg({
             x2={gp.userX}
             y2={gp.userY}
             stroke="rgba(255,255,255,0.30)"
-            weight="duotone"
+            weight="regular"
             strokeDasharray="3,3"
           />
           {/* AI ghost dot (hollow, dashed outline) */}
@@ -822,7 +822,7 @@ function ChartSvg({
             r={8}
             fill="rgba(255,255,255,0.06)"
             stroke="rgba(255,255,255,0.35)"
-            weight="duotone"
+            weight="regular"
             strokeDasharray="3,2"
           />
           {/* Tiny "AI" label next to ghost */}
@@ -854,7 +854,7 @@ function ChartSvg({
                 r={r + 7}
                 fill={`${p.color}18`}
                 stroke={p.color}
-                weight="duotone"
+                weight="regular"
                 strokeOpacity={0.4}
               />
             )}
@@ -883,7 +883,7 @@ function ChartSvg({
                 r={4}
                 fill={primaryColor}
                 stroke="rgba(0,0,0,0.4)"
-                weight="duotone"
+                weight="regular"
               />
             )}
             {/* Transparent tap target — slightly larger than the ring */}

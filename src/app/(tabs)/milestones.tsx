@@ -456,7 +456,7 @@ function StatItem({
         }}
       >
         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-        <Icon size={24} color="#FFFFFF" weight="duotone" />
+        <Icon size={24} color="#FFFFFF" weight="regular" />
       </View>
       <Text
         style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}
@@ -522,7 +522,7 @@ function CategoryDropdown({
         }}
       >
         <View className="flex-row items-center">
-          <Icon size={20} color="#FFFFFF" weight="duotone" />
+          <Icon size={20} color="#FFFFFF" weight="regular" />
           <Text
             style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF" }}
             className="text-base ml-2"
@@ -533,7 +533,7 @@ function CategoryDropdown({
         <CaretDown
           size={20}
           color="rgba(255, 255, 255, 0.8)"
-          weight="duotone"
+          weight="regular"
           style={{ transform: [{ rotate: isOpen ? "180deg" : "0deg" }] }}
         />
       </Pressable>
@@ -564,7 +564,7 @@ function CategoryDropdown({
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <OptionIcon size={18} color="#FFFFFF" weight="duotone" />
+                  <OptionIcon size={18} color="#FFFFFF" weight="regular" />
                   <Text
                     style={{
                       fontFamily: "Inter_500Medium",
@@ -674,7 +674,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 <Icon
                   size={24}
                   color="#FFFFFF"
-                  weight="duotone"
+                  weight="regular"
                 />
               </View>
 
@@ -695,9 +695,9 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
                 }}
               >
                 {badge.unlocked ? (
-                  <LockOpen size={12} color={Colors.primary} weight="duotone" />
+                  <LockOpen size={12} color={Colors.primary} weight="regular" />
                 ) : (
-                  <Lock size={12} color={Colors.primary} weight="duotone" />
+                  <Lock size={12} color={Colors.primary} weight="regular" />
                 )}
               </View>
             </View>
@@ -734,7 +734,7 @@ function BadgeCard({ badge, delay, onPress }: BadgeCardProps) {
           {badge.unlocked ? (
             <View className="items-center">
               <View className="flex-row items-center">
-                <Check size={12} color="#FFFFFF" weight="duotone" />
+                <Check size={12} color="#FFFFFF" weight="regular" />
                 <Text
                   style={{
                     fontFamily: "Inter_400Regular",
@@ -934,7 +934,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                 justifyContent: "center",
               }}
             >
-              <X size={18} color="#FFFFFF" weight="duotone" />
+              <X size={18} color="#FFFFFF" weight="regular" />
             </Pressable>
 
             {/* Rarity chip */}
@@ -990,7 +990,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                     borderRadius: 50,
                   }}
                 />
-                <Icon size={50} color="#FFFFFF" weight="duotone" />
+                <Icon size={50} color="#FFFFFF" weight="regular" />
               </View>
             </View>
 
@@ -1124,7 +1124,7 @@ function BadgeModal({ visible, badge, onClose, onShare }: BadgeModalProps) {
                     gap: 8,
                   }}
                 >
-                  <ShareNetwork size={18} color="#FFFFFF" weight="duotone" />
+                  <ShareNetwork size={18} color="#FFFFFF" weight="regular" />
                   <Text
                     style={{
                       fontFamily: "Inter_600SemiBold",

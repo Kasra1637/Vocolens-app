@@ -92,7 +92,7 @@ function MonthlyExitModal({
               Prefer a lighter plan?
             </Text>
             <Pressable onPress={onDecline} hitSlop={12}>
-              <X size={22} color="rgba(255,255,255,0.6)" weight="duotone" />
+              <X size={22} color="rgba(255,255,255,0.6)" weight="regular" />
             </Pressable>
           </View>
 

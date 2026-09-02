@@ -348,12 +348,12 @@ function BadgeIconCircle({ badge, rarity, currentStreak, emojiStyle }: BadgeIcon
             badgeColor="transparent"
             glowColor={rarity.glow + "88"}
             iconColor="#FFFFFF"
-            weight="duotone"
+            weight="regular"
           />
         ) : (
           (() => {
             const BadgeIcon = BADGE_ICONS[badge.icon] ?? Trophy;
-            return <BadgeIcon size={42} color="#FFFFFF" weight="duotone" />;
+            return <BadgeIcon size={42} color="#FFFFFF" weight="regular" />;
           })()
         )}
       </View>
@@ -541,7 +541,7 @@ export function MilestoneCelebration() {
             justifyContent: "center",
           }}
         >
-          <X size={16} color="#FFFFFF" weight="duotone" />
+          <X size={16} color="#FFFFFF" weight="regular" />
         </Pressable>
 
         {/* Card */}
@@ -671,7 +671,7 @@ export function MilestoneCelebration() {
                       gap: 8,
                     }}
                   >
-                    <ShareNetwork size={17} color="#FFFFFF" weight="duotone" />
+                    <ShareNetwork size={17} color="#FFFFFF" weight="regular" />
                     <Text
                       style={{
                         fontFamily: "Inter_700Bold",

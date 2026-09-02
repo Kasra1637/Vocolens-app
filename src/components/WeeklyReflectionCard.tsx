@@ -56,7 +56,7 @@ function BouncingChevron({ color }: { color: string }) {
 
   return (
     <Animated.View style={[{ marginTop: 4 }, animStyle]}>
-      <CaretDown size={16} color={color} weight="duotone" />
+      <CaretDown size={16} color={color} weight="regular" />
     </Animated.View>
   );
 }
@@ -122,7 +122,7 @@ export function WeeklyReflectionCard({
                   }}
                 >
                   <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                  <CalendarDots size={24} color="#FFFFFF" weight="duotone" />
+                  <CalendarDots size={24} color="#FFFFFF" weight="regular" />
                 </View>
                 <View>
                   <View className="flex-row items-center" style={{ gap: 6 }}>
@@ -176,13 +176,13 @@ export function WeeklyReflectionCard({
                   <CaretUp
                     size={18}
                     color="rgba(255,255,255,0.6)"
-                    weight="duotone"
+                    weight="regular"
                   />
                 ) : (
                   <CaretDown
                     size={18}
                     color="rgba(255,255,255,0.6)"
-                    weight="duotone"
+                    weight="regular"
                   />
                 )}
               </View>
@@ -308,7 +308,7 @@ export function WeeklyReflectionCard({
                         className="flex-row items-center mb-2"
                         style={{ gap: 6 }}
                       >
-                        <BookOpen size={13} color="#FFFFFF" weight="duotone" />
+                        <BookOpen size={13} color="#FFFFFF" weight="regular" />
                         <Text
                           style={{
                             fontFamily: "Inter_700Bold",
@@ -340,7 +340,7 @@ export function WeeklyReflectionCard({
                           className="flex-row items-center mb-2"
                           style={{ gap: 6 }}
                         >
-                          <Leaf size={13} color="#FFFFFF" weight="duotone" />
+                          <Leaf size={13} color="#FFFFFF" weight="regular" />
                           <Text
                             style={{
                               fontFamily: "Inter_700Bold",
@@ -396,7 +396,7 @@ export function WeeklyReflectionCard({
                         className="flex-row items-center mb-2"
                         style={{ gap: 6 }}
                       >
-                        <Star size={13} color="#FFFFFF" weight="duotone" />
+                        <Star size={13} color="#FFFFFF" weight="regular" />
                         <Text
                           style={{
                             fontFamily: "Inter_700Bold",
@@ -439,7 +439,7 @@ export function WeeklyReflectionCard({
                         <SunDim
                           size={13}
                           color="rgba(255,255,255,0.7)"
-                          weight="duotone"
+                          weight="regular"
                         />
                         <Text
                           style={{

@@ -402,7 +402,7 @@ export function StreakCalendar({
           <CaretLeft
             size={18}
             color="rgba(255,255,255,0.8)"
-            weight="duotone"
+            weight="regular"
           />
         </Pressable>
 
@@ -452,7 +452,7 @@ export function StreakCalendar({
             color={
               isCurrentMonth ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.8)"
             }
-            weight="duotone"
+            weight="regular"
           />
         </Pressable>
       </View>

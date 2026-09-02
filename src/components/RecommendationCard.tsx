@@ -159,7 +159,7 @@ export function RecommendationCard({
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-            <Sparkle size={13} color="#FFFFFF" weight="duotone" />
+            <Sparkle size={13} color="#FFFFFF" weight="regular" />
             <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 12 }}>
               Recommendation
             </Text>
@@ -182,8 +182,8 @@ export function RecommendationCard({
                 }}
               >
                 {isSpeaking
-                  ? <Square size={10} color="#FFFFFF" weight="duotone" />
-                  : <Play   size={10} color="#FFFFFF" weight="duotone" />}
+                  ? <Square size={10} color="#FFFFFF" weight="regular" />
+                  : <Play   size={10} color="#FFFFFF" weight="regular" />}
               </Pressable>
             )}
             {isExpanded
@@ -264,7 +264,7 @@ export function RecommendationCard({
                 borderColor: GLASS_INNER_BORDER,
               }}
             >
-              <Sparkle size={16} color="#FFFFFF" weight="duotone" />
+              <Sparkle size={16} color="#FFFFFF" weight="regular" />
             </View>
             <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 15 }}>
               Recommendation
@@ -322,7 +322,7 @@ export function RecommendationCard({
                         borderColor: GLASS_INNER_BORDER,
                       }}
                     >
-                      <SpeakerHigh size={14} color="#FFFFFF" weight="duotone" />
+                      <SpeakerHigh size={14} color="#FFFFFF" weight="regular" />
                     </View>
                     {isSpeaking
                       ? <AudioWaveform isPlaying />
@@ -346,8 +346,8 @@ export function RecommendationCard({
                     }}
                   >
                     {isSpeaking
-                      ? <Square size={14} color="#FFFFFF" weight="duotone" />
-                      : <Play   size={14} color="#FFFFFF" weight="duotone" />}
+                      ? <Square size={14} color="#FFFFFF" weight="regular" />
+                      : <Play   size={14} color="#FFFFFF" weight="regular" />}
                     <Text style={{ fontFamily: 'Inter_600SemiBold', color: '#FFFFFF', fontSize: 13 }}>
                       {isSpeaking ? 'Stop' : 'Listen'}
                     </Text>

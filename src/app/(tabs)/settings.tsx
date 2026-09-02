@@ -405,7 +405,7 @@ export default function SettingsScreen() {
                 >
                   <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 12 }}>
                     <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                    <Crown size={24} color="#FFFFFF" weight="duotone" />
+                    <Crown size={24} color="#FFFFFF" weight="regular" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text
@@ -428,7 +428,7 @@ export default function SettingsScreen() {
                       Tap to manage
                     </Text>
                   </View>
-                  <CaretRight size={20} color="rgba(255,255,255,0.5)" weight="duotone" />
+                  <CaretRight size={20} color="rgba(255,255,255,0.5)" weight="regular" />
                 </View>
               </Pressable>
             </Animated.View>
@@ -537,7 +537,7 @@ export default function SettingsScreen() {
                 >
                   <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
                     <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                    <Palette size={24} color="#FFFFFF" weight="duotone" />
+                    <Palette size={24} color="#FFFFFF" weight="regular" />
                   </View>
                   <Text
                     
@@ -688,7 +688,7 @@ export default function SettingsScreen() {
                 >
                   <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
                     <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                    <Bell size={24} color="#FFFFFF" weight="duotone" />
+                    <Bell size={24} color="#FFFFFF" weight="regular" />
                   </View>
                   <Text
                     style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
@@ -759,7 +759,7 @@ export default function SettingsScreen() {
                         >
                           {formatReminderTime(notificationPreferences?.time || dailyReminderTime)}
                         </Text>
-                        <Clock size={18} color="rgba(255,255,255,0.55)" weight="duotone" />
+                        <Clock size={18} color="rgba(255,255,255,0.55)" weight="regular" />
                       </Pressable>
 
                       {/* Time Picker */}
@@ -902,7 +902,7 @@ export default function SettingsScreen() {
                 >
                   <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
                     <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                    <Brain size={24} color="#FFFFFF" weight="duotone" />
+                    <Brain size={24} color="#FFFFFF" weight="regular" />
                   </View>
                   <Text
                     
@@ -1017,7 +1017,7 @@ export default function SettingsScreen() {
                       }}
                     >
                       <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                      <ChartBar size={24} color="#FFFFFF" weight="duotone" />
+                      <ChartBar size={24} color="#FFFFFF" weight="regular" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text
@@ -1039,7 +1039,7 @@ export default function SettingsScreen() {
                         Confirmation rate, patterns, export CSV
                       </Text>
                     </View>
-                    <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                    <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="regular" />
                   </View>
                 </Pressable>
 
@@ -1097,7 +1097,7 @@ export default function SettingsScreen() {
                       borderRadius: 50,
                     }}
                   >
-                    <Heart size={20} color="#FFFFFF" weight="duotone" />
+                    <Heart size={20} color="#FFFFFF" weight="regular" />
                     <Text
                       style={{
                         fontFamily: "Inter_700Bold",
@@ -1161,7 +1161,7 @@ export default function SettingsScreen() {
                 >
                   <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0 }} className="mr-3">
                     <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                    <Shield size={24} color="#FFFFFF" weight="duotone" />
+                    <Shield size={24} color="#FFFFFF" weight="regular" />
                   </View>
                   <Text
                     
@@ -1182,7 +1182,7 @@ export default function SettingsScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 14 }}>
                         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                        <Key size={24} color="#FFFFFF" weight="duotone" />
+                        <Key size={24} color="#FFFFFF" weight="regular" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text
@@ -1205,7 +1205,7 @@ export default function SettingsScreen() {
                           Enter your current PIN, then create a new one
                         </Text>
                       </View>
-                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="regular" />
                     </View>
                   </Pressable>
 
@@ -1227,7 +1227,7 @@ export default function SettingsScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 14 }}>
                         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                        <DownloadSimple size={24} color="#FFFFFF" weight="duotone" />
+                        <DownloadSimple size={24} color="#FFFFFF" weight="regular" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text
@@ -1251,7 +1251,7 @@ export default function SettingsScreen() {
                           Get your journal entries as a PDF archive with audio files organized by date
                         </Text>
                       </View>
-                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="regular" />
                     </View>
                   </Pressable>
 
@@ -1279,7 +1279,7 @@ export default function SettingsScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 14 }}>
                         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                        <ShieldCheck size={24} color="#FFFFFF" weight="duotone" />
+                        <ShieldCheck size={24} color="#FFFFFF" weight="regular" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text
@@ -1302,7 +1302,7 @@ export default function SettingsScreen() {
                           Export your data, delete entries or account
                         </Text>
                       </View>
-                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="regular" />
                     </View>
                   </Pressable>
 
@@ -1328,7 +1328,7 @@ export default function SettingsScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 14 }}>
                         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                        <FileText size={24} color="#FFFFFF" weight="duotone" />
+                        <FileText size={24} color="#FFFFFF" weight="regular" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text
@@ -1351,7 +1351,7 @@ export default function SettingsScreen() {
                           How your data is handled
                         </Text>
                       </View>
-                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="duotone" />
+                      <CaretRight size={18} color="rgba(255,255,255,0.35)" weight="regular" />
                     </View>
                   </Pressable>
 
@@ -1434,8 +1434,8 @@ export default function SettingsScreen() {
                 >
                   {/* weight="regular" (not duotone) — duotone paints a
                       second, semi-transparent fill behind the glyph, which
-                      read as a stray/extra colour layer inside the crown and
-                      around the X. Regular is a clean single-tone glyph. */}
+                      read as a stray/extra colour layer. All phosphor icons
+                      app-wide now use regular for a clean single-tone look. */}
                   <Crown size={18} color="#FFFFFF" weight="regular" />
                 </View>
                 <Text

@@ -338,7 +338,7 @@ export default function PrivacySettingsScreen() {
                     end={{ x: 1, y: 1 }}
                     style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
                   />
-                  <DownloadSimple size={24} color="#FFFFFF" weight="duotone" />
+                  <DownloadSimple size={24} color="#FFFFFF" weight="regular" />
                 </View>
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
@@ -426,7 +426,7 @@ export default function PrivacySettingsScreen() {
                     end={{ x: 1, y: 1 }}
                     style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
                   />
-                  <Trash size={24} color="#FFFFFF" weight="duotone" />
+                  <Trash size={24} color="#FFFFFF" weight="regular" />
                 </View>
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}
@@ -528,7 +528,7 @@ export default function PrivacySettingsScreen() {
                     end={{ x: 1, y: 1 }}
                     style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
                   />
-                  <Warning size={24} color="#FFFFFF" weight="duotone" />
+                  <Warning size={24} color="#FFFFFF" weight="regular" />
                 </View>
                 <Text
                   style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 18 }}

@@ -236,9 +236,9 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
           ]}
         >
           {isPlaying ? (
-            <Pause size={20} color="#FFFFFF" fill="#FFFFFF" weight="duotone" />
+            <Pause size={20} color="#FFFFFF" fill="#FFFFFF" weight="regular" />
           ) : (
-            <Play size={20} color="#FFFFFF" fill="#FFFFFF" weight="duotone" />
+            <Play size={20} color="#FFFFFF" fill="#FFFFFF" weight="regular" />
           )}
         </Animated.View>
       </Pressable>
@@ -324,7 +324,7 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
             className="w-10 h-10 rounded-full items-center justify-center"
             style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}
           >
-            <ArrowCounterClockwise size={18} color="#FFFFFF" weight="duotone" />
+            <ArrowCounterClockwise size={18} color="#FFFFFF" weight="regular" />
           </View>
         </Pressable>
 
@@ -356,9 +356,9 @@ export function AudioPlayer({ audioUri, primaryColor, isDarkMode = false, compac
             ]}
           >
             {isPlaying ? (
-              <Pause size={28} color="#FFFFFF" fill="#FFFFFF" weight="duotone" />
+              <Pause size={28} color="#FFFFFF" fill="#FFFFFF" weight="regular" />
             ) : (
-              <Play size={28} color="#FFFFFF" fill="#FFFFFF" weight="duotone" style={{ marginLeft: 2 }} />
+              <Play size={28} color="#FFFFFF" fill="#FFFFFF" weight="regular" style={{ marginLeft: 2 }} />
             )}
           </Animated.View>
         </Pressable>

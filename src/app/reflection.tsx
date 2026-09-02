@@ -314,7 +314,7 @@ export default function ReflectionScreen() {
                       <View
                         style={[s.checkBadge, { backgroundColor: accentColor }]}
                       >
-                        <Check size={10} color="#1F2937" weight="duotone" />
+                        <Check size={10} color="#1F2937" weight="regular" />
                       </View>
                     )}
                   </Pressable>
