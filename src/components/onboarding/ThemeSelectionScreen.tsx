@@ -66,22 +66,35 @@ export function ThemeSelectionScreen() {
   const initialIndex = Math.max(0, THEMES.indexOf(selectedTheme));
   const [activeIndex, setActiveIndex] = useState(initialIndex);
 
-  // The index a tap (arrow or card) is animating toward, or null when not
-  // animating from a tap. While non-null, the scroll-position handlers ignore
-  // INTERMEDIATE mid-animation offsets and keep re-asserting this target, so a
-  // slow animated scroll can never briefly render an in-between card as
-  // active. It is cleared the instant the ScrollView's offset actually
-  // reaches the target — detected inside the continuous onScroll handler,
-  // which (unlike onMomentumScrollEnd) DOES fire reliably during a
-  // programmatic animated scrollTo on Android.
+  // NOTE ON TAP-TO-BROWSE (arrows / card taps) — why there is no guard here:
   //
-  // This replaces an earlier boolean guard that was only ever cleared by
-  // onMomentumScrollEnd — an event that frequently NEVER fires for a
-  // programmatic animated scroll on Android, so the guard latched true
-  // forever after the first tap and permanently disabled scroll
-  // reconciliation, leaving the destination card rendered as inactive (no
-  // check, no glow, non-adapting background).
-  const pendingTargetIndexRef = useRef<number | null>(null);
+  // Everything that marks a card "active" (white glow ring, check icon,
+  // brighter text) and the full-screen background gradient all derive from a
+  // single value: `activeIndex`. So the ONLY requirement for correctness is
+  // that activeIndex ends up at the tapped index.
+  //
+  // Earlier attempts used an ANIMATED programmatic scrollTo plus a guard ref
+  // to stop mid-animation scroll positions from overwriting activeIndex. That
+  // approach kept failing on Android for two compounding reasons:
+  //   1. `onMomentumScrollEnd` does NOT reliably fire for a programmatic
+  //      animated scrollTo on Android (it is tied to real fling/drag
+  //      gestures) — so any guard cleared only there latched forever, and the
+  //      authoritative "recompute from settled position" never ran.
+  //   2. `scrollEventThrottle` was SCREEN_WIDTH / 2 (~200ms), far too coarse
+  //      for a ~300ms animation, so the sparse `onScroll` events that DID
+  //      arrive landed mid-animation and rounded to the OLD page index.
+  // Together those left activeIndex on the previous theme while the carousel
+  // had physically scrolled to the new one — the exact reported symptom
+  // (centered card with no ring/check, background stuck on the old colour).
+  //
+  // The fix removes the timing problem instead of trying to out-guess it: taps
+  // now jump the carousel with `animated: false`. A non-animated scrollTo has
+  // no intermediate frames at all, so there is nothing that can race with or
+  // revert the state set below, no guard ref is needed, and correctness no
+  // longer depends on which scroll events a given Android build chooses to
+  // emit. (Same mechanism as the mount-time scroll, which has always worked.)
+  // Trade-off, deliberate: an arrow tap snaps to the next theme rather than
+  // sliding to it. Swiping keeps its native, fully animated feel.
 
   // ── Arrow pulse animations ───────────────────────────────────────────────
   const leftX  = useSharedValue(0);
@@ -128,58 +141,38 @@ export function ThemeSelectionScreen() {
     }
   }, []);
 
-  // Commit a settled index to both local state and the store, once.
-  const commitIndex = useCallback(
-    (index: number, withHaptic: boolean) => {
-      if (index === activeIndex) return;
-      setActiveIndex(index);
-      setSelectedTheme(THEMES[index]);
+  // Sync activeIndex (and therefore the ring/check/text/background) to
+  // whichever page the carousel is currently on. Safe to call from any scroll
+  // event: it no-ops when nothing changed, so duplicate//late events are
+  // harmless.
+  const syncToOffset = useCallback(
+    (offsetX: number, withHaptic: boolean) => {
+      const raw     = offsetX / SCREEN_WIDTH;
+      const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
+      if (clamped === activeIndex) return;
+      setActiveIndex(clamped);
+      setSelectedTheme(THEMES[clamped]);
       if (withHaptic) selectHaptic();
     },
     [activeIndex, setSelectedTheme],
   );
 
-  // Fires continuously as the carousel moves — for BOTH user swipes and the
-  // programmatic animated scrollTo a tap triggers. This is the reliable
-  // handler on Android (onMomentumScrollEnd is not, for programmatic
-  // scrolls), so all reconciliation happens here.
+  // Continuous scroll (user swipes) — keeps the active card, its check/ring,
+  // and the live background gradient in lock-step with the finger.
   const handleScrollContinuous = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const raw     = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
-      const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
-
-      const target = pendingTargetIndexRef.current;
-      if (target !== null) {
-        // A tap-driven animated scroll is in flight. Ignore intermediate
-        // positions and only act once the offset has actually reached the
-        // tapped target — then release the lock. activeIndex/theme were
-        // already set optimistically in goToIndex, so there's nothing more
-        // to commit; this just clears the pending lock so future swipes
-        // reconcile normally again.
-        if (clamped === target) {
-          pendingTargetIndexRef.current = null;
-        }
-        return;
-      }
-
-      // Normal user swipe — keep activeIndex (and the live theme/background)
-      // in lock-step with the current page as it moves.
-      commitIndex(clamped, true);
+      syncToOffset(e.nativeEvent.contentOffset.x, true);
     },
-    [commitIndex],
+    [syncToOffset],
   );
 
-  // Fires on momentum end for user swipes (and sometimes programmatic scrolls,
-  // but we don't rely on it for those). A final safety reconcile so activeIndex
-  // always matches the true resting page.
+  // Momentum end (user swipes) — final reconcile to the true resting page.
+  // Not relied upon for tap-driven navigation; see the note above goToIndex.
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const raw     = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
-      const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
-      pendingTargetIndexRef.current = null;
-      commitIndex(clamped, false);
+      syncToOffset(e.nativeEvent.contentOffset.x, false);
     },
-    [commitIndex],
+    [syncToOffset],
   );
 
   const handleContinue = () => {
@@ -201,18 +194,12 @@ export function ThemeSelectionScreen() {
   const goToIndex = useCallback((index: number) => {
     const clamped = Math.max(0, Math.min(index, THEMES.length - 1));
     if (clamped === activeIndex) return;
-    // Commit the target OPTIMISTICALLY and immediately — so the check icon,
-    // glow ring, brighter text, and background gradient all switch to the
-    // destination theme right now, exactly matching what a swipe shows. The
-    // animated scroll below is then purely cosmetic (slides the carousel to
-    // match). pendingTargetIndexRef tells the continuous scroll handler to
-    // ignore the animation's intermediate frames and just release the lock
-    // once it arrives, so those frames can't revert this optimistic commit.
-    pendingTargetIndexRef.current = clamped;
+    // Non-animated jump: instant, no intermediate frames, nothing to race.
+    // See the long note above for why this is animated:false rather than true.
+    scrollRef.current?.scrollTo({ x: clamped * SCREEN_WIDTH, animated: false });
     setActiveIndex(clamped);
     setSelectedTheme(THEMES[clamped]);
     selectHaptic();
-    scrollRef.current?.scrollTo({ x: clamped * SCREEN_WIDTH, animated: true });
   }, [activeIndex, setSelectedTheme]);
 
   const handleTapLeftArrow  = () => goToIndex(activeIndex - 1);
@@ -351,7 +338,12 @@ export function ThemeSelectionScreen() {
                   decelerationRate="fast"
                   onMomentumScrollEnd={handleScroll}
                   onScroll={handleScrollContinuous}
-                  scrollEventThrottle={SCREEN_WIDTH / 2}
+                  // 16ms ≈ one frame. This was previously SCREEN_WIDTH / 2
+                  // (~200ms on a typical phone) — a value that reads like a
+                  // px measurement but is actually milliseconds, making
+                  // onScroll fire far too rarely to track the carousel
+                  // accurately.
+                  scrollEventThrottle={16}
                   style={{ flexGrow: 0, width: SCREEN_WIDTH }}
                 >
                   {THEMES.map((theme, i) => {
@@ -361,13 +353,8 @@ export function ThemeSelectionScreen() {
                     return (
                       <Pressable
                         key={theme}
-                        // Routed through goToIndex (same helper the arrows
-                        // use) instead of duplicating the animated-scroll
-                        // logic here — this also picks up the
-                        // isProgrammaticScrollRef guard, so tapping a
-                        // non-active card can't be knocked out of sync by
-                        // the ScrollView's own in-flight scroll events
-                        // either (the same class of bug the arrows had).
+                        // Same helper the arrows use, so card taps and arrow
+                        // taps behave identically.
                         onPress={() => goToIndex(i)}
                         style={{ width: SCREEN_WIDTH, alignItems: "center", justifyContent: "center" }}
                       >
