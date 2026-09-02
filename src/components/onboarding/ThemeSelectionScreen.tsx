@@ -1,25 +1,52 @@
 /**
  * Onboarding Screen: Theme Selection
  *
- * Horizontal swipe carousel — each card shows the rounded orb design
- * matching the Settings screen. Swipe left/right to browse themes.
- * Background gradient updates live to match the active card.
+ * REDESIGNED INTERACTION MODEL
+ * ────────────────────────────
+ * This screen previously used a horizontal paging ScrollView and derived the
+ * "which theme is selected" state by reading the scroll offset back out of the
+ * ScrollView (onScroll / onMomentumScrollEnd). That meant there were TWO
+ * sources of truth — the scroll position and the React state — and they could
+ * disagree. Tapping an arrow set the state and then asked the ScrollView to
+ * move; the trailing/throttled scroll callbacks that followed could report a
+ * stale offset and drag the state back to the previous page. The visible
+ * result was the reported bug: the centred orb rendered WITHOUT its white ring
+ * and check icon, and the background gradient stayed on the previous theme,
+ * even though the correct theme's name and colour were on screen.
+ *
+ * The redesign removes that entire class of bug rather than guarding against
+ * it:
+ *
+ *   • There is no ScrollView and no scroll-offset maths anywhere. `activeIndex`
+ *     is the SINGLE source of truth.
+ *   • Exactly ONE card is rendered — the active one — so it is always styled as
+ *     active. The white ring, the check icon, the orb gradient, the name, the
+ *     description and the full-screen background all read from that same one
+ *     index. They cannot drift apart because there is nothing to reconcile.
+ *   • Swiping and tapping both call the identical `goToIndex()` function. A
+ *     swipe is detected with PanResponder and simply resolves to "previous" or
+ *     "next"; an arrow tap resolves to the same thing. Same code path, so the
+ *     two interactions cannot behave differently.
+ *
+ * Content is unchanged: mascot, "Pick your colors", the swipe/tap hint, the
+ * orb with its ring + check, theme name, theme description, the page dots and
+ * the Continue button.
  */
 
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
   Pressable,
-  ScrollView,
   Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
+  PanResponder,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
   FadeIn,
+  FadeInLeft,
+  FadeInRight,
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
@@ -28,7 +55,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
-import { Check, Moon, ChevronLeft, ChevronRight } from "lucide-react-native";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import useOnboardingStore, {
   ThemeColorType,
@@ -43,16 +70,16 @@ import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const THEMES = Object.keys(THEME_COLORS) as ThemeColorType[];
 
-// Each page is exactly SCREEN_WIDTH — pagingEnabled locks one card per swipe.
-const H_PAD = 24;
-const CARD_WIDTH = SCREEN_WIDTH - H_PAD * 2;
-
 // Orb dimensions
 const ORB  = 100;
 const GLOW = ORB + 16;
 
 // Arrow pulse distance (px)
 const ARROW_PULSE = 6;
+
+// How far a horizontal drag must travel before it counts as a page change.
+// Proportional to screen width so it feels the same on any device.
+const SWIPE_THRESHOLD = Math.max(40, SCREEN_WIDTH * 0.12);
 
 export function ThemeSelectionScreen() {
   const selectedTheme    = useOnboardingStore((s) => s.selectedTheme);
@@ -62,39 +89,57 @@ export function ThemeSelectionScreen() {
   const currentStep      = useOnboardingStore((s) => s.currentStep);
   const playClickSound   = useClickSound();
 
-  const scrollRef    = useRef<ScrollView>(null);
-  const initialIndex = Math.max(0, THEMES.indexOf(selectedTheme));
-  const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const [activeIndex, setActiveIndex] = useState(() =>
+    Math.max(0, THEMES.indexOf(selectedTheme)),
+  );
+  // +1 when moving forward, -1 when moving back — drives the enter animation's
+  // direction so the card appears to come from the side you swiped/tapped.
+  const [direction, setDirection] = useState(1);
 
-  // NOTE ON TAP-TO-BROWSE (arrows / card taps) — why there is no guard here:
-  //
-  // Everything that marks a card "active" (white glow ring, check icon,
-  // brighter text) and the full-screen background gradient all derive from a
-  // single value: `activeIndex`. So the ONLY requirement for correctness is
-  // that activeIndex ends up at the tapped index.
-  //
-  // Earlier attempts used an ANIMATED programmatic scrollTo plus a guard ref
-  // to stop mid-animation scroll positions from overwriting activeIndex. That
-  // approach kept failing on Android for two compounding reasons:
-  //   1. `onMomentumScrollEnd` does NOT reliably fire for a programmatic
-  //      animated scrollTo on Android (it is tied to real fling/drag
-  //      gestures) — so any guard cleared only there latched forever, and the
-  //      authoritative "recompute from settled position" never ran.
-  //   2. `scrollEventThrottle` was SCREEN_WIDTH / 2 (~200ms), far too coarse
-  //      for a ~300ms animation, so the sparse `onScroll` events that DID
-  //      arrive landed mid-animation and rounded to the OLD page index.
-  // Together those left activeIndex on the previous theme while the carousel
-  // had physically scrolled to the new one — the exact reported symptom
-  // (centered card with no ring/check, background stuck on the old colour).
-  //
-  // The fix removes the timing problem instead of trying to out-guess it: taps
-  // now jump the carousel with `animated: false`. A non-animated scrollTo has
-  // no intermediate frames at all, so there is nothing that can race with or
-  // revert the state set below, no guard ref is needed, and correctness no
-  // longer depends on which scroll events a given Android build chooses to
-  // emit. (Same mechanism as the mount-time scroll, which has always worked.)
-  // Trade-off, deliberate: an arrow tap snaps to the next theme rather than
-  // sliding to it. Swiping keeps its native, fully animated feel.
+  // Mirrors activeIndex so the PanResponder (created once) always reads the
+  // current value instead of capturing a stale one.
+  const activeIndexRef = useRef(activeIndex);
+  activeIndexRef.current = activeIndex;
+
+  // ── The one and only way the selection changes ──────────────────────────
+  // Both arrow taps and swipes funnel through here, so they are guaranteed to
+  // produce identical results. Stable identity (refs only, no activeIndex in
+  // deps) so the PanResponder never needs rebuilding.
+  const goToIndex = useCallback(
+    (next: number) => {
+      const current = activeIndexRef.current;
+      const clamped = Math.max(0, Math.min(next, THEMES.length - 1));
+      if (clamped === current) return;
+      setDirection(clamped > current ? 1 : -1);
+      activeIndexRef.current = clamped;
+      setActiveIndex(clamped);
+      setSelectedTheme(THEMES[clamped]);
+      selectHaptic();
+    },
+    [setSelectedTheme],
+  );
+
+  const goPrev = useCallback(() => goToIndex(activeIndexRef.current - 1), [goToIndex]);
+  const goNext = useCallback(() => goToIndex(activeIndexRef.current + 1), [goToIndex]);
+
+  // ── Swipe handling ──────────────────────────────────────────────────────
+  // Resolves a horizontal drag to prev/next and then calls the exact same
+  // goToIndex() the arrows use.
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        // Claim the gesture only for clearly-horizontal drags, so vertical
+        // scrolling / other gestures are unaffected.
+        onMoveShouldSetPanResponder: (_evt, g) =>
+          Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy),
+        onPanResponderRelease: (_evt, g) => {
+          if (g.dx <= -SWIPE_THRESHOLD) goNext();
+          else if (g.dx >= SWIPE_THRESHOLD) goPrev();
+        },
+        onPanResponderTerminationRequest: () => true,
+      }),
+    [goNext, goPrev],
+  );
 
   // ── Arrow pulse animations ───────────────────────────────────────────────
   const leftX  = useSharedValue(0);
@@ -103,18 +148,12 @@ export function ThemeSelectionScreen() {
   useEffect(() => {
     const cfg = { duration: 520, easing: Easing.inOut(Easing.ease) };
     leftX.value = withRepeat(
-      withSequence(
-        withTiming(-ARROW_PULSE, cfg),
-        withTiming(0,            cfg),
-      ),
+      withSequence(withTiming(-ARROW_PULSE, cfg), withTiming(0, cfg)),
       -1,
       false,
     );
     rightX.value = withRepeat(
-      withSequence(
-        withTiming(ARROW_PULSE, cfg),
-        withTiming(0,           cfg),
-      ),
+      withSequence(withTiming(ARROW_PULSE, cfg), withTiming(0, cfg)),
       -1,
       false,
     );
@@ -127,89 +166,30 @@ export function ThemeSelectionScreen() {
     transform: [{ translateX: rightX.value }],
   }));
 
-  // Hide left arrow on the very first theme (Midnight Glow, index 0).
-  // Hide right arrow on the very last theme (Ocean Calm, last index).
   const showLeftArrow  = activeIndex > 0;
   const showRightArrow = activeIndex < THEMES.length - 1;
 
-  // ── Scroll to persisted theme on mount ───────────────────────────────────
-  useEffect(() => {
-    if (initialIndex > 0) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ x: initialIndex * SCREEN_WIDTH, animated: false });
-      }, 50);
-    }
-  }, []);
-
-  // Sync activeIndex (and therefore the ring/check/text/background) to
-  // whichever page the carousel is currently on. Safe to call from any scroll
-  // event: it no-ops when nothing changed, so duplicate//late events are
-  // harmless.
-  const syncToOffset = useCallback(
-    (offsetX: number, withHaptic: boolean) => {
-      const raw     = offsetX / SCREEN_WIDTH;
-      const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
-      if (clamped === activeIndex) return;
-      setActiveIndex(clamped);
-      setSelectedTheme(THEMES[clamped]);
-      if (withHaptic) selectHaptic();
-    },
-    [activeIndex, setSelectedTheme],
-  );
-
-  // Continuous scroll (user swipes) — keeps the active card, its check/ring,
-  // and the live background gradient in lock-step with the finger.
-  const handleScrollContinuous = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      syncToOffset(e.nativeEvent.contentOffset.x, true);
-    },
-    [syncToOffset],
-  );
-
-  // Momentum end (user swipes) — final reconcile to the true resting page.
-  // Not relied upon for tap-driven navigation; see the note above goToIndex.
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      syncToOffset(e.nativeEvent.contentOffset.x, false);
-    },
-    [syncToOffset],
-  );
-
   const handleContinue = () => {
-    // Commit the currently displayed card's theme to the store before advancing.
-    // This guarantees the correct theme is saved even if the scroll event
-    // fired slightly before or after the carousel settled.
+    // activeIndex is the single source of truth, so this is always the theme
+    // the user can see on screen.
     setSelectedTheme(THEMES[activeIndex]);
     playClickSound();
     confirmHaptic();
     nextStep();
   };
-  const handleBack     = () => { playClickSound(); tapHaptic();     prevStep(); };
+  const handleBack = () => {
+    playClickSound();
+    tapHaptic();
+    prevStep();
+  };
 
-  // ── Tap the side arrows to browse, same as swiping ──────────────────────
-  // The arrows were previously pointerEvents="none" — purely decorative pulse
-  // animations with no tap handling. goToIndex mirrors exactly what tapping a
-  // non-active card does: scroll the carousel there, update activeIndex, and
-  // commit the theme + haptic, so arrow-tap and swipe/card-tap all stay in sync.
-  const goToIndex = useCallback((index: number) => {
-    const clamped = Math.max(0, Math.min(index, THEMES.length - 1));
-    if (clamped === activeIndex) return;
-    // Non-animated jump: instant, no intermediate frames, nothing to race.
-    // See the long note above for why this is animated:false rather than true.
-    scrollRef.current?.scrollTo({ x: clamped * SCREEN_WIDTH, animated: false });
-    setActiveIndex(clamped);
-    setSelectedTheme(THEMES[clamped]);
-    selectHaptic();
-  }, [activeIndex, setSelectedTheme]);
-
-  const handleTapLeftArrow  = () => goToIndex(activeIndex - 1);
-  const handleTapRightArrow = () => goToIndex(activeIndex + 1);
-
-  const activeData = THEME_COLORS[THEMES[activeIndex]];
+  // Everything visual derives from this one value.
+  const activeTheme = THEMES[activeIndex];
+  const activeData  = THEME_COLORS[activeTheme];
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Live background — fills the screen and updates with the active theme */}
+      {/* Live background — always matches the visible card */}
       <LinearGradient
         colors={activeData.backgroundGradient}
         start={{ x: 0, y: 0 }}
@@ -217,24 +197,16 @@ export function ThemeSelectionScreen() {
         style={{ flex: 1 }}
       />
 
-      {/* Full-screen content — same structure as PersonalizePermissionScreen */}
       <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
         <ProgressBar currentStep={currentStep} totalSteps={23} />
 
         <SafeAreaView style={{ flex: 1 }}>
           <BackButton onPress={handleBack} show={currentStep > 0} />
 
-          {/* Matching PersonalizePermissionScreen vertical rhythm */}
           <View style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 12 }}>
 
-            {/* Character — matches PersonalizePermissionScreen container */}
-            <View
-              style={{
-                height: 80,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            {/* Character */}
+            <View style={{ height: 80, alignItems: "center", justifyContent: "center" }}>
               <EmotionalCompanion
                 state="processing"
                 size={80}
@@ -242,7 +214,7 @@ export function ThemeSelectionScreen() {
               />
             </View>
 
-            {/* Title — matches PersonalizePermissionScreen */}
+            {/* Title */}
             <Animated.View
               entering={FadeIn.delay(100).duration(900).easing(SOFT)}
               style={{ alignItems: "center", marginBottom: 14 }}
@@ -279,207 +251,169 @@ export function ThemeSelectionScreen() {
               </Text>
             </Animated.View>
 
-            {/* Carousel + side arrows — fills remaining space */}
-            <View style={{ flex: 1, justifyContent: "center" }}>
-
-              {/* Left pulsing arrow — tappable, same as swiping */}
+            {/* Card area — swipe surface + side arrows */}
+            <View
+              style={{ flex: 1, justifyContent: "center" }}
+              {...panResponder.panHandlers}
+            >
+              {/* Left arrow */}
               {showLeftArrow && (
                 <Animated.View
                   style={[
                     leftArrowStyle,
-                    {
-                      position: "absolute",
-                      left: -20,
-                      zIndex: 10,
-                      alignSelf: "center",
-                    },
+                    { position: "absolute", left: -20, zIndex: 10, alignSelf: "center" },
                   ]}
                 >
-                  <Pressable
-                    onPress={handleTapLeftArrow}
-                    hitSlop={16}
-                    style={{ padding: 4 }}
-                  >
+                  <Pressable onPress={goPrev} hitSlop={16} style={{ padding: 4 }}>
                     <ChevronLeft size={28} color="rgba(255,255,255,0.70)" strokeWidth={2.2} />
                   </Pressable>
                 </Animated.View>
               )}
 
-              {/* Right pulsing arrow — tappable, same as swiping */}
+              {/* Right arrow */}
               {showRightArrow && (
                 <Animated.View
                   style={[
                     rightArrowStyle,
-                    {
-                      position: "absolute",
-                      right: -20,
-                      zIndex: 10,
-                      alignSelf: "center",
-                    },
+                    { position: "absolute", right: -20, zIndex: 10, alignSelf: "center" },
                   ]}
                 >
-                  <Pressable
-                    onPress={handleTapRightArrow}
-                    hitSlop={16}
-                    style={{ padding: 4 }}
-                  >
+                  <Pressable onPress={goNext} hitSlop={16} style={{ padding: 4 }}>
                     <ChevronRight size={28} color="rgba(255,255,255,0.70)" strokeWidth={2.2} />
                   </Pressable>
                 </Animated.View>
               )}
 
-              {/* Carousel — extend to full screen width by breaking out of the 24px padding */}
-              <View style={{ marginHorizontal: -24 }}>
-                <ScrollView
-                  ref={scrollRef}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  pagingEnabled
-                  decelerationRate="fast"
-                  onMomentumScrollEnd={handleScroll}
-                  onScroll={handleScrollContinuous}
-                  // 16ms ≈ one frame. This was previously SCREEN_WIDTH / 2
-                  // (~200ms on a typical phone) — a value that reads like a
-                  // px measurement but is actually milliseconds, making
-                  // onScroll fire far too rarely to track the carousel
-                  // accurately.
-                  scrollEventThrottle={16}
-                  style={{ flexGrow: 0, width: SCREEN_WIDTH }}
-                >
-                  {THEMES.map((theme, i) => {
-                    const data     = THEME_COLORS[theme];
-                    const isActive = i === activeIndex;
+              {/* The single active card. `key` makes it re-mount on change so
+                  the directional enter animation plays. Because only the
+                  active theme is ever rendered here, the ring + check + colour
+                  are always correct by construction. */}
+              <Animated.View
+                key={activeTheme}
+                entering={(direction >= 0 ? FadeInRight : FadeInLeft)
+                  .duration(300)
+                  .easing(SOFT)}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingVertical: 20,
+                  gap: 20,
+                }}
+              >
+                {/* Orb with glow ring */}
+                <View style={{ alignItems: "center", justifyContent: "center" }}>
+                  <View
+                    style={{
+                      position: "absolute",
+                      width: GLOW,
+                      height: GLOW,
+                      borderRadius: GLOW / 2,
+                      borderWidth: 2.5,
+                      borderColor: "rgba(255,255,255,0.90)",
+                      shadowColor: "#FFFFFF",
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.55,
+                      shadowRadius: 14,
+                    }}
+                  />
+                  <LinearGradient
+                    colors={[activeData.gradientStart, activeData.gradientEnd]}
+                    start={{ x: 0.15, y: 0 }}
+                    end={{ x: 0.85, y: 1 }}
+                    style={{
+                      width: ORB,
+                      height: ORB,
+                      borderRadius: ORB / 2,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 12,
+                        left: 12,
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                        backgroundColor: "rgba(255,255,255,0.38)",
+                      }}
+                    />
+                    <View
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 32,
+                        borderBottomLeftRadius: ORB / 2,
+                        borderBottomRightRadius: ORB / 2,
+                        backgroundColor: "rgba(0,0,0,0.10)",
+                      }}
+                    />
+                    <Check size={30} color="#FFFFFF" strokeWidth={2.8} />
+                  </LinearGradient>
+                </View>
 
-                    return (
-                      <Pressable
-                        key={theme}
-                        // Same helper the arrows use, so card taps and arrow
-                        // taps behave identically.
-                        onPress={() => goToIndex(i)}
-                        style={{ width: SCREEN_WIDTH, alignItems: "center", justifyContent: "center" }}
-                      >
-                        <View
-                          style={{
-                            width: CARD_WIDTH,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            paddingVertical: 20,
-                            paddingHorizontal: 24,
-                            gap: 20,
-                          }}
-                        >
-                          {/* Orb with glow ring */}
-                          <View style={{ alignItems: "center", justifyContent: "center" }}>
-                            {isActive && (
-                              <View
-                                style={{
-                                  position: "absolute",
-                                  width: GLOW,
-                                  height: GLOW,
-                                  borderRadius: GLOW / 2,
-                                  borderWidth: 2.5,
-                                  borderColor: "rgba(255,255,255,0.90)",
-                                  shadowColor: "#FFFFFF",
-                                  shadowOffset: { width: 0, height: 0 },
-                                  shadowOpacity: 0.55,
-                                  shadowRadius: 14,
-                                }}
-                              />
-                            )}
-                            <LinearGradient
-                              colors={[data.gradientStart, data.gradientEnd]}
-                              start={{ x: 0.15, y: 0 }}
-                              end={{ x: 0.85, y: 1 }}
-                              style={{
-                                width: ORB,
-                                height: ORB,
-                                borderRadius: ORB / 2,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                overflow: "hidden",
-                              }}
-                            >
-                              <View
-                                style={{
-                                  position: "absolute",
-                                  top: 12, left: 12,
-                                  width: 24, height: 24,
-                                  borderRadius: 12,
-                                  backgroundColor: "rgba(255,255,255,0.38)",
-                                }}
-                              />
-                              <View
-                                style={{
-                                  position: "absolute",
-                                  bottom: 0, left: 0, right: 0,
-                                  height: 32,
-                                  borderBottomLeftRadius: ORB / 2,
-                                  borderBottomRightRadius: ORB / 2,
-                                  backgroundColor: "rgba(0,0,0,0.10)",
-                                }}
-                              />
-                              {isActive ? (
-                                <Check size={30} color="#FFFFFF" strokeWidth={2.8} />
-                              ) : theme === "darkMode" ? (
-                                <Moon size={26} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-                              ) : null}
-                            </LinearGradient>
-                          </View>
-
-                          {/* Name + description */}
-                          <View style={{ alignItems: "center", gap: 8 }}>
-                            <Text
-                              style={{
-                                fontFamily: "Inter_700Bold",
-                                fontSize: 24,
-                                color: "#FFFFFF",
-                                textAlign: "center",
-                                opacity: isActive ? 1 : 0.65,
-                                letterSpacing: 0.2,
-                              }}
-                            >
-                              {data.name}
-                            </Text>
-                            <Text
-                              style={{
-                                fontFamily: "Inter_400Regular",
-                                fontSize: 14,
-                                color: isActive ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.50)",
-                                textAlign: "center",
-                                lineHeight: 22,
-                              }}
-                            >
-                              {data.description}
-                            </Text>
-                          </View>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              </View>
+                {/* Name + description */}
+                <View style={{ alignItems: "center", gap: 8 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_700Bold",
+                      fontSize: 24,
+                      color: "#FFFFFF",
+                      textAlign: "center",
+                      letterSpacing: 0.2,
+                    }}
+                  >
+                    {activeData.name}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Inter_400Regular",
+                      fontSize: 14,
+                      color: "rgba(255,255,255,0.85)",
+                      textAlign: "center",
+                      lineHeight: 22,
+                    }}
+                  >
+                    {activeData.description}
+                  </Text>
+                </View>
+              </Animated.View>
             </View>
 
-            {/* Dots + Continue — directly below carousel, no flex spacer pushing it down */}
+            {/* Dots + Continue */}
             <Animated.View
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
               style={{ alignItems: "center", gap: 10, paddingBottom: 8 }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-                {THEMES.map((_, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      width: i === activeIndex ? 26 : 7,
-                      height: 7,
-                      borderRadius: 3.5,
-                      backgroundColor: i === activeIndex ? "#FFFFFF" : "rgba(255,255,255,0.32)",
-                    }}
-                  />
+                {THEMES.map((theme, i) => (
+                  <Pressable
+                    key={theme}
+                    onPress={() => goToIndex(i)}
+                    hitSlop={10}
+                  >
+                    <View
+                      style={{
+                        width: i === activeIndex ? 26 : 7,
+                        height: 7,
+                        borderRadius: 3.5,
+                        backgroundColor:
+                          i === activeIndex ? "#FFFFFF" : "rgba(255,255,255,0.32)",
+                      }}
+                    />
+                  </Pressable>
                 ))}
               </View>
               <View style={{ width: "100%" }}>
-                <OnboardingCTAButton label="Continue" onPress={handleContinue} borderColor={THEME_COLORS[THEMES[activeIndex]].secondary || THEME_COLORS[THEMES[activeIndex]].primary} />
+                <OnboardingCTAButton
+                  label="Continue"
+                  onPress={handleContinue}
+                  borderColor={activeData.secondary || activeData.primary}
+                />
               </View>
             </Animated.View>
 
