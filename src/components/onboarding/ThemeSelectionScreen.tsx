@@ -66,15 +66,22 @@ export function ThemeSelectionScreen() {
   const initialIndex = Math.max(0, THEMES.indexOf(selectedTheme));
   const [activeIndex, setActiveIndex] = useState(initialIndex);
 
-  // True while a tap-triggered animated scrollTo (goToIndex) is in flight.
-  // While this is set, the scroll-position-derived handlers below (which fire
-  // continuously with the ScrollView's IN-BETWEEN positions during the
-  // animation) must not touch activeIndex — otherwise they briefly compute
-  // the theme still in transit and stomp over the index goToIndex already
-  // committed, so the orb ends up showing the wrong (unchecked, dimmed) card
-  // once the animation settles. Swiping never sets this flag, so normal
-  // drag-driven scrolling is completely unaffected.
-  const isProgrammaticScrollRef = useRef(false);
+  // The index a tap (arrow or card) is animating toward, or null when not
+  // animating from a tap. While non-null, the scroll-position handlers ignore
+  // INTERMEDIATE mid-animation offsets and keep re-asserting this target, so a
+  // slow animated scroll can never briefly render an in-between card as
+  // active. It is cleared the instant the ScrollView's offset actually
+  // reaches the target — detected inside the continuous onScroll handler,
+  // which (unlike onMomentumScrollEnd) DOES fire reliably during a
+  // programmatic animated scrollTo on Android.
+  //
+  // This replaces an earlier boolean guard that was only ever cleared by
+  // onMomentumScrollEnd — an event that frequently NEVER fires for a
+  // programmatic animated scroll on Android, so the guard latched true
+  // forever after the first tap and permanently disabled scroll
+  // reconciliation, leaving the destination card rendered as inactive (no
+  // check, no glow, non-adapting background).
+  const pendingTargetIndexRef = useRef<number | null>(null);
 
   // ── Arrow pulse animations ───────────────────────────────────────────────
   const leftX  = useSharedValue(0);
@@ -121,46 +128,58 @@ export function ThemeSelectionScreen() {
     }
   }, []);
 
-  // Fires on onMomentumScrollEnd — the ONE moment scrolling is guaranteed to
-  // have truly, fully settled, whether that scroll was a user swipe or a
-  // tap-triggered animated scrollTo (goToIndex). This is now the single
-  // source of truth for both clearing isProgrammaticScrollRef AND for the
-  // final activeIndex/theme — it always recomputes from the real settled
-  // position rather than trusting a timer, so it can't be released too
-  // early (before a slower device's scroll animation actually finishes) and
-  // can't be fooled by an intermediate mid-animation position.
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const wasProgrammatic = isProgrammaticScrollRef.current;
-      isProgrammaticScrollRef.current = false;
-      const raw     = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
-      const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
-      if (clamped !== activeIndex) {
-        setActiveIndex(clamped);
-        setSelectedTheme(THEMES[clamped]);
-        // Avoid a redundant second haptic tick right after goToIndex already
-        // fired one for a tap-driven scroll that settled where expected —
-        // only buzz here for swipes, or for a tap that (rarely) settled
-        // somewhere other than its original target (e.g. interrupted by a
-        // manual swipe mid-animation).
-        if (!wasProgrammatic) selectHaptic();
-      }
+  // Commit a settled index to both local state and the store, once.
+  const commitIndex = useCallback(
+    (index: number, withHaptic: boolean) => {
+      if (index === activeIndex) return;
+      setActiveIndex(index);
+      setSelectedTheme(THEMES[index]);
+      if (withHaptic) selectHaptic();
     },
-    [activeIndex],
+    [activeIndex, setSelectedTheme],
   );
 
-  // Update activeIndex continuously while scrolling so arrow visibility
-  // updates in real time — not just after momentum ends.
+  // Fires continuously as the carousel moves — for BOTH user swipes and the
+  // programmatic animated scrollTo a tap triggers. This is the reliable
+  // handler on Android (onMomentumScrollEnd is not, for programmatic
+  // scrolls), so all reconciliation happens here.
   const handleScrollContinuous = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (isProgrammaticScrollRef.current) return;
       const raw     = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
       const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
-      if (clamped !== activeIndex) {
-        setActiveIndex(clamped);
+
+      const target = pendingTargetIndexRef.current;
+      if (target !== null) {
+        // A tap-driven animated scroll is in flight. Ignore intermediate
+        // positions and only act once the offset has actually reached the
+        // tapped target — then release the lock. activeIndex/theme were
+        // already set optimistically in goToIndex, so there's nothing more
+        // to commit; this just clears the pending lock so future swipes
+        // reconcile normally again.
+        if (clamped === target) {
+          pendingTargetIndexRef.current = null;
+        }
+        return;
       }
+
+      // Normal user swipe — keep activeIndex (and the live theme/background)
+      // in lock-step with the current page as it moves.
+      commitIndex(clamped, true);
     },
-    [activeIndex],
+    [commitIndex],
+  );
+
+  // Fires on momentum end for user swipes (and sometimes programmatic scrolls,
+  // but we don't rely on it for those). A final safety reconcile so activeIndex
+  // always matches the true resting page.
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const raw     = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
+      const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
+      pendingTargetIndexRef.current = null;
+      commitIndex(clamped, false);
+    },
+    [commitIndex],
   );
 
   const handleContinue = () => {
@@ -182,21 +201,19 @@ export function ThemeSelectionScreen() {
   const goToIndex = useCallback((index: number) => {
     const clamped = Math.max(0, Math.min(index, THEMES.length - 1));
     if (clamped === activeIndex) return;
-    // Block the scroll-position-derived handlers until the scroll animation
-    // actually reports completion via onMomentumScrollEnd (handleScroll) —
-    // deliberately NOT a fixed timer. A timer can expire before a slower
-    // device's scroll animation has really finished, letting a stray
-    // mid-animation position slip through and overwrite the index/theme we
-    // set here — which is exactly what produced the mismatch between the
-    // visible orb (already on the new theme) and the checkmark/background
-    // gradient (still reflecting the old one, because activeIndex got
-    // reverted moments after being set correctly).
-    isProgrammaticScrollRef.current = true;
-    scrollRef.current?.scrollTo({ x: clamped * SCREEN_WIDTH, animated: true });
+    // Commit the target OPTIMISTICALLY and immediately — so the check icon,
+    // glow ring, brighter text, and background gradient all switch to the
+    // destination theme right now, exactly matching what a swipe shows. The
+    // animated scroll below is then purely cosmetic (slides the carousel to
+    // match). pendingTargetIndexRef tells the continuous scroll handler to
+    // ignore the animation's intermediate frames and just release the lock
+    // once it arrives, so those frames can't revert this optimistic commit.
+    pendingTargetIndexRef.current = clamped;
     setActiveIndex(clamped);
     setSelectedTheme(THEMES[clamped]);
     selectHaptic();
-  }, [activeIndex]);
+    scrollRef.current?.scrollTo({ x: clamped * SCREEN_WIDTH, animated: true });
+  }, [activeIndex, setSelectedTheme]);
 
   const handleTapLeftArrow  = () => goToIndex(activeIndex - 1);
   const handleTapRightArrow = () => goToIndex(activeIndex + 1);
