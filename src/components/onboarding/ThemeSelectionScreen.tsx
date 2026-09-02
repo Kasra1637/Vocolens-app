@@ -66,6 +66,16 @@ export function ThemeSelectionScreen() {
   const initialIndex = Math.max(0, THEMES.indexOf(selectedTheme));
   const [activeIndex, setActiveIndex] = useState(initialIndex);
 
+  // True while a tap-triggered animated scrollTo (goToIndex) is in flight.
+  // While this is set, the scroll-position-derived handlers below (which fire
+  // continuously with the ScrollView's IN-BETWEEN positions during the
+  // animation) must not touch activeIndex — otherwise they briefly compute
+  // the theme still in transit and stomp over the index goToIndex already
+  // committed, so the orb ends up showing the wrong (unchecked, dimmed) card
+  // once the animation settles. Swiping never sets this flag, so normal
+  // drag-driven scrolling is completely unaffected.
+  const isProgrammaticScrollRef = useRef(false);
+
   // ── Arrow pulse animations ───────────────────────────────────────────────
   const leftX  = useSharedValue(0);
   const rightX = useSharedValue(0);
@@ -113,6 +123,7 @@ export function ThemeSelectionScreen() {
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isProgrammaticScrollRef.current) return;
       const raw     = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
       const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
       if (clamped !== activeIndex) {
@@ -128,6 +139,7 @@ export function ThemeSelectionScreen() {
   // updates in real time — not just after momentum ends.
   const handleScrollContinuous = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isProgrammaticScrollRef.current) return;
       const raw     = e.nativeEvent.contentOffset.x / SCREEN_WIDTH;
       const clamped = Math.max(0, Math.min(Math.round(raw), THEMES.length - 1));
       if (clamped !== activeIndex) {
@@ -156,10 +168,18 @@ export function ThemeSelectionScreen() {
   const goToIndex = useCallback((index: number) => {
     const clamped = Math.max(0, Math.min(index, THEMES.length - 1));
     if (clamped === activeIndex) return;
+    // Block the scroll-position-derived handlers for the duration of the
+    // animated scroll, then release them — RN's default animated scrollTo
+    // duration is ~300ms; 400ms gives a safe margin so we never resume
+    // tracking scroll position before the carousel has actually settled.
+    isProgrammaticScrollRef.current = true;
     scrollRef.current?.scrollTo({ x: clamped * SCREEN_WIDTH, animated: true });
     setActiveIndex(clamped);
     setSelectedTheme(THEMES[clamped]);
     selectHaptic();
+    setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 400);
   }, [activeIndex]);
 
   const handleTapLeftArrow  = () => goToIndex(activeIndex - 1);
@@ -308,14 +328,14 @@ export function ThemeSelectionScreen() {
                     return (
                       <Pressable
                         key={theme}
-                        onPress={() => {
-                          if (!isActive) {
-                            scrollRef.current?.scrollTo({ x: i * SCREEN_WIDTH, animated: true });
-                            setActiveIndex(i);
-                            setSelectedTheme(theme);
-                            selectHaptic();
-                          }
-                        }}
+                        // Routed through goToIndex (same helper the arrows
+                        // use) instead of duplicating the animated-scroll
+                        // logic here — this also picks up the
+                        // isProgrammaticScrollRef guard, so tapping a
+                        // non-active card can't be knocked out of sync by
+                        // the ScrollView's own in-flight scroll events
+                        // either (the same class of bug the arrows had).
+                        onPress={() => goToIndex(i)}
                         style={{ width: SCREEN_WIDTH, alignItems: "center", justifyContent: "center" }}
                       >
                         <View
