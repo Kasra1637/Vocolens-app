@@ -57,6 +57,9 @@ import { PinEntryScreen } from "@/components/PinEntryScreen";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
+import useBiometricStore from "@/lib/state/biometric-store";
+import useSubscriptionStore from "@/lib/state/subscription-store";
+import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { getThemeColors, getThemeGradients } from "@/lib/theme";
 
 // ── Shared glass tokens — exact match to the Settings tab's card system ──────
@@ -86,6 +89,11 @@ export default function PrivacySettingsScreen() {
   const getAllBadges = useBadgesStore((s) => s.getAllBadges);
   const logout = useAuthStore((s) => s.logout);
   const setPinSetup = useAuthStore((s) => s.setPinSetup);
+  const resetOnboarding = useOnboardingStore((s) => s.resetOnboarding);
+  const disableBiometric = useBiometricStore((s) => s.disableBiometric);
+  const disablePin = useBiometricStore((s) => s.disablePin);
+  const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
+  const clearCorrections = useEmotionCorrectionStore((s) => s.clearCorrections);
 
   const handleExportData = async () => {
     try {
@@ -169,6 +177,26 @@ export default function PrivacySettingsScreen() {
     }
   };
 
+  // Deletes ALL local app state so the app returns to a genuinely fresh
+  // install — matching what the confirmation dialog promises ("your account,
+  // all entries, statistics, achievements, and security settings").
+  //
+  // Previously this only cleared entries/stats/badges/AI cache/PIN, leaving
+  // onboarding data (name, theme, mood/goal answers), biometric/PIN-lock
+  // toggles, the local subscription flag, and emotion-correction history all
+  // intact — so a user who "deleted everything" would be dropped straight
+  // back onto the main dashboard, still apparently subscribed and still
+  // recognised by name, instead of seeing the welcome/onboarding flow.
+  //
+  // Note on the subscription flag specifically: clearing it does NOT cancel
+  // any real Google Play / App Store billing subscription — that can only be
+  // cancelled by the user directly in the Play Store / App Store, and this
+  // action never touches that. It only resets this device's local cache of
+  // "premium is currently unlocked". If the user's real subscription is still
+  // active, AuthGate's normal Adapty re-verification on next launch will
+  // simply confirm that and restore premium access automatically — clearing
+  // the flag here does not lock out a still-paying subscriber, it just
+  // ensures "delete account" doesn't leave a stale local flag behind.
   const confirmDeleteAccount = async () => {
     try {
       warningHaptic();
@@ -178,6 +206,11 @@ export default function PrivacySettingsScreen() {
       resetBadges();
       await clearAICache();
       await removePin();
+      clearCorrections();
+      clearSubscription();
+      disableBiometric();
+      disablePin();
+      resetOnboarding();
       logout();
       setPinSetup(false);
       setShowDeleteAccountConfirm(false);
@@ -584,7 +617,7 @@ export default function PrivacySettingsScreen() {
         icon="warning"
         destructiveness="severe"
         title="Delete account?"
-        message="This will permanently delete your account, all entries, statistics, achievements, and security settings. You will need to set up a new PIN to use the app again. This action cannot be undone."
+        message={`This will permanently delete your account, all entries, statistics, achievements, and security settings, and reset the app to a fresh install. You will need to set up a new PIN to use the app again. This action cannot be undone.\n\nThis does not cancel an active ${Platform.OS === "ios" ? "App Store" : "Google Play"} subscription — manage or cancel that separately in the ${Platform.OS === "ios" ? "App Store" : "Play Store"}.`}
         confirmLabel="Delete Everything"
         onConfirm={confirmDeleteAccount}
         onCancel={() => setShowDeleteAccountConfirm(false)}
