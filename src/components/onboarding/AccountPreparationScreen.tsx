@@ -23,20 +23,49 @@ import Animated, {
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { successHaptic, tapHaptic } from "@/lib/haptics";
 import { FlaskConical } from "lucide-react-native";
-import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
+import useOnboardingStore, {
+  THEME_COLORS,
+  AppFeelingType,
+} from "@/lib/state/onboarding-store";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 
+// Mirrors back what the user chose on AppFeelingScreen ("I want Vocolens to
+// be my...") so this "we're building it" moment reads as building THEIR
+// journal rather than a generic one. Before this, selectedAppFeeling was
+// collected during onboarding and then never read anywhere in the app — the
+// question was asked but the answer never acknowledged.
+// NOTE: keyed on the full AppFeelingType union, which includes
+// "private-notebook" — a legacy value with no corresponding option in
+// AppFeelingScreen's current OPTIONS list. It is covered here anyway so a
+// user carrying that value from an older install still gets a real subline
+// instead of a blank one.
+const PREPARING_SUBLINE: Record<AppFeelingType, string> = {
+  "quiet-room": "Building your private space to self-discover",
+  "understanding-tool": "Setting up your daily emotional check-in",
+  "listening-friend": "Teaching Vocolens to listen, not fix",
+  "private-notebook": "Building your private notebook",
+};
+
+// Shown if the user somehow reaches this screen without an answer (e.g. an
+// install that predates the AppFeeling step, or a restored partial state).
+const PREPARING_SUBLINE_FALLBACK = "Getting your journal ready";
+
 export function AccountPreparationScreen() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
+  const selectedAppFeeling = useOnboardingStore((s) => s.selectedAppFeeling);
   const prevStep = useOnboardingStore((s) => s.prevStep);
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const nextStep = useOnboardingStore((s) => s.nextStep);
   const themeColors = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
+
+  const preparingSubline = selectedAppFeeling
+    ? PREPARING_SUBLINE[selectedAppFeeling]
+    : PREPARING_SUBLINE_FALLBACK;
 
   const [displayPercent, setDisplayPercent] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
@@ -153,6 +182,21 @@ export function AccountPreparationScreen() {
                 }}
               >
                 Almost there
+              </Text>
+
+              {/* Personalised subline — echoes the user's AppFeelingScreen
+                  choice so the progress bar below reads as building their
+                  journal specifically. */}
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.72)",
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 14,
+                  textAlign: "center",
+                  lineHeight: 21,
+                }}
+              >
+                {preparingSubline}
               </Text>
             </Animated.View>
 
