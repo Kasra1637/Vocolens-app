@@ -148,6 +148,23 @@ export function ThemeSelectionScreen() {
   };
   const handleBack     = () => { playClickSound(); tapHaptic();     prevStep(); };
 
+  // ── Tap the side arrows to browse, same as swiping ──────────────────────
+  // The arrows were previously pointerEvents="none" — purely decorative pulse
+  // animations with no tap handling. goToIndex mirrors exactly what tapping a
+  // non-active card does: scroll the carousel there, update activeIndex, and
+  // commit the theme + haptic, so arrow-tap and swipe/card-tap all stay in sync.
+  const goToIndex = useCallback((index: number) => {
+    const clamped = Math.max(0, Math.min(index, THEMES.length - 1));
+    if (clamped === activeIndex) return;
+    scrollRef.current?.scrollTo({ x: clamped * SCREEN_WIDTH, animated: true });
+    setActiveIndex(clamped);
+    setSelectedTheme(THEMES[clamped]);
+    selectHaptic();
+  }, [activeIndex]);
+
+  const handleTapLeftArrow  = () => goToIndex(activeIndex - 1);
+  const handleTapRightArrow = () => goToIndex(activeIndex + 1);
+
   const activeData = THEME_COLORS[THEMES[activeIndex]];
 
   return (
@@ -218,14 +235,14 @@ export function ThemeSelectionScreen() {
                   textAlign: "center",
                 }}
               >
-                Swipe to browse · {THEMES.length} themes
+                Swipe or tap the arrows · {THEMES.length} themes
               </Text>
             </Animated.View>
 
             {/* Carousel + side arrows — fills remaining space */}
             <View style={{ flex: 1, justifyContent: "center" }}>
 
-              {/* Left pulsing arrow */}
+              {/* Left pulsing arrow — tappable, same as swiping */}
               {showLeftArrow && (
                 <Animated.View
                   style={[
@@ -235,16 +252,20 @@ export function ThemeSelectionScreen() {
                       left: -20,
                       zIndex: 10,
                       alignSelf: "center",
-                      padding: 4,
                     },
                   ]}
-                  pointerEvents="none"
                 >
-                  <ChevronLeft size={28} color="rgba(255,255,255,0.70)" strokeWidth={2.2} />
+                  <Pressable
+                    onPress={handleTapLeftArrow}
+                    hitSlop={16}
+                    style={{ padding: 4 }}
+                  >
+                    <ChevronLeft size={28} color="rgba(255,255,255,0.70)" strokeWidth={2.2} />
+                  </Pressable>
                 </Animated.View>
               )}
 
-              {/* Right pulsing arrow */}
+              {/* Right pulsing arrow — tappable, same as swiping */}
               {showRightArrow && (
                 <Animated.View
                   style={[
@@ -254,12 +275,16 @@ export function ThemeSelectionScreen() {
                       right: -20,
                       zIndex: 10,
                       alignSelf: "center",
-                      padding: 4,
                     },
                   ]}
-                  pointerEvents="none"
                 >
-                  <ChevronRight size={28} color="rgba(255,255,255,0.70)" strokeWidth={2.2} />
+                  <Pressable
+                    onPress={handleTapRightArrow}
+                    hitSlop={16}
+                    style={{ padding: 4 }}
+                  >
+                    <ChevronRight size={28} color="rgba(255,255,255,0.70)" strokeWidth={2.2} />
+                  </Pressable>
                 </Animated.View>
               )}
 
