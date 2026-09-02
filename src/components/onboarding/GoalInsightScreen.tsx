@@ -21,7 +21,7 @@ import Animated, {
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { successHaptic } from "@/lib/haptics";
-import { Target } from "lucide-react-native";
+import { Target } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   GoalType,
@@ -178,7 +178,7 @@ export function GoalInsightScreen() {
                       ringAnimatedStyle,
                     ]}
                   >
-                    <Target size={40} color="#FFFFFF" strokeWidth={2} />
+                    <Target size={40} color="#FFFFFF" weight="regular" />
                   </Animated.View>
                 </View>
 

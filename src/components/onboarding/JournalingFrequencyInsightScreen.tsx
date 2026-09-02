@@ -21,7 +21,7 @@ import Animated, {
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { BookOpen } from "lucide-react-native";
+import { BookOpen } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   JournalingFrequencyType,
@@ -163,7 +163,7 @@ export function JournalingFrequencyInsightScreen() {
                       ringAnimatedStyle,
                     ]}
                   >
-                    <BookOpen size={38} color="#FFFFFF" strokeWidth={2} />
+                    <BookOpen size={38} color="#FFFFFF" weight="regular" />
                   </Animated.View>
                 </View>
 

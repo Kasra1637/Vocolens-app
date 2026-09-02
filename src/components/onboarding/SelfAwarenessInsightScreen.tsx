@@ -21,7 +21,7 @@ import Animated, {
 } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { Sparkles } from "lucide-react-native";
+import { Sparkle } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   SelfAwarenessType,
@@ -177,7 +177,7 @@ export function SelfAwarenessInsightScreen() {
                       ringAnimatedStyle,
                     ]}
                   >
-                    <Sparkles size={38} color="#FFFFFF" strokeWidth={2} />
+                    <Sparkle size={38} color="#FFFFFF" weight="regular" />
                   </Animated.View>
                 </View>
 

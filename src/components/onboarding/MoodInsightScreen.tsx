@@ -21,7 +21,7 @@ import Animated, {
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { successHaptic } from "@/lib/haptics";
-import { Sparkles } from "lucide-react-native";
+import { Sparkle } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   MoodType,
@@ -231,7 +231,7 @@ export function MoodInsightScreen() {
                       ringAnimatedStyle,
                     ]}
                   >
-                    <Sparkles size={40} color="#FFFFFF" strokeWidth={2} />
+                    <Sparkle size={40} color="#FFFFFF" weight="regular" />
                   </Animated.View>
                 </View>
 

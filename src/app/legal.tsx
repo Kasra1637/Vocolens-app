@@ -20,7 +20,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { ArrowLeft, FileText, Shield } from "lucide-react-native";
+import { ArrowLeft, FileText, Shield } from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 import { hexToRgba } from "@/lib/glass";
@@ -81,7 +81,7 @@ export default function LegalScreen() {
           className="w-10 h-10 rounded-full items-center justify-center mr-4"
           style={{ backgroundColor: hexToRgba(Colors.primary, 0.15) }}
         >
-          <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          <ArrowLeft size={20} color="#FFFFFF" weight="regular" />
         </Pressable>
         <Text
           style={{
@@ -127,7 +127,7 @@ export default function LegalScreen() {
               <Icon
                 size={14}
                 color={activeTab === key ? "#FFFFFF" : "rgba(255,255,255,0.55)"}
-                strokeWidth={2}
+                weight="regular"
               />
               <Text
                 style={{

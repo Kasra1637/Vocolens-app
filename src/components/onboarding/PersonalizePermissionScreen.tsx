@@ -13,7 +13,7 @@ import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
-import { Lock } from "lucide-react-native";
+import { Lock } from "phosphor-react-native";
 import { tapHaptic } from "@/lib/haptics";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { EmotionalCompanion } from "@/components/EmotionalCompanion";
@@ -134,7 +134,7 @@ export function PersonalizePermissionScreen() {
                   paddingHorizontal: 18,
                 }}
               >
-                <Lock size={13} color="rgba(255,255,255,0.80)" strokeWidth={2.2} />
+                <Lock size={13} color="rgba(255,255,255,0.80)" weight="regular" />
                 <Text
                   style={{
                     fontFamily: "Inter_400Regular",

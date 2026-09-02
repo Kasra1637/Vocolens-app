@@ -25,15 +25,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
-  ChevronLeft,
-  CheckCircle2,
-  TrendingUp,
+  CaretLeft,
+  CheckCircle,
+  TrendUp,
   ArrowRight,
-  Download,
-  BarChart3,
-  RefreshCw,
-  Sparkles,
-} from "lucide-react-native";
+  DownloadSimple,
+  ChartBar,
+  ArrowsClockwise,
+  Sparkle,
+} from "phosphor-react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import { getThemeColors, getThemeGradients, BorderRadius } from "@/lib/theme";
@@ -168,7 +168,7 @@ export default function CorrectionHistoryScreen() {
             justifyContent: "center",
           }}
         >
-          <ChevronLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          <CaretLeft size={20} color="#FFFFFF" weight="regular" />
         </Pressable>
 
         <Text
@@ -211,7 +211,7 @@ export default function CorrectionHistoryScreen() {
                 }}
               >
                 <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                <CheckCircle2 size={24} color="#FFFFFF" strokeWidth={2} />
+                <CheckCircle size={24} color="#FFFFFF" weight="regular" />
               </View>
               <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26 }}>
                 {Math.round(confirmationRate * 100)}%
@@ -232,7 +232,7 @@ export default function CorrectionHistoryScreen() {
                 }}
               >
                 <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                <TrendingUp size={24} color="#FFFFFF" strokeWidth={2} />
+                <TrendUp size={24} color="#FFFFFF" weight="regular" />
               </View>
               <Text style={{ fontFamily: "Fraunces_700Bold", color: "#FFFFFF", fontSize: 26 }}>
                 {Math.round(personalizationStrength * 100)}%
@@ -260,7 +260,7 @@ export default function CorrectionHistoryScreen() {
                   }}
                 >
                   <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                  <Sparkles size={24} color="#FFFFFF" strokeWidth={2} />
+                  <Sparkle size={24} color="#FFFFFF" weight="regular" />
                 </View>
                 <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16 }}>
                   Top Pattern
@@ -282,7 +282,7 @@ export default function CorrectionHistoryScreen() {
                       {topPattern.aiLabel}
                     </Text>
                   </View>
-                  <ArrowRight size={16} color="rgba(255,255,255,0.5)" style={{ marginHorizontal: 10 }} />
+                  <ArrowRight size={16} color="rgba(255,255,255,0.5)" weight="regular" style={{ marginHorizontal: 10 }} />
                   <View
                     style={{
                       backgroundColor: "rgba(255,255,255,0.22)",
@@ -319,7 +319,7 @@ export default function CorrectionHistoryScreen() {
                 }}
               >
                 <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                <BarChart3 size={24} color="#FFFFFF" strokeWidth={2} />
+                <ChartBar size={24} color="#FFFFFF" weight="regular" />
               </View>
               <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 16, flex: 1 }}>
                 Recent Feedback
@@ -381,8 +381,8 @@ export default function CorrectionHistoryScreen() {
                           }}
                         >
                           {isConfirmation
-                            ? <CheckCircle2 size={11} color="#22C55E" strokeWidth={2} />
-                            : <RefreshCw size={11} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                            ? <CheckCircle size={11} color="#22C55E" weight="regular" />
+                            : <ArrowsClockwise size={11} color="rgba(255,255,255,0.7)" weight="regular" />
                           }
                           <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 11, color: isConfirmation ? "#22C55E" : "rgba(255,255,255,0.7)" }}>
                             {isConfirmation ? "Confirmed" : "Corrected"}
@@ -397,7 +397,7 @@ export default function CorrectionHistoryScreen() {
                         </Text>
                         {!isConfirmation && (
                           <>
-                            <ArrowRight size={13} color="rgba(255,255,255,0.35)" />
+                            <ArrowRight size={13} color="rgba(255,255,255,0.35)" weight="regular" />
                             <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13, textTransform: "capitalize" }}>
                               {c.userEmotion}
                             </Text>
@@ -453,7 +453,7 @@ export default function CorrectionHistoryScreen() {
                 }}
               >
                 <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                <Download size={24} color="#FFFFFF" strokeWidth={2} />
+                <DownloadSimple size={24} color="#FFFFFF" weight="regular" />
               </View>
               <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
                 Export Feedback as CSV

@@ -24,8 +24,9 @@ import {
   Play,
   Square,
   SpeakerHigh,
+  CaretDown,
+  CaretUp,
 } from 'phosphor-react-native';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { tapHaptic, selectHaptic } from '@/lib/haptics';
 
 // ── Glassmorphic tokens ───────────────────────────────────────────────────────
@@ -187,8 +188,8 @@ export function RecommendationCard({
               </Pressable>
             )}
             {isExpanded
-              ? <ChevronUp   size={14} color="rgba(255,255,255,0.6)" strokeWidth={2} />
-              : <ChevronDown size={14} color="rgba(255,255,255,0.6)" strokeWidth={2} />}
+              ? <CaretUp   size={14} color="rgba(255,255,255,0.6)" weight="regular" />
+              : <CaretDown size={14} color="rgba(255,255,255,0.6)" weight="regular" />}
           </View>
         </Pressable>
 
@@ -271,8 +272,8 @@ export function RecommendationCard({
             </Text>
           </View>
           {isExpanded
-            ? <ChevronUp   size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-            : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+            ? <CaretUp   size={18} color="rgba(255,255,255,0.7)" weight="regular" />
+            : <CaretDown size={18} color="rgba(255,255,255,0.7)" weight="regular" />}
         </Pressable>
 
         {/* Collapsible body */}

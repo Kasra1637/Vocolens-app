@@ -22,7 +22,7 @@ import Animated, {
 
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { successHaptic, tapHaptic } from "@/lib/haptics";
-import { FlaskConical } from "lucide-react-native";
+import { Flask } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   AppFeelingType,
@@ -306,7 +306,7 @@ export function AccountPreparationScreen() {
                   gap: 9,
                 }}
               >
-                <FlaskConical size={18} color="#FFFFFF" strokeWidth={2.5} />
+                <Flask size={18} color="#FFFFFF" weight="regular" />
                 <Text
                   style={{
                     fontFamily: "Fraunces_700Bold",

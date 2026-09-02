@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { Pressable } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import { CaretLeft } from 'phosphor-react-native';
 import { tapHaptic } from '@/lib/haptics';
 import { useClickSound } from '@/lib/hooks/useClickSound';
 
@@ -41,7 +41,7 @@ export function BackButton({ onPress, show = true }: BackButtonProps) {
         justifyContent: 'center',
       }}
     >
-      <ChevronLeft size={26} color="#FFFFFF" strokeWidth={2.8} />
+      <CaretLeft size={26} color="#FFFFFF" weight="regular" />
     </Pressable>
   );
 }

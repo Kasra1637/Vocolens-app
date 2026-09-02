@@ -31,7 +31,7 @@ import Animated, {
 } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { successHaptic, tapHaptic } from "@/lib/haptics";
-import { Bell } from "lucide-react-native";
+import { Bell } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
@@ -145,8 +145,7 @@ function AnimatedBell({ primaryColor }: { primaryColor: string }) {
         <Bell
           size={52}
           color="#FFFFFF"
-          strokeWidth={1.8}
-          fill="rgba(255,255,255,0.2)"
+          weight="regular"
         />
       </Animated.View>
     </View>

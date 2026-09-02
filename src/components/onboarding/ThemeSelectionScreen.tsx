@@ -55,7 +55,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
-import { Check, ChevronLeft, ChevronRight } from "lucide-react-native";
+import { Check, CaretLeft, CaretRight } from "phosphor-react-native";
 import { tapHaptic, selectHaptic, confirmHaptic } from "@/lib/haptics";
 import useOnboardingStore, {
   ThemeColorType,
@@ -265,7 +265,7 @@ export function ThemeSelectionScreen() {
                   ]}
                 >
                   <Pressable onPress={goPrev} hitSlop={16} style={{ padding: 4 }}>
-                    <ChevronLeft size={28} color="rgba(255,255,255,0.70)" strokeWidth={2.2} />
+                    <CaretLeft size={28} color="rgba(255,255,255,0.70)" weight="regular" />
                   </Pressable>
                 </Animated.View>
               )}
@@ -279,7 +279,7 @@ export function ThemeSelectionScreen() {
                   ]}
                 >
                   <Pressable onPress={goNext} hitSlop={16} style={{ padding: 4 }}>
-                    <ChevronRight size={28} color="rgba(255,255,255,0.70)" strokeWidth={2.2} />
+                    <CaretRight size={28} color="rgba(255,255,255,0.70)" weight="regular" />
                   </Pressable>
                 </Animated.View>
               )}
@@ -352,7 +352,7 @@ export function ThemeSelectionScreen() {
                         backgroundColor: "rgba(0,0,0,0.10)",
                       }}
                     />
-                    <Check size={30} color="#FFFFFF" strokeWidth={2.8} />
+                    <Check size={30} color="#FFFFFF" weight="regular" />
                   </LinearGradient>
                 </View>
 

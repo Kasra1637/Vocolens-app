@@ -32,7 +32,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
-import { Fingerprint, Lock, ShieldCheck } from 'lucide-react-native';
+import { Fingerprint, Lock, ShieldCheck } from 'phosphor-react-native';
 import { successHaptic, tapHaptic } from '@/lib/haptics';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
@@ -202,8 +202,8 @@ export function BiometricSetupScreen() {
                 }}
               >
                 {biometricAvailable
-                  ? <Fingerprint size={38} color="#FFFFFF" strokeWidth={1.8} />
-                  : <Lock        size={38} color="#FFFFFF" strokeWidth={1.8} />
+                  ? <Fingerprint size={38} color="#FFFFFF" weight="regular" />
+                  : <Lock        size={38} color="#FFFFFF" weight="regular" />
                 }
               </View>
 
@@ -273,7 +273,7 @@ export function BiometricSetupScreen() {
                         }}
                       >
                         <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-                        <Icon size={22} color="#FFFFFF" strokeWidth={2} />
+                        <Icon size={22} color="#FFFFFF" weight="regular" />
                       </View>
                       <Text
                         style={{

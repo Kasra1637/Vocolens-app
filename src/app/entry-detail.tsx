@@ -22,22 +22,22 @@ import {
   ArrowLeft,
   Calendar,
   Clock,
-  Edit3,
-  Save,
+  PencilSimple,
+  FloppyDisk,
   X,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-  Activity,
-  MessageSquare,
+  Trash,
+  CaretDown,
+  CaretUp,
+  Pulse,
+  ChatText,
   Target,
-  BarChart2,
-  RefreshCw,
-  CheckCircle2,
-  Mic,
+  ChartBar,
+  ArrowsClockwise,
+  CheckCircle,
+  Microphone,
   Heart,
-  AlertTriangle,
-} from "lucide-react-native";
+  Warning,
+} from "phosphor-react-native";
 import Animated, { FadeInDown, FadeIn, FadeOut } from "react-native-reanimated";
 import {
   tapHaptic,
@@ -249,7 +249,7 @@ export default function EntryDetailScreen() {
           className="w-10 h-10 rounded-full items-center justify-center"
           style={{ backgroundColor: GLASS_BG, borderWidth: 1.5, borderColor: GLASS_BORDER }}
         >
-          <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          <ArrowLeft size={20} color="#FFFFFF" weight="regular" />
         </Pressable>
 
         <View className="flex-row items-center" style={{ gap: 10 }}>
@@ -260,14 +260,14 @@ export default function EntryDetailScreen() {
                 className="w-10 h-10 rounded-full items-center justify-center"
                 style={{ backgroundColor: GLASS_BG, borderWidth: 1.5, borderColor: GLASS_BORDER }}
               >
-                <Edit3 size={18} color="#FFFFFF" strokeWidth={2.5} />
+                <PencilSimple size={18} color="#FFFFFF" weight="regular" />
               </Pressable>
               <Pressable
                 onPress={handleDeletePress}
                 className="w-10 h-10 rounded-full items-center justify-center"
                 style={{ backgroundColor: "rgba(239,68,68,0.15)", borderWidth: 1.5, borderColor: "rgba(239,68,68,0.30)" }}
               >
-                <Trash2 size={18} color="#FFFFFF" strokeWidth={2.5} />
+                <Trash size={18} color="#FFFFFF" weight="regular" />
               </Pressable>
             </>
           )}
@@ -278,14 +278,14 @@ export default function EntryDetailScreen() {
                 className="w-10 h-10 rounded-full items-center justify-center"
                 style={{ backgroundColor: GLASS_BG, borderWidth: 1.5, borderColor: GLASS_BORDER }}
               >
-                <X size={18} color="#FFFFFF" strokeWidth={2.5} />
+                <X size={18} color="#FFFFFF" weight="regular" />
               </Pressable>
               <Pressable
                 onPress={handleSave}
                 className="w-10 h-10 rounded-full items-center justify-center"
                 style={{ backgroundColor: GLASS_BG, borderWidth: 1.5, borderColor: GLASS_BORDER }}
               >
-                <Save size={18} color="#FFFFFF" strokeWidth={2.5} />
+                <FloppyDisk size={18} color="#FFFFFF" weight="regular" />
               </Pressable>
             </>
           )}
@@ -347,7 +347,7 @@ export default function EntryDetailScreen() {
           >
             <View className="flex-row items-center justify-around py-4 px-5">
               <View className="items-center">
-                <Calendar size={16} color="rgba(255,255,255,0.9)" strokeWidth={2} />
+                <Calendar size={16} color="rgba(255,255,255,0.9)" weight="regular" />
                 <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 12, marginTop: 4 }}>
                   {formatTime(entry.createdAt)}
                 </Text>
@@ -355,7 +355,7 @@ export default function EntryDetailScreen() {
               </View>
               <View style={{ width: 1, height: 36, backgroundColor: "rgba(255,255,255,0.15)" }} />
               <View className="items-center">
-                <Clock size={16} color="rgba(255,255,255,0.9)" strokeWidth={2} />
+                <Clock size={16} color="rgba(255,255,255,0.9)" weight="regular" />
                 <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 12, marginTop: 4 }}>
                   {formatShortDuration(entry.duration)}
                 </Text>
@@ -363,7 +363,7 @@ export default function EntryDetailScreen() {
               </View>
               <View style={{ width: 1, height: 36, backgroundColor: "rgba(255,255,255,0.15)" }} />
               <View className="items-center">
-                <Activity size={16} color="rgba(255,255,255,0.9)" strokeWidth={2} />
+                <Pulse size={16} color="rgba(255,255,255,0.9)" weight="regular" />
                 <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 12, marginTop: 4 }}>
                   {entry.emotionIntensity}%
                 </Text>
@@ -392,7 +392,7 @@ export default function EntryDetailScreen() {
               <View style={{ padding: 18 }}>
                 <View className="flex-row items-center" style={{ marginBottom: 10, gap: 8 }}>
                   <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                    <MessageSquare size={14} color="rgba(255,255,255,0.85)" strokeWidth={2} />
+                    <ChatText size={14} color="rgba(255,255,255,0.85)" weight="regular" />
                   </View>
                   <Text style={{ fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.75)", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8 }}>
                     Conversation Starter
@@ -427,15 +427,15 @@ export default function EntryDetailScreen() {
               <View className="flex-row items-center justify-between" style={{ marginBottom: sectionTranscript ? 14 : 0 }}>
                 <View className="flex-row items-center" style={{ gap: 8 }}>
                   <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                    <MessageSquare size={16} color="#FFFFFF" strokeWidth={2} />
+                    <ChatText size={16} color="#FFFFFF" weight="regular" />
                   </View>
                   <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
                     Full Transcript
                   </Text>
                 </View>
                 {sectionTranscript
-                  ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-                  : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+                  ? <CaretUp size={18} color="rgba(255,255,255,0.7)" weight="regular" />
+                  : <CaretDown size={18} color="rgba(255,255,255,0.7)" weight="regular" />}
               </View>
 
               {/* Collapsible body */}
@@ -485,8 +485,8 @@ export default function EntryDetailScreen() {
                           style={{ gap: 4 }}
                         >
                           {transcriptExpanded
-                            ? <ChevronUp size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-                            : <ChevronDown size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+                            ? <CaretUp size={14} color="rgba(255,255,255,0.7)" weight="regular" />
+                            : <CaretDown size={14} color="rgba(255,255,255,0.7)" weight="regular" />}
                           <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.75)", fontSize: 13 }}>
                             {transcriptExpanded ? "Show less" : "Read more"}
                           </Text>
@@ -518,7 +518,7 @@ export default function EntryDetailScreen() {
             >
               <View style={{ padding: 20 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 14 }}>
-                  <Mic size={13} color="#FFFFFF" strokeWidth={2} />
+                  <Microphone size={13} color="#FFFFFF" weight="regular" />
                   <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
                     Your recording
                   </Text>
@@ -568,15 +568,15 @@ export default function EntryDetailScreen() {
               <View className="flex-row items-center justify-between" style={{ marginBottom: sectionEmotions ? 16 : 0 }}>
                 <View className="flex-row items-center flex-1" style={{ gap: 8 }}>
                   <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                    <BarChart2 size={16} color="#FFFFFF" strokeWidth={2} />
+                    <ChartBar size={16} color="#FFFFFF" weight="regular" />
                   </View>
                   <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>
                     Emotion Breakdown
                   </Text>
                 </View>
                 {sectionEmotions
-                  ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} style={{ marginLeft: 8 }} />
-                  : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} style={{ marginLeft: 8 }} />}
+                  ? <CaretUp size={18} color="rgba(255,255,255,0.7)" weight="regular" style={{ marginLeft: 8 }} />
+                  : <CaretDown size={18} color="rgba(255,255,255,0.7)" weight="regular" style={{ marginLeft: 8 }} />}
               </View>
 
 
@@ -759,25 +759,25 @@ export default function EntryDetailScreen() {
                 <View className="flex-row items-center justify-between" style={{ marginBottom: sectionReflection ? 18 : 0 }}>
                   <View className="flex-row items-center" style={{ gap: 8 }}>
                     <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Heart size={16} color="#FFFFFF" strokeWidth={2} />
+                      <Heart size={16} color="#FFFFFF" weight="regular" />
                     </View>
                     <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>Your Reflection</Text>
                   </View>
                   <View className="flex-row items-center" style={{ gap: 8 }}>
                     {entry.userValidated ? (
                       <View className="flex-row items-center px-2.5 py-1 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                        <CheckCircle2 size={12} color="#FFFFFF" strokeWidth={2} />
+                        <CheckCircle size={12} color="#FFFFFF" weight="regular" />
                         <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 10, marginLeft: 4 }}>Confirmed</Text>
                       </View>
                     ) : entry.aiCorrected ? (
                       <View className="flex-row items-center px-2.5 py-1 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                        <RefreshCw size={12} color="#FFFFFF" strokeWidth={2} />
+                        <ArrowsClockwise size={12} color="#FFFFFF" weight="regular" />
                         <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 10, marginLeft: 4 }}>Adjusted</Text>
                       </View>
                     ) : null}
                     {sectionReflection
-                      ? <ChevronUp size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />
-                      : <ChevronDown size={18} color="rgba(255,255,255,0.7)" strokeWidth={2} />}
+                      ? <CaretUp size={18} color="rgba(255,255,255,0.7)" weight="regular" />
+                      : <CaretDown size={18} color="rgba(255,255,255,0.7)" weight="regular" />}
                   </View>
                 </View>
 
@@ -826,7 +826,7 @@ export default function EntryDetailScreen() {
                     <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                       {entry.bodySensation && (
                         <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                          <AlertTriangle size={12} color="#FFFFFF" strokeWidth={2} />
+                          <Warning size={12} color="#FFFFFF" weight="regular" />
                           <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6, textTransform: "capitalize" }}>
                             {entry.bodySensation.replace(/_/g, " ")}
                           </Text>
@@ -841,7 +841,7 @@ export default function EntryDetailScreen() {
                       )}
                       {entry.userValidated && (
                         <View className="flex-row items-center px-3 py-2 rounded-full" style={{ backgroundColor: GLASS_INNER_BG, borderWidth: 1, borderColor: GLASS_BORDER }}>
-                      <CheckCircle2 size={12} color="#FFFFFF" strokeWidth={2} />
+                      <CheckCircle size={12} color="#FFFFFF" weight="regular" />
                       <Text style={{ fontFamily: "Inter_500Medium", color: "#FFFFFF", fontSize: 11, marginLeft: 6 }}>Validated</Text>
                     </View>
                   )}
@@ -888,7 +888,7 @@ export default function EntryDetailScreen() {
                 shadowRadius: 8,
               }}
             >
-              <RefreshCw size={16} color="#FFFFFF" strokeWidth={2} />
+              <ArrowsClockwise size={16} color="#FFFFFF" weight="regular" />
               <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 13, marginLeft: 8 }}>
                 Refine Analysis
               </Text>
@@ -919,7 +919,7 @@ export default function EntryDetailScreen() {
                 <View style={{ padding: 20 }}>
                   <View className="flex-row items-center" style={{ marginBottom: 14, gap: 8 }}>
                     <View style={{ backgroundColor: GLASS_INNER_BG, borderRadius: 8, padding: 6, borderWidth: 1, borderColor: GLASS_INNER_BORDER }}>
-                      <Target size={16} color="#FFFFFF" strokeWidth={2} />
+                      <Target size={16} color="#FFFFFF" weight="regular" />
                     </View>
                     <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", fontSize: 15 }}>Topics</Text>
                   </View>

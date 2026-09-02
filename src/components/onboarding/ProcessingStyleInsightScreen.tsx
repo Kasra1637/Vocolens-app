@@ -21,7 +21,7 @@ import Animated, {
 } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { Mic, FileText, GitBranch, HelpCircle } from "lucide-react-native";
+import { Microphone, FileText, GitBranch, Question, type Icon as PhosphorIcon } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   ProcessingStyleType,
@@ -53,14 +53,11 @@ const PROCESSING_INSIGHTS: Record<ProcessingStyleType, string> = {
 };
 
 // Icon per selection — mirrors ProcessingStyleScreen
-const PROCESSING_ICONS: Record<
-  ProcessingStyleType,
-  React.ComponentType<{ size: number; color: string; strokeWidth: number }>
-> = {
-  "talking-out":        Mic,
+const PROCESSING_ICONS: Record<ProcessingStyleType, PhosphorIcon> = {
+  "talking-out":        Microphone,
   "seeing-written":     FileText,
   "noticing-patterns":  GitBranch,
-  "right-question":     HelpCircle,
+  "right-question":     Question,
 };
 
 export function ProcessingStyleInsightScreen() {
@@ -185,7 +182,7 @@ export function ProcessingStyleInsightScreen() {
                       ringAnimatedStyle,
                     ]}
                   >
-                    <Icon size={38} color="#FFFFFF" strokeWidth={2} />
+                    <Icon size={38} color="#FFFFFF" weight="regular" />
                   </Animated.View>
                 </View>
 

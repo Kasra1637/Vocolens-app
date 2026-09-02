@@ -23,7 +23,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, Easing } from "react-native-reanimated";
 import { tapHaptic, selectHaptic, confirmHaptic, selectionHaptic } from "@/lib/haptics";
-import { Clock, Bell, BellOff, Check } from "lucide-react-native";
+import { Clock, Bell, BellSlash, Check } from "phosphor-react-native";
 // DateTimePicker removed — replaced by custom TimeWheelPicker below
 import useOnboardingStore, {
   THEME_COLORS,
@@ -549,12 +549,12 @@ export function NotificationPreferencesScreen() {
                 <View className="flex-row items-center justify-between p-4">
                   <View className="flex-row items-center flex-1">
                     {enableNotifications ? (
-                      <Bell size={22} color="#FFFFFF" strokeWidth={2.5} />
+                      <Bell size={22} color="#FFFFFF" weight="regular" />
                     ) : (
-                      <BellOff
+                      <BellSlash
                         size={22}
                         color="rgba(255,255,255,0.45)"
-                        strokeWidth={2.5}
+                        weight="regular"
                       />
                     )}
                     <View className="ml-3 flex-1">
@@ -720,7 +720,7 @@ export function NotificationPreferencesScreen() {
                       <Clock
                         size={22}
                         color="#FFFFFF"
-                        strokeWidth={2}
+                        weight="regular"
                         style={{ marginRight: 12 }}
                       />
                       <Text
@@ -755,10 +755,10 @@ export function NotificationPreferencesScreen() {
                 entering={FadeIn.delay(400).duration(800).easing(SOFT)}
                 className="items-center py-10"
               >
-                <BellOff
+                <BellSlash
                   size={56}
                   color="rgba(255,255,255,0.25)"
-                  strokeWidth={2}
+                  weight="regular"
                 />
                 <Text
                   style={{
@@ -852,7 +852,7 @@ export function NotificationPreferencesScreen() {
                   accessibilityLabel="Confirm"
                   accessibilityRole="button"
                 >
-                  <Check size={18} color="rgba(255,255,255,0.80)" strokeWidth={2.5} />
+                  <Check size={18} color="rgba(255,255,255,0.80)" weight="regular" />
                 </Pressable>
 
                 {/* Title — centred in remaining space */}
