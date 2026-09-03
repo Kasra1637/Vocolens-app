@@ -19,9 +19,13 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useOnboardingStore from '@/lib/state/onboarding-store';
+import useJournalStore from '@/lib/state/journal-store';
 
 // Storage key for tracking last sent message
 const LAST_MESSAGE_INDEX_KEY = 'notification_last_message_index';
+// Separate rotation memory for the "no entries yet" pool below, so the two
+// pools rotate independently and don't share (or skip) each other's history.
+const EMPTY_STATE_LAST_MESSAGE_INDEX_KEY = 'notification_empty_state_last_message_index';
 
 // expo-notifications weekday: 1=Sunday, 2=Monday, ..., 7=Saturday
 const DAY_TO_WEEKDAY: Record<string, number> = {
@@ -82,6 +86,36 @@ export const NOTIFICATION_MESSAGES: NotificationMessage[] = [
   {
     title: '👋 Quick check-in',
     body: 'How\'s today actually going? Say it out loud.',
+  },
+];
+
+/**
+ * Rotating messages shown ONLY to users who have never saved a journal
+ * entry yet (see hasNoJournalEntries below). Once someone has recorded at
+ * least one entry, these are never selected again — scheduleWeeklyNotifications
+ * automatically switches them over to the regular NOTIFICATION_MESSAGES pool
+ * the next time reminders are (re)scheduled.
+ *
+ * Tone is deliberately more encouraging/activating than the regular pool —
+ * the goal here is to get someone who is curious but hasn't tried the app yet
+ * to record their very first entry, not to sustain an existing habit.
+ */
+export const EMPTY_STATE_NOTIFICATION_MESSAGES: NotificationMessage[] = [
+  {
+    title: '🎙️ Your first entry is 60 seconds away',
+    body: 'No typing, no blank page — just talk. Vocolens does the rest.',
+  },
+  {
+    title: '✨ Ready when you are',
+    body: 'Nothing recorded yet. Try saying whatever\'s on your mind right now.',
+  },
+  {
+    title: '🌱 Start your journal today',
+    body: 'One quick voice note is all it takes to see what Vocolens can show you.',
+  },
+  {
+    title: '💜 We\'re still waiting to hear from you',
+    body: 'Tap the mic and let it out — your first insight is one entry away.',
   },
 ];
 
@@ -178,6 +212,21 @@ function personalizeTitle(title: string, name: string | null): string {
   return `${title}, ${name}`;
 }
 
+// ── "No entries yet" detection ────────────────────────────────────────────────
+// Reads the journal store directly (same pattern as getUserFirstName above) so
+// this plain service class never needs a React hook to know whether the user
+// has ever saved a voice journal entry.
+function hasNoJournalEntries(): boolean {
+  try {
+    return useJournalStore.getState().entries.length === 0;
+  } catch {
+    // If the store can't be read for any reason, default to the regular
+    // (non-empty-state) pool rather than risk nudging an existing journaller
+    // with "you haven't started yet" copy.
+    return false;
+  }
+}
+
 export class NotificationService {
   // ── Message rotation ──────────────────────────────────────────────────────
 
@@ -221,6 +270,60 @@ export class NotificationService {
 
   static getMessageCount(): number {
     return NOTIFICATION_MESSAGES.length;
+  }
+
+  // ── "No entries yet" message rotation ─────────────────────────────────────
+  // Independent rotation state (its own AsyncStorage key, its own "last shown"
+  // memory) so this pool doesn't consume or skip slots in the regular pool's
+  // rotation — a user could go back and forth between having 0 and >0 entries
+  // (e.g. after "Delete all entries") and each pool should resume its own
+  // sequence exactly where it left off.
+
+  static async getEmptyStateLastMessageIndex(): Promise<number | null> {
+    try {
+      const v = await AsyncStorage.getItem(EMPTY_STATE_LAST_MESSAGE_INDEX_KEY);
+      return v !== null ? parseInt(v, 10) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static async setEmptyStateLastMessageIndex(index: number): Promise<void> {
+    try {
+      await AsyncStorage.setItem(EMPTY_STATE_LAST_MESSAGE_INDEX_KEY, index.toString());
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  static async getNextEmptyStateMessage(): Promise<NotificationMessage> {
+    const total = EMPTY_STATE_NOTIFICATION_MESSAGES.length;
+    const last = await this.getEmptyStateLastMessageIndex();
+    let next: number;
+    if (last === null) {
+      next = Math.floor(Math.random() * total);
+    } else {
+      do {
+        next = Math.floor(Math.random() * total);
+      } while (next === last && total > 1);
+    }
+    await this.setEmptyStateLastMessageIndex(next);
+    return EMPTY_STATE_NOTIFICATION_MESSAGES[next];
+  }
+
+  static getAllEmptyStateMessages(): NotificationMessage[] {
+    return EMPTY_STATE_NOTIFICATION_MESSAGES;
+  }
+
+  /**
+   * Picks the next message from whichever pool matches the user's current
+   * journal state — the encouragement pool if they have never saved an entry,
+   * otherwise the regular rotating pool. This is the single place scheduling
+   * code should call instead of getNextMessage()/getNextEmptyStateMessage()
+   * directly, so the "which pool" decision only lives in one spot.
+   */
+  static async getNextScheduledMessage(): Promise<NotificationMessage> {
+    return hasNoJournalEntries() ? this.getNextEmptyStateMessage() : this.getNextMessage();
   }
 
   // ── Permissions ───────────────────────────────────────────────────────────
@@ -328,7 +431,15 @@ export class NotificationService {
         const weekday = DAY_TO_WEEKDAY[day.toLowerCase()];
         if (!weekday) continue;
 
-        const message = await this.getNextMessage();
+        // Each iteration re-reads the journal state — a week's worth of
+        // reminders is only scheduled once per call (see cancelAllNotifications
+        // above), so if the user records their first entry between now and a
+        // future reschedule, the empty-state pool naturally stops being chosen
+        // the next time this runs (see AuthGate / journal-service triggers).
+        const isEmptyState = hasNoJournalEntries();
+        const message = isEmptyState
+          ? await this.getNextEmptyStateMessage()
+          : await this.getNextMessage();
         const personalizedTitle = personalizeTitle(message.title, getUserFirstName());
 
         const id = await N.scheduleNotificationAsync({
@@ -340,7 +451,10 @@ export class NotificationService {
             data: {
               type: 'daily-reminder',
               day,
-              messageIndex: await this.getLastMessageIndex(),
+              messageIndex: isEmptyState
+                ? await this.getEmptyStateLastMessageIndex()
+                : await this.getLastMessageIndex(),
+              pool: isEmptyState ? 'empty-state' : 'regular',
             },
           },
           trigger: {
@@ -414,7 +528,7 @@ export class NotificationService {
       if (!granted) return;
 
       ensureHandlerConfigured();
-      const message = await this.getNextMessage();
+      const message = await this.getNextScheduledMessage();
 
       await N.scheduleNotificationAsync({
         content: {
@@ -535,6 +649,38 @@ export class NotificationService {
     if (hasDailyReminder) return;
 
     await this.scheduleWeeklyNotifications(time, days);
+  }
+
+  /**
+   * Call once, right after the user's very first journal entry is saved.
+   *
+   * Notification content is baked in at schedule time, so if daily reminders
+   * were already queued while the user had zero entries, the OS still holds
+   * a week's worth of "no entries yet" copy in its notification queue even
+   * though that's no longer true the instant the first entry is saved.
+   *
+   * This forces a fresh scheduleWeeklyNotifications() pass from the user's
+   * stored time/days — which internally re-checks hasNoJournalEntries() per
+   * day — so every reminder from this point on is drawn from the regular
+   * rotating pool instead. Safe/no-op if reminders were never enabled, and
+   * harmless if called when the entry wasn't actually the first one (it just
+   * reschedules with what would already be the regular pool).
+   */
+  static async refreshAfterFirstEntry(): Promise<void> {
+    try {
+      const prefs = useOnboardingStore.getState().notificationPreferences;
+      if (!prefs?.time || !prefs.days || prefs.days.length === 0) return;
+
+      const { granted } = await this.checkPermissions();
+      if (!granted) return;
+
+      await this.scheduleWeeklyNotifications(prefs.time, prefs.days);
+    } catch (error) {
+      console.warn(
+        '[NotificationService] refreshAfterFirstEntry error:',
+        (error as Error)?.message,
+      );
+    }
   }
 
   // ── Formatting helpers ────────────────────────────────────────────────────

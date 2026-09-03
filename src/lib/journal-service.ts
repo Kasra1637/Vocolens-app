@@ -33,6 +33,7 @@ import { analyzeWithOpenRouter, generateRecommendation } from "./api/openrouter-
 import * as FileSystem from "expo-file-system/legacy";
 import { commitUsageForAudio } from "./api/usage-service";
 import { buildPersonalizationPrompt } from "./personalization";
+import { NotificationService } from "./services/notification-service";
 
 /**
  * Analyze transcript for emotional content
@@ -762,6 +763,23 @@ export async function createJournalEntry(
     conversationTopic,
     conversationPrompt,
   });
+
+  // If this was the user's very first saved entry, any daily reminders that
+  // were already scheduled while the journal was empty still hold "no
+  // entries yet" copy baked into their content (notifications are pre-built
+  // at schedule time, not generated live when they fire). Reschedule now so
+  // every reminder from this point on draws from the regular pool instead.
+  // Fire-and-forget and non-throwing by contract — a saved entry must never
+  // fail, or appear to fail, over a notification refresh.
+  //
+  // Deliberately re-reads useJournalStore.getState() here rather than using
+  // the `journalStore` snapshot captured at the top of this function — that
+  // snapshot's `.entries` was read before addEntry() ran and does not reflect
+  // the mutation (Zustand's getState() returns a point-in-time value, not a
+  // live reference), so it would always read as the pre-save count.
+  if (useJournalStore.getState().entries.length === 1) {
+    NotificationService.refreshAfterFirstEntry().catch(() => {});
+  }
 
   // Update user stats.
   // incrementEntries() MUST run before the badge check below, which reads
