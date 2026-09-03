@@ -102,7 +102,7 @@ export const NOTIFICATION_MESSAGES: NotificationMessage[] = [
  */
 export const EMPTY_STATE_NOTIFICATION_MESSAGES: NotificationMessage[] = [
   {
-    title: '🎙️ First entry: 60 seconds',
+    title: '🎙️ Your first entry awaits',
     body: 'No typing, no blank page — just talk.',
   },
   {
