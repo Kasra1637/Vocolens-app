@@ -5,8 +5,9 @@
  *   GET  /                              health ping
  *   GET  /health                        health ping
  *   GET  /api/journal/status            connection status
- *   GET  /api/usage/status              server-authoritative monthly balance
- *   POST /api/usage/commit              charge a saved entry's audio minutes
+ *   GET    /api/usage/status            server-authoritative monthly balance
+ *   POST   /api/usage/commit            charge a saved entry's audio minutes
+ *   DELETE /api/usage                   erase this device's usage record (account deletion)
  *   POST /api/transcribe                Deepgram STT (reserves audio minutes)
  *   POST /api/analyze                   analyse transcript
  *   POST /api/journal/analyze           alias for /api/analyze
@@ -34,7 +35,7 @@ function getCorsHeaders(request) {
   const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Device-Id, X-Api-Key",
     "Access-Control-Allow-Credentials": "true",
   };
@@ -43,7 +44,7 @@ function getCorsHeaders(request) {
 function json(data, status = 200, request = null) {
   const headers = request ? getCorsHeaders(request) : {
     "Access-Control-Allow-Origin": ALLOWED_ORIGINS[0],
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Device-Id, X-Api-Key",
   };
   return Response.json(data, { status, headers });
@@ -714,6 +715,71 @@ async function handleUsageCommit(request, env) {
   }
 }
 
+/**
+ * DELETE /api/usage — erase the caller's server-side usage record.
+ *
+ * Called by the app's "Delete Account" flow so the promise to erase the user's
+ * data is honoured on the server too, not only on-device. The row is anonymous
+ * (a hashed device id + a minute counter), but deleting it is the correct,
+ * complete behaviour and keeps the Data-safety attestation truthful.
+ *
+ * Removes the committed-usage row (`usage`) AND any outstanding reservations
+ * (`usage_pending`) for this subject. A missing `usage_pending` table (schema
+ * not yet migrated) is tolerated — the committed row is what matters, and its
+ * deletion must not fail because the optional table is absent.
+ *
+ * Idempotent: deleting a subject that has no row is a success (the desired end
+ * state — no record — already holds), so retries and double-taps are safe.
+ *
+ * NOT in PAID_PATHS and spends nothing. Note this only clears THIS device's
+ * allowance bucket; it does not touch anyone else's, and (like a fresh install)
+ * the next recording simply starts a new row from a full allowance.
+ */
+async function handleUsageDelete(request, env) {
+  if (!env.DB) {
+    console.error("[usage] D1 binding 'DB' is missing — cannot delete");
+    return json(
+      {
+        error: "usage_metering_unavailable",
+        message: "Usage metering is temporarily unavailable.",
+      },
+      503,
+      request
+    );
+  }
+
+  const subjectHash = await hashSubject(resolveSubject(request));
+
+  try {
+    // Committed balance — the row keyed on this subject.
+    await env.DB.prepare("DELETE FROM usage WHERE subject_hash = ?1")
+      .bind(subjectHash)
+      .run();
+
+    // Outstanding reservations for this subject. Tolerate the table not
+    // existing yet (see isMissingPendingTable) — nothing to delete in that case.
+    try {
+      await env.DB.prepare("DELETE FROM usage_pending WHERE subject_hash = ?1")
+        .bind(subjectHash)
+        .run();
+    } catch (err) {
+      if (!isMissingPendingTable(err)) throw err;
+    }
+
+    return json({ success: true, deleted: true }, 200, request);
+  } catch (err) {
+    console.error("[usage] delete failed:", err && err.message);
+    return json(
+      {
+        error: "usage_delete_failed",
+        message: "Could not delete usage record.",
+      },
+      503,
+      request
+    );
+  }
+}
+
 async function handleTranscribe(request, env, gate) {
   const body = await request.json();
   const audioBase64 = body.audioBase64;
@@ -1073,6 +1139,19 @@ export default {
         return json({ error: "Unauthorized" }, 401, request);
       }
       return await handleUsageStatus(request, env);
+    }
+
+    // ── Usage delete (account deletion) ───────────────────────────────────────
+    // Authenticated DELETE, handled here because the POST-only auth + routing
+    // below would otherwise 404 it. Erases this subject's server-side usage
+    // record so "Delete Account" is honoured on the server as well as on-device.
+    if (path === "/api/usage" && request.method === "DELETE") {
+      const clientKey = request.headers.get("X-Api-Key") || "";
+      const serverKey = env.VOCOLENS_API_KEY || "";
+      if (!serverKey || clientKey !== serverKey) {
+        return json({ error: "Unauthorized" }, 401, request);
+      }
+      return await handleUsageDelete(request, env);
     }
 
     // ── Authentication ──────────────────────────────────────────────────────

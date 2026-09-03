@@ -210,6 +210,31 @@ export async function commitUsageForAudio(
 
 
 /**
+ * Erases this device's server-side usage record — called from the "Delete
+ * Account" flow so the promise to delete the user's data is honoured on the
+ * server too, not just on-device.
+ *
+ * Never throws. Account deletion of LOCAL data must always succeed even if this
+ * network call fails, so the user is never left stuck; a failed delete leaves an
+ * anonymous, ephemeral row that a fresh install already bypasses (a new device
+ * id starts a new bucket), so failing quietly is the safe direction.
+ */
+export async function deleteUsageOnServer(): Promise<void> {
+  try {
+    const deviceId = await getDeviceId();
+    const response = await apiFetch('/api/usage', {
+      method: 'DELETE',
+      headers: { 'X-Device-Id': deviceId },
+    });
+    if (!response.ok) {
+      console.warn('[UsageService] Usage delete failed:', response.status);
+    }
+  } catch (err) {
+    console.warn('[UsageService] Usage delete request failed:', err);
+  }
+}
+
+/**
  * Thrown when the Worker refuses a request because the monthly allowance is
  * exhausted (HTTP 402).
  *

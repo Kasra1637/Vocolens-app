@@ -49,6 +49,7 @@ import useUserStatsStore from "@/lib/state/user-stats-store";
 import useBadgesStore from "@/lib/state/badges-store";
 import { calculateAverageMood } from "@/lib/analytics";
 import { deleteAllAudioFiles } from "@/lib/journal-service";
+import { deleteUsageOnServer } from "@/lib/api/usage-service";
 import { useAuthStore } from "@/lib/state/auth-store";
 import { removePin } from "@/lib/auth-service";
 import { clearAICache } from "@/lib/ai-emotional-intelligence";
@@ -202,6 +203,11 @@ export default function PrivacySettingsScreen() {
     try {
       warningHaptic();
       await deleteAllAudioFiles();
+      // Erase the server-side usage record too, so account deletion is honoured
+      // on the backend and not just on-device. Never throws (best-effort): if
+      // it fails, the anonymous, ephemeral row is left behind but a fresh
+      // install already starts a new bucket — local deletion must still proceed.
+      await deleteUsageOnServer();
       clearAllEntries();
       resetStats();
       resetBadges();
