@@ -102,20 +102,20 @@ export const NOTIFICATION_MESSAGES: NotificationMessage[] = [
  */
 export const EMPTY_STATE_NOTIFICATION_MESSAGES: NotificationMessage[] = [
   {
-    title: '🎙️ Your first entry is 60 seconds away',
-    body: 'No typing, no blank page — just talk. Vocolens does the rest.',
+    title: '🎙️ First entry: 60 seconds',
+    body: 'No typing, no blank page — just talk.',
   },
   {
-    title: '✨ Ready when you are',
-    body: 'Nothing recorded yet. Try saying whatever\'s on your mind right now.',
+    title: '✨ Ready anytime',
+    body: 'Nothing recorded yet. Say what\'s on your mind.',
   },
   {
-    title: '🌱 Start your journal today',
-    body: 'One quick voice note is all it takes to see what Vocolens can show you.',
+    title: '🌱 Start today',
+    body: 'One voice note shows what Vocolens can do.',
   },
   {
-    title: '💜 We\'re still waiting to hear from you',
-    body: 'Tap the mic and let it out — your first insight is one entry away.',
+    title: '💜 Waiting to hear from you',
+    body: 'Tap the mic — your first insight awaits.',
   },
 ];
 

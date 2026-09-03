@@ -623,13 +623,17 @@ export default function PrivacySettingsScreen() {
         onCancel={() => setShowDeleteConfirm(false)}
       />
 
-      {/* Delete Account Confirmation — canonical ConfirmDialog. */}
+      {/* Delete Account Confirmation — canonical ConfirmDialog.
+          The subscription notice is passed as `footnote` (not appended to
+          `message`) so it renders smaller/dimmer — a reminder, not a second
+          warning competing with the actual delete warning above it. */}
       <ConfirmDialog
         visible={showDeleteAccountConfirm}
         icon="warning"
         destructiveness="severe"
         title="Delete account?"
-        message={`This will permanently delete your account, all entries, statistics, achievements, and security settings, and reset the app to a fresh install. You will need to set up a new PIN to use the app again. This action cannot be undone.\n\nThis does not cancel an active ${Platform.OS === "ios" ? "App Store" : "Google Play"} subscription — manage or cancel that separately in the ${Platform.OS === "ios" ? "App Store" : "Play Store"}.`}
+        message="This will permanently delete your account, all entries, statistics, achievements, and security settings, and reset the app to a fresh install. You will need to set up a new PIN to use the app again. This action cannot be undone."
+        footnote={`This does not cancel an active ${Platform.OS === "ios" ? "App Store" : "Google Play"} subscription — manage or cancel that separately in the ${Platform.OS === "ios" ? "App Store" : "Play Store"}.`}
         confirmLabel="Delete everything"
         onConfirm={confirmDeleteAccount}
         onCancel={() => setShowDeleteAccountConfirm(false)}

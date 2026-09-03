@@ -58,6 +58,16 @@ interface ConfirmDialogProps {
   /** Single-step convenience props — ignored if `steps` is provided. */
   title?: string;
   message?: string;
+  /**
+   * Optional secondary line rendered below `message` in smaller, dimmer text
+   * (12px, 55% opacity vs. the main message's 15px/75%) — for informational
+   * asides that must stay visible but shouldn't visually compete with the
+   * primary warning copy above it. e.g. "This does not cancel an active
+   * Google Play subscription — manage or cancel that separately in the Play
+   * Store" on the delete-account dialog: legally/functionally important, but
+   * not the actual warning the user needs to weigh before confirming.
+   */
+  footnote?: string;
   confirmLabel?: string;
   /** Multi-step flow (e.g. reset-all-data's "are you sure?" second step). */
   steps?: ConfirmDialogStep[];
@@ -80,6 +90,7 @@ export function ConfirmDialog({
   visible,
   title,
   message,
+  footnote,
   confirmLabel = 'Confirm',
   steps,
   currentStep = 0,
@@ -179,6 +190,24 @@ export function ConfirmDialog({
             >
               {displayMessage}
             </Text>
+
+            {/* Footnote — deliberately smaller/dimmer than the message above
+                it, so an informational aside (e.g. "this doesn't cancel your
+                subscription") reads as a footnote, not as a second warning
+                competing for the same attention as the primary message. */}
+            {footnote ? (
+              <Text
+                style={{
+                  color: 'rgba(255, 255, 255, 0.55)',
+                  fontSize: 12,
+                  textAlign: 'center',
+                  lineHeight: 17,
+                  marginTop: 10,
+                }}
+              >
+                {footnote}
+              </Text>
+            ) : null}
           </View>
 
           {/* Step indicator — only rendered for multi-step flows */}
