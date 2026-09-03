@@ -18,6 +18,7 @@
 
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import useOnboardingStore from '@/lib/state/onboarding-store';
 
 // Storage key for tracking last sent message
 const LAST_MESSAGE_INDEX_KEY = 'notification_last_message_index';
@@ -139,6 +140,43 @@ const DENIED: NotificationPermissionStatus = {
   canAskAgain: false,
   status: 'denied',
 };
+
+// ── Personalization ───────────────────────────────────────────────────────────
+// Reads the first name the user gave during onboarding (NameCollectionScreen)
+// so notification titles can address them directly. Falls back to null (no
+// personalization) for users who skipped/haven't reached that step, or if the
+// store read fails for any reason — the generic title is always a safe result.
+function getUserFirstName(): string | null {
+  try {
+    const userName = useOnboardingStore.getState().userName;
+    if (!userName) return null;
+    // Mirrors the "first word only" convention used for the Insights greeting
+    // (see app/(tabs)/insights.tsx) — a user who typed a full name still gets
+    // addressed by just their first name.
+    const first = userName.trim().split(/\s+/)[0];
+    return first || null;
+  } catch {
+    return null;
+  }
+}
+
+// Inserts ", {name}" as a vocative directly before any trailing punctuation,
+// so the result reads as grammatically correct regardless of whether the
+// base title is a statement ("Your journal's ready." -> "Your journal's
+// ready, Kasra."), a question ("Something on your mind?" -> "Something on
+// your mind, Kasra?"), or has no terminal punctuation at all ("Quick
+// check-in" -> "Quick check-in, Kasra"). Returns the title unchanged if no
+// name is available.
+function personalizeTitle(title: string, name: string | null): string {
+  if (!name) return title;
+  const trailingPunctuation = title.match(/([.!?]+)\s*$/);
+  if (trailingPunctuation) {
+    const punctuation = trailingPunctuation[1];
+    const base = title.slice(0, title.length - punctuation.length).replace(/\s+$/, '');
+    return `${base}, ${name}${punctuation}`;
+  }
+  return `${title}, ${name}`;
+}
 
 export class NotificationService {
   // ── Message rotation ──────────────────────────────────────────────────────
@@ -291,10 +329,11 @@ export class NotificationService {
         if (!weekday) continue;
 
         const message = await this.getNextMessage();
+        const personalizedTitle = personalizeTitle(message.title, getUserFirstName());
 
         const id = await N.scheduleNotificationAsync({
           content: {
-            title: message.title,
+            title: personalizedTitle,
             body: message.body,
             sound: 'default',
             priority: N.AndroidNotificationPriority.HIGH,
@@ -379,7 +418,7 @@ export class NotificationService {
 
       await N.scheduleNotificationAsync({
         content: {
-          title: message.title,
+          title: personalizeTitle(message.title, getUserFirstName()),
           body: message.body,
           sound: 'default',
           data: { type: 'test-notification' },
@@ -458,7 +497,7 @@ export class NotificationService {
 
       const id = await N.scheduleNotificationAsync({
         content: {
-          title: '🎙️ Your trial ends tomorrow',
+          title: personalizeTitle('🎙️ Your trial ends tomorrow', getUserFirstName()),
           body,
           sound: 'default',
           data: { type: 'trial-day2-reminder' },
