@@ -13,6 +13,7 @@ import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import {
   X,
   Check,
+  CaretLeft,
   CaretRight,
   Sparkle,
   SkipForward,
@@ -192,10 +193,45 @@ export default function ReflectionScreen() {
     else handleSave();
   }, [stepIdx, effectiveSteps, handleSave]);
 
+  // Back navigation. Previously this screen was forward-only — once you left
+  // the emotion grid you could not return to fix a selection, which made a
+  // mis-tap unrecoverable without discarding the whole recording.
+  const prevStep = useCallback(() => {
+    tapHaptic();
+    const prev = effectiveSteps[stepIdx - 1];
+    if (prev) setStep(prev);
+  }, [stepIdx, effectiveSteps]);
+
+  // Jump straight to a step from the progress dots. Every step is optional
+  // (each has a Skip), so no target is ever an invalid state — jumping
+  // forward is equivalent to skipping the steps in between.
+  const goToStep = useCallback((target: Step) => {
+    tapHaptic();
+    setStep(target);
+  }, []);
+
   const skipStep = useCallback(() => {
     tapHaptic();
     nextStep();
   }, [nextStep]);
+
+  /**
+   * The AI's confidence score (0–100) for an emotion, from the analysis that
+   * produced this pending reflection.
+   *
+   * Surfaced on the summary step so "AI detected these emotions" is backed by
+   * visible evidence — previously the grid pre-selected some chips but gave no
+   * indication of how strongly each was detected, so the user had no basis to
+   * judge whether to agree.
+   */
+  const aiScoreFor = useCallback(
+    (emotion: EmotionType): number => {
+      const raw = pending?.emotionScores?.[emotion];
+      const n = typeof raw === "number" ? raw : 0;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    },
+    [pending],
+  );
 
   const toggleEmotion = useCallback((e: EmotionType) => {
     tapHaptic();
@@ -252,19 +288,31 @@ export default function ReflectionScreen() {
         end={{ x: 0, y: 1 }}
       />
 
-      {/* Header — only X and Skip, no title */}
+      {/* Header — back/dismiss on the left, skip on the right.
+          On the first step the left control dismisses (discarding the
+          recording); on later steps it goes back a step instead, matching the
+          Refine Analysis modal's pattern so both correction surfaces navigate
+          the same way. Discarding from a later step is still possible by
+          stepping back to the first step — and requiring that extra tap is a
+          feature, since discarding throws away a finished recording. */}
       <View style={[s.header, { paddingTop: insets.top + 12 }]}>
         <Pressable
-          onPress={handleDismiss}
+          onPress={stepIdx > 0 ? prevStep : handleDismiss}
+          accessibilityLabel={stepIdx > 0 ? "Go back a step" : "Discard reflection"}
           style={[
             s.headerBtn,
             { backgroundColor: hexToRgba(Colors.primary, 0.1) },
           ]}
         >
-          <X size={22} color="rgba(255,255,255,0.75)" />
+          {stepIdx > 0 ? (
+            <CaretLeft size={22} color="rgba(255,255,255,0.75)" />
+          ) : (
+            <X size={22} color="rgba(255,255,255,0.75)" />
+          )}
         </Pressable>
         <Pressable
           onPress={skipStep}
+          accessibilityLabel="Skip this step"
           style={[
             s.headerBtn,
             { backgroundColor: hexToRgba(Colors.primary, 0.1) },
@@ -272,6 +320,33 @@ export default function ReflectionScreen() {
         >
           <SkipForward size={18} color="rgba(255,255,255,0.55)" />
         </Pressable>
+      </View>
+
+      {/* Step progress — tappable, so the dots double as navigation.
+          This screen previously gave no indication of how many steps remained
+          (it varies: 2 in "quick" mode, 3 in "full"). */}
+      <View style={s.dotsRow}>
+        {effectiveSteps.map((stepName, i) => {
+          const isCurrent = stepName === step;
+          return (
+            <Pressable
+              key={stepName}
+              onPress={() => goToStep(stepName)}
+              hitSlop={10}
+              accessibilityLabel={`Go to step ${i + 1} of ${effectiveSteps.length}`}
+            >
+              <View
+                style={[
+                  s.dot,
+                  isCurrent && s.dotActive,
+                  // Steps already visited read as "done" rather than pending,
+                  // so progress is legible at a glance.
+                  !isCurrent && i < stepIdx && s.dotVisited,
+                ]}
+              />
+            </Pressable>
+          );
+        })}
       </View>
 
       <ScrollView
@@ -284,10 +359,16 @@ export default function ReflectionScreen() {
           <Animated.View entering={FadeIn}>
             <Text style={s.sectionLabel}>AI detected these emotions</Text>
             <View style={[s.emotionGrid, { overflow: "hidden" }]}>
+              {/* Fixed order, deliberately NOT sorted by score — a stable
+                  layout every time is worth more to this audience than
+                  ranking, and matches the "same order every time" promise the
+                  rest of the reflection flow makes. The AI's confidence is
+                  conveyed by the bar inside each chip instead. */}
               {ALL_EMOTIONS.map((emotion) => {
                 const def = getEmotionDefinition(emotion);
                 const sel = emotions.includes(emotion);
                 const accentColor = EMOTION_COLORS[emotion];
+                const aiScore = aiScoreFor(emotion);
                 return (
                   <Pressable
                     key={emotion}
@@ -298,6 +379,11 @@ export default function ReflectionScreen() {
                         selectedEmotionDef === emotion ? null : emotion,
                       );
                     }}
+                    accessibilityLabel={
+                      aiScore > 0
+                        ? `${emotion}, AI confidence ${aiScore} percent${sel ? ", selected" : ""}`
+                        : `${emotion}${sel ? ", selected" : ""}`
+                    }
                     style={[
                       s.emotionChip,
                       sel && {
@@ -310,6 +396,26 @@ export default function ReflectionScreen() {
                     <Text style={[s.emotionLabel, sel && { color: "#FFFFFF" }]}>
                       {emotion}
                     </Text>
+
+                    {/* AI confidence for this emotion. Rendered only when the
+                        AI actually detected it, so undetected emotions stay
+                        visually quiet rather than showing an empty track. */}
+                    {aiScore > 0 && (
+                      <View style={s.scoreTrack}>
+                        <View
+                          style={[
+                            s.scoreFill,
+                            {
+                              width: `${aiScore}%`,
+                              backgroundColor: sel
+                                ? accentColor
+                                : "rgba(255,255,255,0.45)",
+                            },
+                          ]}
+                        />
+                      </View>
+                    )}
+
                     {sel && (
                       <View
                         style={[s.checkBadge, { backgroundColor: accentColor }]}
@@ -336,17 +442,24 @@ export default function ReflectionScreen() {
                 <Text style={s.defEmoji}>
                   {getEmotionDefinition(selectedEmotionDef).emoji}
                 </Text>
-                <View style={s.defContent}>
-                  <Text style={s.defTitle}>
-                    {getSubLabelForIntensity(selectedEmotionDef, 50).label}
-                  </Text>
-                  <Text style={s.defDesc}>
-                    {getSubLabelForIntensity(selectedEmotionDef, 50).definition}
-                  </Text>
-                  <Text style={s.defExample}>
-                    "{getSubLabelForIntensity(selectedEmotionDef, 50).example}"
-                  </Text>
-                </View>
+                {/* Uses this entry's ACTUAL detected intensity, so the
+                    Plutchik rung shown matches what the AI found (e.g.
+                    "Ecstasy" at 85, not always the mid-range "Joy"). Falls
+                    back to the midpoint for an emotion the AI didn't detect,
+                    since a 0 score would render the faintest rung and read as
+                    misleading for one the user is adding themselves. */}
+                {(() => {
+                  const detected = aiScoreFor(selectedEmotionDef);
+                  const intensity = detected > 0 ? detected : 50;
+                  const sub = getSubLabelForIntensity(selectedEmotionDef, intensity);
+                  return (
+                    <View style={s.defContent}>
+                      <Text style={s.defTitle}>{sub.label}</Text>
+                      <Text style={s.defDesc}>{sub.definition}</Text>
+                      <Text style={s.defExample}>"{sub.example}"</Text>
+                    </View>
+                  );
+                })()}
               </Animated.View>
             )}
 
@@ -388,7 +501,11 @@ export default function ReflectionScreen() {
               ]}
             >
               <View style={s.sliderHeader}>
-                <Text style={s.sliderTitle}>Pleasant ↔ Unpleasant</Text>
+                {/* Order matches the axis labels below (Unpleasant on the
+                    left / low end, Pleasant on the right / high end) and the
+                    Refine Analysis modal. It previously read "Pleasant ↔
+                    Unpleasant", contradicting its own slider direction. */}
+                <Text style={s.sliderTitle}>Unpleasant ↔ Pleasant</Text>
                 <Text style={s.sliderValue}>
                   {valence > 0 ? "+" : ""}
                   {valence}
@@ -554,6 +671,39 @@ const s = StyleSheet.create({
     padding: 10,
     borderRadius: 24,
     backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  dotsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    paddingTop: 4,
+    paddingBottom: 4,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.25)",
+  },
+  dotActive: {
+    width: 18,
+    backgroundColor: "#FFFFFF",
+  },
+  dotVisited: {
+    backgroundColor: "rgba(255,255,255,0.55)",
+  },
+  scoreTrack: {
+    width: 40,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    marginTop: 6,
+    overflow: "hidden",
+  },
+  scoreFill: {
+    height: "100%",
+    borderRadius: 2,
   },
   sectionLabel: {
     fontSize: 22,
