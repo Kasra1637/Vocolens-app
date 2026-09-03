@@ -203,16 +203,66 @@ export default function EntryDetailScreen() {
 
   if (!entry) {
     return (
-      <View className="flex-1 items-center justify-center" style={{ backgroundColor: Colors.background }}>
+      <View className="flex-1" style={{ backgroundColor: Colors.background }}>
         <LinearGradient
           colors={Gradients.background}
           style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
         />
-        <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }} className="text-lg">
-          Entry not found
-        </Text>
+
+        {/* Header with a back button — the native header is hidden for this
+            route, so without this the user could be stranded here (no visible
+            way out aside from a swipe gesture). Reuses the same glass-styled
+            back control as the normal entry header. */}
+        <View
+          className="flex-row items-center px-5"
+          style={{ paddingTop: insets.top + 12, paddingBottom: 16 }}
+        >
+          <Pressable
+            onPress={handleBack}
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: GLASS_BG, borderWidth: 1.5, borderColor: GLASS_BORDER }}
+          >
+            <ArrowLeft size={20} color="#FFFFFF" weight="regular" />
+          </Pressable>
+        </View>
+
+        <View className="flex-1 items-center justify-center px-8" style={{ marginTop: -40 }}>
+          <Text
+            style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF", textAlign: "center" }}
+            className="text-lg"
+          >
+            Entry not found
+          </Text>
+          <Text
+            style={{
+              fontFamily: "Inter_400Regular",
+              color: "rgba(255,255,255,0.7)",
+              textAlign: "center",
+              marginTop: 8,
+            }}
+            className="text-sm"
+          >
+            This entry may have been deleted.
+          </Text>
+          <Pressable
+            onPress={handleBack}
+            className="rounded-full items-center justify-center"
+            style={{
+              marginTop: 24,
+              paddingVertical: 12,
+              paddingHorizontal: 28,
+              backgroundColor: GLASS_BG,
+              borderWidth: 1.5,
+              borderColor: GLASS_BORDER,
+            }}
+          >
+            <Text style={{ fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }} className="text-sm">
+              Go back
+            </Text>
+          </Pressable>
+        </View>
       </View>
     );
   }

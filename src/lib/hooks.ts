@@ -22,7 +22,7 @@ import {
   EmotionalShift,
   DeepInsight,
 } from './emotional-intelligence';
-import { getAIAnalysis } from './ai-emotional-intelligence';
+import { getAIAnalysis, getInsightsCacheKey } from './ai-emotional-intelligence';
 import {
   JournalEntry,
   EmotionType,
@@ -281,7 +281,9 @@ export function useDeepInsights() {
   // Use entry count + latest timestamp as cache key instead of the full array.
   // The full array reference changes on every store update (e.g. aiReflection save),
   // which would invalidate the cache every few seconds and cause duplicate LLM calls.
-  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
+  // Shared with ai-emotional-intelligence's cache so the two never drift; it also
+  // folds in the latest updatedAt so editing an entry refreshes insights.
+  const cacheKey = getInsightsCacheKey(entries);
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
@@ -303,7 +305,7 @@ export function useDeepInsights() {
 // Hook to get emotional triggers using AI
 export function useEmotionalTriggers() {
   const entries = useJournalStore((s) => s.entries);
-  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
+  const cacheKey = getInsightsCacheKey(entries);
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
@@ -325,7 +327,7 @@ export function useEmotionalTriggers() {
 // Hook to get mood cycles using AI
 export function useMoodCycles() {
   const entries = useJournalStore((s) => s.entries);
-  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
+  const cacheKey = getInsightsCacheKey(entries);
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
@@ -347,7 +349,7 @@ export function useMoodCycles() {
 // Hook to get emotional shifts using AI
 export function useEmotionalShifts() {
   const entries = useJournalStore((s) => s.entries);
-  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
+  const cacheKey = getInsightsCacheKey(entries);
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
@@ -369,7 +371,7 @@ export function useEmotionalShifts() {
 // Hook to get priority insights for display using AI
 export function usePriorityInsights() {
   const entries = useJournalStore((s) => s.entries);
-  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
+  const cacheKey = getInsightsCacheKey(entries);
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
@@ -405,7 +407,7 @@ export function useTriggerDetection(timeWindow: '7D' | '14D' | '30D' = '30D') {
   const entries = useJournalStore((s) => s.entries);
   // Create a stable cache key based on entries count and latest entry timestamp
   // This avoids re-computation when entries array reference changes but content is same
-  const cacheKey = `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
+  const cacheKey = getInsightsCacheKey(entries);
 
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps

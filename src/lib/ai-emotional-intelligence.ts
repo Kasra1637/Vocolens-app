@@ -74,14 +74,30 @@ const FAILURE_CACHE_DURATION = 60 * 1000; // 1 minute
 const PERSIST_KEY = 'vocolens_ai_analysis_cache_v1';
 
 /**
- * Identifies a set of entries for caching purposes. Matches the react-query key
- * used by the hooks (count + newest entry timestamp) so the two layers
- * invalidate together — the previous version keyed on entry count alone, which
- * meant editing an entry, or deleting one and adding another, kept serving stale
- * insights for up to 10 minutes.
+ * Builds the cache key that fronts every AI-insights layer (this module's
+ * in-memory + AsyncStorage cache, and the react-query hooks in hooks.ts).
+ *
+ * It must change whenever the analysed content changes. Entry count and the
+ * newest entry's createdAt catch adds and deletes — but NOT edits: editing an
+ * entry's transcript/title leaves both the count and every createdAt untouched,
+ * so insights used to keep quoting the pre-edit text forever. Editing DOES
+ * stamp a fresh updatedAt (see journal-store.updateEntry), so folding the most
+ * recent updatedAt across all entries into the key makes an edit bust the cache
+ * and regenerate insights from the corrected content.
+ *
+ * Exported so hooks.ts uses the exact same formula — the two must never drift.
  */
+export function getInsightsCacheKey(entries: JournalEntry[]): string {
+  let latestUpdatedAt = '';
+  for (const e of entries) {
+    const u = e?.updatedAt ?? '';
+    if (u > latestUpdatedAt) latestUpdatedAt = u;
+  }
+  return `${entries.length}-${entries[0]?.createdAt ?? 'empty'}-${latestUpdatedAt || 'none'}`;
+}
+
 function getCacheKey(entries: JournalEntry[]): string {
-  return `${entries.length}-${entries[0]?.createdAt ?? 'empty'}`;
+  return getInsightsCacheKey(entries);
 }
 
 /**

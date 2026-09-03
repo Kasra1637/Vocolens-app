@@ -96,6 +96,7 @@ export default function PrivacySettingsScreen() {
   const disablePin = useBiometricStore((s) => s.disablePin);
   const clearSubscription = useSubscriptionStore((s) => s.clearSubscription);
   const clearCorrections = useEmotionCorrectionStore((s) => s.clearCorrections);
+  const resetSettings = useSettingsStore((s) => s.resetSettings);
 
   const handleExportData = async () => {
     try {
@@ -218,6 +219,10 @@ export default function PrivacySettingsScreen() {
       disableBiometric();
       disablePin();
       resetOnboarding();
+      // Return app preferences (dark mode, notifications, reminder time,
+      // reflection mode) to their defaults too — otherwise a "fresh install"
+      // delete would leave the previous user's settings behind.
+      resetSettings();
       logout();
       setPinSetup(false);
       setShowDeleteAccountConfirm(false);
