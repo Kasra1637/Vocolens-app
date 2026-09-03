@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useState } from "react";
-import { View, PanResponder, LayoutChangeEvent } from "react-native";
+import { View, PanResponder, LayoutChangeEvent, Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
 
 interface UnifiedSliderProps {
@@ -14,6 +14,13 @@ interface UnifiedSliderProps {
   touchAreaHeight?: number;
   trackHeight?: number;
   thumbSize?: number;
+  /**
+   * Snap-to-zero window, in value units. Within ±this of zero the slider
+   * settles exactly on 0 with a distinct haptic, so "neutral" is actually
+   * reachable on a −100…100 range. Defaults to 3 for bipolar sliders, 0
+   * (disabled) for unipolar ones. Pass 0 to disable.
+   */
+  detentRange?: number;
 }
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -27,6 +34,54 @@ const CENTER_MARK   = "rgba(255, 255, 255, 0.30)";  // bipolar centre divider
 const THUMB_BG      = "rgba(255, 255, 255, 0.92)";  // thumb — just slightly opaque white
 const THUMB_BORDER  = "rgba(255, 255, 255, 0.40)";  // subtle border, no solid colour
 
+// ── Gesture tuning ───────────────────────────────────────────────────────────
+// How far the finger must travel horizontally before this slider claims the
+// gesture. Small enough that dragging feels immediate, large enough that a
+// vertical scroll starting on the slider goes to the parent ScrollView instead
+// of silently changing the value.
+const HORIZONTAL_CLAIM_PX = 4;
+// Haptics are throttled on BOTH value delta and wall-clock time. A fast drag
+// across a 200-unit range would otherwise fire dozens of impacts, which stutters
+// on Android and drowns out the detent cue.
+const HAPTIC_VALUE_STEP = 4;
+const HAPTIC_MIN_INTERVAL_MS = 45;
+
+function toValue(
+  px: number,
+  tw: number,
+  min: number,
+  max: number,
+  detent: number,
+): number {
+  const raw = min + (clamp(px, 0, tw) / tw) * (max - min);
+  let v = Math.round(raw);
+  if (detent > 0 && Math.abs(v) <= detent) v = 0;
+  return clamp(v, min, max);
+}
+
+function toPixel(v: number, tw: number, min: number, max: number): number {
+  return ((v - min) / (max - min)) * tw;
+}
+
+/**
+ * The single slider used by every adjustment surface in the app.
+ *
+ * Interaction model (deliberate, and different from a naive slider):
+ *
+ *   • It does NOT claim the gesture on touch-down. Touching or resting a finger
+ *     never changes the value, and a vertical drag that begins on the slider is
+ *     handed to the parent ScrollView. Previously this component captured every
+ *     touch in its 56px band, which made ~112px of the reflection screen
+ *     un-scrollable — dragging to scroll silently rewrote the user's data.
+ *
+ *   • Dragging is RELATIVE to the value at gesture start, so the thumb never
+ *     jumps to meet the finger mid-drag. This is what makes small, precise
+ *     adjustments possible.
+ *
+ *   • Tapping anywhere on the track still jumps to that position, so the thumb
+ *     itself never has to be hit. That is handled by a separate press handler,
+ *     which the pan responder pre-empts as soon as a real drag begins.
+ */
 export default function UnifiedSlider({
   value,
   min,
@@ -35,161 +90,240 @@ export default function UnifiedSlider({
   touchAreaHeight = 56,
   trackHeight     = 6,
   thumbSize       = 28,
+  detentRange,
 }: UnifiedSliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
-  const trackWidthRef  = useRef(0);
-  const lastHapticVal  = useRef(value);
+  const [isActive, setIsActive] = useState(false);
 
-  // Snapshot taken at the START of every gesture
-  const grantThumbPx   = useRef(0); // thumb pixel at grant
-  const grantPageX     = useRef(0); // finger pageX at grant
+  const isBipolar = min < 0;
+  const detent = detentRange ?? (isBipolar ? 3 : 0);
 
-  function valueToPixel(v: number, tw: number): number {
-    return ((v - min) / (max - min)) * tw;
-  }
-
-  function pixelToValue(px: number, tw: number): number {
-    return Math.round(min + (clamp(px, 0, tw) / tw) * (max - min));
-  }
+  // The PanResponder is created once, so everything it reads must come from a
+  // ref that is refreshed on each render — otherwise it closes over the first
+  // render's min/max/onChange/value forever.
+  const io = useRef({
+    min,
+    max,
+    detent,
+    value,
+    onChange,
+    trackWidth: 0,
+    grantValue: value,
+    lastHapticVal: value,
+    lastHapticAt: 0,
+    inDetent: false,
+  });
+  io.current.min = min;
+  io.current.max = max;
+  io.current.detent = detent;
+  io.current.value = value;
+  io.current.onChange = onChange;
 
   const handleLayout = useCallback((e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
     if (w > 0) {
-      trackWidthRef.current  = w;
-      grantThumbPx.current   = valueToPixel(value, w);
+      io.current.trackWidth = w;
       setTrackWidth(w);
     }
-  }, [value, min, max]);
+  }, []);
+
+  const fireHaptic = (newVal: number) => {
+    const s = io.current;
+    const now = Date.now();
+
+    // Landing on the zero detent gets its own, heavier cue so it's
+    // distinguishable from the ordinary drag ticks.
+    if (s.detent > 0 && newVal === 0) {
+      if (!s.inDetent) {
+        s.inDetent = true;
+        s.lastHapticVal = newVal;
+        s.lastHapticAt = now;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      }
+      return;
+    }
+    s.inDetent = false;
+
+    if (
+      Math.abs(newVal - s.lastHapticVal) >= HAPTIC_VALUE_STEP &&
+      now - s.lastHapticAt >= HAPTIC_MIN_INTERVAL_MS
+    ) {
+      s.lastHapticVal = newVal;
+      s.lastHapticAt = now;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    }
+  };
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder:        () => true,
-      onMoveShouldSetPanResponder:         () => true,
-      onStartShouldSetPanResponderCapture: () => true,
-      onMoveShouldSetPanResponderCapture:  () => true,
+      // Never claim on touch-down — see the component doc comment. This is what
+      // keeps the parent ScrollView usable and stops accidental writes.
+      onStartShouldSetPanResponder:        () => false,
+      onStartShouldSetPanResponderCapture: () => false,
 
-      onPanResponderGrant: (evt) => {
-        const tw = trackWidthRef.current;
-        if (tw <= 0) return;
-        // Snap to tap position immediately
-        const tapX   = clamp(evt.nativeEvent.locationX, 0, tw);
-        grantThumbPx.current = tapX;
-        grantPageX.current   = evt.nativeEvent.pageX;
-        const newVal = pixelToValue(tapX, tw);
-        lastHapticVal.current = newVal;
-        onChange(newVal);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      // Claim only a clearly-horizontal drag.
+      onMoveShouldSetPanResponder: (_e, gs) =>
+        Math.abs(gs.dx) > HORIZONTAL_CLAIM_PX &&
+        Math.abs(gs.dx) > Math.abs(gs.dy),
+      onMoveShouldSetPanResponderCapture: (_e, gs) =>
+        Math.abs(gs.dx) > HORIZONTAL_CLAIM_PX &&
+        Math.abs(gs.dx) > Math.abs(gs.dy),
+
+      onPanResponderGrant: () => {
+        const s = io.current;
+        s.grantValue = s.value;
+        s.lastHapticVal = s.value;
+        s.lastHapticAt = 0;
+        s.inDetent = s.detent > 0 && s.value === 0;
+        setIsActive(true);
       },
 
-      onPanResponderMove: (evt) => {
-        const tw = trackWidthRef.current;
+      onPanResponderMove: (_e, gs) => {
+        const s = io.current;
+        const tw = s.trackWidth;
         if (tw <= 0) return;
-        // Real-time: delta from the finger's current pageX vs grant pageX
-        const delta  = evt.nativeEvent.pageX - grantPageX.current;
-        const rawPx  = clamp(grantThumbPx.current + delta, 0, tw);
-        const newVal = pixelToValue(rawPx, tw);
-        onChange(newVal);
-        if (Math.abs(newVal - lastHapticVal.current) >= 5) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          lastHapticVal.current = newVal;
+        // Relative to the value the gesture started from, so the thumb tracks
+        // the finger without ever snapping to it.
+        const startPx = toPixel(s.grantValue, tw, s.min, s.max);
+        const newVal = toValue(startPx + gs.dx, tw, s.min, s.max, s.detent);
+        if (newVal !== s.value) {
+          fireHaptic(newVal);
+          s.onChange(newVal);
         }
       },
 
-      onPanResponderRelease: (evt) => {
-        const tw = trackWidthRef.current;
-        if (tw <= 0) return;
-        const delta    = evt.nativeEvent.pageX - grantPageX.current;
-        const finalPx  = clamp(grantThumbPx.current + delta, 0, tw);
-        // Commit so next gesture starts from here
-        grantThumbPx.current = finalPx;
-        const finalVal = pixelToValue(finalPx, tw);
-        onChange(finalVal);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      onPanResponderRelease: () => {
+        setIsActive(false);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       },
 
-      onPanResponderTerminate: (evt) => {
-        const tw = trackWidthRef.current;
-        if (tw <= 0) return;
-        const delta   = evt.nativeEvent.pageX - grantPageX.current;
-        const finalPx = clamp(grantThumbPx.current + delta, 0, tw);
-        grantThumbPx.current = finalPx;
+      onPanResponderTerminate: () => {
+        setIsActive(false);
       },
-    })
+
+      // Let the parent (e.g. a ScrollView that has decided this is a scroll)
+      // take the gesture back rather than fighting it.
+      onPanResponderTerminationRequest: () => true,
+    }),
   ).current;
+
+  /**
+   * Tap-to-set. Fires only when the touch ends without becoming a drag —
+   * the pan responder claims the gesture first in that case, and a claimed
+   * gesture never reaches this handler.
+   */
+  const handleTrackPress = useCallback((locationX: number) => {
+    const s = io.current;
+    const tw = s.trackWidth;
+    if (tw <= 0) return;
+    const newVal = toValue(locationX, tw, s.min, s.max, s.detent);
+    if (newVal !== s.value) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      s.onChange(newVal);
+    }
+  }, []);
 
   const tw         = trackWidth > 0 ? trackWidth : 1;
   const normalized = clamp((value - min) / (max - min), 0, 1);
   const thumbLeft  = clamp(normalized * tw - thumbSize / 2, 0, tw - thumbSize);
-  const isBipolar  = min < 0;
+  const activeThumbScale = isActive ? 1.12 : 1;
+
+  // Where zero sits on the track, as a 0–1 fraction. Derived rather than
+  // assumed to be the midpoint, so the fill and centre mark stay correct for
+  // any bipolar range (not just symmetric ones like −100…100).
+  const zeroNorm = isBipolar ? clamp((0 - min) / (max - min), 0, 1) : 0;
+  // Fill spans from the zero mark to the current value.
+  //
+  // This previously used `Math.abs(value)%`, which on a −100…100 range made the
+  // bar advance twice as fast as the thumb and saturate at value 50 (the
+  // overflow was simply clipped, hiding it). The fill now measures the real
+  // distance between zero and the value.
+  const fillPct = isBipolar
+    ? Math.abs(normalized - zeroNorm) * 100
+    : normalized * 100;
 
   return (
     <View onLayout={handleLayout} style={{ width: "100%" }}>
-      <View
-        {...panResponder.panHandlers}
+      <Pressable
+        onPress={(e) => handleTrackPress(e.nativeEvent.locationX)}
+        // The whole 56px band is tappable, so the 28px thumb never has to be
+        // hit precisely.
         style={{ height: touchAreaHeight, justifyContent: "center" }}
+        accessibilityRole="adjustable"
+        accessibilityValue={{ min, max, now: value }}
       >
-        {/* Track bed */}
-        <View
-          style={{
-            height: trackHeight,
-            borderRadius: trackHeight / 2,
-            backgroundColor: TRACK_BG,
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          {/* Bipolar centre divider */}
-          {isBipolar && (
+        <View {...panResponder.panHandlers} style={{ justifyContent: "center" }}>
+          {/* Track bed */}
+          <View
+            style={{
+              height: trackHeight,
+              borderRadius: trackHeight / 2,
+              backgroundColor: TRACK_BG,
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Zero mark — positioned from the real zero point, not assumed
+                to be the visual midpoint. */}
+            {isBipolar && (
+              <View
+                style={{
+                  position: "absolute",
+                  left: `${zeroNorm * 100}%` as any,
+                  marginLeft: -1,
+                  top: 0,
+                  bottom: 0,
+                  width: 2,
+                  backgroundColor: CENTER_MARK,
+                  zIndex: 2,
+                }}
+              />
+            )}
+
+            {/* Fill — grows from the left edge (unipolar) or the zero mark
+                (bipolar, in whichever direction the value went). */}
             <View
               style={{
                 position: "absolute",
-                left: "49.5%",
                 top: 0,
                 bottom: 0,
-                width: 2,
-                backgroundColor: CENTER_MARK,
-                zIndex: 2,
+                backgroundColor: FILL_COLOR,
+                borderRadius: trackHeight / 2,
+                width: `${fillPct}%` as any,
+                left: isBipolar
+                  ? (value >= 0 ? (`${zeroNorm * 100}%` as any) : undefined)
+                  : 0,
+                right: isBipolar && value < 0
+                  ? (`${(1 - zeroNorm) * 100}%` as any)
+                  : undefined,
               }}
             />
-          )}
+          </View>
 
-          {/* Fill — grows from left (unipolar) or centre (bipolar) */}
+          {/* Thumb — neutral translucent circle, no solid white.
+              Grows slightly while dragging so the control confirms it has the
+              gesture without adding any persistent visual weight. */}
           <View
+            pointerEvents="none"
             style={{
               position: "absolute",
-              top: 0,
-              bottom: 0,
-              backgroundColor: FILL_COLOR,
-              borderRadius: trackHeight / 2,
-              width: isBipolar
-                ? (`${Math.abs(value)}%` as any)
-                : (`${normalized * 100}%` as any),
-              left:  isBipolar && value >= 0 ? "50%" : undefined,
-              right: isBipolar && value <  0 ? "50%" : undefined,
+              left: thumbLeft,
+              width: thumbSize,
+              height: thumbSize,
+              borderRadius: thumbSize / 2,
+              backgroundColor: THUMB_BG,
+              borderWidth: 1.5,
+              borderColor: isActive ? "rgba(255,255,255,0.75)" : THUMB_BORDER,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: isActive ? 0.28 : 0.18,
+              shadowRadius: isActive ? 6 : 4,
+              elevation: isActive ? 6 : 4,
+              transform: [{ scale: activeThumbScale }],
             }}
           />
         </View>
-
-        {/* Thumb — neutral translucent circle, no solid white */}
-        <View
-          style={{
-            position: "absolute",
-            left: thumbLeft,
-            width: thumbSize,
-            height: thumbSize,
-            borderRadius: thumbSize / 2,
-            backgroundColor: THUMB_BG,
-            borderWidth: 1.5,
-            borderColor: THUMB_BORDER,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.18,
-            shadowRadius: 4,
-            elevation: 4,
-            marginTop: -(thumbSize / 2) + trackHeight / 2,
-          }}
-        />
-      </View>
+      </Pressable>
     </View>
   );
 }

@@ -33,7 +33,7 @@ import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeColors, getThemeGradients } from "@/lib/theme";
 import { useCreateEntry } from "@/lib/hooks";
-import ReflectionSlider from "@/components/reflection/ReflectionSlider";
+import AdjustmentSliderCard from "@/components/shared/AdjustmentSliderCard";
 import BodyRegionMap from "@/components/reflection/BodyRegionMap";
 import { BrandedAlert } from "@/components/BrandedAlert";
 import { UsageLimitError } from "@/lib/api/usage-service";
@@ -491,65 +491,33 @@ export default function ReflectionScreen() {
           <Animated.View entering={FadeInUp}>
             <Text style={s.sectionLabel}>Adjust how it felt</Text>
 
-            <View
-              style={[
-                s.sliderCard,
-                {
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderColor: "rgba(255, 255, 255, 0.20)",
-                },
-              ]}
-            >
-              <View style={s.sliderHeader}>
-                {/* Order matches the axis labels below (Unpleasant on the
-                    left / low end, Pleasant on the right / high end) and the
-                    Refine Analysis modal. It previously read "Pleasant ↔
-                    Unpleasant", contradicting its own slider direction. */}
-                <Text style={s.sliderTitle}>Unpleasant ↔ Pleasant</Text>
-                <Text style={s.sliderValue}>
-                  {valence > 0 ? "+" : ""}
-                  {valence}
-                </Text>
-              </View>
-              <ReflectionSlider
-                value={valence}
-                min={-100}
-                max={100}
-                onChange={setValence}
-              />
-              <View style={s.sliderLabels}>
-                <Text style={s.sliderHint}>Unpleasant</Text>
-                <Text style={s.sliderHint}>Pleasant</Text>
-              </View>
-            </View>
+            {/* Both adjustment cards come from the shared component, so this
+                screen and the post-save Refine Analysis modal are identical in
+                design, spacing and behaviour. The label order matches the axis
+                labels (Unpleasant low / Pleasant high) — it previously read
+                "Pleasant ↔ Unpleasant", contradicting its own slider. */}
+            <AdjustmentSliderCard
+              label="Unpleasant ↔ Pleasant"
+              value={valence}
+              min={-100}
+              max={100}
+              onChange={setValence}
+              formatValue={(v) => `${v > 0 ? "+" : ""}${v}`}
+              minLabel="Unpleasant"
+              maxLabel="Pleasant"
+            />
 
-            <View
-              style={[
-                s.sliderCard,
-                {
-                  marginTop: 16,
-                  backgroundColor: "rgba(255, 255, 255, 0.12)",
-                  borderColor: "rgba(255, 255, 255, 0.20)",
-                },
-              ]}
-            >
-              <View style={s.sliderHeader}>
-                <Text style={s.sliderTitle}>Calm ↔ Activated</Text>
-                <Text style={s.sliderValue}>
-                  {arousal}%
-                </Text>
-              </View>
-              <ReflectionSlider
-                value={arousal}
-                min={0}
-                max={100}
-                onChange={setArousal}
-              />
-              <View style={s.sliderLabels}>
-                <Text style={s.sliderHint}>Calm</Text>
-                <Text style={s.sliderHint}>Activated</Text>
-              </View>
-            </View>
+            <AdjustmentSliderCard
+              style={{ marginTop: 16 }}
+              label="Calm ↔ Activated"
+              value={arousal}
+              min={0}
+              max={100}
+              onChange={setArousal}
+              formatValue={(v) => `${v}%`}
+              minLabel="Calm"
+              maxLabel="Activated"
+            />
 
             {distress !== "low" && (
               <Animated.View
@@ -809,43 +777,9 @@ const s = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     color: "rgba(255,255,255,0.45)",
   },
-  sliderCard: {
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.20)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-  },
-  sliderHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  sliderTitle: {
-    fontSize: 14,
-    fontFamily: "Inter_500Medium",
-    color: "rgba(255,255,255,0.8)",
-  },
-  sliderValue: {
-    fontSize: 20,
-    fontFamily: "Inter_700Bold",
-    color: "#FFFFFF",
-  },
-  sliderLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  sliderHint: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
-    color: "rgba(255,255,255,0.35)",
-  },
+  // Slider card styles removed — the adjustment cards now come from the shared
+  // AdjustmentSliderCard component, which owns that styling so this screen and
+  // the Refine Analysis modal cannot drift apart again.
   distressBanner: {
     borderRadius: 24,
     paddingVertical: 14,

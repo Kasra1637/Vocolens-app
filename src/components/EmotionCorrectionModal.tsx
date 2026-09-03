@@ -17,7 +17,7 @@ import {
   TextInput,
   PanResponder,
 } from "react-native";
-import ReflectionSlider from "@/components/reflection/ReflectionSlider";
+import AdjustmentSliderCard from "@/components/shared/AdjustmentSliderCard";
 import * as Haptics from "expo-haptics";
 import Animated from "react-native-reanimated";
 import {
@@ -369,29 +369,37 @@ export default function EmotionCorrectionModal({
                   <MiniBar label="Arousal" value={aiArousal} />
                 </View>
               </View>
-              <View style={{ ...glassCard, marginBottom: 4 }}>
-                <View style={{ padding: 18 }}>
-                  <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13,
-                      color: "rgba(255,255,255,0.70)", marginBottom: 16,
-                      textTransform: "uppercase", letterSpacing: 0.6 }}>
-                    Fine-tune if needed
-                  </Text>
-                  <View style={{ marginBottom: 20 }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                      <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: "#FFFFFF" }}>Unpleasant ↔ Pleasant</Text>
-                      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>{valence > 0 ? `+${valence}` : `${valence}`}</Text>
-                    </View>
-                    <ReflectionSlider value={valence} min={-100} max={100} onChange={setValence} />
-                  </View>
-                  <View>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                      <Text style={{ fontFamily: "Inter_500Medium", fontSize: 13, color: "#FFFFFF" }}>Calm ↔ Activated</Text>
-                      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13, color: "#FFFFFF" }}>{arousal}%</Text>
-                    </View>
-                    <ReflectionSlider value={arousal} min={0} max={100} onChange={setArousal} />
-                  </View>
-                </View>
-              </View>
+              {/* Section heading kept, but the two sliders now use the shared
+                  AdjustmentSliderCard so this modal matches the reflection
+                  screen exactly — same type scale, spacing, axis labels and
+                  steppers. Previously these were hand-rolled here at a smaller
+                  type scale with no axis labels, inside one shared card. */}
+              <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 13,
+                  color: "rgba(255,255,255,0.70)", marginBottom: 12,
+                  textTransform: "uppercase", letterSpacing: 0.6 }}>
+                Fine-tune if needed
+              </Text>
+              <AdjustmentSliderCard
+                label="Unpleasant ↔ Pleasant"
+                value={valence}
+                min={-100}
+                max={100}
+                onChange={setValence}
+                formatValue={(v) => `${v > 0 ? "+" : ""}${v}`}
+                minLabel="Unpleasant"
+                maxLabel="Pleasant"
+              />
+              <AdjustmentSliderCard
+                style={{ marginTop: 16 }}
+                label="Calm ↔ Activated"
+                value={arousal}
+                min={0}
+                max={100}
+                onChange={setArousal}
+                formatValue={(v) => `${v}%`}
+                minLabel="Calm"
+                maxLabel="Activated"
+              />
             </>
           )}
 
