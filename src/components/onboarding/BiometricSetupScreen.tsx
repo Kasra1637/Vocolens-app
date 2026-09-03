@@ -59,7 +59,7 @@ const BIOMETRIC_POINTS = [
 const PIN_ONLY_POINTS = [
   { icon: Lock,         text: 'A PIN keeps entries private' },
   { icon: Lock,         text: 'PIN is hardware-encrypted' },
-  { icon: Lock,         text: 'Change PIN anytime in Settings' },
+  { icon: Lock,         text: 'Change PIN anytime' },
 ];
 
 export function BiometricSetupScreen() {
