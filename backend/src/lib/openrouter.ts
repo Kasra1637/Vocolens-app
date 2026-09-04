@@ -529,6 +529,111 @@ Respond with valid JSON only (no markdown, no code fences):
   };
 }
 
+// ── Recommendation ────────────────────────────────────────────────────────────
+
+export interface RecommendationResult {
+  /** 75-100 word personalised advocacy paragraph. */
+  advice: string;
+  /** Shorter TTS-friendly version of the advice. */
+  audioAdvice: string;
+}
+
+/**
+ * Generate a warm, personalised recommendation card for a journal entry.
+ *
+ * Mirrors the deployed Cloudflare Worker's /api/recommend handler
+ * (src/worker.js → handleRecommend) exactly: same model, prompt,
+ * temperature, token budget, and { advice, audioAdvice } response shape
+ * with the same safety fallbacks, so the Node backend (src/index.ts +
+ * routes/journal.ts) and the Worker return identical results.
+ */
+export async function generateRecommendation(
+  transcript: string,
+  primaryEmotion: string = "happiness",
+): Promise<RecommendationResult> {
+  const apiKey = getApiKey();
+
+  if (!apiKey || !apiKey.startsWith("sk-or-")) {
+    throw new Error("[OpenRouter] OPENROUTER_API_KEY is missing or invalid.");
+  }
+
+  if (!transcript || transcript.trim().length === 0) {
+    throw new Error("transcript is required");
+  }
+
+  const systemPrompt = `You are the core AI engine for Vocolens, an empathetic voice journaling application.
+Generate a hyper-personalised advocacy paragraph based on the user's journal transcript.
+
+RULES:
+- LENGTH: Strictly 75 to 100 words. Count before responding.
+- TONE: Grounded, warm, peer-like, deeply encouraging. Not clinical. Not preachy.
+- VOCABULARY: Strong verbs, domain-specific nouns matching the user's context.
+- BANNED WORDS: Delve, Testament, Beacon, Masterclass, Landscape, Tapestry, Journey.
+- FORMAT: Single cohesive paragraph. No bullet points. No introductory filler.
+- ADDRESS: Second person only. Never start with I.
+- Acknowledge their exact state, validate with specificity, dictate one actionable tiny task.
+- NEVER ask open-ended questions. Invent and dictate the exact task.
+
+Return ONLY this JSON — no markdown, no explanation:
+{
+  "advice": "75-100 word personalised paragraph",
+  "audioAdvice": "50-70 word TTS version, natural rhythm, no special characters"
+}`;
+
+  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: buildHeaders(apiKey),
+    body: JSON.stringify({
+      model: TEXT_FALLBACK_MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `Here is my journal entry:\n\n"${transcript}"\n\nPrimary emotion detected: ${primaryEmotion}\n\nPlease provide a warm, personalised recommendation.`,
+        },
+      ],
+      temperature: 0.85,
+      max_tokens: 500,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`[OpenRouter] Recommendation error (${response.status}): ${errText}`);
+  }
+
+  const data = await response.json() as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error("[OpenRouter] Recommendation returned empty content");
+  }
+
+  const jsonStr = content
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+
+  const result = JSON.parse(jsonStr) as { advice?: unknown; audioAdvice?: unknown };
+
+  const advice =
+    typeof result.advice === "string" && result.advice.trim().length >= 60
+      ? result.advice.trim()
+      : "You showed up today and that already matters. Place both feet flat on the floor right now, feel the ground beneath you, and take three slow breaths — in for four counts, hold for two, out for six. Do that once. That single act tells your nervous system it is safe, and from that calmer place everything else becomes a little more manageable.";
+
+  const audioAdvice =
+    typeof result.audioAdvice === "string" && result.audioAdvice.trim().length > 0
+      ? result.audioAdvice.trim()
+      : advice.split(".")[0] + ".";
+
+  console.log(`[OpenRouter] Recommendation generated | primary=${primaryEmotion}`);
+
+  return { advice, audioAdvice };
+}
+
 // ── AI Emotional Intelligence Analysis ────────────────────────────────────────
 
 export interface AICompletionRequest {
