@@ -83,6 +83,12 @@ export default function ReflectionScreen() {
   const [bodyRegions, setBodyRegions] = useState<BodyRegionSensation[]>([]);
   const [selectedEmotionDef, setSelectedEmotionDef] =
     useState<EmotionType | null>(null);
+  // The AI-detected emotions are presented as a read-only result by default.
+  // Users only get to add/remove emotions after they explicitly say they
+  // disagree — this prevents accidental taps from silently rewriting what the
+  // AI found, and makes it clear that editing is a deliberate "I disagree"
+  // action rather than the default interaction.
+  const [emotionsEditable, setEmotionsEditable] = useState(false);
   const [saving, setSaving] = useState(false);
   // Shown when handleSave fails. The pending reflection data is untouched on
   // failure (it's only cleared after a successful save), so closing this
@@ -94,6 +100,9 @@ export default function ReflectionScreen() {
     setEmotions(pending.suggestedEmotions);
     setValence(pending.initialValence);
     setArousal(pending.initialArousal);
+    // Every new reflection starts in the read-only "agree" state; the user
+    // must opt into editing again if they disagree with this entry's result.
+    setEmotionsEditable(false);
   }, [pending]);
 
   useEffect(() => {
@@ -372,7 +381,18 @@ export default function ReflectionScreen() {
                 return (
                   <Pressable
                     key={emotion}
-                    onPress={() => toggleEmotion(emotion)}
+                    // Read-only until the user opts into editing. Tapping a
+                    // chip only toggles selection once they've said they
+                    // disagree; before that, taps do nothing so the AI result
+                    // can't be changed by accident.
+                    onPress={
+                      emotionsEditable
+                        ? () => toggleEmotion(emotion)
+                        : undefined
+                    }
+                    // Long-press for the Plutchik definition stays available in
+                    // both modes — reading about an emotion never mutates the
+                    // selection.
                     onLongPress={() => {
                       tapHaptic();
                       setSelectedEmotionDef(
@@ -381,8 +401,8 @@ export default function ReflectionScreen() {
                     }}
                     accessibilityLabel={
                       aiScore > 0
-                        ? `${emotion}, AI confidence ${aiScore} percent${sel ? ", selected" : ""}`
-                        : `${emotion}${sel ? ", selected" : ""}`
+                        ? `${emotion}, AI confidence ${aiScore} percent${sel ? ", selected" : ""}${emotionsEditable ? ", tap to toggle" : ""}`
+                        : `${emotion}${sel ? ", selected" : ""}${emotionsEditable ? ", tap to toggle" : ""}`
                     }
                     style={[
                       s.emotionChip,
@@ -390,6 +410,10 @@ export default function ReflectionScreen() {
                         borderColor: accentColor,
                         backgroundColor: `${accentColor}22`,
                       },
+                      // In read-only mode, fade the unselected chips so the
+                      // detected ones read clearly as "the result" and the
+                      // grid doesn't look like a set of live buttons.
+                      !emotionsEditable && !sel && { opacity: 0.45 },
                     ]}
                   >
                     <Text style={s.emotionEmoji}>{def.emoji}</Text>
@@ -463,9 +487,49 @@ export default function ReflectionScreen() {
               </Animated.View>
             )}
 
-            <Text style={s.hint}>
-              Tap to toggle · Long-press for Plutchik definition
-            </Text>
+            {/* Editing gate. By default the grid above is a read-only result;
+                the user taps "I disagree" to unlock it, then taps chips to
+                add/remove emotions so their final decision is what gets saved.
+                They can lock it back to "agree" if they change their mind. */}
+            {!emotionsEditable ? (
+              <>
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    setEmotionsEditable(true);
+                  }}
+                  accessibilityLabel="I disagree — edit the detected emotions"
+                  style={s.disagreeBtn}
+                >
+                  <Sparkle size={16} color="rgba(255,255,255,0.85)" />
+                  <Text style={s.disagreeBtnText}>
+                    Not quite right? Tap to edit
+                  </Text>
+                </Pressable>
+                <Text style={s.hint}>
+                  These are the emotions the AI detected · Long-press any for
+                  its Plutchik definition
+                </Text>
+              </>
+            ) : (
+              <>
+                <Pressable
+                  onPress={() => {
+                    tapHaptic();
+                    setEmotionsEditable(false);
+                  }}
+                  accessibilityLabel="Done editing — keep these emotions"
+                  style={s.disagreeBtn}
+                >
+                  <Check size={16} color="rgba(255,255,255,0.85)" />
+                  <Text style={s.disagreeBtnText}>Done editing</Text>
+                </Pressable>
+                <Text style={s.hint}>
+                  Tap emotions to add or remove them · Long-press for the
+                  Plutchik definition
+                </Text>
+              </>
+            )}
 
             <Pressable
               onPress={nextStep}
@@ -749,6 +813,25 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.4)",
     marginTop: 8,
     textAlign: "center",
+  },
+  disagreeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    alignSelf: "center",
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.20)",
+  },
+  disagreeBtnText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: "rgba(255,255,255,0.85)",
   },
   nextBtn: {
     flexDirection: "row",

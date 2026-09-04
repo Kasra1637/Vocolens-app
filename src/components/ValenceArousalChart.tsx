@@ -384,7 +384,11 @@ export default function ValenceArousalChart({
             <LinearGradient colors={["rgba(255,255,255,0.20)", "rgba(255,255,255,0.05)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
             <Pulse size={24} color="#FFFFFF" weight="regular" />
           </View>
-          <View>
+          {/* flex:1 so the title/subtitle column wraps within the card instead
+              of overflowing past the right edge (the subtitle was being clipped
+              off-screen). minWidth:0 lets the text actually shrink inside the
+              row rather than forcing the row wider than the card. */}
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text
               style={{
                 fontFamily: "Inter_600SemiBold",
