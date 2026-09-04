@@ -1022,7 +1022,7 @@ function InsightsContent({
       >
         {/* Welcome Section */}
         <Animated.View entering={ENTER_1}>
-          <WelcomeSection user={user} totalEntries={stats.totalEntries} />
+          <WelcomeSection user={user} totalEntries={entries.length} />
         </Animated.View>
 
         {/* Journal Streak Calendar */}

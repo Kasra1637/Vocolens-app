@@ -154,6 +154,12 @@ export default function ValenceArousalChart({
 
   const CHART_H = chartWidth; // square
   const PAD = 0; // SVG padding — labels drawn outside chart area
+  // Inset the plotting area so a point sitting at an extreme value (e.g.
+  // valence = +100) never has its ring, "edited by you" badge, or emoji
+  // clipped by the SVG canvas edge. Must be >= ring radius (15) + the
+  // correction badge's outward offset + a little breathing room.
+  const DOT_MARGIN = 30;
+  const PLOT_SPAN = Math.max(CHART_H - DOT_MARGIN * 2, 1);
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
@@ -188,10 +194,12 @@ export default function ValenceArousalChart({
           e.arousal !== undefined,
       )
       .map((e) => {
-        // Map valence (-100..+100) → SVG x (0..chartWidth)
-        const x = ((e.valence + 100) / 200) * CHART_H;
-        // Map arousal (0..100) → SVG y (inverted: 0 = bottom = calm)
-        const y = CHART_H - (e.arousal / 100) * CHART_H;
+        // Map valence (-100..+100) → SVG x, inset by DOT_MARGIN on both
+        // sides so points at the extremes still have room for their ring,
+        // correction badge, and emoji overlay.
+        const x = DOT_MARGIN + ((e.valence + 100) / 200) * PLOT_SPAN;
+        // Map arousal (0..100) → SVG y (inverted: 0 = bottom = calm), same inset
+        const y = DOT_MARGIN + PLOT_SPAN - (e.arousal / 100) * PLOT_SPAN;
         const emotion = e.primaryEmotion ?? "happiness";
         return {
           x,
@@ -210,7 +218,7 @@ export default function ValenceArousalChart({
           entryId: e.id,
         };
       });
-  }, [entries, days, CHART_H, primaryColor]);
+  }, [entries, days, CHART_H, primaryColor, PLOT_SPAN, DOT_MARGIN]);
 
   const quadrantCounts: QuadrantCounts = useMemo(() => {
     let pleasantActivated = 0;
@@ -256,9 +264,9 @@ export default function ValenceArousalChart({
       .filter((p) => correctionMap.has(p.entryId))
       .map((p) => {
         const c = correctionMap.get(p.entryId)!;
-        // AI original position → SVG coords
-        const aiX = ((c.aiValence + 100) / 200) * CHART_H;
-        const aiY = CHART_H - (c.aiArousal / 100) * CHART_H;
+        // AI original position → SVG coords (same inset mapping as points)
+        const aiX = DOT_MARGIN + ((c.aiValence + 100) / 200) * PLOT_SPAN;
+        const aiY = DOT_MARGIN + PLOT_SPAN - (c.aiArousal / 100) * PLOT_SPAN;
         return {
           aiX,
           aiY,
@@ -267,7 +275,7 @@ export default function ValenceArousalChart({
           entryId: p.entryId,
         };
       });
-  }, [points, corrections, days, CHART_H]);
+  }, [points, corrections, days, CHART_H, PLOT_SPAN, DOT_MARGIN]);
 
   // ─── AI Accuracy Stats for the current time range ──────────────────────────
   const aiAccuracyStats = useMemo(() => {
@@ -393,7 +401,7 @@ export default function ValenceArousalChart({
                 color: "rgba(255,255,255,0.6)",
               }}
             >
-              Calm–activated × pleasant–unpleasant grid
+              How pleasant and how intense each entry felt
             </Text>
           </View>
         </View>
@@ -875,22 +883,45 @@ function ChartSvg({
               strokeWidth={isSelected ? 2.5 : 1.5}
               strokeOpacity={isSelected ? 1 : 0.75}
             />
-            {/* "Edited by you" indicator — small dot at top-right of ring */}
+            {/* "Edited by you" indicator — badge sits just outside the ring
+                (rather than on top of it) so it never overlaps the emoji,
+                with a white halo underneath for contrast against any
+                background color. */}
             {p.isUserCorrected && (
-              <Circle
-                cx={p.x + r - 3}
-                cy={p.y - r + 3}
-                r={4}
-                fill={primaryColor}
-                stroke="rgba(0,0,0,0.4)"
-                weight="regular"
-              />
+              <G>
+                <Circle
+                  cx={p.x + r + 2}
+                  cy={p.y - r - 2}
+                  r={7.5}
+                  fill="#FFFFFF"
+                />
+                <Circle
+                  cx={p.x + r + 2}
+                  cy={p.y - r - 2}
+                  r={6}
+                  fill={primaryColor}
+                  stroke="rgba(0,0,0,0.55)"
+                  strokeWidth={1}
+                  weight="regular"
+                />
+                <SvgText
+                  x={p.x + r + 2}
+                  y={p.y - r - 2 + 3}
+                  fontSize={8}
+                  fill="#FFFFFF"
+                  textAnchor="middle"
+                  fontFamily="Inter_700Bold"
+                >
+                  ✓
+                </SvgText>
+              </G>
             )}
-            {/* Transparent tap target — slightly larger than the ring */}
+            {/* Transparent tap target — generously larger than the ring so
+                it's easy to hit with a finger on a small phone screen */}
             <Circle
               cx={p.x}
               cy={p.y}
-              r={r + 6}
+              r={r + 12}
               fill="transparent"
               onPress={() => onPointPress(p)}
             />
