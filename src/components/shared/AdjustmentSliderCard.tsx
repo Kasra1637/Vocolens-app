@@ -2,25 +2,22 @@
  * AdjustmentSliderCard
  *
  * The single card used for every valence/arousal adjustment in the app —
- * the pre-save reflection screen and the post-save Refine Analysis modal.
+ * the pre-save reflection screen ("Adjust how it felt") and the post-save
+ * Refine Analysis modal. Both render the exact same card so the two feel
+ * like one control the user already knows, not two different ones.
  *
- * It exists so those two surfaces are genuinely identical rather than merely
- * similar. They previously diverged in ways that made the second one feel like
- * a different app: value text at 20px Bold vs 13px SemiBold, min/max axis
- * labels present on one and absent on the other, and one card per slider vs.
- * both sliders sharing a single card.
- *
- * Includes −/+ steppers beside the value. A drag is good for coarse movement
- * but poor at landing on an exact number, and this range is wide (−100…100).
- * The steppers sit in space the value row already occupies, so exact control
- * costs no extra height.
+ * Tapping the bar jumps straight to a position — good for coarse placement.
+ * The +/- steppers next to the value are the primary way to fine-tune from
+ * there: a single tap nudges by `step`, and press-and-hold repeats
+ * automatically with acceleration, so a drastic change (e.g. −80 → +80)
+ * doesn't require dozens of individual taps.
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { View, Text, Pressable, StyleSheet, ViewStyle } from "react-native";
 import { Minus, Plus } from "phosphor-react-native";
 import UnifiedSlider from "@/components/shared/UnifiedSlider";
-import { tapHaptic } from "@/lib/haptics";
+import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 
 interface Props {
   /** e.g. "Unpleasant ↔ Pleasant" — order must match minLabel/maxLabel. */
@@ -34,10 +31,20 @@ interface Props {
   /** Axis labels under the track. Both or neither. */
   minLabel?: string;
   maxLabel?: string;
-  /** Amount a single stepper tap moves the value. */
+  /** Amount a single stepper tap (or the first hold repeat) moves the value. */
   step?: number;
   style?: ViewStyle;
 }
+
+// ── Press-and-hold tuning ────────────────────────────────────────────────────
+// Delay before the first auto-repeat fires, so a quick single tap never
+// double-nudges the value.
+const HOLD_INITIAL_DELAY_MS = 380;
+// Repeat interval shrinks as the hold continues, so a long hold accelerates
+// toward the extreme instead of crawling there at a fixed rate.
+const HOLD_REPEAT_START_MS = 140;
+const HOLD_REPEAT_MIN_MS = 40;
+const HOLD_ACCELERATION = 0.88; // multiplies the interval after every repeat
 
 export default function AdjustmentSliderCard({
   label,
@@ -53,16 +60,77 @@ export default function AdjustmentSliderCard({
 }: Props) {
   const display = formatValue ? formatValue(value) : String(value);
 
-  const nudge = useCallback(
+  // Read/write the live value from a ref while holding, rather than closing
+  // over the `value` prop — the interval callback is scheduled once per hold
+  // and must always nudge from the CURRENT value, not the value at the moment
+  // the hold started.
+  const liveValue = useRef(value);
+  liveValue.current = value;
+
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdIntervalMs = useRef(HOLD_REPEAT_START_MS);
+
+  const clearHold = useCallback(() => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+    if (holdInterval.current) {
+      clearTimeout(holdInterval.current);
+      holdInterval.current = null;
+    }
+    holdIntervalMs.current = HOLD_REPEAT_START_MS;
+  }, []);
+
+  const applyNudge = useCallback(
     (delta: number) => {
-      const next = Math.max(min, Math.min(max, value + delta));
-      if (next !== value) {
-        tapHaptic();
+      const next = Math.max(min, Math.min(max, liveValue.current + delta));
+      if (next !== liveValue.current) {
+        liveValue.current = next;
         onChange(next);
       }
+      return next;
     },
-    [value, min, max, onChange],
+    [min, max, onChange],
   );
+
+  const nudge = useCallback(
+    (delta: number) => {
+      tapHaptic();
+      applyNudge(delta);
+    },
+    [applyNudge],
+  );
+
+  const startHold = useCallback(
+    (delta: number) => {
+      // The initial tap is handled by onPress (below) — this only covers the
+      // REPEATED nudges after the hold delay, so a normal tap never fires
+      // twice.
+      holdTimer.current = setTimeout(() => {
+        const scheduleNext = () => {
+          applyNudge(delta);
+          selectionHaptic();
+          if (liveValue.current === min || liveValue.current === max) {
+            clearHold();
+            return;
+          }
+          holdIntervalMs.current = Math.max(
+            HOLD_REPEAT_MIN_MS,
+            holdIntervalMs.current * HOLD_ACCELERATION,
+          );
+          holdInterval.current = setTimeout(scheduleNext, holdIntervalMs.current);
+        };
+        scheduleNext();
+      }, HOLD_INITIAL_DELAY_MS);
+    },
+    [applyNudge, clearHold, min, max],
+  );
+
+  // Stop any in-flight hold if the card unmounts (e.g. navigating away while
+  // pressing) so it doesn't fire onChange against a gone component.
+  useEffect(() => clearHold, [clearHold]);
 
   const atMin = value <= min;
   const atMax = value >= max;
@@ -77,11 +145,14 @@ export default function AdjustmentSliderCard({
         <View style={styles.valueGroup}>
           <Pressable
             onPress={() => nudge(-step)}
+            onPressIn={() => startHold(-step)}
+            onPressOut={clearHold}
             disabled={atMin}
             // Generous hit area without enlarging the visual control.
             hitSlop={{ top: 12, bottom: 12, left: 10, right: 6 }}
             accessibilityRole="button"
             accessibilityLabel={`Decrease ${label}`}
+            accessibilityHint="Double tap to nudge, or press and hold to change quickly"
             style={[styles.stepBtn, atMin && styles.stepBtnDisabled]}
           >
             <Minus size={12} color="#FFFFFF" weight="bold" />
@@ -95,10 +166,13 @@ export default function AdjustmentSliderCard({
 
           <Pressable
             onPress={() => nudge(step)}
+            onPressIn={() => startHold(step)}
+            onPressOut={clearHold}
             disabled={atMax}
             hitSlop={{ top: 12, bottom: 12, left: 6, right: 10 }}
             accessibilityRole="button"
             accessibilityLabel={`Increase ${label}`}
+            accessibilityHint="Double tap to nudge, or press and hold to change quickly"
             style={[styles.stepBtn, atMax && styles.stepBtnDisabled]}
           >
             <Plus size={12} color="#FFFFFF" weight="bold" />
