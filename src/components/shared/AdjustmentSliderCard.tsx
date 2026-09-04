@@ -6,11 +6,16 @@
  * Refine Analysis modal. Both render the exact same card so the two feel
  * like one control the user already knows, not two different ones.
  *
+ * Layout is a single integrated control: a minus button on the far left, the
+ * tappable bar in the middle, and a plus button on the far right. The current
+ * value rides on the bar's thumb and moves with it, so the number is always
+ * visible right where the user is adjusting.
+ *
  * Tapping the bar jumps straight to a position — good for coarse placement.
- * The +/- steppers next to the value are the primary way to fine-tune from
- * there: a single tap nudges by `step`, and press-and-hold repeats
- * automatically with acceleration, so a drastic change (e.g. −80 → +80)
- * doesn't require dozens of individual taps.
+ * The flanking +/- steppers are the primary way to fine-tune from there: a
+ * single tap nudges by `step`, and press-and-hold repeats automatically with
+ * acceleration, so a drastic change (e.g. −80 → +80) doesn't require dozens of
+ * individual taps.
  */
 
 import React, { useCallback, useEffect, useRef } from "react";
@@ -58,8 +63,6 @@ export default function AdjustmentSliderCard({
   step = 1,
   style,
 }: Props) {
-  const display = formatValue ? formatValue(value) : String(value);
-
   // Read/write the live value from a ref while holding, rather than closing
   // over the `value` prop — the interval callback is scheduled once per hold
   // and must always nudge from the CURRENT value, not the value at the moment
@@ -137,50 +140,53 @@ export default function AdjustmentSliderCard({
 
   return (
     <View style={[styles.card, style]}>
-      <View style={styles.header}>
-        <Text style={styles.title} numberOfLines={1}>
-          {label}
-        </Text>
+      <Text style={styles.title} numberOfLines={1}>
+        {label}
+      </Text>
 
-        <View style={styles.valueGroup}>
-          <Pressable
-            onPress={() => nudge(-step)}
-            onPressIn={() => startHold(-step)}
-            onPressOut={clearHold}
-            disabled={atMin}
-            // Generous hit area without enlarging the visual control.
-            hitSlop={{ top: 12, bottom: 12, left: 10, right: 6 }}
-            accessibilityRole="button"
-            accessibilityLabel={`Decrease ${label}`}
-            accessibilityHint="Double tap to nudge, or press and hold to change quickly"
-            style={[styles.stepBtn, atMin && styles.stepBtnDisabled]}
-          >
-            <Minus size={12} color="#FFFFFF" weight="bold" />
-          </Pressable>
+      {/* Integrated control: minus on the far left, plus on the far right, the
+          tappable bar in the middle. The current value rides on the slider's
+          thumb (see formatValue passed to UnifiedSlider) so the number is
+          visible right on the bar as it moves — no separate readout needed. */}
+      <View style={styles.controlRow}>
+        <Pressable
+          onPress={() => nudge(-step)}
+          onPressIn={() => startHold(-step)}
+          onPressOut={clearHold}
+          disabled={atMin}
+          hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={`Decrease ${label}`}
+          accessibilityHint="Double tap to nudge, or press and hold to change quickly"
+          style={[styles.stepBtn, atMin && styles.stepBtnDisabled]}
+        >
+          <Minus size={16} color="#FFFFFF" weight="bold" />
+        </Pressable>
 
-          {/* Fixed width so the row doesn't shift as the number changes
-              width (e.g. "+9" → "+100"). */}
-          <Text style={styles.value} numberOfLines={1}>
-            {display}
-          </Text>
-
-          <Pressable
-            onPress={() => nudge(step)}
-            onPressIn={() => startHold(step)}
-            onPressOut={clearHold}
-            disabled={atMax}
-            hitSlop={{ top: 12, bottom: 12, left: 6, right: 10 }}
-            accessibilityRole="button"
-            accessibilityLabel={`Increase ${label}`}
-            accessibilityHint="Double tap to nudge, or press and hold to change quickly"
-            style={[styles.stepBtn, atMax && styles.stepBtnDisabled]}
-          >
-            <Plus size={12} color="#FFFFFF" weight="bold" />
-          </Pressable>
+        <View style={styles.sliderWrap}>
+          <UnifiedSlider
+            value={value}
+            min={min}
+            max={max}
+            onChange={onChange}
+            formatValue={formatValue ?? ((v) => String(v))}
+          />
         </View>
-      </View>
 
-      <UnifiedSlider value={value} min={min} max={max} onChange={onChange} />
+        <Pressable
+          onPress={() => nudge(step)}
+          onPressIn={() => startHold(step)}
+          onPressOut={clearHold}
+          disabled={atMax}
+          hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={`Increase ${label}`}
+          accessibilityHint="Double tap to nudge, or press and hold to change quickly"
+          style={[styles.stepBtn, atMax && styles.stepBtnDisabled]}
+        >
+          <Plus size={16} color="#FFFFFF" weight="bold" />
+        </Pressable>
+      </View>
 
       {(minLabel || maxLabel) && (
         <View style={styles.axisLabels}>
@@ -204,28 +210,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
   title: {
     fontSize: 14,
     fontFamily: "Inter_500Medium",
     color: "rgba(255,255,255,0.8)",
-    flexShrink: 1,
-    marginRight: 10,
+    marginBottom: 2,
   },
-  valueGroup: {
+  controlRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
+  },
+  sliderWrap: {
+    flex: 1,
   },
   stepBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.12)",
@@ -235,17 +237,12 @@ const styles = StyleSheet.create({
   stepBtnDisabled: {
     opacity: 0.35,
   },
-  value: {
-    fontSize: 18,
-    fontFamily: "Inter_700Bold",
-    color: "#FFFFFF",
-    minWidth: 52,
-    textAlign: "center",
-  },
   axisLabels: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 2,
+    // Align axis labels under the track, not under the flanking buttons.
+    paddingHorizontal: 44,
   },
   axisHint: {
     fontSize: 11,

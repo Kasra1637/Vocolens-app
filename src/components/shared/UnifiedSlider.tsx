@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { View, Pressable, LayoutChangeEvent } from "react-native";
+import { View, Text, Pressable, LayoutChangeEvent } from "react-native";
 import * as Haptics from "expo-haptics";
 
 interface UnifiedSliderProps {
@@ -21,6 +21,13 @@ interface UnifiedSliderProps {
    * sliders, 0 (disabled) for unipolar ones. Pass 0 to disable.
    */
   detentRange?: number;
+  /**
+   * When provided, the current value is rendered as a small bubble that rides
+   * on the thumb and moves along the track as the value changes, so the number
+   * is always visible right where the user is looking. Formats the readout
+   * (e.g. "+40", "72%"). When omitted, no bubble is drawn.
+   */
+  formatValue?: (value: number) => string;
 }
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -72,6 +79,7 @@ export default function UnifiedSlider({
   trackHeight     = 6,
   thumbSize       = 28,
   detentRange,
+  formatValue,
 }: UnifiedSliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
   const [isPressed, setIsPressed] = useState(false);
@@ -103,6 +111,13 @@ export default function UnifiedSlider({
   const tw         = trackWidth > 0 ? trackWidth : 1;
   const normalized = clamp((value - min) / (max - min), 0, 1);
   const thumbLeft  = clamp(normalized * tw - thumbSize / 2, 0, tw - thumbSize);
+
+  // The value bubble is centred over the thumb's centre. Its own width is
+  // clamped-centred separately below so it can't spill past the track edges.
+  const thumbCenter = normalized * tw;
+  const BUBBLE_W = 44;
+  const bubbleLeft = clamp(thumbCenter - BUBBLE_W / 2, 0, tw - BUBBLE_W);
+  const showBubble = !!formatValue && trackWidth > 0;
 
   // Where zero sits on the track, as a 0–1 fraction. Derived rather than
   // assumed to be the midpoint, so the fill and zero mark stay correct for
@@ -197,6 +212,50 @@ export default function UnifiedSlider({
               marginTop: -(thumbSize / 2) + trackHeight / 2,
             }}
           />
+
+          {/* Value bubble — rides on the thumb and moves with it, so the
+              current number is always visible right where the user is
+              adjusting. Sits above the track; a small notch points down at
+              the thumb. */}
+          {showBubble && (
+            <View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                left: bubbleLeft,
+                width: BUBBLE_W,
+                bottom: thumbSize / 2 + 8,
+                alignItems: "center",
+              }}
+            >
+              <View
+                style={{
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  borderRadius: 9,
+                  backgroundColor: isPressed
+                    ? "rgba(255,255,255,0.95)"
+                    : "rgba(255,255,255,0.16)",
+                  borderWidth: 1,
+                  borderColor: isPressed
+                    ? "rgba(255,255,255,0.95)"
+                    : "rgba(255,255,255,0.28)",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Inter_700Bold",
+                    fontSize: 12,
+                    color: isPressed ? "#1A1A2E" : "#FFFFFF",
+                    textAlign: "center",
+                  }}
+                  numberOfLines={1}
+                >
+                  {formatValue!(value)}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       </Pressable>
     </View>
