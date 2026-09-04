@@ -114,9 +114,10 @@ export default function UnifiedSlider({
 
   // The value bubble is centred over the thumb's centre. Its own width is
   // clamped-centred separately below so it can't spill past the track edges.
+  // Wide enough for the longest readout ("-100", "100%") without truncating.
   const thumbCenter = normalized * tw;
-  const BUBBLE_W = 44;
-  const bubbleLeft = clamp(thumbCenter - BUBBLE_W / 2, 0, tw - BUBBLE_W);
+  const BUBBLE_W = 56;
+  const bubbleLeft = clamp(thumbCenter - BUBBLE_W / 2, 0, Math.max(0, tw - BUBBLE_W));
   const showBubble = !!formatValue && trackWidth > 0;
 
   // Where zero sits on the track, as a 0–1 fraction. Derived rather than
@@ -224,12 +225,13 @@ export default function UnifiedSlider({
                 position: "absolute",
                 left: bubbleLeft,
                 width: BUBBLE_W,
-                bottom: thumbSize / 2 + 8,
+                bottom: thumbSize / 2 + 6,
                 alignItems: "center",
               }}
             >
               <View
                 style={{
+                  minWidth: 36,
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                   borderRadius: 9,

@@ -544,9 +544,6 @@ export default function ReflectionScreen() {
               <Text style={s.nextBtnText}>Next</Text>
               <CaretRight size={18} color="#FFFFFF" />
             </Pressable>
-            <Pressable onPress={skipStep} style={s.skipBtnWrap}>
-              <Text style={s.skipText}>Skip reflection</Text>
-            </Pressable>
           </Animated.View>
         )}
 

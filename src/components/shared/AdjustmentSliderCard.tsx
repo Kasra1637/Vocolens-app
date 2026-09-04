@@ -214,12 +214,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Inter_500Medium",
     color: "rgba(255,255,255,0.8)",
-    marginBottom: 2,
   },
   controlRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    // Reserve vertical room above the track for the value bubble that rides
+    // on the thumb, so it never overlaps the label above.
+    marginTop: 26,
   },
   sliderWrap: {
     flex: 1,
