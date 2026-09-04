@@ -288,7 +288,20 @@ export function AuthGate({ children }: AuthGateProps) {
     <>
       {children}
       {!hasSeenWelcomeCelebration && (
-        <FirstLaunchCelebration onDone={markWelcomeCelebrationSeen} />
+        <FirstLaunchCelebration
+          onDone={() => {
+            markWelcomeCelebrationSeen();
+            // On a first launch where the user set up biometric/PIN during
+            // onboarding, unlocking also queues the recurring unlock
+            // celebration. Without this, it would fire immediately after the
+            // one-time first-launch welcome and the user would see two nearly
+            // identical welcome animations back-to-back. Consume that pending
+            // unlock celebration so only the first-launch welcome shows the
+            // very first time. The unlock celebration still plays normally on
+            // every subsequent unlock.
+            setShowUnlockCelebration(false);
+          }}
+        />
       )}
       {showUnlockCelebration && hasSeenWelcomeCelebration && (
         <BiometricUnlockCelebration onDone={() => setShowUnlockCelebration(false)} />
