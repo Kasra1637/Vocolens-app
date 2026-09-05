@@ -221,28 +221,6 @@ export function ProcessingStyleInsightScreen() {
                   {insight}
                 </Text>
 
-                {/* Animated progress bar */}
-                <View style={{ marginTop: 24 }}>
-                  <View
-                    style={{
-                      height: 6,
-                      borderRadius: 3,
-                      overflow: "hidden",
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    }}
-                  >
-                    <Animated.View
-                      style={[
-                        {
-                          height: "100%",
-                          borderRadius: 3,
-                          backgroundColor: "rgba(255, 255, 255, 0.75)",
-                        },
-                        progressAnimatedStyle,
-                      ]}
-                    />
-                  </View>
-                </View>
               </View>
             </Animated.View>
 

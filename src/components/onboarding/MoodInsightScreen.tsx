@@ -265,20 +265,7 @@ export function MoodInsightScreen() {
                   )}
                 </View>
 
-                {/* Progress Bar Visualization */}
                 <View className="mt-6">
-                  <View
-                    className="h-1.5 rounded-full overflow-hidden"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
-                  >
-                    <Animated.View
-                      className="h-full rounded-full"
-                      style={[
-                        { backgroundColor: "rgba(255, 255, 255, 0.75)" },
-                        progressAnimatedStyle,
-                      ]}
-                    />
-                  </View>
                   <Text
                     className="text-center mt-3"
                     style={{

@@ -204,21 +204,6 @@ export function JournalingFrequencyInsightScreen() {
                   , provide optimal relief from stress and anxiety.
                 </Text>
 
-                {/* Progress bar */}
-                <View className="mt-6">
-                  <View
-                    className="h-1.5 rounded-full overflow-hidden"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
-                  >
-                    <Animated.View
-                      className="h-full rounded-full"
-                      style={[
-                        { backgroundColor: "rgba(255, 255, 255, 0.75)" },
-                        progressAnimatedStyle,
-                      ]}
-                    />
-                  </View>
-                </View>
               </View>
             </Animated.View>
 
