@@ -29,6 +29,7 @@ import {
 } from "@/lib/valence-arousal";
 import { tapHaptic, successHaptic, errorHaptic } from "@/lib/haptics";
 import useReflectionStore from "@/lib/state/reflection-store";
+import { useEmotionCorrectionStore } from "@/lib/state/emotion-correction-store";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import useSettingsStore from "@/lib/state/settings-store";
 import { getThemeColors, getThemeGradients } from "@/lib/theme";
@@ -94,6 +95,14 @@ export default function ReflectionScreen() {
   // failure (it's only cleared after a successful save), so closing this
   // alert simply leaves the user on the same step, free to tap Save again.
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Feeds the "How well AI reads you" card and the Emotional Landscape's
+  // ghost-point drift lines. Previously this screen never wrote to this
+  // store at all — only the post-save Refine Analysis modal did — so an
+  // entry corrected here, before it was ever saved, left no trace: the
+  // chart and accuracy card had nothing to show for it. See handleSave.
+  const recordCorrection = useEmotionCorrectionStore((s) => s.recordCorrection);
+  const recordConfirmation = useEmotionCorrectionStore((s) => s.recordConfirmation);
 
   useEffect(() => {
     if (!pending) return;
@@ -167,6 +176,46 @@ export default function ReflectionScreen() {
           aiAmbivalenceFlags: pending.aiAmbivalenceFlags,
         },
       });
+
+      // Log what the user actually saved against what the AI originally
+      // suggested, exactly like EmotionCorrectionModal does post-save — this
+      // is what feeds the Emotional Landscape's ghost-point drift lines and
+      // the "How well AI reads you" card. Without this, a correction made
+      // here (before the entry is ever saved) left no trace in either place.
+      if (entry?.id) {
+        const aiEmotion = pending.suggestedEmotions[0] ?? "trust";
+        const userEmotion = emotions[0] ?? "trust";
+        const valenceDiff = Math.abs(valence - pending.initialValence);
+        const arousalDiff = Math.abs(arousal - pending.initialArousal);
+        // Same ±3 threshold the chart itself uses to bucket a data point as
+        // "confirmed" vs. "adjusted" — keeps this log consistent with how
+        // it's read back out.
+        const isConfirmation =
+          aiEmotion === userEmotion && valenceDiff <= 3 && arousalDiff <= 3;
+
+        if (isConfirmation) {
+          recordConfirmation(
+            entry.id,
+            aiEmotion,
+            pending.initialValence,
+            pending.initialArousal,
+          );
+        } else {
+          recordCorrection({
+            entryId: entry.id,
+            timestamp: new Date().toISOString(),
+            aiEmotion,
+            userEmotion,
+            aiValence: pending.initialValence,
+            userValence: valence,
+            aiArousal: pending.initialArousal,
+            userArousal: arousal,
+            correctionMode: "slider",
+            correctionType: "intensity",
+          });
+        }
+      }
+
       clearReflection();
       if (entry?.id) {
         router.replace(`/entry-detail?id=${entry.id}`);
@@ -193,6 +242,8 @@ export default function ReflectionScreen() {
     arousal,
     bodyRegions,
     distress,
+    recordCorrection,
+    recordConfirmation,
   ]);
 
   const nextStep = useCallback(() => {
