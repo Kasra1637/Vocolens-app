@@ -1230,28 +1230,37 @@ function AIAccuracySummary({
           🤖 emoji (renders with an unfriendly expression on several
           platforms) swapped for the same Pulse icon used by the chart's own
           header, so this card reads as collaborative rather than a scoreboard. */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 12,
-        }}
-      >
-        <Pulse size={15} color="rgba(255,255,255,0.85)" weight="regular" />
-        <Text
+      <View style={{ marginBottom: 12 }}>
+        <View
           style={{
-            fontFamily: "Inter_600SemiBold",
-            fontSize: 14,
-            color: "#FFFFFF",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
           }}
         >
-          How well AI reads you
-        </Text>
+          <Pulse size={15} color="rgba(255,255,255,0.85)" weight="regular" />
+          <Text
+            style={{
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 14,
+              color: "#FFFFFF",
+            }}
+          >
+            How well AI reads you
+          </Text>
+        </View>
+        {/* Kept — it explains why the chart shows fewer ghost dots than the
+            total correction count below (only corrections with an actual
+            drift get one; agreements don't). Previously sat inline with the
+            title, pushed to the far right via marginLeft:"auto", which
+            clipped off the card's edge on narrower screens (it was fighting
+            the title for the same row). Now sits on its own line directly
+            under the title, left-aligned, so it's never cut off. */}
         {ghostCount > 0 && (
           <View
             style={{
-              marginLeft: "auto",
+              alignSelf: "flex-start",
+              marginTop: 6,
               paddingHorizontal: 7,
               paddingVertical: 2,
               borderRadius: 8,

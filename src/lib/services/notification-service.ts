@@ -26,6 +26,17 @@ const LAST_MESSAGE_INDEX_KEY = 'notification_last_message_index';
 // Separate rotation memory for the "no entries yet" pool below, so the two
 // pools rotate independently and don't share (or skip) each other's history.
 const EMPTY_STATE_LAST_MESSAGE_INDEX_KEY = 'notification_empty_state_last_message_index';
+// Identifiers of the 5 one-time "no entries yet" activation-sequence
+// notifications (see scheduleActivationSequence), so cancelActivationSequence
+// can cancel exactly these and nothing else — NOT
+// cancelAllScheduledNotificationsAsync, which would also wipe the user's own
+// daily-reminder schedule.
+const ACTIVATION_SEQUENCE_IDS_KEY = 'notification_activation_sequence_ids';
+
+// Hours after onboarding completes at which each touch in the "no entries
+// yet" activation sequence fires: +2h (same day), +24h, +2 days, +5 days,
+// +10 days. See scheduleActivationSequence for the full rationale.
+const ACTIVATION_SEQUENCE_HOURS = [2, 24, 48, 120, 240];
 
 // expo-notifications weekday: 1=Sunday, 2=Monday, ..., 7=Saturday
 const DAY_TO_WEEKDAY: Record<string, number> = {
@@ -313,6 +324,114 @@ export class NotificationService {
 
   static getAllEmptyStateMessages(): NotificationMessage[] {
     return EMPTY_STATE_NOTIFICATION_MESSAGES;
+  }
+
+  // ── "No entries yet" activation sequence ───────────────────────────────────
+  // A one-time, 5-touch push sequence exclusively for users who complete
+  // onboarding without ever saving a voice journal entry. Independent of the
+  // user's own daily-reminder time/days — those are opt-in and may not even be
+  // set, whereas this sequence's whole purpose is to reach someone who hasn't
+  // engaged yet, so it must not depend on them having configured reminders.
+  //
+  // Cadence (hours after onboarding completes): 2h (same day), 24h, 2 days,
+  // 5 days, 10 days. Front-loaded while intent from onboarding is still
+  // fresh, then exponentially spaced out, then stops entirely at 10 days —
+  // deliberately conservative for a "no pressure" wellness app; this is not
+  // meant to escalate into daily nagging.
+  //
+  // Cancelled the instant the user saves their first entry (see
+  // cancelActivationSequence, called from journal-service's first-entry
+  // hook) — any touches still queued for later become irrelevant the moment
+  // they've actually started journaling.
+
+  /**
+   * Schedule all 5 touches. Call ONCE, right when onboarding completes
+   * (BiometricSetupScreen.finishOnboarding) — NOT gated on the user having
+   * set up daily reminders, only on notification permission being granted.
+   * Safe/no-op if permission isn't granted or expo-notifications isn't
+   * available (Expo Go) — this never blocks onboarding from completing.
+   */
+  static async scheduleActivationSequence(): Promise<void> {
+    const N = getNotifications();
+    if (!N) return;
+
+    try {
+      const { granted } = await this.checkPermissions();
+      if (!granted) return;
+
+      // Guard against double-scheduling (e.g. finishOnboarding firing twice,
+      // or a re-run of onboarding on the same device/session).
+      await this.cancelActivationSequence();
+
+      ensureHandlerConfigured();
+      await this.ensureAndroidChannel();
+
+      const now = Date.now();
+      const ids: string[] = [];
+
+      for (const hours of ACTIVATION_SEQUENCE_HOURS) {
+        const triggerDate = new Date(now + hours * 60 * 60 * 1000);
+        const message = await this.getNextEmptyStateMessage();
+        const personalizedTitle = personalizeTitle(message.title, getUserFirstName());
+
+        const id = await N.scheduleNotificationAsync({
+          content: {
+            title: personalizedTitle,
+            body: message.body,
+            sound: 'default',
+            priority: N.AndroidNotificationPriority.HIGH,
+            data: { type: 'activation-sequence', hoursAfterOnboarding: hours },
+          },
+          trigger: {
+            type: (N as any).SchedulableTriggerInputTypes?.DATE ?? 'date',
+            date: triggerDate,
+            channelId: 'daily-reminders',
+          } as any,
+        });
+
+        ids.push(id);
+      }
+
+      await AsyncStorage.setItem(ACTIVATION_SEQUENCE_IDS_KEY, JSON.stringify(ids));
+      console.log(
+        `[NotificationService] Scheduled ${ids.length}-touch activation sequence (hours: ${ACTIVATION_SEQUENCE_HOURS.join(', ')})`,
+      );
+    } catch (error) {
+      console.error('[NotificationService] scheduleActivationSequence error:', error);
+    }
+  }
+
+  /**
+   * Cancel any still-queued activation-sequence touches. Call the moment the
+   * user's journal entry count goes from 0 to 1 (see journal-service.ts) —
+   * once they've started journaling, the "you haven't recorded anything yet"
+   * premise no longer applies, and any later touch would read as tone-deaf.
+   *
+   * Cancels ONLY these specific notification ids (tracked via
+   * ACTIVATION_SEQUENCE_IDS_KEY), never cancelAllScheduledNotificationsAsync
+   * — the user's own opted-in daily reminders, if any, must be left alone.
+   */
+  static async cancelActivationSequence(): Promise<void> {
+    const N = getNotifications();
+    if (!N) return;
+
+    try {
+      const raw = await AsyncStorage.getItem(ACTIVATION_SEQUENCE_IDS_KEY);
+      if (!raw) return;
+      const ids: string[] = JSON.parse(raw);
+
+      for (const id of ids) {
+        try {
+          await N.cancelScheduledNotificationAsync(id);
+        } catch {
+          // Already fired or already cancelled — fine either way.
+        }
+      }
+
+      await AsyncStorage.removeItem(ACTIVATION_SEQUENCE_IDS_KEY);
+    } catch {
+      // Nothing persisted, or storage unavailable — nothing to cancel.
+    }
   }
 
   /**

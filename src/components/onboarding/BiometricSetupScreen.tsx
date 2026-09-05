@@ -36,6 +36,7 @@ import { Fingerprint, Lock, ShieldCheck } from 'phosphor-react-native';
 import { successHaptic, tapHaptic } from '@/lib/haptics';
 import useOnboardingStore, { THEME_COLORS } from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
+import { NotificationService } from '@/lib/services/notification-service';
 import {
   checkBiometricCapabilities,
   getBiometricTypeName,
@@ -86,6 +87,16 @@ export function BiometricSetupScreen() {
   }, []);
 
   const finishOnboarding = useCallback(() => {
+    // Kick off the 5-touch "no entries yet" activation sequence right as
+    // onboarding completes — the single point every onboarding path (with or
+    // without biometric/PIN) funnels through, so this fires exactly once per
+    // install regardless of which route the user took. Not gated on the
+    // user having set up daily reminders (NotificationPreferencesScreen) —
+    // only on notification permission being granted, which was already
+    // decided earlier in onboarding — so someone who skipped setting a
+    // reminder time still gets nudged toward their first entry. Cancelled
+    // automatically the moment they save one (see journal-service.ts).
+    NotificationService.scheduleActivationSequence().catch(() => {});
     setTimeout(() => setHasCompletedOnboarding(true), 1300);
   }, [setHasCompletedOnboarding]);
 

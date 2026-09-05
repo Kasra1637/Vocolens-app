@@ -779,6 +779,11 @@ export async function createJournalEntry(
   // live reference), so it would always read as the pre-save count.
   if (useJournalStore.getState().entries.length === 1) {
     NotificationService.refreshAfterFirstEntry().catch(() => {});
+    // The 5-touch "no entries yet" activation sequence (scheduled at
+    // onboarding completion — see BiometricSetupScreen.finishOnboarding) no
+    // longer applies once the user has actually recorded something. Cancel
+    // any touches still queued for later so they don't fire after the fact.
+    NotificationService.cancelActivationSequence().catch(() => {});
   }
 
   // Update user stats.
