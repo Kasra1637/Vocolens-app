@@ -865,7 +865,7 @@ function ChartSvg({
           <Circle
             cx={gp.aiX}
             cy={gp.aiY}
-            r={8}
+            r={10}
             fill="rgba(255,255,255,0.06)"
             stroke="rgba(255,255,255,0.35)"
             weight="regular"
@@ -874,8 +874,8 @@ function ChartSvg({
           {/* Tiny "AI" label next to ghost */}
           <SvgText
             x={gp.aiX}
-            y={gp.aiY + 3}
-            fontSize={7}
+            y={gp.aiY + 3.5}
+            fontSize={9}
             fill="rgba(255,255,255,0.5)"
             textAnchor="middle"
             fontFamily="Inter_600SemiBold"
@@ -921,39 +921,6 @@ function ChartSvg({
               strokeWidth={isSelected ? 2.5 : 1.5}
               strokeOpacity={isSelected ? 1 : 0.75}
             />
-            {/* "Edited by you" indicator — badge sits just outside the ring
-                (rather than on top of it) so it never overlaps the emoji,
-                with a white halo underneath for contrast against any
-                background color. */}
-            {p.isUserCorrected && (
-              <G>
-                <Circle
-                  cx={p.x + r + 2}
-                  cy={p.y - r - 2}
-                  r={7.5}
-                  fill="#FFFFFF"
-                />
-                <Circle
-                  cx={p.x + r + 2}
-                  cy={p.y - r - 2}
-                  r={6}
-                  fill={primaryColor}
-                  stroke="rgba(0,0,0,0.55)"
-                  strokeWidth={1}
-                  weight="regular"
-                />
-                <SvgText
-                  x={p.x + r + 2}
-                  y={p.y - r - 2 + 3}
-                  fontSize={8}
-                  fill="#FFFFFF"
-                  textAnchor="middle"
-                  fontFamily="Inter_700Bold"
-                >
-                  ✓
-                </SvgText>
-              </G>
-            )}
             {/* Transparent tap target — generously larger than the ring so
                 it's easy to hit with a finger on a small phone screen */}
             <Circle
