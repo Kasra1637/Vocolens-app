@@ -41,7 +41,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { Pulse } from "phosphor-react-native";
+import { Pulse, TrendUp, TrendDown } from "phosphor-react-native";
 import { tapHaptic, selectionHaptic } from "@/lib/haptics";
 import useOnboardingStore from "@/lib/state/onboarding-store";
 import { hexToRgba } from "@/lib/glass";
@@ -279,7 +279,8 @@ export default function ValenceArousalChart({
 
   // ─── AI Accuracy Stats for the current time range ──────────────────────────
   const aiAccuracyStats = useMemo(() => {
-    const cutoff = new Date();
+    const now = new Date();
+    const cutoff = new Date(now);
     cutoff.setDate(cutoff.getDate() - days);
 
     const rangeCorrections = corrections.filter(
@@ -334,6 +335,38 @@ export default function ValenceArousalChart({
       }
     });
 
+    // ── Trend vs. the immediately preceding equivalent period ────────────────
+    // Compares the current range (e.g. last 30 days) against the SAME LENGTH
+    // window right before it (the 30 days before that) — always relative to
+    // whichever range tab is selected, rather than a fixed calendar month, so
+    // the trend stays consistent with the rest of this chart's range selector.
+    // Only shown once BOTH periods clear MIN_TREND_SAMPLE feedback events —
+    // below that, a swing is just noise, and showing "no comparison" is
+    // better than a misleading arrow.
+    const MIN_TREND_SAMPLE = 5;
+    const prevCutoffStart = new Date(cutoff);
+    prevCutoffStart.setDate(prevCutoffStart.getDate() - days);
+
+    const prevCorrections = corrections.filter((c) => {
+      const t = new Date(c.timestamp);
+      return t >= prevCutoffStart && t < cutoff;
+    });
+
+    let trendDeltaPts: number | null = null;
+    if (
+      rangeCorrections.length >= MIN_TREND_SAMPLE &&
+      prevCorrections.length >= MIN_TREND_SAMPLE
+    ) {
+      const prevConfirmations = prevCorrections.filter(
+        (c) =>
+          c.aiEmotion === c.userEmotion &&
+          Math.abs(c.aiValence - c.userValence) <= 3 &&
+          Math.abs(c.aiArousal - c.userArousal) <= 3
+      ).length;
+      const prevRate = prevConfirmations / prevCorrections.length;
+      trendDeltaPts = Math.round(confirmationRate * 100) - Math.round(prevRate * 100);
+    }
+
     return {
       totalFeedback: rangeCorrections.length,
       confirmations: confirmations.length,
@@ -342,6 +375,7 @@ export default function ValenceArousalChart({
       avgValenceDrift,
       avgArousalDrift,
       topPattern,
+      trendDeltaPts,
     };
   }, [corrections, days]);
 
@@ -722,7 +756,7 @@ export default function ValenceArousalChart({
             </Animated.View>
           )}
 
-          {/* AI vs You — Accuracy Summary */}
+          {/* "How well AI reads you" — accuracy + trend summary */}
           {aiAccuracyStats && aiAccuracyStats.totalFeedback >= 1 && (
             <AIAccuracySummary stats={aiAccuracyStats} ghostCount={ghostPoints.length} />
           )}
@@ -1116,7 +1150,19 @@ interface AIAccuracyStatsData {
   avgValenceDrift: number;
   avgArousalDrift: number;
   topPattern: { from: string; to: string; count: number } | null;
+  /**
+   * Percentage-point change in confirmation rate vs. the immediately
+   * preceding equivalent period (e.g. last 30 days vs. the 30 days before
+   * that). Null when there isn't enough feedback in one or both periods to
+   * make the comparison meaningful — see MIN_TREND_SAMPLE in the computation.
+   */
+  trendDeltaPts: number | null;
 }
+
+// Below this many feedback events, a confirmation rate is more noise than
+// signal — a single flip can swing it 50 points. Shown as an encouraging
+// "still learning" message instead of a hard percentage until reached.
+const MIN_RATE_SAMPLE = 5;
 
 function AIAccuracySummary({
   stats,
@@ -1126,29 +1172,46 @@ function AIAccuracySummary({
   ghostCount: number;
 }) {
   const pct = Math.round(stats.confirmationRate * 100);
+  const hasReliableRate = stats.totalFeedback >= MIN_RATE_SAMPLE;
 
-  // Drift description
-  const getDriftDescription = () => {
-    const parts: string[] = [];
-    if (Math.abs(stats.avgValenceDrift) > 3) {
-      parts.push(
-        stats.avgValenceDrift > 0
-          ? `more pleasant than AI thought (+${stats.avgValenceDrift})`
-          : `less pleasant than AI thought (${stats.avgValenceDrift})`
-      );
-    }
-    if (Math.abs(stats.avgArousalDrift) > 3) {
-      parts.push(
-        stats.avgArousalDrift > 0
-          ? `more activated (+${stats.avgArousalDrift})`
-          : `calmer (${stats.avgArousalDrift})`
-      );
-    }
-    if (parts.length === 0) return null;
-    return `On average, you feel ${parts.join(" and ")}`;
+  // Plain-language takeaway — the actual payoff of this card. Leads with what
+  // it means for the user rather than the raw valence/arousal delta, since
+  // most people don't have intuition for "+35 on a −100..100 scale".
+  const getTakeaway = (): string | null => {
+    const valenceUp = stats.avgValenceDrift > 3;
+    const valenceDown = stats.avgValenceDrift < -3;
+    const arousalUp = stats.avgArousalDrift > 3;
+    const arousalDown = stats.avgArousalDrift < -3;
+
+    if (valenceUp && arousalUp) return "You tend to feel better and more energized than the AI expects.";
+    if (valenceUp && arousalDown) return "You tend to feel better and calmer than the AI expects.";
+    if (valenceDown && arousalUp) return "You tend to feel tougher moments and more on edge than the AI expects.";
+    if (valenceDown && arousalDown) return "You tend to feel tougher moments and calmer than the AI expects.";
+    if (valenceUp) return "You tend to be kinder to yourself than the AI expects — you often feel better than it predicts.";
+    if (valenceDown) return "You tend to feel harder moments more than the AI expects.";
+    if (arousalUp) return "You tend to run more energized than the AI expects.";
+    if (arousalDown) return "You tend to run calmer than the AI expects.";
+    return null;
   };
 
-  const driftDesc = getDriftDescription();
+  const takeaway = getTakeaway();
+
+  // Exact figures, kept as a secondary line under the takeaway for anyone who
+  // wants the numbers — not the headline anymore.
+  const getDriftDetail = (): string | null => {
+    const parts: string[] = [];
+    if (Math.abs(stats.avgValenceDrift) > 3) {
+      parts.push(`pleasantness ${stats.avgValenceDrift > 0 ? "+" : ""}${stats.avgValenceDrift}`);
+    }
+    if (Math.abs(stats.avgArousalDrift) > 3) {
+      parts.push(`energy ${stats.avgArousalDrift > 0 ? "+" : ""}${stats.avgArousalDrift}`);
+    }
+    if (parts.length === 0) return null;
+    return `On average: ${parts.join(" · ")}`;
+  };
+
+  const driftDetail = getDriftDetail();
+  const trendUp = stats.trendDeltaPts !== null && stats.trendDeltaPts > 0;
 
   return (
     <Animated.View
@@ -1163,7 +1226,10 @@ function AIAccuracySummary({
         borderColor: "rgba(255, 255, 255, 0.20)",
       }}
     >
-      {/* Header */}
+      {/* Header — renamed from "AI vs You" (read as adversarial) and the
+          🤖 emoji (renders with an unfriendly expression on several
+          platforms) swapped for the same Pulse icon used by the chart's own
+          header, so this card reads as collaborative rather than a scoreboard. */}
       <View
         style={{
           flexDirection: "row",
@@ -1172,7 +1238,7 @@ function AIAccuracySummary({
           marginBottom: 12,
         }}
       >
-        <Text style={{ fontSize: 14 }}>🤖</Text>
+        <Pulse size={15} color="rgba(255,255,255,0.85)" weight="regular" />
         <Text
           style={{
             fontFamily: "Inter_600SemiBold",
@@ -1180,7 +1246,7 @@ function AIAccuracySummary({
             color: "#FFFFFF",
           }}
         >
-          AI vs You
+          How well AI reads you
         </Text>
         {ghostCount > 0 && (
           <View
@@ -1201,7 +1267,7 @@ function AIAccuracySummary({
                 color: "rgba(255,255,255,0.7)",
               }}
             >
-              {ghostCount} drift{ghostCount !== 1 ? "s" : ""} shown
+              {ghostCount} correction{ghostCount !== 1 ? "s" : ""} on chart
             </Text>
           </View>
         )}
@@ -1213,6 +1279,7 @@ function AIAccuracySummary({
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
+            alignItems: "center",
             marginBottom: 6,
           }}
         >
@@ -1225,15 +1292,52 @@ function AIAccuracySummary({
           >
             AI matched your feeling
           </Text>
-          <Text
-            style={{
-              fontFamily: "Inter_700Bold",
-              fontSize: 12,
-              color: "#FFFFFF",
-            }}
-          >
-            {pct}%
-          </Text>
+
+          {hasReliableRate ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              {/* Trend vs. the prior equivalent period — only rendered once
+                  both periods clear MIN_TREND_SAMPLE (see computation), so an
+                  arrow is never shown off a couple of noisy events. */}
+              {stats.trendDeltaPts !== null && stats.trendDeltaPts !== 0 && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+                  {trendUp ? (
+                    <TrendUp size={12} color="#4ADE80" weight="bold" />
+                  ) : (
+                    <TrendDown size={12} color="rgba(255,255,255,0.55)" weight="bold" />
+                  )}
+                  <Text
+                    style={{
+                      fontFamily: "Inter_600SemiBold",
+                      fontSize: 11,
+                      color: trendUp ? "#4ADE80" : "rgba(255,255,255,0.55)",
+                    }}
+                  >
+                    {trendUp ? "+" : ""}
+                    {stats.trendDeltaPts} pts
+                  </Text>
+                </View>
+              )}
+              <Text
+                style={{
+                  fontFamily: "Inter_700Bold",
+                  fontSize: 12,
+                  color: "#FFFFFF",
+                }}
+              >
+                {pct}%
+              </Text>
+            </View>
+          ) : (
+            <Text
+              style={{
+                fontFamily: "Inter_600SemiBold",
+                fontSize: 11,
+                color: "rgba(255,255,255,0.6)",
+              }}
+            >
+              Still learning
+            </Text>
+          )}
         </View>
         <View
           style={{
@@ -1245,10 +1349,10 @@ function AIAccuracySummary({
         >
           <View
             style={{
-              width: `${pct}%`,
+              width: `${hasReliableRate ? pct : Math.max(8, pct)}%`,
               height: "100%",
               backgroundColor: "#FFFFFF",
-              opacity: 0.85,
+              opacity: hasReliableRate ? 0.85 : 0.35,
               borderRadius: 3,
             }}
           />
@@ -1267,7 +1371,7 @@ function AIAccuracySummary({
               color: "rgba(255,255,255,0.4)",
             }}
           >
-            {stats.confirmations} confirmed
+            {stats.confirmations} you agreed with
           </Text>
           <Text
             style={{
@@ -1276,13 +1380,28 @@ function AIAccuracySummary({
               color: "rgba(255,255,255,0.4)",
             }}
           >
-            {stats.corrections} adjusted
+            {stats.corrections} you refined
           </Text>
         </View>
+        {!hasReliableRate && (
+          <Text
+            style={{
+              fontFamily: "Inter_400Regular",
+              fontSize: 10,
+              color: "rgba(255,255,255,0.35)",
+              marginTop: 6,
+            }}
+          >
+            The percentage will show once you've reviewed a few more entries —
+            right now it would swing too easily to be meaningful.
+          </Text>
+        )}
       </View>
 
-      {/* Drift description */}
-      {driftDesc && (
+      {/* Takeaway — the plain-language payoff, promoted above the raw
+          figures. The exact valence/arousal delta is kept as a secondary
+          line for anyone who wants it. */}
+      {takeaway && (
         <View
           style={{
             backgroundColor: "rgba(255,255,255,0.07)",
@@ -1295,12 +1414,24 @@ function AIAccuracySummary({
             style={{
               fontFamily: "Inter_400Regular",
               fontSize: 12,
-              color: "rgba(255,255,255,0.8)",
+              color: "rgba(255,255,255,0.85)",
               lineHeight: 18,
             }}
           >
-            {driftDesc}
+            {takeaway}
           </Text>
+          {driftDetail && (
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 10,
+                color: "rgba(255,255,255,0.45)",
+                marginTop: 4,
+              }}
+            >
+              {driftDetail}
+            </Text>
+          )}
         </View>
       )}
 
