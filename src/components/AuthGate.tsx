@@ -40,6 +40,7 @@ import useOnboardingStore from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
 import useRecordingStore from '@/lib/state/recording-store';
 import useSubscriptionStore from '@/lib/state/subscription-store';
+import useUserStatsStore from '@/lib/state/user-stats-store';
 import { OnboardingFlow, PaywallScreen } from './onboarding';
 import { BiometricLockScreen } from './BiometricLockScreen';
 import { BiometricUnlockCelebration } from './BiometricUnlockCelebration';
@@ -226,17 +227,36 @@ export function AuthGate({ children }: AuthGateProps) {
     setAuthenticated(true);
     setLoading(false);
 
+    // ── Re-arm notifications on launch ────────────────────────────────────
+    // Daily reminders are a wellness/retention feature, not a paid
+    // entitlement, so they are re-armed regardless of subscription status
+    // (see rescheduleFromPreferences). Local scheduled notifications can be
+    // cleared by the OS (reboot, battery optimisation, app update), so launch
+    // is where we make sure they're still queued.
     if (
-      confirmedActive &&
       notificationPreferences?.time &&
       notificationPreferences.days.length > 0
     ) {
       NotificationService.rescheduleFromPreferences(
         notificationPreferences.time,
         notificationPreferences.days,
-        true,
       );
+      // If the device timezone changed since we last scheduled, re-arm so the
+      // recurring reminders (and their baked-in content) re-sync to the new
+      // zone. Cheap no-op when the zone is unchanged.
+      NotificationService.rescheduleIfTimezoneChanged(
+        notificationPreferences.time,
+        notificationPreferences.days,
+      ).catch(() => {});
     }
+
+    // Re-arm the single "we miss you" inactivity nudge from the user's most
+    // recent entry. No-op for users who have never recorded (they get the
+    // activation sequence instead) or whose next nudge time is already past.
+    // Fire-and-forget; must never block launch.
+    NotificationService.scheduleInactivityReminder(
+      useUserStatsStore.getState().stats.lastEntryDate,
+    ).catch(() => {});
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────

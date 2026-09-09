@@ -805,6 +805,15 @@ export async function createJournalEntry(
   // the user has already saved must never fail over a usage counter.
   commitUsageForAudio(audioUri).catch(() => {});
   userStatsStore.updateStreak(entry.createdAt);
+
+  // Re-arm the single "we miss you" inactivity nudge forward from this entry.
+  // updateStreak() above just set lastEntryDate to entry.createdAt, so pass
+  // that directly rather than re-reading (getState() is a point-in-time
+  // snapshot and may lag the set above). scheduleInactivityReminder cancels
+  // any previously-queued nudge first, so the clock always tracks the user's
+  // most recent activity. Fire-and-forget, non-throwing by contract — a saved
+  // entry must never fail over a notification.
+  NotificationService.scheduleInactivityReminder(entry.createdAt).catch(() => {});
   // Average mood and top emotions are no longer accumulated here. They are
   // computed from the entries on read (analytics.ts), which removes the ordering
   // dependency on incrementEntries() above and keeps them correct after a delete.
