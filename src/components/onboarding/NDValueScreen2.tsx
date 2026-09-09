@@ -39,7 +39,7 @@ const HOW_IT_WORKS = [
     icon: TrendUp,
     step: "03",
     headline: "Watch patterns unfold",
-    body: "See the patterns behind your emotions — privately, at your pace",
+    body: "Discover your emotional patterns at your own pace",
   },
 ];
 
