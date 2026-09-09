@@ -551,23 +551,33 @@ export class NotificationService {
    * INACTIVITY_REMINDER_DAYS, clamped out of quiet hours. Cancels any
    * previously-queued inactivity reminder first so only one is ever pending.
    *
+   * `hasSubscription` is required (not optional/defaulted) so a caller can't
+   * accidentally schedule this for someone whose subscription has ended —
+   * this is an automatic re-engagement notification, and once a subscription
+   * ends no automatic reminder notification should go out (see
+   * rescheduleFromPreferences for the same rule applied to daily reminders).
+   *
    * No-op (and cancels any stale reminder) when: expo-notifications is
-   * unavailable, permission isn't granted, there is no last entry, or the
-   * computed fire time is already in the past (they're already overdue — we
-   * don't fire a "we miss you" retroactively on launch; the next saved entry
-   * or launch will re-arm it forward).
+   * unavailable, permission isn't granted, the subscription has ended, there
+   * is no last entry, or the computed fire time is already in the past
+   * (they're already overdue — we don't fire a "we miss you" retroactively on
+   * launch; the next saved entry or launch will re-arm it forward).
    */
-  static async scheduleInactivityReminder(lastEntryDate: string | null): Promise<void> {
+  static async scheduleInactivityReminder(
+    lastEntryDate: string | null,
+    hasSubscription: boolean,
+  ): Promise<void> {
     const N = getNotifications();
     if (!N) return;
 
     try {
       // Always clear the previous one first — this method is the single
       // owner of that queued notification, and re-arming from a newer
-      // last-entry time must not leave the older one pending.
+      // last-entry time (or an ended subscription) must not leave the older
+      // one pending.
       await this.cancelInactivityReminder();
 
-      if (!lastEntryDate) return;
+      if (!hasSubscription || !lastEntryDate) return;
 
       const { granted } = await this.checkPermissions();
       if (!granted) return;
@@ -1034,25 +1044,22 @@ export class NotificationService {
   /**
    * Re-arm the user's own daily reminders from their saved preferences on
    * launch, if they aren't already scheduled. Safe/no-op when reminders were
-   * never configured or permission isn't granted.
+   * never configured, permission isn't granted, or the subscription has
+   * ended.
    *
-   * Deliberately NOT gated on an active subscription. Local scheduled
-   * notifications can be cleared by the OS (reboot, aggressive battery
-   * management, app update), so relaunch is the primary place they get
-   * re-armed — and daily journaling reminders are a wellness/retention
-   * feature, not a paid entitlement. Gating them on `hasSubscription` meant a
-   * lapsed subscriber (exactly the person a gentle nudge might win back) — or
-   * any user during the brief launch window before Adapty resolves and the
-   * flag is momentarily false — silently stopped receiving reminders. The
-   * `hasSubscription` parameter is retained (optional) for call-site
-   * compatibility but no longer blocks scheduling.
+   * Gated on `hasSubscription` by design: once a subscription ends, no
+   * automatic reminder notification (daily reminder or the inactivity nudge —
+   * see scheduleInactivityReminder) should go out. Call sites also cancel any
+   * already-queued reminders when the subscription ends (see
+   * clearSubscriptionNotifications) so this gate covers both "never
+   * scheduled" and "was scheduled, now shouldn't be" cases on re-launch.
    */
   static async rescheduleFromPreferences(
     time: string | null,
     days: string[],
-    _hasSubscription?: boolean,
+    hasSubscription: boolean,
   ): Promise<void> {
-    if (!time || days.length === 0) return;
+    if (!hasSubscription || !time || days.length === 0) return;
 
     const { granted } = await this.checkPermissions();
     if (!granted) return;
@@ -1064,6 +1071,39 @@ export class NotificationService {
     if (hasDailyReminder) return;
 
     await this.scheduleWeeklyNotifications(time, days);
+  }
+
+  /**
+   * Cancel every automatic reminder-style notification (daily reminders and
+   * the inactivity nudge) the moment a subscription ends. Does NOT touch the
+   * activation sequence (fires during onboarding, before any subscription
+   * decision exists) or a pending trial-conversion reminder (tied to an
+   * active trial, not an ended paid subscription). Call from wherever a
+   * subscription is detected as no longer active (e.g. AuthGate when
+   * confirmedActive is false for a previously-subscribed user).
+   */
+  static async clearSubscriptionNotifications(): Promise<void> {
+    const N = getNotifications();
+    if (!N) return;
+    try {
+      const scheduled = await this.getScheduledNotifications();
+      for (const n of scheduled) {
+        const type = (n.content?.data as any)?.type;
+        if (type === 'daily-reminder' || type === 'inactivity-reminder') {
+          try {
+            await N.cancelScheduledNotificationAsync(n.identifier);
+          } catch {
+            // Already fired or cancelled — fine either way.
+          }
+        }
+      }
+      await this.cancelInactivityReminder();
+    } catch (error) {
+      console.warn(
+        '[NotificationService] clearSubscriptionNotifications error:',
+        (error as Error)?.message,
+      );
+    }
   }
 
   /**

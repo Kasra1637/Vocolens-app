@@ -227,36 +227,45 @@ export function AuthGate({ children }: AuthGateProps) {
     setAuthenticated(true);
     setLoading(false);
 
-    // ── Re-arm notifications on launch ────────────────────────────────────
-    // Daily reminders are a wellness/retention feature, not a paid
-    // entitlement, so they are re-armed regardless of subscription status
-    // (see rescheduleFromPreferences). Local scheduled notifications can be
-    // cleared by the OS (reboot, battery optimisation, app update), so launch
-    // is where we make sure they're still queued.
-    if (
-      notificationPreferences?.time &&
-      notificationPreferences.days.length > 0
-    ) {
-      NotificationService.rescheduleFromPreferences(
-        notificationPreferences.time,
-        notificationPreferences.days,
-      );
-      // If the device timezone changed since we last scheduled, re-arm so the
-      // recurring reminders (and their baked-in content) re-sync to the new
-      // zone. Cheap no-op when the zone is unchanged.
-      NotificationService.rescheduleIfTimezoneChanged(
-        notificationPreferences.time,
-        notificationPreferences.days,
-      ).catch(() => {});
-    }
+    // ── Re-arm (or clear) automatic reminder notifications on launch ───────
+    // Every automatic reminder-style notification (daily reminders, the
+    // inactivity nudge) is gated on an active subscription: once a
+    // subscription ends, none of these should keep going out. `confirmedActive`
+    // reflects the latest Adapty check (or the still-valid cache) evaluated
+    // just above.
+    if (confirmedActive) {
+      if (
+        notificationPreferences?.time &&
+        notificationPreferences.days.length > 0
+      ) {
+        NotificationService.rescheduleFromPreferences(
+          notificationPreferences.time,
+          notificationPreferences.days,
+          true,
+        );
+        // If the device timezone changed since we last scheduled, re-arm so
+        // the recurring reminders (and their baked-in content) re-sync to
+        // the new zone. Cheap no-op when the zone is unchanged.
+        NotificationService.rescheduleIfTimezoneChanged(
+          notificationPreferences.time,
+          notificationPreferences.days,
+        ).catch(() => {});
+      }
 
-    // Re-arm the single "we miss you" inactivity nudge from the user's most
-    // recent entry. No-op for users who have never recorded (they get the
-    // activation sequence instead) or whose next nudge time is already past.
-    // Fire-and-forget; must never block launch.
-    NotificationService.scheduleInactivityReminder(
-      useUserStatsStore.getState().stats.lastEntryDate,
-    ).catch(() => {});
+      // Re-arm the single "we miss you" inactivity nudge from the user's most
+      // recent entry. No-op for users who have never recorded (they get the
+      // activation sequence instead) or whose next nudge time is already
+      // past. Fire-and-forget; must never block launch.
+      NotificationService.scheduleInactivityReminder(
+        useUserStatsStore.getState().stats.lastEntryDate,
+        true,
+      ).catch(() => {});
+    } else {
+      // Subscription is not active (never subscribed, lapsed, or expired
+      // cache) — make sure no automatic reminder is left queued from when it
+      // was active.
+      NotificationService.clearSubscriptionNotifications().catch(() => {});
+    }
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────

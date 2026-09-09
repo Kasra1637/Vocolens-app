@@ -34,6 +34,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { commitUsageForAudio } from "./api/usage-service";
 import { buildPersonalizationPrompt } from "./personalization";
 import { NotificationService } from "./services/notification-service";
+import useSubscriptionStore from "./state/subscription-store";
 
 /**
  * Analyze transcript for emotional content
@@ -811,9 +812,15 @@ export async function createJournalEntry(
   // that directly rather than re-reading (getState() is a point-in-time
   // snapshot and may lag the set above). scheduleInactivityReminder cancels
   // any previously-queued nudge first, so the clock always tracks the user's
-  // most recent activity. Fire-and-forget, non-throwing by contract — a saved
-  // entry must never fail over a notification.
-  NotificationService.scheduleInactivityReminder(entry.createdAt).catch(() => {});
+  // most recent activity. Gated on an active subscription — this is an
+  // automatic reminder notification, and none of those should go out once a
+  // subscription has ended (see notification-service.ts). Fire-and-forget,
+  // non-throwing by contract — a saved entry must never fail over a
+  // notification.
+  NotificationService.scheduleInactivityReminder(
+    entry.createdAt,
+    useSubscriptionStore.getState().isEntitlementValid(),
+  ).catch(() => {});
   // Average mood and top emotions are no longer accumulated here. They are
   // computed from the entries on read (analytics.ts), which removes the ordering
   // dependency on incrementEntries() above and keeps them correct after a delete.
