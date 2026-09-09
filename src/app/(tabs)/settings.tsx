@@ -203,8 +203,14 @@ export default function SettingsScreen() {
         );
       }
     } else {
-      // User wants to disable notifications
+      // User wants to disable notifications. cancelAllNotifications() wipes the
+      // OS queue (daily reminders, activation sequence, inactivity nudge), so
+      // also clear the tracking keys for the sequence/inactivity reminders —
+      // otherwise their persisted ids would dangle and a later re-enable could
+      // wrongly believe an (already-cancelled) sequence is still queued.
       await NotificationService.cancelAllNotifications();
+      await NotificationService.cancelActivationSequence();
+      await NotificationService.cancelInactivityReminder();
       setNotificationsEnabled(false);
     }
   };
@@ -877,6 +883,39 @@ export default function SettingsScreen() {
                         })}
                       </View>
                     </View>
+                  )}
+
+                  {/* Dev-only: fire an immediate test notification to verify
+                      permissions, the Android channel, and content rendering
+                      on a real device. Gated on __DEV__ so it never ships in a
+                      production build (same pattern as the dev buttons on the
+                      paywall screens). */}
+                  {__DEV__ && (
+                    <Pressable
+                      onPress={() => {
+                        tapHaptic();
+                        NotificationService.sendTestNotification();
+                      }}
+                      style={{
+                        marginTop: 16,
+                        backgroundColor: "rgba(255,255,255,0.10)",
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: "rgba(255,255,255,0.18)",
+                        paddingVertical: 12,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "#FFFFFF",
+                          fontSize: 14,
+                        }}
+                      >
+                        Send test notification (dev)
+                      </Text>
+                    </Pressable>
                   )}
                 </View>
               </View>

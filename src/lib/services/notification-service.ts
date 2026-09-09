@@ -38,6 +38,33 @@ const ACTIVATION_SEQUENCE_IDS_KEY = 'notification_activation_sequence_ids';
 // +10 days. See scheduleActivationSequence for the full rationale.
 const ACTIVATION_SEQUENCE_HOURS = [2, 24, 48, 120, 240];
 
+// Identifier of the single "we miss you" inactivity re-engagement notification
+// (see scheduleInactivityReminder / cancelInactivityReminder). Persisted so it
+// can be cancelled/rescheduled precisely without touching the user's own daily
+// reminders or the activation sequence.
+const INACTIVITY_REMINDER_ID_KEY = 'notification_inactivity_reminder_id';
+
+// The IANA timezone the daily reminders were last scheduled under. Used to
+// detect a genuine device-timezone change on launch (see
+// rescheduleIfTimezoneChanged) so the schedule can be re-armed. Updated every
+// time scheduleWeeklyNotifications successfully schedules.
+const LAST_SCHEDULED_TIMEZONE_KEY = 'notification_last_scheduled_timezone';
+
+// How long a previously-active journaller may go without saving an entry
+// before the single inactivity re-engagement nudge fires. Measured from their
+// last entry. Deliberately a few days, not hours — a "no pressure" wellness
+// app should not nag someone who simply took a weekend off.
+const INACTIVITY_REMINDER_DAYS = 3;
+
+// Quiet-hours window. Notifications whose natural fire time would land at or
+// after QUIET_HOURS_START (inclusive) or before QUIET_HOURS_END are pushed to
+// QUIET_HOURS_END the same or next morning. Applied to notifications whose
+// timing is derived from an arbitrary moment (activation sequence = onboarding
+// time + offset; inactivity = last-entry time + offset) — NOT to the user's
+// own daily reminders, whose time they chose explicitly.
+const QUIET_HOURS_START = 22; // 10 PM
+const QUIET_HOURS_END = 8; // 8 AM
+
 // expo-notifications weekday: 1=Sunday, 2=Monday, ..., 7=Saturday
 const DAY_TO_WEEKDAY: Record<string, number> = {
   sunday: 1,
@@ -127,6 +154,29 @@ export const EMPTY_STATE_NOTIFICATION_MESSAGES: NotificationMessage[] = [
   {
     title: '💜 Waiting to hear from you',
     body: 'Tap the mic — your first insight awaits.',
+  },
+];
+
+/**
+ * Rotating messages for the single "we miss you" inactivity nudge shown to a
+ * user who HAS journalled before but has gone quiet (see
+ * scheduleInactivityReminder). Tone is warm and low-pressure — this is a
+ * lapsed habit, not a new user, so it gently invites them back rather than
+ * selling the app. One is picked at random each time the reminder is
+ * (re)scheduled.
+ */
+export const INACTIVITY_NOTIFICATION_MESSAGES: NotificationMessage[] = [
+  {
+    title: '💜 Still here whenever you are',
+    body: 'It\'s been a few days. A quick check-in can help you reset.',
+  },
+  {
+    title: '🔥 Your streak is waiting',
+    body: 'Pick up where you left off — just talk for a minute.',
+  },
+  {
+    title: '🌙 How have the last few days been?',
+    body: 'Say it out loud. Vocolens is ready when you are.',
   },
 ];
 
@@ -236,6 +286,32 @@ function hasNoJournalEntries(): boolean {
     // with "you haven't started yet" copy.
     return false;
   }
+}
+
+// ── Quiet-hours clamping ──────────────────────────────────────────────────────
+// Shifts a candidate fire time out of the overnight quiet window
+// [QUIET_HOURS_START, 24) ∪ [0, QUIET_HOURS_END) and onto QUIET_HOURS_END.
+// Used for notifications whose time is derived from an arbitrary anchor moment
+// (onboarding completion, last-entry time) rather than a time the user picked,
+// so a user who onboards at 1 AM doesn't get pinged at 3 AM. Local device time
+// is used throughout (getHours/setHours), which is what the user experiences.
+//
+//   • before 8 AM            → same day at 8 AM
+//   • at/after 10 PM         → next day at 8 AM
+//   • otherwise (daytime)    → unchanged
+function clampToDaytime(date: Date): Date {
+  const result = new Date(date);
+  const hour = result.getHours();
+
+  if (hour >= QUIET_HOURS_START) {
+    // Late night → push to the following morning.
+    result.setDate(result.getDate() + 1);
+    result.setHours(QUIET_HOURS_END, 0, 0, 0);
+  } else if (hour < QUIET_HOURS_END) {
+    // Early morning → push to later the same morning.
+    result.setHours(QUIET_HOURS_END, 0, 0, 0);
+  }
+  return result;
 }
 
 export class NotificationService {
@@ -370,7 +446,10 @@ export class NotificationService {
       const ids: string[] = [];
 
       for (const hours of ACTIVATION_SEQUENCE_HOURS) {
-        const triggerDate = new Date(now + hours * 60 * 60 * 1000);
+        // Clamp out of quiet hours: the offsets are measured from whenever
+        // onboarding happened to finish, so without this a user who onboards
+        // late at night would get the +2h touch in the middle of the night.
+        const triggerDate = clampToDaytime(new Date(now + hours * 60 * 60 * 1000));
         const message = await this.getNextEmptyStateMessage();
         const personalizedTitle = personalizeTitle(message.title, getUserFirstName());
 
@@ -429,6 +508,140 @@ export class NotificationService {
       }
 
       await AsyncStorage.removeItem(ACTIVATION_SEQUENCE_IDS_KEY);
+    } catch {
+      // Nothing persisted, or storage unavailable — nothing to cancel.
+    }
+  }
+
+  /**
+   * True if the "no entries yet" activation sequence has touches tracked as
+   * queued (its ids are persisted at schedule time and removed on cancel).
+   * Note this reflects whether the sequence was scheduled and not yet
+   * cancelled — individual touches may have already fired — which is exactly
+   * the signal daily-reminder scheduling needs to avoid double-nudging a
+   * still-brand-new user (see scheduleWeeklyNotifications).
+   */
+  static async hasActivationSequenceQueued(): Promise<boolean> {
+    try {
+      const raw = await AsyncStorage.getItem(ACTIVATION_SEQUENCE_IDS_KEY);
+      if (!raw) return false;
+      const ids = JSON.parse(raw);
+      return Array.isArray(ids) && ids.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  // ── Inactivity re-engagement ("we miss you") ───────────────────────────────
+  // A SINGLE, low-pressure nudge for a user who has journalled before but has
+  // gone quiet for INACTIVITY_REMINDER_DAYS. Distinct from:
+  //   • the activation sequence, which is only for users with ZERO entries;
+  //   • daily reminders, which fire on a schedule the user opted into.
+  //
+  // Re-armed on every app launch (AuthGate) and after every saved entry
+  // (journal-service) from the user's last-entry time, so the "few days quiet"
+  // clock always reflects their most recent activity. Saving an entry pushes
+  // it forward; opening the app just re-confirms it. Only one is ever queued
+  // at a time (tracked via INACTIVITY_REMINDER_ID_KEY), and it is a no-op for
+  // users who have never recorded anything (they get the activation sequence
+  // instead) or who haven't granted permission.
+
+  /**
+   * (Re)schedule the single inactivity reminder for `lastEntryDate` +
+   * INACTIVITY_REMINDER_DAYS, clamped out of quiet hours. Cancels any
+   * previously-queued inactivity reminder first so only one is ever pending.
+   *
+   * `hasSubscription` is required (not optional/defaulted) so a caller can't
+   * accidentally schedule this for someone whose subscription has ended —
+   * this is an automatic re-engagement notification, and once a subscription
+   * ends no automatic reminder notification should go out (see
+   * rescheduleFromPreferences for the same rule applied to daily reminders).
+   *
+   * No-op (and cancels any stale reminder) when: expo-notifications is
+   * unavailable, permission isn't granted, the subscription has ended, there
+   * is no last entry, or the computed fire time is already in the past
+   * (they're already overdue — we don't fire a "we miss you" retroactively on
+   * launch; the next saved entry or launch will re-arm it forward).
+   */
+  static async scheduleInactivityReminder(
+    lastEntryDate: string | null,
+    hasSubscription: boolean,
+  ): Promise<void> {
+    const N = getNotifications();
+    if (!N) return;
+
+    try {
+      // Always clear the previous one first — this method is the single
+      // owner of that queued notification, and re-arming from a newer
+      // last-entry time (or an ended subscription) must not leave the older
+      // one pending.
+      await this.cancelInactivityReminder();
+
+      if (!hasSubscription || !lastEntryDate) return;
+
+      const { granted } = await this.checkPermissions();
+      if (!granted) return;
+
+      const last = new Date(lastEntryDate);
+      if (isNaN(last.getTime())) return;
+
+      const fireAt = clampToDaytime(
+        new Date(last.getTime() + INACTIVITY_REMINDER_DAYS * 24 * 60 * 60 * 1000),
+      );
+
+      // Already overdue — don't fire retroactively. A future entry/launch
+      // re-arms it forward from the newer activity.
+      if (fireAt.getTime() <= Date.now()) return;
+
+      ensureHandlerConfigured();
+      await this.ensureAndroidChannel();
+
+      const pool = INACTIVITY_NOTIFICATION_MESSAGES;
+      const message = pool[Math.floor(Math.random() * pool.length)];
+      const personalizedTitle = personalizeTitle(message.title, getUserFirstName());
+
+      const id = await N.scheduleNotificationAsync({
+        content: {
+          title: personalizedTitle,
+          body: message.body,
+          sound: 'default',
+          priority: N.AndroidNotificationPriority.HIGH,
+          data: { type: 'inactivity-reminder' },
+        },
+        trigger: {
+          type: (N as any).SchedulableTriggerInputTypes?.DATE ?? 'date',
+          date: fireAt,
+          channelId: 'daily-reminders',
+        } as any,
+      });
+
+      await AsyncStorage.setItem(INACTIVITY_REMINDER_ID_KEY, id);
+      console.log(
+        `[NotificationService] Scheduled inactivity reminder for ${fireAt.toISOString()} (id: ${id})`,
+      );
+    } catch (error) {
+      console.error('[NotificationService] scheduleInactivityReminder error:', error);
+    }
+  }
+
+  /**
+   * Cancel the queued inactivity reminder, if any. Cancels ONLY that specific
+   * id (tracked via INACTIVITY_REMINDER_ID_KEY) — never the user's daily
+   * reminders or the activation sequence.
+   */
+  static async cancelInactivityReminder(): Promise<void> {
+    const N = getNotifications();
+    if (!N) return;
+
+    try {
+      const id = await AsyncStorage.getItem(INACTIVITY_REMINDER_ID_KEY);
+      if (!id) return;
+      try {
+        await N.cancelScheduledNotificationAsync(id);
+      } catch {
+        // Already fired or cancelled — fine either way.
+      }
+      await AsyncStorage.removeItem(INACTIVITY_REMINDER_ID_KEY);
     } catch {
       // Nothing persisted, or storage unavailable — nothing to cancel.
     }
@@ -544,6 +757,24 @@ export class NotificationService {
 
       if (days.length === 0) return [];
 
+      // Avoid double-nudging a brand-new user: while the 5-touch activation
+      // sequence is still queued (user has recorded nothing yet), it already
+      // covers days 0–10 from the same encouraging empty-state pool. Layering
+      // recurring empty-state daily reminders on top means two similar "you
+      // haven't started yet" pings can land the same day. Skip the daily
+      // reminders in that window; they resume automatically — drawing from the
+      // regular pool — the moment the user saves their first entry, which
+      // cancels the activation sequence and calls refreshAfterFirstEntry()
+      // (see journal-service.ts). Only suppress when a sequence is actually
+      // queued, so a user who never had one (e.g. later re-enable in Settings)
+      // is unaffected.
+      if (hasNoJournalEntries() && (await this.hasActivationSequenceQueued())) {
+        console.log(
+          '[NotificationService] Skipping daily reminders: activation sequence still active for zero-entry user.',
+        );
+        return [];
+      }
+
       const identifiers: string[] = [];
 
       for (const day of days) {
@@ -598,6 +829,15 @@ export class NotificationService {
         identifiers.push(id);
       }
 
+      // Record the timezone these were scheduled under so a later launch can
+      // detect a device-timezone change and re-arm (see
+      // rescheduleIfTimezoneChanged). Best-effort; never fail scheduling over it.
+      try {
+        await AsyncStorage.setItem(LAST_SCHEDULED_TIMEZONE_KEY, this.getLocalTimezone());
+      } catch {
+        // ignore storage errors
+      }
+
       console.log(
         `[NotificationService] Scheduled ${identifiers.length} notifications (${days.join(', ')} at ${time})`,
       );
@@ -616,6 +856,56 @@ export class NotificationService {
 
   static async rescheduleWithNewMessage(time: string): Promise<string | null> {
     return this.scheduleDailyNotification(time);
+  }
+
+  // ── Timezone change handling ───────────────────────────────────────────────
+  // The recurring WEEKLY trigger fires on device-local wall-clock time, and the
+  // OS re-evaluates it against the device's CURRENT timezone/DST — so a "9 PM"
+  // reminder keeps firing at 9 PM local even after the user travels or a DST
+  // shift occurs. That part needs no help from us.
+  //
+  // What is NOT automatic: the notification's message content is baked in at
+  // schedule time, and the stored schedule was computed under the timezone
+  // that was current then. When the device timezone actually changes, re-arm
+  // the schedule so content is refreshed and the OS re-registers the alarms
+  // under the new zone. We persist the last timezone we scheduled under and
+  // only reschedule when it genuinely differs — so this is a cheap no-op on
+  // the common case where the zone is unchanged.
+  static async rescheduleIfTimezoneChanged(
+    time: string | null,
+    days: string[],
+  ): Promise<void> {
+    if (!time || days.length === 0) return;
+    const N = getNotifications();
+    if (!N) return;
+
+    try {
+      const { granted } = await this.checkPermissions();
+      if (!granted) return;
+
+      const currentTz = this.getLocalTimezone();
+      const storedTz = await AsyncStorage.getItem(LAST_SCHEDULED_TIMEZONE_KEY);
+
+      // First run after this feature ships: record the current zone without
+      // rescheduling (the existing schedule is already correct for it).
+      if (!storedTz) {
+        await AsyncStorage.setItem(LAST_SCHEDULED_TIMEZONE_KEY, currentTz);
+        return;
+      }
+
+      if (storedTz === currentTz) return;
+
+      await this.scheduleWeeklyNotifications(time, days);
+      await AsyncStorage.setItem(LAST_SCHEDULED_TIMEZONE_KEY, currentTz);
+      console.log(
+        `[NotificationService] Timezone changed ${storedTz} -> ${currentTz}; rescheduled daily reminders.`,
+      );
+    } catch (error) {
+      console.warn(
+        '[NotificationService] rescheduleIfTimezoneChanged error:',
+        (error as Error)?.message,
+      );
+    }
   }
 
   static async cancelAllNotifications(): Promise<void> {
@@ -751,6 +1041,19 @@ export class NotificationService {
     }
   }
 
+  /**
+   * Re-arm the user's own daily reminders from their saved preferences on
+   * launch, if they aren't already scheduled. Safe/no-op when reminders were
+   * never configured, permission isn't granted, or the subscription has
+   * ended.
+   *
+   * Gated on `hasSubscription` by design: once a subscription ends, no
+   * automatic reminder notification (daily reminder or the inactivity nudge —
+   * see scheduleInactivityReminder) should go out. Call sites also cancel any
+   * already-queued reminders when the subscription ends (see
+   * clearSubscriptionNotifications) so this gate covers both "never
+   * scheduled" and "was scheduled, now shouldn't be" cases on re-launch.
+   */
   static async rescheduleFromPreferences(
     time: string | null,
     days: string[],
@@ -768,6 +1071,39 @@ export class NotificationService {
     if (hasDailyReminder) return;
 
     await this.scheduleWeeklyNotifications(time, days);
+  }
+
+  /**
+   * Cancel every automatic reminder-style notification (daily reminders and
+   * the inactivity nudge) the moment a subscription ends. Does NOT touch the
+   * activation sequence (fires during onboarding, before any subscription
+   * decision exists) or a pending trial-conversion reminder (tied to an
+   * active trial, not an ended paid subscription). Call from wherever a
+   * subscription is detected as no longer active (e.g. AuthGate when
+   * confirmedActive is false for a previously-subscribed user).
+   */
+  static async clearSubscriptionNotifications(): Promise<void> {
+    const N = getNotifications();
+    if (!N) return;
+    try {
+      const scheduled = await this.getScheduledNotifications();
+      for (const n of scheduled) {
+        const type = (n.content?.data as any)?.type;
+        if (type === 'daily-reminder' || type === 'inactivity-reminder') {
+          try {
+            await N.cancelScheduledNotificationAsync(n.identifier);
+          } catch {
+            // Already fired or cancelled — fine either way.
+          }
+        }
+      }
+      await this.cancelInactivityReminder();
+    } catch (error) {
+      console.warn(
+        '[NotificationService] clearSubscriptionNotifications error:',
+        (error as Error)?.message,
+      );
+    }
   }
 
   /**

@@ -40,6 +40,7 @@ import useOnboardingStore from '@/lib/state/onboarding-store';
 import useBiometricStore from '@/lib/state/biometric-store';
 import useRecordingStore from '@/lib/state/recording-store';
 import useSubscriptionStore from '@/lib/state/subscription-store';
+import useUserStatsStore from '@/lib/state/user-stats-store';
 import { OnboardingFlow, PaywallScreen } from './onboarding';
 import { BiometricLockScreen } from './BiometricLockScreen';
 import { BiometricUnlockCelebration } from './BiometricUnlockCelebration';
@@ -226,16 +227,44 @@ export function AuthGate({ children }: AuthGateProps) {
     setAuthenticated(true);
     setLoading(false);
 
-    if (
-      confirmedActive &&
-      notificationPreferences?.time &&
-      notificationPreferences.days.length > 0
-    ) {
-      NotificationService.rescheduleFromPreferences(
-        notificationPreferences.time,
-        notificationPreferences.days,
+    // ── Re-arm (or clear) automatic reminder notifications on launch ───────
+    // Every automatic reminder-style notification (daily reminders, the
+    // inactivity nudge) is gated on an active subscription: once a
+    // subscription ends, none of these should keep going out. `confirmedActive`
+    // reflects the latest Adapty check (or the still-valid cache) evaluated
+    // just above.
+    if (confirmedActive) {
+      if (
+        notificationPreferences?.time &&
+        notificationPreferences.days.length > 0
+      ) {
+        NotificationService.rescheduleFromPreferences(
+          notificationPreferences.time,
+          notificationPreferences.days,
+          true,
+        );
+        // If the device timezone changed since we last scheduled, re-arm so
+        // the recurring reminders (and their baked-in content) re-sync to
+        // the new zone. Cheap no-op when the zone is unchanged.
+        NotificationService.rescheduleIfTimezoneChanged(
+          notificationPreferences.time,
+          notificationPreferences.days,
+        ).catch(() => {});
+      }
+
+      // Re-arm the single "we miss you" inactivity nudge from the user's most
+      // recent entry. No-op for users who have never recorded (they get the
+      // activation sequence instead) or whose next nudge time is already
+      // past. Fire-and-forget; must never block launch.
+      NotificationService.scheduleInactivityReminder(
+        useUserStatsStore.getState().stats.lastEntryDate,
         true,
-      );
+      ).catch(() => {});
+    } else {
+      // Subscription is not active (never subscribed, lapsed, or expired
+      // cache) — make sure no automatic reminder is left queued from when it
+      // was active.
+      NotificationService.clearSubscriptionNotifications().catch(() => {});
     }
   };
 
