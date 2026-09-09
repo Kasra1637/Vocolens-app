@@ -187,20 +187,6 @@ export function MoodInsightScreen() {
                       ? "You're not alone in this"
                       : "Let's build on that calm"}
               </Text>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.62)",
-                  fontSize: 13,
-                  textAlign: "center",
-                  marginTop: 5,
-                  lineHeight: 20,
-                  letterSpacing: 0.1,
-                  maxWidth: "85%",
-                }}
-              >
-                You just took the first step toward catching what you feel — before it catches you.
-              </Text>
             </Animated.View>
 
             {/* Visual Reflection Card */}
