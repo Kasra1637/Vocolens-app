@@ -13,7 +13,6 @@ import Animated, {
   FadeIn,
   useSharedValue,
   useAnimatedStyle,
-  withTiming,
   withSpring,
   withDelay,
   Easing,
@@ -49,25 +48,16 @@ export function JournalingFrequencyInsightScreen() {
   const themeColors = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
 
-  const progressWidth = useSharedValue(0);
   const ringScale = useSharedValue(0);
 
   useEffect(() => {
     successHaptic();
     // Gentler animation timing for neurodivergent users
-    progressWidth.value = withDelay(
-      500,
-      withTiming(100, { duration: 1800, easing: Easing.out(Easing.cubic) }),
-    );
     ringScale.value = withDelay(
       700,
       withSpring(1, { damping: 18, stiffness: 80 }),
     );
   }, []);
-
-  const progressAnimatedStyle = useAnimatedStyle(() => ({
-    width: `${progressWidth.value}%`,
-  }));
 
   const ringAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: ringScale.value }],
