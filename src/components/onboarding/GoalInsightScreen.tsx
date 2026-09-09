@@ -2,7 +2,9 @@
  * Onboarding Screen 6: Goal Insight Screen
  *
  * Visual reflection screen that shows the user's goal and blocker selection.
- * Matches the "We hear you" (MoodInsightScreen) design style.
+ * Card visual spec, haptics, and animation timing are shared with the other
+ * confirmation/insight screens (Mood, JournalingFrequency, ProcessingStyle,
+ * SelfAwareness).
  */
 
 import React, { useEffect } from "react";
@@ -13,14 +15,13 @@ import Animated, {
   FadeIn,
   useSharedValue,
   useAnimatedStyle,
-  withTiming,
   withSpring,
   withDelay,
   Easing,
 } from "react-native-reanimated";
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
-import { successHaptic } from "@/lib/haptics";
+import { tapHaptic, successHaptic } from "@/lib/haptics";
 import { Target } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
@@ -59,25 +60,20 @@ export function GoalInsightScreen() {
   const themeColors = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
 
-  // Animation values — matches MoodInsightScreen
-  const progressWidth = useSharedValue(0);
+  // Animation values — matches the other confirmation/insight screens
   const ringScale = useSharedValue(0);
 
   useEffect(() => {
+    // Confirming haptic on entry — matches the other confirmation screens
+    // (JournalingFrequency/ProcessingStyle/SelfAwareness), which all fire
+    // this on mount. Was previously missing here.
+    successHaptic();
     // Gentler animation timing for neurodivergent users
-    progressWidth.value = withDelay(
-      500,
-      withTiming(100, { duration: 1600, easing: Easing.out(Easing.cubic) }),
-    );
     ringScale.value = withDelay(
       700,
       withSpring(1, { damping: 18, stiffness: 80 }),
     );
   }, []);
-
-  const progressAnimatedStyle = useAnimatedStyle(() => ({
-    width: `${progressWidth.value}%`,
-  }));
 
   const ringAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: ringScale.value }],
@@ -90,6 +86,8 @@ export function GoalInsightScreen() {
   };
 
   const handleBack = () => {
+    playClickSound();
+    tapHaptic();
     prevStep();
   };
 
@@ -156,11 +154,12 @@ export function GoalInsightScreen() {
               style={{ marginBottom: 16 }}
             >
               <View
-                className="rounded-2xl p-6 mx-2"
+                className="p-6 mx-1"
                 style={{
+                  borderRadius: 24,
                   backgroundColor: "rgba(255, 255, 255, 0.08)",
                   borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.15)",
+                  borderColor: "rgba(255, 255, 255, 0.18)",
                 }}
               >
                 {/* Icon */}
@@ -168,9 +167,9 @@ export function GoalInsightScreen() {
                   <Animated.View
                     style={[
                       {
-                        width: 100,
-                        height: 100,
-                        borderRadius: 50,
+                        width: 90,
+                        height: 90,
+                        borderRadius: 45,
                         alignItems: "center",
                         justifyContent: "center",
                         backgroundColor: "rgba(255, 255, 255, 0.12)",
@@ -178,7 +177,7 @@ export function GoalInsightScreen() {
                       ringAnimatedStyle,
                     ]}
                   >
-                    <Target size={40} color="#FFFFFF" weight="regular" />
+                    <Target size={38} color="#FFFFFF" weight="regular" />
                   </Animated.View>
                 </View>
 
