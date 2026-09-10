@@ -31,7 +31,7 @@ const OPTIONS: Option[] = [
   { id: "deep-focus",      label: "Lost in what I love",  icon: Headphones },
   { id: "no-demands",      label: "No one needs me",      icon: Leaf },
   { id: "talking-aloud",   label: "Thinking out loud",    icon: ChatCircle },
-  { id: "after-movement",  label: "I understand why", icon: Lightbulb },
+  { id: "after-movement",  label: "Understanding why", icon: Lightbulb },
 ];
 
 
@@ -118,7 +118,7 @@ export function SelfAwarenessScreen() {
                   lineHeight: 20,
                 }}
               >
-                We'll help you notice when you're in this zone
+                We'll help you notice what brings you back to yourself.
               </Text>
             </Animated.View>
 
