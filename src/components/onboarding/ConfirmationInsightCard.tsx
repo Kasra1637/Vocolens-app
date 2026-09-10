@@ -19,9 +19,9 @@
  *   1. Icon ring     — echoes the exact icon the user tapped on the preceding
  *                      selection screen, so the confirmation feels like a
  *                      direct response to their choice.
- *   2. Eyebrow       — tiny uppercase label naming what the value below IS
- *                      ("RIGHT NOW", "YOUR FOCUS", …). Gives the bare value
- *                      context without a full sentence.
+ *   2. Eyebrow       — short conversational lead-in addressing the user
+ *                      ("You're feeling", "You want to", …) that flows into
+ *                      the value below it, so the two read as one phrase.
  *   3. Value         — the user's selection, the visual anchor of the card.
  *   4. Secondary     — optional supporting detail (only Mood uses this today,
  *                      for the follow-up that inspired the mood).
@@ -43,7 +43,10 @@ import type { Icon as PhosphorIcon } from "phosphor-react-native";
 interface ConfirmationInsightCardProps {
   /** Per-selection icon, mirroring the icon shown on the selection screen. */
   icon: PhosphorIcon;
-  /** Tiny uppercase label describing what `value` represents. */
+  /**
+   * Short conversational lead-in (sentence case, addressing the user with
+   * "you/your") that flows into `value` — e.g. "You're feeling" → "Anxious".
+   */
   eyebrow: string;
   /** The user's selection — the anchor of the card. */
   value: string;
@@ -100,15 +103,19 @@ export function ConfirmationInsightCard({
         </Animated.View>
       </View>
 
-      {/* 2. Eyebrow */}
+      {/* 2. Eyebrow — a short conversational lead-in ("You're feeling", "You
+          want to", …) that flows straight into the value below it. Styled in
+          sentence case (NOT uppercase) with minimal letter-spacing so it reads
+          as the app speaking to the user, rather than as a clinical form-field
+          label. Pass eyebrow copy in sentence case. */}
       <Text
         style={{
-          fontFamily: "Inter_600SemiBold",
-          color: "rgba(255, 255, 255, 0.5)",
-          fontSize: 11,
-          letterSpacing: 1.4,
+          fontFamily: "Inter_500Medium",
+          color: "rgba(255, 255, 255, 0.7)",
+          fontSize: 14,
+          letterSpacing: 0.2,
+          lineHeight: 20,
           textAlign: "center",
-          textTransform: "uppercase",
         }}
       >
         {eyebrow}

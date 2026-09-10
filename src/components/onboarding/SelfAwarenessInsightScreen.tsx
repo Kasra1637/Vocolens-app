@@ -163,7 +163,7 @@ export function SelfAwarenessInsightScreen() {
                     ? SELF_AWARENESS_ICONS[selectedSelfAwareness]
                     : Headphones
                 }
-                eyebrow="Feel most like myself when"
+                eyebrow="In your words"
                 value={selectionLabel}
                 insight={insightText}
                 ringAnimatedStyle={ringAnimatedStyle}
