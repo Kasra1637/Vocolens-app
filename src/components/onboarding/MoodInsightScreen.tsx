@@ -41,6 +41,7 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
+import { personalizeInsightText } from "@/lib/onboarding-personalization";
 
 // Time-of-day aware greeting prefix
 function getGreetingPrefix(): string {
@@ -148,9 +149,16 @@ export function MoodInsightScreen() {
   const followUpLabel = selectedMoodFollowUp
     ? FOLLOWUP_LABELS[selectedMoodFollowUp]
     : "";
-  const insightMessage = selectedMood
-    ? MOOD_INSIGHT_MESSAGES[selectedMood]
-    : "";
+  // First-word-only, mirroring the convention used for the Insights greeting
+  // and push notification titles — a user who typed a full name is still
+  // addressed by just their first name.
+  const firstName = userName ? userName.trim().split(/\s+/)[0] || null : null;
+  const insightMessage = personalizeInsightText(
+    selectedMood
+      ? MOOD_INSIGHT_MESSAGES[selectedMood]
+      : "We'll help you understand what you're feeling",
+    firstName,
+  );
 
   return (
     <View className="flex-1">
@@ -216,10 +224,7 @@ export function MoodInsightScreen() {
                 secondaryLine={
                   followUpLabel ? `Inspired by ${followUpLabel}` : undefined
                 }
-                insight={
-                  insightMessage ||
-                  "We'll help you understand what you're feeling"
-                }
+                insight={insightMessage}
                 ringAnimatedStyle={ringAnimatedStyle}
               />
             </Animated.View>

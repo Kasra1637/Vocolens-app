@@ -36,11 +36,22 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
+import { getOnboardingFirstName } from "@/lib/onboarding-personalization";
 
 const FREQUENCY_LABELS: Record<JournalingFrequencyType, string> = {
   "once-twice": "1–2 times a week",
   "three-five": "3–5 times a week",
   daily: "Every day",
+};
+
+// Per-selection titles — matches the personalized-title pattern already used
+// on Mood/Goal (4 title variants each). This screen previously showed one
+// static "Great choice!" title regardless of the answer; every confirmation
+// screen should react to the specific answer the same way.
+const FREQUENCY_TITLES: Record<JournalingFrequencyType, string> = {
+  "once-twice": "A steady start",
+  "three-five": "Great choice!",
+  daily: "That's real commitment",
 };
 
 // Icon per frequency — mirrors the icons on the frequency selection screen
@@ -92,6 +103,10 @@ export function JournalingFrequencyInsightScreen() {
   const frequencyLabel = selectedJournalingFrequency
     ? FREQUENCY_LABELS[selectedJournalingFrequency]
     : "3–5 times a week";
+  const frequencyTitle = selectedJournalingFrequency
+    ? FREQUENCY_TITLES[selectedJournalingFrequency]
+    : "Great choice!";
+  const firstName = getOnboardingFirstName();
 
   return (
     <View className="flex-1">
@@ -135,7 +150,7 @@ export function JournalingFrequencyInsightScreen() {
                   lineHeight: 38,
                 }}
               >
-                Great choice!
+                {frequencyTitle}
               </Text>
             </Animated.View>
 
@@ -160,7 +175,8 @@ export function JournalingFrequencyInsightScreen() {
                     >
                       15–20 minute sessions, 3–4 times per week
                     </Text>
-                    , provide optimal relief from stress and anxiety.
+                    , provide optimal relief from stress and anxiety
+                    {firstName ? `, ${firstName}` : ""}.
                   </>
                 }
                 ringAnimatedStyle={ringAnimatedStyle}

@@ -31,6 +31,10 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
+import {
+  getOnboardingFirstName,
+  personalizeInsightText,
+} from "@/lib/onboarding-personalization";
 
 // Mirror labels from ProcessingStyleScreen
 const PROCESSING_LABELS: Record<ProcessingStyleType, string> = {
@@ -58,6 +62,17 @@ const PROCESSING_ICONS: Record<ProcessingStyleType, PhosphorIcon> = {
   "seeing-written":     FileText,
   "noticing-patterns":  GitBranch,
   "right-question":     Question,
+};
+
+// Per-selection titles — this screen previously showed one static "We're
+// built for that" title regardless of the answer; every confirmation screen
+// should react to the specific answer the same way (matches the Mood/Goal
+// pattern of 4 title variants each).
+const PROCESSING_TITLES: Record<ProcessingStyleType, string> = {
+  "talking-out":        "We're built for that",
+  "seeing-written":     "We'll put it in writing",
+  "noticing-patterns":  "We'll track that for you",
+  "right-question":     "We'll ask, so you don't have to",
 };
 
 export function ProcessingStyleInsightScreen() {
@@ -97,8 +112,12 @@ export function ProcessingStyleInsightScreen() {
 
   const style   = selectedProcessingStyle ?? "talking-out";
   const label   = PROCESSING_LABELS[style];
-  const insight = PROCESSING_INSIGHTS[style];
+  const title   = PROCESSING_TITLES[style];
   const Icon    = PROCESSING_ICONS[style];
+  const insight = personalizeInsightText(
+    PROCESSING_INSIGHTS[style],
+    getOnboardingFirstName(),
+  );
 
   return (
     <View style={{ flex: 1 }}>
@@ -139,7 +158,7 @@ export function ProcessingStyleInsightScreen() {
                   lineHeight: 38,
                 }}
               >
-                We're built for that
+                {title}
               </Text>
             </Animated.View>
 

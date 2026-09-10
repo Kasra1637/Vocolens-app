@@ -37,6 +37,10 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
+import {
+  getOnboardingFirstName,
+  personalizeInsightText,
+} from "@/lib/onboarding-personalization";
 
 // Icon per selection — mirrors the icons on SelfAwarenessScreen.
 const SELF_AWARENESS_ICONS: Record<SelfAwarenessType, PhosphorIcon> = {
@@ -44,6 +48,17 @@ const SELF_AWARENESS_ICONS: Record<SelfAwarenessType, PhosphorIcon> = {
   "no-demands": Leaf,
   "talking-aloud": ChatCircle,
   "after-movement": Lightbulb,
+};
+
+// Per-selection titles — this screen previously showed one static "That
+// makes total sense" title regardless of the answer; every confirmation
+// screen should react to the specific answer the same way (matches the
+// Mood/Goal pattern of 4 title variants each).
+const SELF_AWARENESS_TITLES: Record<SelfAwarenessType, string> = {
+  "deep-focus": "That tracks",
+  "no-demands": "That makes total sense",
+  "talking-aloud": "We hear that",
+  "after-movement": "That's real insight",
 };
 
 // Labels mirroring the option labels from SelfAwarenessScreen
@@ -105,9 +120,16 @@ export function SelfAwarenessInsightScreen() {
     ? SELF_AWARENESS_LABELS[selectedSelfAwareness]
     : "Lost in what I love";
 
-  const insightText = selectedSelfAwareness
-    ? SELF_AWARENESS_INSIGHTS[selectedSelfAwareness]
-    : SELF_AWARENESS_INSIGHTS["deep-focus"];
+  const title = selectedSelfAwareness
+    ? SELF_AWARENESS_TITLES[selectedSelfAwareness]
+    : SELF_AWARENESS_TITLES["deep-focus"];
+
+  const insightText = personalizeInsightText(
+    selectedSelfAwareness
+      ? SELF_AWARENESS_INSIGHTS[selectedSelfAwareness]
+      : SELF_AWARENESS_INSIGHTS["deep-focus"],
+    getOnboardingFirstName(),
+  );
 
   return (
     <View style={{ flex: 1 }}>
@@ -148,7 +170,7 @@ export function SelfAwarenessInsightScreen() {
                   lineHeight: 38,
                 }}
               >
-                That makes total sense
+                {title}
               </Text>
             </Animated.View>
 
@@ -163,7 +185,7 @@ export function SelfAwarenessInsightScreen() {
                     ? SELF_AWARENESS_ICONS[selectedSelfAwareness]
                     : Headphones
                 }
-                eyebrow="In your words"
+                eyebrow="You said"
                 value={selectionLabel}
                 insight={insightText}
                 ringAnimatedStyle={ringAnimatedStyle}
