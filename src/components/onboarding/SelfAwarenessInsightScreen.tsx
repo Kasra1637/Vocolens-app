@@ -66,7 +66,7 @@ const SELF_AWARENESS_LABELS: Record<SelfAwarenessType, string> = {
   "deep-focus":     "Lost in what I love",
   "no-demands":     "No one needs me",
   "talking-aloud":  "Thinking out loud",
-  "after-movement": "I understand why",
+  "after-movement": "Understanding why",
 };
 
 // Personalised insight copy per selection
