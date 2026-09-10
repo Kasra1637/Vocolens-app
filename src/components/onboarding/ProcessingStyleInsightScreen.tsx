@@ -37,7 +37,7 @@ const PROCESSING_LABELS: Record<ProcessingStyleType, string> = {
   "talking-out":        "Saying it out loud",
   "seeing-written":     "Seeing it written",
   "noticing-patterns":  "Spotting the pattern",
-  "right-question":     "The right question",
+  "right-question":     "Asking the right question",
 };
 
 // Personalised insight per selection

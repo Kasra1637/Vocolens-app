@@ -31,7 +31,7 @@ const OPTIONS: Option[] = [
   { id: "talking-out",       label: "Saying it out loud",    icon: Microphone },
   { id: "seeing-written",    label: "Seeing it written",     icon: FileText },
   { id: "noticing-patterns", label: "Spotting the pattern",  icon: TreeStructure },
-  { id: "right-question",    label: "The right question",    icon: Question },
+  { id: "right-question",    label: "Asking the right question", icon: Question },
 ];
 
 
