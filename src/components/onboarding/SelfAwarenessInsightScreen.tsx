@@ -55,10 +55,10 @@ const SELF_AWARENESS_ICONS: Record<SelfAwarenessType, PhosphorIcon> = {
 // screen should react to the specific answer the same way (matches the
 // Mood/Goal pattern of 4 title variants each).
 const SELF_AWARENESS_TITLES: Record<SelfAwarenessType, string> = {
-  "deep-focus": "That tracks",
+  "deep-focus": "We can tell",
   "no-demands": "That makes total sense",
-  "talking-aloud": "We hear that",
-  "after-movement": "That's real insight",
+  "talking-aloud": "We're listening",
+  "after-movement": "That's a good one to notice",
 };
 
 // Labels mirroring the option labels from SelfAwarenessScreen

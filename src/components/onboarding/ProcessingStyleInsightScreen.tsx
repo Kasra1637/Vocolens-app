@@ -70,8 +70,8 @@ const PROCESSING_ICONS: Record<ProcessingStyleType, PhosphorIcon> = {
 // pattern of 4 title variants each).
 const PROCESSING_TITLES: Record<ProcessingStyleType, string> = {
   "talking-out":        "We're built for that",
-  "seeing-written":     "We'll put it in writing",
-  "noticing-patterns":  "We'll track that for you",
+  "seeing-written":     "Your words, written down",
+  "noticing-patterns":  "We'll help you see it",
   "right-question":     "We'll ask, so you don't have to",
 };
 
