@@ -93,7 +93,7 @@ const MOOD_INSIGHT_MESSAGES: Record<MoodType, string> = {
   happy: "We'll help you notice what lifts you — so you can return to it on purpose",
   stressed: "Soon you'll spot the pressure building early — and head it off sooner",
   anxious: "You'll start to see your triggers coming, instead of being blindsided",
-  calm: "We'll help you protect this calm and recognise what creates it",
+  calm: "We'll help you protect this calm and recognize what creates it",
 };
 
 export function MoodInsightScreen() {
