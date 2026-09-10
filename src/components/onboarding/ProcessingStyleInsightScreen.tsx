@@ -150,7 +150,7 @@ export function ProcessingStyleInsightScreen() {
             >
               <ConfirmationInsightCard
                 icon={Icon}
-                eyebrow="How you process"
+                eyebrow="You process best by"
                 value={label}
                 insight={insight}
                 ringAnimatedStyle={ringAnimatedStyle}

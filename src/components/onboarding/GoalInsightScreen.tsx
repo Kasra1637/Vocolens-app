@@ -170,7 +170,7 @@ export function GoalInsightScreen() {
             >
               <ConfirmationInsightCard
                 icon={selectedGoal ? GOAL_ICONS[selectedGoal] : Target}
-                eyebrow="Your focus"
+                eyebrow="You want help with"
                 value={goalLabel}
                 insight={insightMessage || "Your journey begins now"}
                 ringAnimatedStyle={ringAnimatedStyle}

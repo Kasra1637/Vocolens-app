@@ -211,7 +211,7 @@ export function MoodInsightScreen() {
             >
               <ConfirmationInsightCard
                 icon={selectedMood ? MOOD_ICONS[selectedMood] : Smiley}
-                eyebrow="Right now"
+                eyebrow="You're feeling"
                 value={moodLabel}
                 secondaryLine={
                   followUpLabel ? `Inspired by ${followUpLabel}` : undefined

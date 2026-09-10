@@ -150,7 +150,7 @@ export function JournalingFrequencyInsightScreen() {
                     ? FREQUENCY_ICONS[selectedJournalingFrequency]
                     : SmileyWink
                 }
-                eyebrow="Your rhythm"
+                eyebrow="You'll check in"
                 value={frequencyLabel}
                 insight={
                   <>
