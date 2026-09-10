@@ -221,29 +221,38 @@ export function MoodInsightScreen() {
                   </Animated.View>
                 </View>
 
-                {/* Mood & Follow-up Labels */}
-                <View className="items-center gap-3">
+                {/* Selection badge — sizing/spacing matches the other
+                    confirmation screens (Goal/JournalingFrequency/
+                    ProcessingStyle/SelfAwareness): 16px label, mb-5 */}
+                <View style={{ alignItems: "center", marginBottom: 20 }}>
                   <View
-                    className="px-5 py-2 rounded-full"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.18)" }}
+                    style={{
+                      paddingHorizontal: 20,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      backgroundColor: "rgba(255, 255, 255, 0.18)",
+                    }}
                   >
                     <Text
                       style={{
                         fontFamily: "Inter_700Bold",
                         color: "#FFFFFF",
-                        fontSize: 18,
+                        fontSize: 16,
                       }}
                     >
                       {moodLabel}
                     </Text>
                   </View>
 
+                  {/* Secondary context line — subordinate to the badge, but
+                      no longer competing with the insight text below it */}
                   {followUpLabel && (
                     <Text
                       style={{
                         fontFamily: "Inter_500Medium",
-                        color: "rgba(255, 255, 255, 0.8)",
-                        fontSize: 14,
+                        color: "rgba(255, 255, 255, 0.6)",
+                        fontSize: 13,
+                        marginTop: 10,
                       }}
                     >
                       Inspired by: {followUpLabel}
@@ -251,18 +260,23 @@ export function MoodInsightScreen() {
                   )}
                 </View>
 
-                <View className="mt-6">
-                  <Text
-                    className="text-center mt-3"
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      color: "rgba(255, 255, 255, 0.65)",
-                      fontSize: 12,
-                    }}
-                  >
-                    {insightMessage || "Self-awareness unlocked"}
-                  </Text>
-                </View>
+                {/* Insight text — promoted to the same weight/size/opacity
+                    as the other confirmation screens (14px, 0.9 opacity,
+                    22 line-height) so the actual payoff message is legible
+                    instead of the smallest, dimmest text on the card. Every
+                    mood has a defined message (see MOOD_INSIGHT_MESSAGES),
+                    so no gamified fallback copy is needed here. */}
+                <Text
+                  style={{
+                    fontFamily: "Inter_400Regular",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    fontSize: 14,
+                    lineHeight: 22,
+                    textAlign: "center",
+                  }}
+                >
+                  {insightMessage || "We'll help you understand what you're feeling"}
+                </Text>
               </View>
             </Animated.View>
 
