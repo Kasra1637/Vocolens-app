@@ -30,6 +30,7 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
 
 // Mirror labels from ProcessingStyleScreen
 const PROCESSING_LABELS: Record<ProcessingStyleType, string> = {
@@ -147,71 +148,13 @@ export function ProcessingStyleInsightScreen() {
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
               style={{ marginBottom: 16 }}
             >
-              <View
-                style={{
-                  borderRadius: 24,
-                  padding: 24,
-                  marginHorizontal: 4,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.18)",
-                }}
-              >
-                {/* Icon ring */}
-                <View style={{ alignItems: "center", marginBottom: 20 }}>
-                  <Animated.View
-                    style={[
-                      {
-                        width: 90,
-                        height: 90,
-                        borderRadius: 45,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "rgba(255, 255, 255, 0.12)",
-                      },
-                      ringAnimatedStyle,
-                    ]}
-                  >
-                    <Icon size={38} color="#FFFFFF" weight="regular" />
-                  </Animated.View>
-                </View>
-
-                {/* Selection badge */}
-                <View style={{ alignItems: "center", marginBottom: 20 }}>
-                  <View
-                    style={{
-                      paddingHorizontal: 20,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      backgroundColor: "rgba(255, 255, 255, 0.18)",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "Inter_700Bold",
-                        color: "#FFFFFF",
-                        fontSize: 16,
-                      }}
-                    >
-                      {label}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Insight text */}
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.9)",
-                    fontSize: 14,
-                    lineHeight: 22,
-                    textAlign: "center",
-                  }}
-                >
-                  {insight}
-                </Text>
-
-              </View>
+              <ConfirmationInsightCard
+                icon={Icon}
+                eyebrow="How you process"
+                value={label}
+                insight={insight}
+                ringAnimatedStyle={ringAnimatedStyle}
+              />
             </Animated.View>
 
             {/* Continue */}

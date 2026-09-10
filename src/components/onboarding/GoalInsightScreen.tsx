@@ -22,7 +22,13 @@ import Animated, {
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { Target } from "phosphor-react-native";
+import {
+  Smiley,
+  Target,
+  Eye,
+  Brain,
+  type Icon as PhosphorIcon,
+} from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   GoalType,
@@ -32,6 +38,15 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
+
+// Icon per goal — mirrors the icons on GoalSelectionScreen.
+const GOAL_ICONS: Record<GoalType, PhosphorIcon> = {
+  "emotional-processing": Smiley,
+  "goal-setting": Target,
+  "self-reflection": Eye,
+  "decision-making": Brain,
+};
 
 const GOAL_LABELS: Record<GoalType, string> = {
   "emotional-processing": "Emotional processing",
@@ -153,66 +168,13 @@ export function GoalInsightScreen() {
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
               style={{ marginBottom: 16 }}
             >
-              <View
-                className="p-6 mx-1"
-                style={{
-                  borderRadius: 24,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.18)",
-                }}
-              >
-                {/* Icon */}
-                <View className="items-center mb-6">
-                  <Animated.View
-                    style={[
-                      {
-                        width: 90,
-                        height: 90,
-                        borderRadius: 45,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "rgba(255, 255, 255, 0.12)",
-                      },
-                      ringAnimatedStyle,
-                    ]}
-                  >
-                    <Target size={38} color="#FFFFFF" weight="regular" />
-                  </Animated.View>
-                </View>
-
-                {/* Goal & Blocker Labels */}
-                <View className="items-center gap-3">
-                  <View
-                    className="px-5 py-2 rounded-full"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.18)" }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "Inter_700Bold",
-                        color: "#FFFFFF",
-                        fontSize: 18,
-                      }}
-                    >
-                      {goalLabel}
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="mt-6">
-                  <Text
-                    className="text-center mt-3"
-                    style={{
-                      fontFamily: "Inter_400Regular",
-                      color: "rgba(255, 255, 255, 0.65)",
-                      fontSize: 12,
-                      lineHeight: 18,
-                    }}
-                  >
-                    {insightMessage || "Your journey begins now"}
-                  </Text>
-                </View>
-              </View>
+              <ConfirmationInsightCard
+                icon={selectedGoal ? GOAL_ICONS[selectedGoal] : Target}
+                eyebrow="Your focus"
+                value={goalLabel}
+                insight={insightMessage || "Your journey begins now"}
+                ringAnimatedStyle={ringAnimatedStyle}
+              />
             </Animated.View>
 
             {/* Continue Button */}
