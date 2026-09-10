@@ -72,13 +72,13 @@ const SELF_AWARENESS_LABELS: Record<SelfAwarenessType, string> = {
 // Personalised insight copy per selection
 const SELF_AWARENESS_INSIGHTS: Record<SelfAwarenessType, string> = {
   "deep-focus":
-    "Emotions surface most clearly after deep focus. We'll prompt you there",
+    "Emotions often surface most clearly right after deep focus fades — a good moment to talk it out",
   "no-demands":
     "Journaling in low-demand moments leads to your most honest entries",
   "talking-aloud":
     "Voice journaling is built for you — just speak and let clarity find you",
   "after-movement":
-    "Understanding the 'why' behind your feelings is where real growth starts — we'll help you get there",
+    "Understanding the 'why' behind your feelings is where real growth starts — voice journaling helps that click into place",
 };
 
 export function SelfAwarenessInsightScreen() {

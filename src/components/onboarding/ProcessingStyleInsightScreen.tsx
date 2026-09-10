@@ -53,7 +53,7 @@ const PROCESSING_INSIGHTS: Record<ProcessingStyleType, string> = {
   "noticing-patterns":
     "Vocolens tracks emotions and triggers over time so patterns start to appear",
   "right-question":
-    "Vocolens surfaces the question beneath your words and reflects it back",
+    "Vocolens reflects your feelings back clearly, so the answer becomes obvious on its own",
 };
 
 // Icon per selection — mirrors ProcessingStyleScreen
@@ -72,7 +72,7 @@ const PROCESSING_TITLES: Record<ProcessingStyleType, string> = {
   "talking-out":        "We're built for that",
   "seeing-written":     "Your words, written down",
   "noticing-patterns":  "We'll help you see it",
-  "right-question":     "We'll ask, so you don't have to",
+  "right-question":     "We'll help it surface",
 };
 
 export function ProcessingStyleInsightScreen() {
