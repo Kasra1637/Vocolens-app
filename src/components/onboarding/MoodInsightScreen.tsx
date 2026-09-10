@@ -232,7 +232,7 @@ export function MoodInsightScreen() {
                     : selectedMood === "anxious"
                       ? "You're not alone in this"
                       : selectedMood === "not-sure"
-                        ? "That's okay too"
+                        ? "This is where we help most"
                         : "Let's build on that calm"}
               </Text>
             </Animated.View>
@@ -244,7 +244,7 @@ export function MoodInsightScreen() {
             >
               <ConfirmationInsightCard
                 icon={selectedMood ? MOOD_ICONS[selectedMood] : Smiley}
-                eyebrow="You're feeling"
+                eyebrow={selectedMood === "not-sure" ? "You said" : "You're feeling"}
                 value={moodLabel}
                 secondaryLine={
                   followUpLabel ? `Inspired by ${followUpLabel}` : undefined
