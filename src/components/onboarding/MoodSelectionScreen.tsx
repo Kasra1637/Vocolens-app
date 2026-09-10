@@ -13,7 +13,7 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 // Gentle easing — content appears smoothly, optimized for neurodivergent users.
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, selectHaptic } from "@/lib/haptics";
-import { Smiley, SmileySad, SmileyNervous, SmileyBlank } from "phosphor-react-native";
+import { Smiley, SmileySad, SmileyNervous, SmileyBlank, Question } from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   MoodType,
@@ -36,11 +36,16 @@ const MOOD_OPTIONS: MoodOption[] = [
   { id: "stressed", label: "Stressed",description: "Feeling overwhelmed or pressured",    icon: SmileySad     },
   { id: "anxious",  label: "Anxious", description: "Feeling worried or uneasy",           icon: SmileyNervous },
   { id: "calm",     label: "Calm",    description: "Feeling peaceful and relaxed",        icon: SmileyBlank   },
+  // For users who don't know / can't name what they're feeling right now —
+  // e.g. alexithymia. Deliberately phrased as a real, valid answer rather
+  // than a "skip" — not knowing is itself useful information for the app.
+  { id: "not-sure", label: "Not sure", description: "Hard to put a name to it right now", icon: Question      },
 ];
 
 export function MoodSelectionScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
   const prevStep = useOnboardingStore((s) => s.prevStep);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
   const setSelectedMood = useOnboardingStore((s) => s.setSelectedMood);
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const currentStep = useOnboardingStore((s) => s.currentStep);
@@ -61,7 +66,16 @@ export function MoodSelectionScreen() {
     playClickSound();
     tapHaptic();
     setSelectedMood(selectedMood);
-    nextStep();
+    // MoodFollowUpScreen (step 7) asks "what's driving that feeling" —
+    // a question that presupposes the user already knows what they're
+    // feeling. That doesn't apply to "not-sure", so skip straight to the
+    // confirmation screen (step 8) rather than asking a follow-up that
+    // can't sensibly be answered.
+    if (selectedMood === "not-sure") {
+      setCurrentStep(8);
+    } else {
+      nextStep();
+    }
   };
 
   const handleBack = () => {

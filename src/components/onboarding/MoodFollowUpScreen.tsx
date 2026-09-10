@@ -82,6 +82,24 @@ const MOOD_FOLLOWUP_MAP: Record<MoodType, MoodFollowUpConfig> = {
       { id: "positive-thought",label: "Positive thought",icon: SmileyWink },
     ],
   },
+  // Defensive entry only — MoodSelectionScreen skips this screen entirely
+  // for "not-sure" (its question presupposes a known feeling, which doesn't
+  // apply here), routing straight to MoodInsightScreen instead. This exists
+  // solely so MOOD_FOLLOWUP_MAP stays a total Record<MoodType, ...> — if
+  // this screen is ever somehow reached for "not-sure", it shows a neutral
+  // question rather than crashing or silently reusing the "happy" one.
+  // Reuses existing MoodFollowUpType ids/labels (defined canonically in
+  // MoodInsightScreen's FOLLOWUP_LABELS) rather than inventing new ones, so
+  // the confirmation screen's "Inspired by ___" line can never mismatch
+  // what was shown here.
+  "not-sure": {
+    question: "What's on your mind right now?",
+    options: [
+      { id: "quiet-moment",     label: "Quiet moment",     icon: SmileyMeh  },
+      { id: "feel-overwhelmed", label: "Feel overwhelmed", icon: SmileySad  },
+      { id: "positive-thought", label: "Positive thought", icon: SunHorizon },
+    ],
+  },
 };
 
 const DEFAULT_CONFIG: MoodFollowUpConfig = MOOD_FOLLOWUP_MAP.happy;

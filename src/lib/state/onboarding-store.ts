@@ -16,7 +16,12 @@ export type ThemeColorType =
   | "oceanCalm"
   | "darkMode";
 
-export type MoodType = "happy" | "stressed" | "anxious" | "calm";
+// "not-sure" — for users who don't know / can't name what they're feeling
+// right now (e.g. alexithymia). Kept as a first-class mood rather than a
+// null/skip, since the app can still respond meaningfully to "I don't know"
+// (see MoodInsightScreen's not-sure copy) rather than treating it as an
+// unanswered question.
+export type MoodType = "happy" | "stressed" | "anxious" | "calm" | "not-sure";
 
 export type GoalType =
   | "emotional-processing"
