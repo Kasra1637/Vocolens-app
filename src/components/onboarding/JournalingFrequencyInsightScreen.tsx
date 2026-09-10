@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -20,7 +20,12 @@ import Animated, {
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { BookOpen } from "phosphor-react-native";
+import {
+  Smiley,
+  SmileyWink,
+  Fire,
+  type Icon as PhosphorIcon,
+} from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   JournalingFrequencyType,
@@ -30,11 +35,20 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
 
 const FREQUENCY_LABELS: Record<JournalingFrequencyType, string> = {
   "once-twice": "1–2 times a week",
   "three-five": "3–5 times a week",
   daily: "Every day",
+};
+
+// Icon per frequency — mirrors the icons on the frequency selection screen
+// (ReflectionFeelingsScreen).
+const FREQUENCY_ICONS: Record<JournalingFrequencyType, PhosphorIcon> = {
+  "once-twice": Smiley,
+  "three-five": SmileyWink,
+  daily: Fire,
 };
 
 export function JournalingFrequencyInsightScreen() {
@@ -130,71 +144,27 @@ export function JournalingFrequencyInsightScreen() {
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
               style={{ marginBottom: 16 }}
             >
-              <View
-                className="rounded-3xl p-6 mx-1"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.18)",
-                }}
-              >
-                {/* Icon */}
-                <View className="items-center mb-5">
-                  <Animated.View
-                    style={[
-                      {
-                        width: 90,
-                        height: 90,
-                        borderRadius: 45,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "rgba(255, 255, 255, 0.12)",
-                      },
-                      ringAnimatedStyle,
-                    ]}
-                  >
-                    <BookOpen size={38} color="#FFFFFF" weight="regular" />
-                  </Animated.View>
-                </View>
-
-                {/* Selected frequency badge */}
-                <View className="items-center mb-5">
-                  <View
-                    className="px-5 py-2 rounded-full"
-                    style={{ backgroundColor: "rgba(255, 255, 255, 0.18)" }}
-                  >
+              <ConfirmationInsightCard
+                icon={
+                  selectedJournalingFrequency
+                    ? FREQUENCY_ICONS[selectedJournalingFrequency]
+                    : SmileyWink
+                }
+                eyebrow="Your rhythm"
+                value={frequencyLabel}
+                insight={
+                  <>
+                    Studies suggest that{" "}
                     <Text
-                      style={{
-                        fontFamily: "Inter_700Bold",
-                        color: "#FFFFFF",
-                        fontSize: 16,
-                      }}
+                      style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}
                     >
-                      {frequencyLabel}
+                      15–20 minute sessions, 3–4 times per week
                     </Text>
-                  </View>
-                </View>
-
-                {/* Study insight */}
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.9)",
-                    fontSize: 14,
-                    lineHeight: 22,
-                    textAlign: "center",
-                  }}
-                >
-                  Studies suggest that{" "}
-                  <Text
-                    style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}
-                  >
-                    15–20 minute sessions, 3–4 times per week
-                  </Text>
-                  , provide optimal relief from stress and anxiety.
-                </Text>
-
-              </View>
+                    , provide optimal relief from stress and anxiety.
+                  </>
+                }
+                ringAnimatedStyle={ringAnimatedStyle}
+              />
             </Animated.View>
 
             {/* Continue */}

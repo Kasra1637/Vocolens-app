@@ -20,7 +20,13 @@ import Animated, {
 } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { Sparkle } from "phosphor-react-native";
+import {
+  Headphones,
+  Leaf,
+  ChatCircle,
+  Lightbulb,
+  type Icon as PhosphorIcon,
+} from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   SelfAwarenessType,
@@ -30,6 +36,15 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
+
+// Icon per selection — mirrors the icons on SelfAwarenessScreen.
+const SELF_AWARENESS_ICONS: Record<SelfAwarenessType, PhosphorIcon> = {
+  "deep-focus": Headphones,
+  "no-demands": Leaf,
+  "talking-aloud": ChatCircle,
+  "after-movement": Lightbulb,
+};
 
 // Labels mirroring the option labels from SelfAwarenessScreen
 const SELF_AWARENESS_LABELS: Record<SelfAwarenessType, string> = {
@@ -142,71 +157,17 @@ export function SelfAwarenessInsightScreen() {
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
               style={{ marginBottom: 16 }}
             >
-              <View
-                style={{
-                  borderRadius: 24,
-                  padding: 24,
-                  marginHorizontal: 4,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.18)",
-                }}
-              >
-                {/* Icon ring */}
-                <View style={{ alignItems: "center", marginBottom: 20 }}>
-                  <Animated.View
-                    style={[
-                      {
-                        width: 90,
-                        height: 90,
-                        borderRadius: 45,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "rgba(255, 255, 255, 0.12)",
-                      },
-                      ringAnimatedStyle,
-                    ]}
-                  >
-                    <Sparkle size={38} color="#FFFFFF" weight="regular" />
-                  </Animated.View>
-                </View>
-
-                {/* Selection badge */}
-                <View style={{ alignItems: "center", marginBottom: 20 }}>
-                  <View
-                    style={{
-                      paddingHorizontal: 20,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      backgroundColor: "rgba(255, 255, 255, 0.18)",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "Inter_700Bold",
-                        color: "#FFFFFF",
-                        fontSize: 16,
-                      }}
-                    >
-                      {selectionLabel}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Insight text */}
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.9)",
-                    fontSize: 14,
-                    lineHeight: 22,
-                    textAlign: "center",
-                  }}
-                >
-                  {insightText}
-                </Text>
-
-              </View>
+              <ConfirmationInsightCard
+                icon={
+                  selectedSelfAwareness
+                    ? SELF_AWARENESS_ICONS[selectedSelfAwareness]
+                    : Headphones
+                }
+                eyebrow="Most yourself when"
+                value={selectionLabel}
+                insight={insightText}
+                ringAnimatedStyle={ringAnimatedStyle}
+              />
             </Animated.View>
 
             {/* Continue */}

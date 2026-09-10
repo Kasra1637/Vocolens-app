@@ -23,7 +23,13 @@ import Animated, {
 
 const SOFT = Easing.bezier(0.22, 1, 0.36, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
-import { Sparkle } from "phosphor-react-native";
+import {
+  Smiley,
+  SmileySad,
+  SmileyNervous,
+  SmileyBlank,
+  type Icon as PhosphorIcon,
+} from "phosphor-react-native";
 import useOnboardingStore, {
   THEME_COLORS,
   MoodType,
@@ -34,6 +40,7 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
+import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
 
 // Time-of-day aware greeting prefix
 function getGreetingPrefix(): string {
@@ -71,6 +78,15 @@ const FOLLOWUP_LABELS: Record<MoodFollowUpType, string> = {
   "quiet-moment": "Quiet Moment",
   "fresh-air": "Fresh Air",
   "positive-thought": "Positive Thought",
+};
+
+// Icon per mood — mirrors the icons on MoodSelectionScreen so the
+// confirmation card echoes the exact icon the user just tapped.
+const MOOD_ICONS: Record<MoodType, PhosphorIcon> = {
+  happy: Smiley,
+  stressed: SmileySad,
+  anxious: SmileyNervous,
+  calm: SmileyBlank,
 };
 
 const MOOD_INSIGHT_MESSAGES: Record<MoodType, string> = {
@@ -193,91 +209,19 @@ export function MoodInsightScreen() {
               entering={FadeIn.delay(250).duration(900).easing(SOFT)}
               style={{ marginBottom: 16 }}
             >
-              <View
-                className="p-6 mx-1"
-                style={{
-                  borderRadius: 24,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255, 255, 255, 0.18)",
-                }}
-              >
-                {/* Mood Icon */}
-                <View className="items-center mb-6">
-                  <Animated.View
-                    style={[
-                      {
-                        width: 90,
-                        height: 90,
-                        borderRadius: 45,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "rgba(255, 255, 255, 0.12)",
-                      },
-                      ringAnimatedStyle,
-                    ]}
-                  >
-                    <Sparkle size={38} color="#FFFFFF" weight="regular" />
-                  </Animated.View>
-                </View>
-
-                {/* Selection badge — sizing/spacing matches the other
-                    confirmation screens (Goal/JournalingFrequency/
-                    ProcessingStyle/SelfAwareness): 16px label, mb-5 */}
-                <View style={{ alignItems: "center", marginBottom: 20 }}>
-                  <View
-                    style={{
-                      paddingHorizontal: 20,
-                      paddingVertical: 8,
-                      borderRadius: 999,
-                      backgroundColor: "rgba(255, 255, 255, 0.18)",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "Inter_700Bold",
-                        color: "#FFFFFF",
-                        fontSize: 16,
-                      }}
-                    >
-                      {moodLabel}
-                    </Text>
-                  </View>
-
-                  {/* Secondary context line — subordinate to the badge, but
-                      no longer competing with the insight text below it */}
-                  {followUpLabel && (
-                    <Text
-                      style={{
-                        fontFamily: "Inter_500Medium",
-                        color: "rgba(255, 255, 255, 0.6)",
-                        fontSize: 13,
-                        marginTop: 10,
-                      }}
-                    >
-                      Inspired by: {followUpLabel}
-                    </Text>
-                  )}
-                </View>
-
-                {/* Insight text — promoted to the same weight/size/opacity
-                    as the other confirmation screens (14px, 0.9 opacity,
-                    22 line-height) so the actual payoff message is legible
-                    instead of the smallest, dimmest text on the card. Every
-                    mood has a defined message (see MOOD_INSIGHT_MESSAGES),
-                    so no gamified fallback copy is needed here. */}
-                <Text
-                  style={{
-                    fontFamily: "Inter_400Regular",
-                    color: "rgba(255, 255, 255, 0.9)",
-                    fontSize: 14,
-                    lineHeight: 22,
-                    textAlign: "center",
-                  }}
-                >
-                  {insightMessage || "We'll help you understand what you're feeling"}
-                </Text>
-              </View>
+              <ConfirmationInsightCard
+                icon={selectedMood ? MOOD_ICONS[selectedMood] : Smiley}
+                eyebrow="Right now"
+                value={moodLabel}
+                secondaryLine={
+                  followUpLabel ? `Inspired by ${followUpLabel}` : undefined
+                }
+                insight={
+                  insightMessage ||
+                  "We'll help you understand what you're feeling"
+                }
+                ringAnimatedStyle={ringAnimatedStyle}
+              />
             </Animated.View>
 
             {/* Continue Button */}
