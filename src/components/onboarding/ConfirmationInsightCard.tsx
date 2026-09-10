@@ -107,14 +107,20 @@ export function ConfirmationInsightCard({
           want to", …) that flows straight into the value below it. Styled in
           sentence case (NOT uppercase) with minimal letter-spacing so it reads
           as the app speaking to the user, rather than as a clinical form-field
-          label. Pass eyebrow copy in sentence case. */}
+          label. Pass eyebrow copy in sentence case.
+
+          fontSize 13 matches the caption/label scale used elsewhere in the
+          app's main dashboard (e.g. RecommendationCard's small header, the
+          usage-limit banner captions on the home screen) — this is a small
+          lead-in caption, not body copy, so it should sit at that size
+          rather than the 14px used for the insight text below it. */}
       <Text
         style={{
           fontFamily: "Inter_500Medium",
           color: "rgba(255, 255, 255, 0.7)",
-          fontSize: 14,
+          fontSize: 13,
           letterSpacing: 0.2,
-          lineHeight: 20,
+          lineHeight: 18,
           textAlign: "center",
         }}
       >
