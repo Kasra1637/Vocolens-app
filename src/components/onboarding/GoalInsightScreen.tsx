@@ -39,6 +39,10 @@ import { BackButton } from "@/components/onboarding/BackButton";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 import { OnboardingCTAButton } from "@/components/onboarding/OnboardingCTAButton";
 import { ConfirmationInsightCard } from "@/components/onboarding/ConfirmationInsightCard";
+import {
+  getOnboardingFirstName,
+  personalizeInsightText,
+} from "@/lib/onboarding-personalization";
 
 // Icon per goal — mirrors the icons on GoalSelectionScreen.
 const GOAL_ICONS: Record<GoalType, PhosphorIcon> = {
@@ -107,9 +111,12 @@ export function GoalInsightScreen() {
   };
 
   const goalLabel = selectedGoal ? GOAL_LABELS[selectedGoal] : "Your Goal";
-  const insightMessage = selectedGoal
-    ? GOAL_INSIGHT_MESSAGES[selectedGoal]
-    : "";
+  const insightMessage = personalizeInsightText(
+    selectedGoal
+      ? GOAL_INSIGHT_MESSAGES[selectedGoal]
+      : "Your journey begins now",
+    getOnboardingFirstName(),
+  );
 
   return (
     <View className="flex-1">
@@ -172,7 +179,7 @@ export function GoalInsightScreen() {
                 icon={selectedGoal ? GOAL_ICONS[selectedGoal] : Target}
                 eyebrow="You want help with"
                 value={goalLabel}
-                insight={insightMessage || "Your journey begins now"}
+                insight={insightMessage}
                 ringAnimatedStyle={ringAnimatedStyle}
               />
             </Animated.View>
