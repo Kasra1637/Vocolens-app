@@ -35,7 +35,7 @@ import useSettingsStore from "@/lib/state/settings-store";
 
 type TabType = "privacy" | "terms";
 
-const EFFECTIVE_DATE = "March 10, 2026";
+const EFFECTIVE_DATE = "June 23, 2026";
 const APP_NAME = "Vocolens";
 const CONTACT_EMAIL = "connect@vocolens.com";
 
@@ -376,7 +376,9 @@ function PrivacyPolicy({
           Onboarding responses (mood, goals, journaling preferences)
         </Bullet>
         <Bullet>
-          Your PIN code (encrypted using your device's secure hardware keystore)
+          Your PIN code (hashed with SHA-256 and a per-device salt before
+          storage — the raw PIN is never saved; the salt is kept in your
+          device's secure hardware keystore)
         </Bullet>
         <Body>
           {
@@ -432,30 +434,33 @@ function PrivacyPolicy({
             marginTop: 12,
           }}
         >
-          2. OpenRouter / OpenAI (Emotional Analysis)
+          2. OpenAI GPT-5.4 Mini (Emotional Analysis) via OpenRouter
         </Text>
         <Bullet>
-          Your text transcript is sent to our analysis backend for emotional
-          analysis.
+          Your text transcript — and, when available, your raw audio recording
+          — is sent to our analysis backend for emotional analysis.
         </Bullet>
         <Bullet>
-          Our backend forwards this data to OpenRouter, an AI provider gateway,
-          which routes the request to the underlying language model (currently an
-          OpenAI GPT model). Both OpenRouter and the model provider therefore
-          process this data.
+          Our backend forwards this data to OpenAI's GPT-5.4 Mini model,
+          accessed through OpenRouter (an AI provider gateway). When audio is
+          included, the model analyses vocal characteristics (tone, pace,
+          energy) alongside the words themselves; when only text is available,
+          analysis is based on the transcript content alone. Both OpenRouter
+          and OpenAI therefore process this data.
         </Bullet>
         <Bullet>
           The analysis scores the 8 core emotions and generates a personalised
-          reflection from the content of your words.
+          reflection from the content — and, when available, the sound — of
+          your words.
         </Bullet>
         <Bullet>
           No name, email address, or account identifier is sent alongside the
-          transcript. A hashed device identifier is included solely to enforce
-          the monthly usage allowance.
+          transcript or audio. A hashed device identifier is included solely to
+          enforce the monthly usage allowance.
         </Bullet>
         <Bullet>
-          OpenRouter's and the model provider's privacy policies govern how they
-          handle this data. See openrouter.ai/privacy and openai.com/privacy.
+          OpenRouter's and OpenAI's privacy policies govern how they handle
+          this data. See openrouter.ai/privacy and openai.com/privacy.
         </Bullet>
         <Bullet>
           If the analysis backend is unavailable, the app falls back to
@@ -473,9 +478,10 @@ function PrivacyPolicy({
           HTTPS connection for speech-to-text transcription.
         </Bullet>
         <Bullet>
-          Emotional analysis is performed on the text transcript. Where vocal
-          analysis is used, the audio is relayed through our backend to the AI
-          provider for that purpose only.
+          Your text transcript is sent to our analysis backend for emotional
+          analysis. When available, your raw audio recording is also sent so
+          the AI model can analyse vocal tone and pace alongside the words —
+          see "Data Sent to Third-Party Services" above for detail.
         </Bullet>
         <Bullet>
           We do not send your name, email address, or any account identifier
@@ -507,6 +513,14 @@ function PrivacyPolicy({
         </Bullet>
       </Section>
 
+      <Section primaryColor={primaryColor} title="Usage Tracking">
+        <Body>
+          {
+            "To enforce the monthly transcription allowance included with your subscription, your session duration and a hashed device identifier are sent to our backend server after each recording session.\n\nThis data is stored in our backend database solely to track your usage against your monthly allowance. It is not linked to your name, email address, or any other personally identifying information, and it contains none of your journal content."
+          }
+        </Body>
+      </Section>
+
       <Section primaryColor={primaryColor} title="Local Notifications">
         <Body>
           {`${APP_NAME} can send daily reminder notifications to encourage journaling. These notifications:\n`}
@@ -534,7 +548,7 @@ function PrivacyPolicy({
 
       <Section primaryColor={primaryColor} title="No Analytics or Tracking">
         <Body>
-          {`${APP_NAME} does not include any third-party analytics, advertising, or crash-reporting SDKs. We do not track:\n`}
+          {`${APP_NAME} does not include any third-party advertising or crash-reporting SDKs. The app's build tooling includes Expo's own telemetry module (expo-insights), which is not currently enabled or collecting data. We do not track:\n`}
         </Body>
         <Bullet>How you use the app (screens viewed, buttons tapped)</Bullet>
         <Bullet>How often you open the app</Bullet>
@@ -551,8 +565,10 @@ function PrivacyPolicy({
       <Section primaryColor={primaryColor} title="Security">
         <Body>{"We take reasonable measures to protect your data:\n"}</Body>
         <Bullet>
-          Your PIN is stored in your device's secure hardware keystore (iOS
-          Keychain / Android Keystore), never in plain text.
+          Your PIN is hashed using SHA-256 with a unique device-specific salt
+          before storage. The salt is generated once per installation and
+          stored in your device's secure hardware keystore (iOS Keychain /
+          Android Keystore). The raw PIN is never stored or transmitted.
         </Bullet>
         <Bullet>All network communications use HTTPS / TLS encryption.</Bullet>
         <Bullet>
