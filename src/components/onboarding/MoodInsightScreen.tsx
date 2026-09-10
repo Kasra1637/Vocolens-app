@@ -28,6 +28,7 @@ import {
   SmileySad,
   SmileyNervous,
   SmileyBlank,
+  Question,
   type Icon as PhosphorIcon,
 } from "phosphor-react-native";
 import useOnboardingStore, {
@@ -57,6 +58,7 @@ const MOOD_LABELS: Record<MoodType, string> = {
   stressed: "Stressed",
   anxious: "Anxious",
   calm: "Calm",
+  "not-sure": "Not sure",
 };
 
 const MOOD_COLORS: Record<MoodType, string> = {
@@ -64,6 +66,7 @@ const MOOD_COLORS: Record<MoodType, string> = {
   stressed: "#7B8FB5",
   anxious: "#A78BFA",
   calm: "#8BA888",
+  "not-sure": "#9CA3AF",
 };
 
 const FOLLOWUP_LABELS: Record<MoodFollowUpType, string> = {
@@ -88,18 +91,28 @@ const MOOD_ICONS: Record<MoodType, PhosphorIcon> = {
   stressed: SmileySad,
   anxious: SmileyNervous,
   calm: SmileyBlank,
+  "not-sure": Question,
 };
 
+// "not-sure" is deliberately NOT phrased as if the app now knows what the
+// user feels — it doesn't, and pretending otherwise would be exactly the
+// wrong response to an alexithymia-relevant answer. Instead it validates
+// that "I don't know" is a normal, useful starting point, and names the
+// concrete mechanism (AI-assisted naming from the words/tone in a voice
+// entry) that helps from here — without claiming the feeling is already
+// identified.
 const MOOD_INSIGHT_MESSAGES: Record<MoodType, string> = {
   happy: "We'll help you notice what lifts you — so you can return to it on purpose",
   stressed: "Soon you'll spot the pressure building early — and head it off sooner",
   anxious: "You'll start to see your triggers coming, instead of being blindsided",
   calm: "We'll help you protect this calm and recognize what creates it",
+  "not-sure": "Not knowing is a completely normal place to start — talk it out, and we'll help put a name to it",
 };
 
 export function MoodInsightScreen() {
   const nextStep = useOnboardingStore((s) => s.nextStep);
   const prevStep = useOnboardingStore((s) => s.prevStep);
+  const setCurrentStep = useOnboardingStore((s) => s.setCurrentStep);
   const selectedMood = useOnboardingStore((s) => s.selectedMood);
   const selectedMoodFollowUp = useOnboardingStore(
     (s) => s.selectedMoodFollowUp,
@@ -139,7 +152,17 @@ export function MoodInsightScreen() {
   const handleBack = () => {
     playClickSound();
     tapHaptic();
-    prevStep();
+    // "not-sure" skips MoodFollowUpScreen (step 7) on the way in — see
+    // MoodSelectionScreen.handleContinue — because that screen's question
+    // presupposes the user already knows what they're feeling, which
+    // doesn't apply here. Skip it symmetrically on the way back too, or
+    // the user would land on a follow-up question for a mood ("happy",
+    // via DEFAULT_CONFIG) they never actually selected.
+    if (selectedMood === "not-sure") {
+      setCurrentStep(6);
+    } else {
+      prevStep();
+    }
   };
 
   const moodLabel = selectedMood ? MOOD_LABELS[selectedMood] : "Your Mood";
@@ -208,7 +231,9 @@ export function MoodInsightScreen() {
                     ? "We hear you"
                     : selectedMood === "anxious"
                       ? "You're not alone in this"
-                      : "Let's build on that calm"}
+                      : selectedMood === "not-sure"
+                        ? "That's okay too"
+                        : "Let's build on that calm"}
               </Text>
             </Animated.View>
 
