@@ -13,7 +13,7 @@
     "android": {
       "package": "com.vocolens.app",
       "softwareKeyboardLayoutMode": "pan",
-      "versionCode": 11,
+      "versionCode": 12,
       "permissions": ["RECORD_AUDIO", "POST_NOTIFICATIONS"]
     },
     "web": {

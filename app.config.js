@@ -53,7 +53,7 @@ export default ({ config }) => ({
     // here. Every build therefore produced versionCode 8 again and again,
     // causing repeated "Version code already used" upload rejections.
     // Bump this by hand before every new production build from now on.
-    versionCode: 11,
+    versionCode: 12,
     adaptiveIcon: {
       foregroundImage: './assets/images/icon.png',
       backgroundColor: '#0F0E1A',
