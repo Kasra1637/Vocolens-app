@@ -1403,7 +1403,7 @@ export default function SpeakScreen() {
                   ? "Please wait..."
                   : isAtLimit
                     ? "Monthly limit reached"
-                    : `Tap to start · ${remainingMinutesDisplay} min left`}
+                    : "Tap to start"}
               </Text>
               {!isProcessing && !isAtLimit && (
                 <Text
