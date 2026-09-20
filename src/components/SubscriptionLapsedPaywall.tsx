@@ -231,6 +231,13 @@ export function SubscriptionLapsedPaywall() {
     } else if (!result.ok && result.reason === "sdk_error") {
       errorHaptic();
       showAlert("error", "Payment Error", "Something went wrong. Please try again.");
+    } else if (!result.ok && result.reason === "not_configured") {
+      errorHaptic();
+      showAlert(
+        "error",
+        "Purchases Unavailable",
+        "Billing is currently unavailable. Please check your connection or update the app to the latest version and try again.",
+      );
     }
   };
 
@@ -257,6 +264,13 @@ export function SubscriptionLapsedPaywall() {
     } else if (!result.ok && result.reason === "sdk_error") {
       errorHaptic();
       showAlert("error", "Payment Error", "Something went wrong. Please try again.");
+    } else if (!result.ok && result.reason === "not_configured") {
+      errorHaptic();
+      showAlert(
+        "error",
+        "Purchases Unavailable",
+        "Billing is currently unavailable. Please check your connection or update the app to the latest version and try again.",
+      );
     }
   };
 

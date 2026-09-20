@@ -268,7 +268,13 @@ export const getPaywallProducts = (
     if (__DEV__) {
       console.log(
         `${LOG} Paywall "${placementId}" loaded | Products: ${products.length} ` +
-          `[${products.map((p) => p.vendorProductId).join(", ")}]`,
+          `[${products
+            .map((p) => {
+              const offer = p.subscription?.offer?.identifier;
+              const offerLabel = offer ? `${offer.type}/${offer.id ?? "?"}` : "no-offer";
+              return `${p.vendorProductId}(${offerLabel})`;
+            })
+            .join(", ")}]`,
       );
     }
     return { paywall, products };
@@ -339,8 +345,15 @@ export type PurchaseOutcome =
 /** Purchase a product. Returns the updated profile on success. */
 export const makePurchase = (
   product: AdaptyPaywallProduct,
-): Promise<AdaptyResult<PurchaseOutcome>> =>
-  guard("makePurchase", async () => {
+): Promise<AdaptyResult<PurchaseOutcome>> => {
+  // Fail closed in release builds without a real Adapty key: mock mode would
+  // otherwise return instant fake success (no Play sheet) and grant premium
+  // for free. Dev builds keep mock purchases for UI testing.
+  if (!__DEV__ && isUsingMockMode()) {
+    console.warn(`${LOG} makePurchase blocked — no real Adapty key (mock mode). Update the app.`);
+    return Promise.resolve({ ok: false, reason: "not_configured" });
+  }
+  return guard("makePurchase", async () => {
     if (__DEV__) console.log(`${LOG} Initiating purchase: ${product.vendorProductId}`);
     const result: AdaptyPurchaseResult = await adapty.makePurchase(product);
     if (result.type === "success" && result.profile) {
@@ -351,10 +364,18 @@ export const makePurchase = (
     }
     return { type: "pending" } as PurchaseOutcome;
   });
+};
 
 /** Restore previous purchases. Returns the updated profile. */
-export const restorePurchases = (): Promise<AdaptyResult<AdaptyProfile>> =>
-  guard("restorePurchases", () => adapty.restorePurchases());
+export const restorePurchases = (): Promise<AdaptyResult<AdaptyProfile>> => {
+  // Same fail-closed rule as makePurchase — a mock restore must never unlock
+  // premium in a release build.
+  if (!__DEV__ && isUsingMockMode()) {
+    console.warn(`${LOG} restorePurchases blocked — no real Adapty key (mock mode). Update the app.`);
+    return Promise.resolve({ ok: false, reason: "not_configured" });
+  }
+  return guard("restorePurchases", () => adapty.restorePurchases());
+};
 
 /**
  * Identify the user (anonymous by default).
