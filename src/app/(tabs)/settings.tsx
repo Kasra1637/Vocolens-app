@@ -73,6 +73,9 @@ import {
   restorePurchases,
   hasAccessLevel,
   getPlanTypeFromProfile,
+  extractPurchaseError,
+  describePurchaseError,
+  purchaseErrorRef,
 } from "@/lib/adaptyClient";
 import { removePin, changePin } from "@/lib/auth-service";
 import { hexToRgba } from "@/lib/glass";
@@ -244,7 +247,7 @@ export default function SettingsScreen() {
     // Deep-link to Google Play subscription management page.
     // On iOS this would open the App Store subscriptions settings instead.
     const url = Platform.select({
-      android: "https://play.google.com/store/account/subscriptions?sku=com.vocolens.app&package=com.vocolens.app",
+      android: "https://play.google.com/store/account/subscriptions?package=com.vocolens.app",
       ios: "https://apps.apple.com/account/subscriptions",
       default: "https://play.google.com/store/account/subscriptions",
     });
@@ -274,7 +277,12 @@ export default function SettingsScreen() {
       }
     } else {
       errorHaptic();
-      showAlert("error", "Restore failed", "Something went wrong. Please try again.");
+      if (result.reason === "sdk_error") {
+        const d = extractPurchaseError(result.error);
+        showAlert("error", "Restore failed", `${describePurchaseError(d)}${purchaseErrorRef(d)}`);
+      } else {
+        showAlert("error", "Restore failed", "Something went wrong. Please try again.");
+      }
     }
   };
 

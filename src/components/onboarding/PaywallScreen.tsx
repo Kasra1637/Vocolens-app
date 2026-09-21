@@ -24,7 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
-import { CaretRight, CaretDown, CaretUp, X, ChatCircle, Shield, Eye, TrendUp, LockOpen, Bell, Star } from "phosphor-react-native";
+import { CaretRight, CaretDown, CaretUp, ChatCircle, Shield, Eye, TrendUp, LockOpen, Bell, Star } from "phosphor-react-native";
 import Constants from "expo-constants";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
@@ -39,6 +39,9 @@ import {
   makePurchase,
   restorePurchases,
   hasAccessLevel,
+  extractPurchaseError,
+  describePurchaseError,
+  purchaseErrorRef,
   ADAPTY_ACCESS_LEVEL,
   PLACEMENT_ONBOARDING_PAYWALL,
   PRODUCT_ID_MONTHLY,
@@ -183,89 +186,6 @@ function TrialTimeline({
   );
 }
 
-// ── Monthly exit-offer modal ───────────────────────────────────────────────────
-function MonthlyExitModal({
-  visible,
-  themeColors,
-  onAccept,
-  onDecline,
-  isPurchasing,
-  monthlyPrice,
-}: {
-  visible: boolean;
-  themeColors: (typeof THEME_COLORS)[keyof typeof THEME_COLORS];
-  onAccept: () => void;
-  onDecline: () => void;
-  isPurchasing: boolean;
-  monthlyPrice: string;
-}) {
-  return (
-    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent>
-      <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.6)" }}>
-        <LinearGradient
-          colors={[themeColors.gradientStart, themeColors.gradientEnd]}
-          style={{ borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 }}
-        >
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 20 }}>
-              Not ready to commit?
-            </Text>
-            <Pressable onPress={onDecline} hitSlop={12}>
-              <X size={22} color="rgba(255,255,255,0.6)" weight="regular" />
-            </Pressable>
-          </View>
-
-          <Text style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Inter_400Regular", fontSize: 14, lineHeight: 21, marginBottom: 20 }}>
-            Try Vocolens monthly — no long-term commitment, cancel anytime
-          </Text>
-
-          <View style={{
-            borderRadius: 18, borderWidth: 2, borderColor: "rgba(255,255,255,0.50)",
-            backgroundColor: "rgba(255,255,255,0.14)", paddingVertical: 16,
-            paddingHorizontal: 18, flexDirection: "row", alignItems: "center",
-            justifyContent: "space-between", marginBottom: 20,
-          }}>
-            <View>
-              <Text style={{ color: "rgba(255,255,255,0.7)", fontFamily: "Inter_600SemiBold", fontSize: 12, marginBottom: 4 }}>
-                Monthly Plan
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5 }}>
-                <Text style={{ color: "#FFFFFF", fontFamily: "Fraunces_700Bold", fontSize: 24 }}>{monthlyPrice}</Text>
-                <Text style={{ color: "rgba(255,255,255,0.55)", fontFamily: "Inter_400Regular", fontSize: 12 }}>/month</Text>
-              </View>
-            </View>
-            <Text style={{ color: "rgba(255,255,255,0.45)", fontFamily: "Inter_400Regular", fontSize: 11 }}>
-              No free trial
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={onAccept}
-            disabled={isPurchasing}
-            style={{ borderRadius: 18, borderWidth: 2, borderColor: themeColors.secondary, overflow: "hidden", opacity: isPurchasing ? 0.7 : 1, marginBottom: 12 }}
-          >
-            <LinearGradient
-              colors={["rgba(255,255,255,0.25)", "rgba(255,255,255,0.08)"]}
-              start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-              style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 15, gap: 6 }}
-            >
-              {isPurchasing
-                ? <ActivityIndicator color="#FFFFFF" size="small" />
-                : <Text style={{ color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 16 }}>Start monthly plan</Text>}
-            </LinearGradient>
-          </Pressable>
-
-          <Pressable onPress={onDecline} style={{ alignItems: "center", paddingTop: 4 }}>
-            <Text style={{ color: "rgba(255,255,255,0.40)", fontFamily: "Inter_400Regular", fontSize: 13 }}>
-              No thanks, I'll pass
-            </Text>
-          </Pressable>
-        </LinearGradient>
-      </View>
-    </Modal>
-  );
-}
-
 // ── Trial-charge reminder opt-in modal ─────────────────────────────────────────
 // Shown right after a successful Yearly-plan purchase, ONLY if the OS
 // notification permission hasn't already been explicitly denied. This is
@@ -364,9 +284,7 @@ export function PaywallScreen() {
 
   const [selectedPlan,       setSelectedPlan]       = useState<PlanKey>("yearly");
   const [isPurchasing,       setIsPurchasing]        = useState(false);
-  const [isPurchasingMonthly, setIsPurchasingMonthly] = useState(false);
   const [isRestoring,        setIsRestoring]         = useState(false);
-  const [showExitModal,      setShowExitModal]       = useState(false);
   const [showMorePlans,      setShowMorePlans]       = useState(false);
 
   // ── Trial-charge reminder opt-in (yearly plan only) ─────────────────────────
@@ -455,45 +373,17 @@ export function PaywallScreen() {
       grantAccess(selectedPlan, result.data.profile);
     } else if (result.ok && result.data.type === "user_cancelled") {
       errorHaptic();
-    } else if (!result.ok && result.reason === "sdk_error") {
-      errorHaptic();
-      showAlert("error", "Payment Error", "Something went wrong. Please try again.");
-    } else if (!result.ok && result.reason === "not_configured") {
+    } else if (result.ok && result.data.type === "pending") {
       errorHaptic();
       showAlert(
-        "error",
-        "Purchases Unavailable",
-        "Billing is currently unavailable. Please check your connection or update the app to the latest version and try again.",
+        "warning",
+        "Payment Pending",
+        "Your payment is pending with Google Play (e.g. bank approval). Once it clears, tap Restore Purchase to activate.",
       );
-    }
-  };
-
-  // ── Purchase monthly (exit-offer modal) ─────────────────────────────────────
-  const handleMonthlyAccept = async () => {
-    playClickSound();
-    trackEvent("cta_tapped", { plan: "monthly" });
-
-    if (!monthlyPkg) {
-      errorHaptic();
-      showAlert(
-        "error",
-        "Products Unavailable",
-        "We couldn't load subscription options. Please check your connection and try again.",
-      );
-      return;
-    }
-
-    setIsPurchasingMonthly(true);
-    const result = await makePurchase(monthlyPkg);
-    setIsPurchasingMonthly(false);
-
-    if (result.ok && result.data.type === "success" && hasAccessLevel(result.data.profile)) {
-      grantAccess("monthly", result.data.profile);
-    } else if (result.ok && result.data.type === "user_cancelled") {
-      errorHaptic();
     } else if (!result.ok && result.reason === "sdk_error") {
       errorHaptic();
-      showAlert("error", "Payment Error", "Something went wrong. Please try again.");
+      const d = extractPurchaseError(result.error);
+      showAlert("error", "Payment Error", `${describePurchaseError(d)}${purchaseErrorRef(d)}`);
     } else if (!result.ok && result.reason === "not_configured") {
       errorHaptic();
       showAlert(
@@ -529,7 +419,6 @@ export function PaywallScreen() {
   const grantAccess = (plan: PlanKey, profile?: AdaptyProfile) => {
     successHaptic();
     setSubscription(true, plan === "three_month" ? "quarterly" : plan);
-    setShowExitModal(false);
 
     if (plan === "yearly") {
       const expiresAt = profile?.accessLevels?.[ADAPTY_ACCESS_LEVEL]?.expiresAt;
@@ -612,6 +501,10 @@ export function PaywallScreen() {
     } else if (result.ok) {
       errorHaptic();
       showAlert("warning", "No Active Subscription", "We couldn't find an active subscription to restore.");
+    } else if (!result.ok && result.reason === "sdk_error") {
+      errorHaptic();
+      const d = extractPurchaseError(result.error);
+      showAlert("error", "Restore Failed", `${describePurchaseError(d)}${purchaseErrorRef(d)}`);
     } else {
       errorHaptic();
       showAlert("error", "Restore Failed", "Something went wrong. Please try again.");
@@ -809,6 +702,11 @@ export function PaywallScreen() {
                     ? `${threeMonthPrice} billed every 3 months · Cancel anytime`
                     : `${monthlyPrice} billed monthly · Cancel anytime`}
               </Text>
+              {selectedPlan === "yearly" && (
+                <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.45)", fontSize: 10, textAlign: "center", marginTop: 4, lineHeight: 14 }}>
+                  Your bank may show a temporary $1 authorization hold that reverses automatically.
+                </Text>
+              )}
 
               {/* Legal + Restore */}
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 14 }}>
@@ -865,15 +763,6 @@ export function PaywallScreen() {
         themeColors={themeColors}
         onEnable={handleTrialReminderOptInEnable}
         onDecline={handleTrialReminderOptInDecline}
-      />
-
-      <MonthlyExitModal
-        visible={showExitModal}
-        themeColors={themeColors}
-        onAccept={handleMonthlyAccept}
-        onDecline={() => { setShowExitModal(false); prevStep(); }}
-        isPurchasing={isPurchasingMonthly}
-        monthlyPrice={monthlyPrice}
       />
 
       <BrandedAlert

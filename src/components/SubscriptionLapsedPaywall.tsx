@@ -39,6 +39,9 @@ import {
   makePurchase,
   restorePurchases,
   hasAccessLevel,
+  extractPurchaseError,
+  describePurchaseError,
+  purchaseErrorRef,
   PLACEMENT_MAIN_PAYWALL,
   PRODUCT_ID_MONTHLY,
   PRODUCT_ID_THREE_MONTH,
@@ -228,9 +231,17 @@ export function SubscriptionLapsedPaywall() {
       grantAccess(selectedPlan);
     } else if (result.ok && result.data.type === "user_cancelled") {
       errorHaptic();
+    } else if (result.ok && result.data.type === "pending") {
+      errorHaptic();
+      showAlert(
+        "warning",
+        "Payment Pending",
+        "Your payment is pending with Google Play (e.g. bank approval). Once it clears, tap Restore Purchase to activate.",
+      );
     } else if (!result.ok && result.reason === "sdk_error") {
       errorHaptic();
-      showAlert("error", "Payment Error", "Something went wrong. Please try again.");
+      const d = extractPurchaseError(result.error);
+      showAlert("error", "Payment Error", `${describePurchaseError(d)}${purchaseErrorRef(d)}`);
     } else if (!result.ok && result.reason === "not_configured") {
       errorHaptic();
       showAlert(
@@ -261,9 +272,17 @@ export function SubscriptionLapsedPaywall() {
       grantAccess("monthly");
     } else if (result.ok && result.data.type === "user_cancelled") {
       errorHaptic();
+    } else if (result.ok && result.data.type === "pending") {
+      errorHaptic();
+      showAlert(
+        "warning",
+        "Payment Pending",
+        "Your payment is pending with Google Play (e.g. bank approval). Once it clears, tap Restore Purchase to activate.",
+      );
     } else if (!result.ok && result.reason === "sdk_error") {
       errorHaptic();
-      showAlert("error", "Payment Error", "Something went wrong. Please try again.");
+      const d = extractPurchaseError(result.error);
+      showAlert("error", "Payment Error", `${describePurchaseError(d)}${purchaseErrorRef(d)}`);
     } else if (!result.ok && result.reason === "not_configured") {
       errorHaptic();
       showAlert(
@@ -285,6 +304,10 @@ export function SubscriptionLapsedPaywall() {
     } else if (result.ok) {
       errorHaptic();
       showAlert("warning", "No Active Subscription", "We couldn't find an active subscription to restore.");
+    } else if (!result.ok && result.reason === "sdk_error") {
+      errorHaptic();
+      const d = extractPurchaseError(result.error);
+      showAlert("error", "Restore Failed", `${describePurchaseError(d)}${purchaseErrorRef(d)}`);
     } else {
       errorHaptic();
       showAlert("error", "Restore Failed", "Something went wrong. Please try again.");

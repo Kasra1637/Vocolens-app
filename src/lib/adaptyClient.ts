@@ -228,6 +228,82 @@ async function ensureActivated(): Promise<boolean> {
 }
 
 // ── Guard helper ──────────────────────────────────────────────────────────────
+/**
+ * Structured purchase/Billing failure details.
+ *
+ * The paywalls surface these (mapped message + numeric ref) instead of a
+ * generic alert, so a failed attempt names its true cause. Numeric codes
+ * follow @adapty/core's ErrorCodeMapping (e.g. 106 billingError,
+ * 107 itemAlreadyOwned, 102 billingServiceUnavailable).
+ */
+export interface PurchaseErrorDetails {
+  code: number | null;
+  message: string;
+  detail?: string;
+}
+
+/** Pull code/message/detail off an unknown SDK throw (AdaptyError or Error). */
+export function extractPurchaseError(error: unknown): PurchaseErrorDetails {
+  const e = error as {
+    adaptyCode?: unknown;
+    code?: unknown;
+    message?: unknown;
+    detail?: unknown;
+    localizedDescription?: unknown;
+  } | null;
+  const rawCode = e?.adaptyCode ?? e?.code;
+  const code =
+    typeof rawCode === "number" && Number.isFinite(rawCode) ? rawCode : null;
+  const message =
+    typeof e?.message === "string" && e.message.length > 0
+      ? e.message
+      : "Unknown purchase error";
+  const rawDetail = e?.detail ?? e?.localizedDescription;
+  const detail =
+    typeof rawDetail === "string" && rawDetail.length > 0 ? rawDetail : undefined;
+  return { code, message, detail };
+}
+
+/** Map a purchase failure to an actionable user-facing message. */
+export function describePurchaseError(d: PurchaseErrorDetails): string {
+  switch (d.code) {
+    case 107:
+      return "This subscription looks already linked to your Google account. Tap Restore Purchase to re-activate it.";
+    case 108:
+      return "Google Play couldn't find that item on your account. Try Restore Purchase, or re-try the purchase.";
+    case 97:
+    case 99:
+    case 102:
+      return "Google Play billing is temporarily unavailable. Check your connection and Play Store updates, then try again.";
+    case 103:
+      return "Billing isn't available on this device or account. Update the Play Store and try again.";
+    case 98:
+      return "This device's Play Store doesn't support this purchase. Update the Play Store and try again.";
+    case 112:
+    case 2005:
+      return "Network issue while contacting Google Play. Check your connection and try again.";
+    case 1003:
+      return "Purchases aren't allowed on this device or account (e.g. parental controls or device policy).";
+    case 11:
+    case 22:
+    case 105:
+    case 1000:
+    case 1002:
+      return "Store configuration issue (product not found). Please update the app to the latest version and try again.";
+    case 106:
+    case 1005:
+    case 1006:
+      return "Google Play couldn't complete the charge. Check your payment method (including any bank approval prompt) and try again.";
+    default:
+      return "Something went wrong. Please try again.";
+  }
+}
+
+/** Short diagnostic ref appended to purchase alerts (e.g. " (ref 106)"). */
+export function purchaseErrorRef(d: PurchaseErrorDetails): string {
+  return d.code !== null ? ` (ref ${d.code})` : "";
+}
+
 async function guard<T>(action: string, op: () => Promise<T>): Promise<AdaptyResult<T>> {
   const activated = await ensureActivated();
   if (!activated) {
@@ -237,7 +313,11 @@ async function guard<T>(action: string, op: () => Promise<T>): Promise<AdaptyRes
   try {
     return { ok: true, data: await op() };
   } catch (error: any) {
-    console.log(`${LOG} ${action} failed:`, error?.message ?? error);
+    const d = extractPurchaseError(error);
+    console.warn(
+      `${LOG} ${action} failed: code=${d.code ?? "n/a"} message=${d.message}` +
+        (d.detail ? ` detail=${d.detail}` : ""),
+    );
     return { ok: false, reason: "sdk_error", error };
   }
 }
@@ -354,7 +434,11 @@ export const makePurchase = (
     return Promise.resolve({ ok: false, reason: "not_configured" });
   }
   return guard("makePurchase", async () => {
-    if (__DEV__) console.log(`${LOG} Initiating purchase: ${product.vendorProductId}`);
+    const offer = product.subscription?.offer?.identifier;
+    console.warn(
+      `${LOG} Initiating purchase: ${product.vendorProductId} ` +
+        `offer=${offer?.type ?? "none"}/${offer?.id ?? "none"}`,
+    );
     const result: AdaptyPurchaseResult = await adapty.makePurchase(product);
     if (result.type === "success" && result.profile) {
       return { type: "success", profile: result.profile } as PurchaseOutcome;
