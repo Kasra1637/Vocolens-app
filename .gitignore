@@ -34,6 +34,11 @@ Thumbs.db
 .idea/
 *.swp
 *.swo-e 
+# Google Cloud service-account keys (downloaded JSON) — never commit.
+# Adapty verification key included: always verify project_id before upload.
+*-key.json
+service-account*.json
+adapty-*.json
 # Environment and credential files
 .env
 .env.*

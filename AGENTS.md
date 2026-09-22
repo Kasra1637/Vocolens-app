@@ -28,5 +28,16 @@ Production package: `com.vocolens.app`.
 - Privacy posture: on-device storage, no accounts, biometric/PIN lock,
   transient HTTPS transcription + analysis, export JSON / delete / wipe in
   Settings. Keep all user-facing privacy claims consistent with this.
-- Google Cloud: single project `vocolens` for Play RTDN Pub/Sub; Adapty
-  auto-creates the topic — never invent topic names.
+- Google Cloud: single project `vocolens-9feb6` (number `715290490818`)
+  for Play RTDN Pub/Sub; Adapty auto-creates the topic — never invent
+  topic names. Canonical topic:
+  `projects/vocolens-9feb6/topics/adapty-prod-f06e1cf0-2448-4d69-bda4-8ff73d1ed068`.
+- Billing identity: ONLY invite/keep service accounts from `vocolens-9feb6`
+  (canonical: `adapty-play-dash-billing@vocolens-9feb6.iam.gserviceaccount.com`).
+  Before inviting, read the project segment of the account email
+  (`@<project>.iam.gserviceaccount.com`); before uploading a JSON key to
+  Adapty, confirm its `project_id` is `vocolens-9feb6`. Never invite keys
+  from foreign/tutorial projects (past incident: a
+  `youtube-video-to-post-*` account broke all server-side verification:
+  live Play orders, empty Adapty feed, purchase-time `sdk_error`,
+  ok-but-inactive restores).
