@@ -19,8 +19,8 @@
  * Overlay is pointer-transparent except the skip press.
  */
 
-import React, { useEffect, useRef } from "react";
-import { View, Pressable, Dimensions } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Pressable, Dimensions, AccessibilityInfo } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -167,16 +167,28 @@ export function PurchaseCelebration({
   visible,
   onDone,
   themeColors,
+  target,
 }: {
   visible: boolean;
   onDone: () => void;
   themeColors: (typeof THEME_COLORS)[keyof typeof THEME_COLORS];
+  /** Exact dissolve point in overlay-local coords (measured CTA center).
+   *  Falls back to the estimated CTA zone when null. */
+  target: { x: number; y: number } | null;
 }) {
   const soundRef = useRef<Audio.Sound | null>(null);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
 
   const veilOpacity = useSharedValue(1);
+
+  // Motion-sensitive users get sound + haptic only — no orbit visuals.
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then(setReduceMotion)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!visible) return;
@@ -229,11 +241,12 @@ export function PurchaseCelebration({
     opacity: veilOpacity.value,
   }));
 
-  if (!visible) return null;
+  if (!visible || reduceMotion) return null;
 
-  // Low orbit band behind the CTA zone; the finale dissolves into the CTA.
+  // Low orbit band behind the CTA zone; the finale dissolves into the
+  // measured CTA center (or the estimated zone as fallback).
   const center = { x: SW / 2, y: SH * 0.8 };
-  const cta = { x: SW / 2, y: SH * 0.82 };
+  const cta = target ?? { x: SW / 2, y: SH * 0.82 };
   const palette = ["#FFFFFF", GOLD, themeColors.secondary, themeColors.primary];
 
   return (

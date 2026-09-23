@@ -23,7 +23,7 @@
  * up some form of app lock, and the PIN-only path is never skipped silently.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -96,6 +96,33 @@ export function BiometricSetupScreen() {
       console.warn("[Celebration] skipped: no purchase flag (restore/skip/dev or pre-fix bundle)");
     }
   }, []);
+
+  // ── Measured CTA center (overlay-local coords) ─────────────────────────────
+  // The celebration finale dissolves into the real CTA button position rather
+  // than a hardcoded guess, so it lands correctly on every screen size.
+  const rootRef = useRef<View>(null);
+  const ctaRef = useRef<View>(null);
+  const [ctaCenter, setCtaCenter] = useState<{ x: number; y: number } | null>(null);
+
+  const remeasureCTA = useCallback(() => {
+    const root = rootRef.current;
+    const cta = ctaRef.current;
+    if (!root || !cta) return;
+    try {
+      root.measure((_rx, _ry, _rw, _rh, rootPX, rootPY) => {
+        cta.measure((_x, _y, w, h, px, py) => {
+          setCtaCenter({ x: px + w / 2 - rootPX, y: py + h / 2 - rootPY });
+        });
+      });
+    } catch {
+      // no-op — overlay falls back to the estimated CTA zone
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(remeasureCTA, 300);
+    return () => clearTimeout(t);
+  }, [remeasureCTA, checking]);
 
   useEffect(() => {
     (async () => {
@@ -194,7 +221,7 @@ export function BiometricSetupScreen() {
   const privacyPoints = biometricAvailable ? BIOMETRIC_POINTS : PIN_ONLY_POINTS;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View ref={rootRef} style={{ flex: 1 }}>
       <LinearGradient
         colors={themeColors.backgroundGradient}
         start={{ x: 0, y: 0 }}
@@ -327,6 +354,8 @@ export function BiometricSetupScreen() {
 
             {/* Bottom: CTA — sits directly below the feature points */}
             <Animated.View
+              ref={ctaRef}
+              onLayout={remeasureCTA}
               entering={FadeIn.delay(160).duration(500).easing(SOFT)}
               style={{ width: '100%', gap: 12, marginTop: 20 }}
             >
@@ -345,6 +374,7 @@ export function BiometricSetupScreen() {
         visible={showCelebration}
         onDone={() => setShowCelebration(false)}
         themeColors={themeColors}
+        target={ctaCenter}
       />
     </View>
   );
