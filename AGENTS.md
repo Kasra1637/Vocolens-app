@@ -10,7 +10,10 @@ Production package: `com.vocolens.app`.
 - Before committing: show `git status` + `git diff` for this folder first.
 - Never `--force` push, never commit secrets, `.env`, or credentials.
 - `versionCode` (Android) is bumped by hand before every production build —
-  keep `app.json` and `app.config.js` in agreement.
+  keep `app.json` and `app.config.js` in agreement. Bumps are intentional
+  safety margins set above the store number so uploads are never rejected.
+  Store carries 17 as of Sep 2026 (repo files read 15); next hand-bump must
+  exceed 17 in both files.
 - `EXPO_PUBLIC_ADAPTY_KEY` must be set (EAS secret) or release builds run in
   Adapty mock mode with no Play sheet. Never ship mock-mode purchases.
 - Verify with `npx tsc --noEmit`, then commit to `main` and push without
