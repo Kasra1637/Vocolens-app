@@ -143,7 +143,7 @@ export function PersonalizePermissionScreen() {
                     flexShrink: 1,
                   }}
                 >
-                  Your answers are private, encrypted, and never shared.
+                  Your answers stay on your device.
                 </Text>
               </View>
             </Animated.View>
