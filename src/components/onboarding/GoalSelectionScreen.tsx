@@ -134,18 +134,6 @@ export function GoalSelectionScreen() {
               >
                 What's your main goal for using Vocolens?
               </Text>
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.70)",
-                  fontSize: 14,
-                  textAlign: "center",
-                  marginTop: 8,
-                  lineHeight: 20,
-                }}
-              >
-                To personalise your experience
-              </Text>
             </Animated.View>
 
             {/* Goal Options */}
