@@ -108,6 +108,7 @@ export function PurchaseCelebration({
   useEffect(() => {
     if (!visible) return;
 
+    console.warn("[Celebration] overlay mounted: ripples + chime starting");
     celebrationHaptic();
     badgeScale.value = 0.4;
     badgeScale.value = withDelay(150, withSpring(1, { damping: 9, stiffness: 140 }));

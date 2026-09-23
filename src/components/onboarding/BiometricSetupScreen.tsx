@@ -89,8 +89,11 @@ export function BiometricSetupScreen() {
 
   useEffect(() => {
     if (celebratePurchase) {
+      console.warn("[Celebration] firing: purchase flag consumed on Secure screen");
       setCelebratePurchase(false);
       setShowCelebration(true);
+    } else {
+      console.warn("[Celebration] skipped: no purchase flag (restore/skip/dev or pre-fix bundle)");
     }
   }, []);
 
