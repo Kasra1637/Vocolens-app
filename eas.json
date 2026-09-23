@@ -14,8 +14,7 @@
       "android": { "buildType": "apk" },
       "env": {
         "EXPO_PUBLIC_BLINK_PREVIEW_ENABLED": "true",
-        "NPM_FLAGS": "--legacy-peer-deps",
-        "EXPO_PUBLIC_ALLOW_TESTER_SKIP": "true"
+        "NPM_FLAGS": "--legacy-peer-deps"
       }
     },
     "closed-testing": {
@@ -25,8 +24,7 @@
       "android": { "buildType": "app-bundle" },
       "autoIncrement": true,
       "env": {
-        "NPM_FLAGS": "--legacy-peer-deps",
-        "EXPO_PUBLIC_ALLOW_TESTER_SKIP": "true"
+        "NPM_FLAGS": "--legacy-peer-deps"
       }
     },
     "production": {

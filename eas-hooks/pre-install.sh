@@ -27,8 +27,7 @@ echo "Writing .env from EAS environment variables..."
 for var in \
   EXPO_PUBLIC_ADAPTY_KEY \
   EXPO_PUBLIC_BACKEND_URL \
-  EXPO_PUBLIC_VOCOLENS_API_KEY \
-  EXPO_PUBLIC_ALLOW_TESTER_SKIP
+  EXPO_PUBLIC_VOCOLENS_API_KEY
 do
   value="${!var:-}"
   if [ -n "$value" ]; then

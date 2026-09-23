@@ -28,7 +28,6 @@ import Animated, { FadeIn, Easing } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic, errorHaptic, selectHaptic } from "@/lib/haptics";
 import { CaretRight, X } from "phosphor-react-native";
-import Constants from "expo-constants";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import useSubscriptionStore from "@/lib/state/subscription-store";
 import { BrandedAlert } from "@/components/BrandedAlert";
@@ -49,14 +48,6 @@ import {
 } from "@/lib/adaptyClient";
 import type { AdaptyPaywallProduct } from "react-native-adapty";
 import { NotificationService } from "@/lib/services/notification-service";
-
-// ── Tester bypass flag ────────────────────────────────────────────────────────
-// Set to `true` while distributing via internal testing on Google Play.
-// See PaywallScreen.tsx — gated on the EAS build profile via env var, so it is
-// structurally absent from production builds.
-const ALLOW_TESTER_SKIP =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_ALLOW_TESTER_SKIP ??
-    process.env.EXPO_PUBLIC_ALLOW_TESTER_SKIP) === 'true';
 
 // ── Pricing fallbacks ─────────────────────────────────────────────────────────
 // Display fallbacks when the SDK hasn't loaded products. They must NEVER
@@ -535,21 +526,6 @@ export function SubscriptionLapsedPaywall() {
                 >
                   <Text style={{ fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.25)", fontSize: 12, textDecorationLine: "underline" }}>
                     [DEV] Escape payment
-                  </Text>
-                </Pressable>
-              )}
-
-              {/* Tester skip — visible in internal testing builds */}
-              {ALLOW_TESTER_SKIP && (
-                <Pressable
-                  onPress={() => {
-                    tapHaptic();
-                    setSubscription(true, "yearly");
-                  }}
-                  style={{ marginTop: 16, paddingVertical: 8, paddingHorizontal: 16 }}
-                >
-                  <Text style={{ fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.50)", fontSize: 13, textAlign: "center" }}>
-                    Skip — I'm a tester
                   </Text>
                 </Pressable>
               )}

@@ -139,10 +139,6 @@ export default ({ config }) => ({
     // through the Worker instead of shipping the key.
     EXPO_PUBLIC_BACKEND_URL:
       process.env.EXPO_PUBLIC_BACKEND_URL || undefined,
-    // Set to "true" ONLY by the `preview` build profile in eas.json, so the
-    // closed-testing "Skip — I'm a tester" bypass cannot reach production.
-    EXPO_PUBLIC_ALLOW_TESTER_SKIP:
-      process.env.EXPO_PUBLIC_ALLOW_TESTER_SKIP || undefined,
     EXPO_PUBLIC_VOCOLENS_API_KEY:
       process.env.EXPO_PUBLIC_VOCOLENS_API_KEY || undefined,
     // Adapty Public SDK Key (App settings → General → Api keys in the
