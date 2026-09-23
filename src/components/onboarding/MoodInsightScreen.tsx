@@ -106,7 +106,7 @@ const MOOD_INSIGHT_MESSAGES: Record<MoodType, string> = {
   stressed: "Soon you'll spot the pressure building early — and head it off sooner",
   anxious: "You'll start to see your triggers coming, instead of being blindsided",
   calm: "We'll help you protect this calm and recognize what creates it",
-  "not-sure": "Not knowing is a completely normal place to start — talk it out, and we'll help put a name to it",
+  "not-sure": "Not knowing is a normal place to start — talk it out, we'll help put a name to it",
 };
 
 export function MoodInsightScreen() {

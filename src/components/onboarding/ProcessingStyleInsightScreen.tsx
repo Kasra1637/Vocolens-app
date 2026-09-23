@@ -53,7 +53,7 @@ const PROCESSING_INSIGHTS: Record<ProcessingStyleType, string> = {
   "noticing-patterns":
     "Vocolens tracks emotions and triggers over time so patterns start to appear",
   "right-question":
-    "Vocolens reflects your feelings back clearly, so the answer becomes obvious on its own",
+    "Vocolens reflects your feelings back clearly, so the answer becomes obvious",
 };
 
 // Icon per selection — mirrors ProcessingStyleScreen

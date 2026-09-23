@@ -328,13 +328,12 @@ export function AccountPreparationScreen() {
                   lineHeight: 22,
                 }}
               >
-                We use the scientifically validated{" "}
+                Uses the validated{" "}
                 <Text style={{ fontFamily: "Inter_700Bold", color: "#FFFFFF" }}>
                   Plutchik Model
                 </Text>
-                , which includes eight core emotions and their intensities, to
-                ensure a precise and research-based understanding of your
-                feelings
+                {" "}— eight core emotions and intensities — for precise
+                understanding of your feelings
               </Text>
             </Animated.View>
 

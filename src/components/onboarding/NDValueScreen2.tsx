@@ -33,7 +33,7 @@ const HOW_IT_WORKS = [
     icon: Smiley,
     step: "02",
     headline: "Emotions get named",
-    body: "When emotions are hard to name, the AI names them for you",
+    body: "When emotions are hard to name, we name it for you",
   },
   {
     icon: TrendUp,

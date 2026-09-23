@@ -144,7 +144,7 @@ export function GoalSelectionScreen() {
                   lineHeight: 20,
                 }}
               >
-                This helps us personalise your experience
+                To personalise your experience
               </Text>
             </Animated.View>
 
