@@ -276,6 +276,7 @@ export function PaywallScreen() {
   const themeColors    = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
+  const setCelebratePurchase = useOnboardingStore((s) => s.setCelebratePurchase);
 
   // Adapty product references (loaded from SDK)
   const [monthlyPkg,    setMonthlyPkg]    = useState<AdaptyPaywallProduct | null>(null);
@@ -419,6 +420,10 @@ export function PaywallScreen() {
   const grantAccess = (plan: PlanKey, profile?: AdaptyProfile) => {
     successHaptic();
     setSubscription(true, plan === "three_month" ? "quarterly" : plan);
+    // Real purchase (any plan, real card or test card) — the Secure/Protect
+    // screen consumes this once to fire the one-time purchase celebration.
+    // Restore / tester-skip / dev-escape paths never set it.
+    setCelebratePurchase(true);
 
     if (plan === "yearly") {
       const expiresAt = profile?.accessLevels?.[ADAPTY_ACCESS_LEVEL]?.expiresAt;

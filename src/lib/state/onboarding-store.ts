@@ -219,6 +219,16 @@ interface OnboardingState {
   // Current onboarding step
   currentStep: number;
 
+  /**
+   * Transient (never persisted — deliberately absent from `partialize`
+   * below): true when the user just completed a REAL purchase (any plan,
+   * real card or test card) and is arriving at the Secure/Protect screen.
+   * Restore, tester-skip, and dev-escape paths never set it. Consumed once
+   * by BiometricSetupScreen to fire the one-time purchase celebration.
+   */
+  celebratePurchase: boolean;
+  setCelebratePurchase: (celebrate: boolean) => void;
+
   // Actions
   setHasCompletedOnboarding: (completed: boolean) => void;
   setHasExistingAccount: (existing: boolean) => void;
@@ -263,6 +273,9 @@ const useOnboardingStore = create<OnboardingState>()(
       selectedAppFeeling: null,
       notificationPreferences: null,
       currentStep: 0,
+      celebratePurchase: false,
+      setCelebratePurchase: (celebrate) =>
+        set({ celebratePurchase: celebrate }),
 
       setHasCompletedOnboarding: (completed) =>
         set({ hasCompletedOnboarding: completed }),
@@ -322,6 +335,7 @@ const useOnboardingStore = create<OnboardingState>()(
           selectedJournalingTopic: null,
           notificationPreferences: null,
           currentStep: 0,
+          celebratePurchase: false,
         }),
       getThemeColors: () => {
         const theme = get().selectedTheme;

@@ -45,6 +45,7 @@ import { ProgressBar } from '@/components/onboarding/ProgressBar';
 import { useClickSound } from '@/lib/hooks/useClickSound';
 import { OnboardingCTAButton } from '@/components/onboarding/OnboardingCTAButton';
 import { PinEntryScreen } from '@/components/PinEntryScreen';
+import { PurchaseCelebration } from '@/components/PurchaseCelebration';
 
 type Phase = 'intro' | 'pin_setup';
 
@@ -76,6 +77,22 @@ export function BiometricSetupScreen() {
   const [biometricName, setBiometricName] = useState('Fingerprint');
   const [biometricAvailable, setBiometricAvailable] = useState(true);
   const [checking,      setChecking]     = useState(true);
+
+  // ── One-time purchase celebration ──────────────────────────────────────────
+  // Fires only when arriving here straight from a REAL purchase (any plan,
+  // real card or test card): PaywallScreen.grantAccess sets the transient
+  // `celebratePurchase` flag, consumed once below. Restore / tester-skip /
+  // dev-escape arrivals never set it, so they stay quiet.
+  const celebratePurchase    = useOnboardingStore((s) => s.celebratePurchase);
+  const setCelebratePurchase = useOnboardingStore((s) => s.setCelebratePurchase);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  useEffect(() => {
+    if (celebratePurchase) {
+      setCelebratePurchase(false);
+      setShowCelebration(true);
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -319,6 +336,13 @@ export function BiometricSetupScreen() {
           </View>
         </SafeAreaView>
       </LinearGradient>
+
+      {/* One-time purchase celebration overlay (see flag above) */}
+      <PurchaseCelebration
+        visible={showCelebration}
+        onDone={() => setShowCelebration(false)}
+        themeColors={themeColors}
+      />
     </View>
   );
 }
