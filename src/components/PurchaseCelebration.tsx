@@ -1,5 +1,5 @@
 /**
- * PurchaseCelebration
+ * PurchaseCelebration — Option 3: Orbiting Starfield
  *
  * One-time celebration shown on the Secure/Protect journal screen
  * (BiometricSetupScreen, onboarding step 24) right after a REAL purchase
@@ -7,12 +7,14 @@
  * dev-escape arrivals never trigger it (see `celebratePurchase` in
  * onboarding-store: set only by grantAccess, consumed once here).
  *
- * Design language — brand ripples, not party confetti (per product pick):
- * three expanding ripple rings in theme colours, a springing star badge,
- * a short headline, the fanfare chime + celebration haptic.
- * Auto-dismisses at ~2.8 s with a fade; tap anywhere to skip.
- * Overlay is pointer-transparent except the skip press, so the screen
- * underneath stays interactive.
+ * Choreography (3.0 s total):
+ *   0.0–1.3 s  dozens of star dots swing in from wide scattered orbits,
+ *              accelerating onto elliptical paths around the central badge.
+ *   0.9–1.4 s  badge springs in, headline fades in as the ring settles.
+ *   1.3–2.6 s  slow orbital drift (the aligned universe), gentle shimmer.
+ *   2.6–3.0 s  full-overlay fade; auto-dismiss at 3.0 s. Tap skips anytime.
+ * Fanfare chime + celebration haptic on fire. Overlay is pointer-transparent
+ * except the skip press, so the screen underneath stays interactive.
  */
 
 import React, { useEffect, useRef } from "react";
@@ -37,38 +39,98 @@ const { width: SW, height: SH } = Dimensions.get("window");
 // Celebration fanfare — same asset as the milestone celebration.
 const CELEBRATION_ASSET = require("../../assets/sound-effect-1767694881912.mp3");
 
-const AUTO_DISMISS_MS = 2800;
+const AUTO_DISMISS_MS = 3000;
+const STAR_COUNT = 36;
+const GOLD = "#F5C86B";
 
-// ─── Ripple ring ─────────────────────────────────────────────────────────────
-function RippleRing({
-  color,
-  delay,
-  maxSize,
-}: {
-  color: string;
+// Deterministic pseudo-random in [0, 1) — stable across renders.
+function rand(seed: number): number {
+  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+interface StarSpec {
+  rx: number;
+  ry: number;
+  startAngle: number;
+  sweep: number;
+  size: number;
+  colorIndex: number; // 0 white · 1 gold · 2 secondary · 3 primary
   delay: number;
-  maxSize: number;
+}
+
+// Built once at module load — layout never reshuffles between renders.
+const STARS: StarSpec[] = Array.from({ length: STAR_COUNT }, (_, i) => ({
+  rx: 95 + rand(i * 4 + 1) * 85, // 95–180 elliptical x radius
+  ry: 62 + rand(i * 4 + 2) * 62, // 62–124 elliptical y radius
+  startAngle: rand(i * 4 + 3) * Math.PI * 2,
+  sweep: Math.PI * (2.6 + rand(i * 4 + 4) * 1.2), // swing-in sweep
+  size: 3 + rand(i * 7 + 5) * 4.5, // 3–7.5 px dots
+  colorIndex: Math.floor(rand(i * 3 + 6) * 4),
+  delay: Math.floor(rand(i * 5 + 7) * 350), // 0–350 ms stagger
+}));
+
+// ─── Orbiting star dot ───────────────────────────────────────────────────────
+function OrbitStar({
+  spec,
+  cx,
+  cy,
+  palette,
+}: {
+  spec: StarSpec;
+  cx: number;
+  cy: number;
+  palette: string[];
 }) {
-  const scale = useSharedValue(0.15);
+  const angle = useSharedValue(spec.startAngle);
+  const radK = useSharedValue(1.75); // starts scattered wide, settles to 1
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    scale.value = withDelay(
-      delay,
-      withTiming(1, { duration: 1200, easing: Easing.out(Easing.cubic) }),
+    // Phase 1 — swing in, accelerating onto the orbit.
+    angle.value = withDelay(
+      spec.delay,
+      withSequence(
+        withTiming(spec.startAngle + spec.sweep, {
+          duration: 1250,
+          easing: Easing.inOut(Easing.quad),
+        }),
+        // Phase 2 — slow aligned drift.
+        withTiming(spec.startAngle + spec.sweep + 0.9, {
+          duration: 1350,
+          easing: Easing.linear,
+        }),
+      ),
+    );
+    radK.value = withDelay(
+      spec.delay,
+      withTiming(1, { duration: 1250, easing: Easing.out(Easing.cubic) }),
     );
     opacity.value = withDelay(
-      delay,
+      spec.delay,
       withSequence(
-        withTiming(0.55, { duration: 300, easing: Easing.out(Easing.ease) }),
-        withTiming(0, { duration: 900, easing: Easing.in(Easing.ease) }),
+        withTiming(0.95, { duration: 220, easing: Easing.out(Easing.ease) }),
+        // Hold, then decay into the overlay fade.
+        withDelay(
+          2150,
+          withTiming(0, { duration: 450, easing: Easing.in(Easing.ease) }),
+        ),
       ),
     );
   }, []);
 
   const style = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
     opacity: opacity.value,
+    transform: [
+      {
+        translateX:
+          cx + spec.rx * radK.value * Math.cos(angle.value) - spec.size / 2,
+      },
+      {
+        translateY:
+          cy + spec.ry * radK.value * Math.sin(angle.value) - spec.size / 2,
+      },
+    ],
   }));
 
   return (
@@ -78,11 +140,12 @@ function RippleRing({
         style,
         {
           position: "absolute",
-          width: maxSize,
-          height: maxSize,
-          borderRadius: maxSize / 2,
-          borderWidth: 2,
-          borderColor: color,
+          left: 0,
+          top: 0,
+          width: spec.size,
+          height: spec.size,
+          borderRadius: spec.size / 2,
+          backgroundColor: palette[spec.colorIndex],
         },
       ]}
     />
@@ -104,14 +167,23 @@ export function PurchaseCelebration({
   doneRef.current = onDone;
 
   const badgeScale = useSharedValue(0.4);
+  const veilOpacity = useSharedValue(1);
 
   useEffect(() => {
     if (!visible) return;
 
-    console.warn("[Celebration] overlay mounted: ripples + chime starting");
+    console.warn("[Celebration] overlay mounted: starfield + chime starting");
     celebrationHaptic();
     badgeScale.value = 0.4;
-    badgeScale.value = withDelay(150, withSpring(1, { damping: 9, stiffness: 140 }));
+    badgeScale.value = withDelay(
+      850,
+      withSpring(1, { damping: 10, stiffness: 130 }),
+    );
+    veilOpacity.value = 1;
+    veilOpacity.value = withDelay(
+      2600,
+      withTiming(0, { duration: 400, easing: Easing.in(Easing.ease) }),
+    );
 
     let mounted = true;
     (async () => {
@@ -152,10 +224,14 @@ export function PurchaseCelebration({
   const badgeStyle = useAnimatedStyle(() => ({
     transform: [{ scale: badgeScale.value }],
   }));
+  const veilStyle = useAnimatedStyle(() => ({
+    opacity: veilOpacity.value,
+  }));
 
   if (!visible) return null;
 
   const center = { x: SW / 2, y: SH * 0.32 };
+  const palette = ["#FFFFFF", GOLD, themeColors.secondary, themeColors.primary];
 
   return (
     <View
@@ -180,25 +256,34 @@ export function PurchaseCelebration({
           bottom: 0,
         }}
       />
-      {/* Ripple burst */}
-      <View
+      <Animated.View
         pointerEvents="none"
-        style={{
-          position: "absolute",
-          left: center.x,
-          top: center.y,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={[
+          veilStyle,
+          {
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+          },
+        ]}
       >
-        <RippleRing color="#FFFFFF" delay={0} maxSize={300} />
-        <RippleRing color={themeColors.secondary} delay={140} maxSize={360} />
-        <RippleRing color={themeColors.primary} delay={280} maxSize={420} />
-      </View>
+        {/* Orbiting starfield */}
+        {STARS.map((spec, i) => (
+          <OrbitStar
+            key={i}
+            spec={spec}
+            cx={center.x}
+            cy={center.y}
+            palette={palette}
+          />
+        ))}
+      </Animated.View>
       {/* Star badge + headline */}
       <Animated.View
         pointerEvents="none"
-        entering={FadeIn.delay(150).duration(400)}
+        entering={FadeIn.delay(900).duration(500)}
         style={{ alignItems: "center", marginTop: SH * 0.32 - 110 }}
       >
         <Animated.View
