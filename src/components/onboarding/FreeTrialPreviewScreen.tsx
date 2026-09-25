@@ -3,21 +3,34 @@
  *
  * "We want you to try Vocolens for free."
  *
- * Three-phase animated app demo that mirrors the REAL current app UI/UX,
+ * Six-phase animated app demo that mirrors the REAL current app UI/UX,
  * not a stylised approximation:
- *   Phase 1 — Recording screen: header states, the (accurate) transparent
+ *   Phase 1 — Idle: "Speak your mind" + the real MicButton (sonar, halo,
+ *             bezel) + "Tap to start". A scripted press (the exact
+ *             withSpring(0.92) the real button uses) starts recording.
+ *   Phase 2 — Recording screen: header states, the (accurate) transparent
  *             live-status card with its real placeholder copy — the app has
  *             no live/streaming transcript, so this demo doesn't fake one —
  *             the 50s insight-depth goal bar, and the real 3-button control
- *             row (Discard / Pause / Save & Analyze).
- *   Phase 2 — Processing: the real pulsing-dot indicator + "Transcribing
+ *             row (Discard / Pause / Save & Analyze). A scripted press on
+ *             Save ends the recording.
+ *   Phase 3 — Processing: the real pulsing-dot indicator + "Transcribing
  *             your voice..." / "Analyzing emotions..." copy shown in-place
  *             on the recording tab while the entry is analysed.
- *   Phase 3 — Entry results: an auto-scrolling pass down the real
+ *   Phase 4 — Reflection review: "AI detected these emotions" + the
+ *             "Adjust how it felt" sliders + Save, then the real
+ *             "Saving..." overlay.
+ *   Phase 5 — Entry results: an auto-scrolling pass down the real
  *             entry-detail screen — header, meta chips, Recommendation
  *             card, and the full Emotion Breakdown card (ranked Plutchik
  *             emotions, Blended Emotions, Emotional Tension) — so the
  *             *entire* results screen is shown, not just a cropped card.
+ *   Phase 6 — Insights: streak card + the real BodyHeatmapCard with demo
+ *             data, auto-gliding like the entry pass.
+ *
+ * A single wall-clock driver advances the whole story and loops it; every
+ * press occupies the tail of the state it acts on so it bottoms out exactly
+ * as that state changes. All colors come from the selected onboarding theme.
  */
 
 import React, { useEffect } from "react";
@@ -32,6 +45,7 @@ import Animated, {
   useDerivedValue,
   scrollTo,
   withTiming,
+  withSpring,
   withRepeat,
   withSequence,
   Easing,
@@ -53,18 +67,53 @@ import {
   ChartBar,
   Target,
   Play,
+  Flame,
+  Trophy,
 } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
+import { MicButton } from "@/components/MicButton";
+import BodyHeatmapCard from "@/components/BodyHeatmapCard";
+import type { JournalEntry } from "@/lib/types";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 
-// ── Phase timing ── mirrors the real pacing of record → analyse → results.
-const RECORDING_PHASE_DURATION = 6000;
-const PROCESSING_PHASE_DURATION = 2200;
-const ENTRY_PHASE_DURATION = 9000; // long enough to auto-scroll the full results screen
-const TRANSITION_DURATION = 500;
+// ── Demo clock ── one wall-clock driver advances the whole story and loops
+// it, so background throttling can't desync the choreography. Each press
+// occupies the tail of the state it acts on (PRESS_MS), bottoming out
+// exactly as that state changes.
+const PRESS_MS = 350;
+const T = {
+  micPressStart: 1200,
+  recordStart: 1200 + PRESS_MS,
+  recordEnd: 7550,
+  savePressStart: 7550 - PRESS_MS,
+  processStart: 7550,
+  processEnd: 9750,
+  labelSwap: 7550 + 990,
+  reflectStart: 9750,
+  rsavePressStart: 12750,
+  savingStart: 13100,
+  reflectEnd: 14100,
+  entryStart: 14100,
+  entryEnd: 23100,
+  insightsStart: 23100,
+  insightsEnd: 26600,
+  total: 26600,
+} as const;
+
 const MIN_RECORDING_SECONDS = 50; // matches the real insight-depth goal
+
+type DemoPhase = "idle" | "recording" | "processing" | "reflection" | "entry" | "insights";
+
+function phaseAt(t: number): DemoPhase {
+  if (t < T.recordStart) return "idle";
+  if (t < T.processStart) return "recording";
+  if (t < T.reflectStart) return "processing";
+  if (t < T.entryStart) return "reflection";
+  if (t < T.insightsStart) return "entry";
+  return "insights";
+}
 
 // ── Static live indicator — the real app's dot never blinks; it's a plain
 //    solid marker, not an animated "recording" affordance. ──
@@ -229,6 +278,93 @@ const DEMO_EMOTIONS = [
   { label: "Pensiveness", subLabel: "sadness", score: 31 },
 ];
 
+// ── Static reflection slider — mirrors reflection.tsx's valence/arousal
+//    rows ("Unpleasant ↔ Pleasant", "Calm ↔ Activated") at demo scale. ──
+function DemoSlider({ label, knobPct }: { label: string; knobPct: number }) {
+  return (
+    <View style={{ marginBottom: 10 }}>
+      <Text
+        style={{
+          fontFamily: "Inter_600SemiBold",
+          color: "rgba(255,255,255,0.8)",
+          fontSize: 8,
+          marginBottom: 5,
+        }}
+      >
+        {label}
+      </Text>
+      <View
+        style={{
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: "rgba(255,255,255,0.15)",
+        }}
+      >
+        <View
+          style={{
+            position: "absolute",
+            width: 14,
+            height: 14,
+            borderRadius: 7,
+            backgroundColor: "#FFFFFF",
+            left: `${knobPct}%`,
+            top: -4,
+            marginLeft: -7,
+          }}
+        />
+      </View>
+    </View>
+  );
+}
+
+function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+// ── Demo entries backing the real BodyHeatmapCard in the Insights phase.
+//    Dated relative to now so the card's 30-day filter always keeps them. ──
+const DEMO_HEATMAP_ENTRIES: JournalEntry[] = [
+  {
+    id: "demo-entry-1",
+    title: "Morning Reflections",
+    transcript: "Started my day with a great workout.",
+    duration: 120,
+    createdAt: daysAgoIso(2),
+    updatedAt: daysAgoIso(2),
+    emotions: ["happiness", "trust"],
+    primaryEmotion: "happiness",
+    emotionIntensity: 78,
+    valence: 45,
+    arousal: 60,
+    bodyRegions: [
+      { region: "chest", intensity: 4 },
+      { region: "stomach", intensity: 3 },
+    ],
+    distressLevel: "low",
+    topics: ["Gratitude"],
+  },
+  {
+    id: "demo-entry-2",
+    title: "Evening Wind-down",
+    transcript: "Taking a moment to breathe and reflect.",
+    duration: 180,
+    createdAt: daysAgoIso(9),
+    updatedAt: daysAgoIso(9),
+    emotions: ["happiness", "anticipation"],
+    primaryEmotion: "happiness",
+    emotionIntensity: 65,
+    valence: 30,
+    arousal: 40,
+    bodyRegions: [
+      { region: "chest", intensity: 5 },
+      { region: "head", intensity: 2 },
+      { region: "hands", intensity: 3 },
+    ],
+    distressLevel: "low",
+    topics: ["Self-Awareness"],
+  },
+];
+
 const WHITE_BADGE_STYLE = {
   backgroundColor: "rgba(255,255,255,0.12)",
   borderColor: "rgba(255,255,255,0.25)",
@@ -242,29 +378,68 @@ export function FreeTrialPreviewScreen() {
   const themeColors = THEME_COLORS[selectedTheme];
   const playClickSound = useClickSound();
 
-  // Phase state: 'recording' | 'processing' | 'entry'
-  const [phase, setPhase] = React.useState<"recording" | "processing" | "entry">(
-    "recording",
-  );
-  const [processingLabel, setProcessingLabel] = React.useState<
-    "Transcribing your voice..." | "Analyzing emotions..."
-  >("Transcribing your voice...");
+  // Demo clock — wall-clock deltas in a 100ms interval, modulo the loop.
+  const [clock, setClock] = React.useState(0);
+  const clockRef = React.useRef(0);
+  React.useEffect(() => {
+    const lastRef = { current: Date.now() };
+    const id = setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - lastRef.current;
+      lastRef.current = now;
+      clockRef.current = (clockRef.current + elapsed) % T.total;
+      setClock(clockRef.current);
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
 
-  // Demo card float animation
+  const phase = phaseAt(clock);
+
+  // Scripted presses — the mic uses the exact spring the real MicButton
+  // uses (withSpring 0.92, damping 15, stiffness 400); the Save buttons use
+  // a bare withSpring(0.92) like the real Pause control. (The real Save
+  // buttons carry Shadows.large but no scale animation, so the press itself
+  // is a deliberate demo enhancement, not app-verbatim.)
+  const micScale = useSharedValue(1);
+  const saveScale = useSharedValue(1);
+  const rsaveScale = useSharedValue(1);
   const cardFloat = useSharedValue(0);
+  const micPressed = clock >= T.micPressStart && clock < T.recordStart;
+  const savePressed = clock >= T.savePressStart && clock < T.processStart;
+  const rsavePressed = clock >= T.rsavePressStart && clock < T.savingStart;
 
-  // Phase cross-fade opacities
-  const recordingOpacity = useSharedValue(1);
-  const processingOpacity = useSharedValue(0);
-  const entryOpacity = useSharedValue(0);
+  React.useEffect(() => {
+    micScale.value = micPressed
+      ? withSpring(0.92, { damping: 15, stiffness: 400 })
+      : withSpring(1, { damping: 15, stiffness: 400 });
+  }, [micPressed, micScale]);
 
-  // Duration counter — mirrors the real recording timer
-  const [demoSeconds, setDemoSeconds] = React.useState(0);
-  useEffect(() => {
-    if (phase !== "recording") return;
-    const interval = setInterval(() => setDemoSeconds((s) => s + 1), 1000);
-    return () => clearInterval(interval);
-  }, [phase]);
+  React.useEffect(() => {
+    saveScale.value = savePressed ? withSpring(0.92) : withSpring(1);
+  }, [savePressed, saveScale]);
+
+  React.useEffect(() => {
+    rsaveScale.value = rsavePressed ? withSpring(0.92) : withSpring(1);
+  }, [rsavePressed, rsaveScale]);
+
+  const micScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: micScale.value }],
+  }));
+  const saveScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: saveScale.value }],
+  }));
+  const rsaveScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: rsaveScale.value }],
+  }));
+
+  const processingLabel =
+    clock < T.labelSwap ? "Transcribing your voice..." : "Analyzing emotions...";
+
+  // Duration counter — derived from the clock, mirrors the real timer.
+  const demoSeconds =
+    phase === "recording"
+      ? Math.min(6, Math.max(0, Math.floor((clock - T.recordStart) / 1000)))
+      : 0;
 
   // Auto-scroll through the full results screen — driven by measured
   // content/viewport heights so it always reaches the bottom regardless of
@@ -288,78 +463,39 @@ export function FreeTrialPreviewScreen() {
     if (maxScroll <= 0) return;
     const t = setTimeout(() => {
       scrollY.value = withTiming(maxScroll, {
-        duration: Math.max(2000, ENTRY_PHASE_DURATION - 2000),
+        duration: Math.max(2000, T.entryEnd - T.entryStart - 2000),
         easing: Easing.inOut(Easing.ease),
       });
     }, 900);
     return () => clearTimeout(t);
-  }, [phase, entryContentHeight, entryViewportHeight]);
+  }, [phase, entryContentHeight, entryViewportHeight, scrollY]);
 
-  // Phase cycling — recording → processing → entry → back to recording.
+  // Insights auto-glide — same measured pattern, shorter window.
+  const insightsScrollRef = useAnimatedRef<Animated.ScrollView>();
+  const insightsScrollY = useSharedValue(0);
+  const [insightsViewportHeight, setInsightsViewportHeight] = React.useState(0);
+  const [insightsContentHeight, setInsightsContentHeight] = React.useState(0);
+
+  useDerivedValue(() => {
+    scrollTo(insightsScrollRef, 0, insightsScrollY.value, false);
+  });
+
   useEffect(() => {
-    let mounted = true;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    const runCycle = () => {
-      if (!mounted) return;
-      setPhase("recording");
-      setDemoSeconds(0);
-      recordingOpacity.value = withTiming(1, { duration: TRANSITION_DURATION });
-
-      timers.push(
-        setTimeout(() => {
-          // recording → processing
-          recordingOpacity.value = withTiming(0, { duration: TRANSITION_DURATION });
-          timers.push(
-            setTimeout(() => {
-              if (!mounted) return;
-              setProcessingLabel("Transcribing your voice...");
-              setPhase("processing");
-              processingOpacity.value = withTiming(1, { duration: TRANSITION_DURATION });
-              timers.push(
-                setTimeout(() => {
-                  if (mounted) setProcessingLabel("Analyzing emotions...");
-                }, PROCESSING_PHASE_DURATION * 0.45),
-              );
-
-              timers.push(
-                setTimeout(() => {
-                  // processing → entry
-                  processingOpacity.value = withTiming(0, { duration: TRANSITION_DURATION });
-                  timers.push(
-                    setTimeout(() => {
-                      if (!mounted) return;
-                      setPhase("entry");
-                      entryOpacity.value = withTiming(1, { duration: TRANSITION_DURATION });
-
-                      timers.push(
-                        setTimeout(() => {
-                          // entry → recording (loop)
-                          entryOpacity.value = withTiming(0, { duration: TRANSITION_DURATION });
-                          timers.push(
-                            setTimeout(() => {
-                              if (mounted) runCycle();
-                            }, TRANSITION_DURATION),
-                          );
-                        }, ENTRY_PHASE_DURATION),
-                      );
-                    }, TRANSITION_DURATION),
-                  );
-                }, PROCESSING_PHASE_DURATION),
-              );
-            }, TRANSITION_DURATION),
-          );
-        }, RECORDING_PHASE_DURATION),
-      );
-    };
-
-    runCycle();
-
-    return () => {
-      mounted = false;
-      timers.forEach(clearTimeout);
-    };
-  }, []);
+    if (phase !== "insights") {
+      insightsScrollY.value = withTiming(0, { duration: 300 });
+      return;
+    }
+    insightsScrollY.value = 0;
+    const maxScroll = Math.max(0, insightsContentHeight - insightsViewportHeight);
+    if (maxScroll <= 0) return;
+    const t = setTimeout(() => {
+      insightsScrollY.value = withTiming(maxScroll, {
+        duration: Math.max(1500, T.insightsEnd - T.insightsStart - 1000),
+        easing: Easing.inOut(Easing.ease),
+      });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [phase, insightsContentHeight, insightsViewportHeight, insightsScrollY]);
 
   useEffect(() => {
     cardFloat.value = withRepeat(
@@ -370,15 +506,11 @@ export function FreeTrialPreviewScreen() {
       -1,
       false,
     );
-  }, []);
+  }, [cardFloat]);
 
   const cardFloatStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: cardFloat.value }],
   }));
-
-  const recordingPhaseStyle = useAnimatedStyle(() => ({ opacity: recordingOpacity.value }));
-  const processingPhaseStyle = useAnimatedStyle(() => ({ opacity: processingOpacity.value }));
-  const entryPhaseStyle = useAnimatedStyle(() => ({ opacity: entryOpacity.value }));
 
   const handleContinue = () => {
     playClickSound();
@@ -467,10 +599,75 @@ export function FreeTrialPreviewScreen() {
                   style={{ flex: 1 }}
                 >
                   {/* ══════════════════════════════════════════
-                      PHASE 1 — Recording Screen
+                      PHASE 1 — Idle ("Speak your mind" + real MicButton)
+                      A scripted press on the mic starts the recording.
+                     ══════════════════════════════════════════ */}
+                  {phase === "idle" && (
+                    <Animated.View
+                      entering={FadeIn.duration(400)}
+                      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "Fraunces_700Bold",
+                          color: "#FFFFFF",
+                          fontSize: 17,
+                          textAlign: "center",
+                        }}
+                      >
+                        Speak your mind
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_400Regular",
+                          color: "rgba(255,255,255,0.8)",
+                          fontSize: 10,
+                          textAlign: "center",
+                          marginTop: 4,
+                        }}
+                      >
+                        What&apos;s on your mind today?
+                      </Text>
+                      <Animated.View style={[{ marginVertical: 6 }, micScaleStyle]}>
+                        <MicButton
+                          onPress={() => {}}
+                          disabled
+                          micButtonGradient={
+                            themeColors.micButtonGradient as [string, string, string]
+                          }
+                          glowColor={themeColors.buttonGlowColor}
+                          scale={micScale}
+                        />
+                      </Animated.View>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_400Regular",
+                          color: "#FFFFFF",
+                          fontSize: 10,
+                        }}
+                      >
+                        Tap to start
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "Inter_400Regular",
+                          color: "rgba(255,255,255,0.45)",
+                          fontSize: 8,
+                          textAlign: "center",
+                          marginTop: 4,
+                          paddingHorizontal: 24,
+                        }}
+                      >
+                        Record for at least 50s for accurate emotional insights
+                      </Text>
+                    </Animated.View>
+                  )}
+
+                  {/* ══════════════════════════════════════════
+                      PHASE 2 — Recording Screen
                      ══════════════════════════════════════════ */}
                   {phase === "recording" && (
-                    <Animated.View style={[{ flex: 1 }, recordingPhaseStyle]}>
+                    <Animated.View entering={FadeIn.duration(400)} style={{ flex: 1 }}>
                       <View
                         style={{
                           flex: 1,
@@ -670,20 +867,22 @@ export function FreeTrialPreviewScreen() {
                           </View>
 
                           <View style={{ alignItems: "center", gap: 4 }}>
-                            <LinearGradient
-                              colors={["#EF4444", "#DC2626"]}
-                              style={{
-                                width: 56,
-                                height: 56,
-                                borderRadius: 28,
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 1 }}
-                            >
-                              <Check size={24} color="#FFFFFF" weight="bold" />
-                            </LinearGradient>
+                            <Animated.View style={saveScaleStyle}>
+                              <LinearGradient
+                                colors={["#EF4444", "#DC2626"]}
+                                style={{
+                                  width: 56,
+                                  height: 56,
+                                  borderRadius: 28,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                              >
+                                <Check size={24} color="#FFFFFF" weight="bold" />
+                              </LinearGradient>
+                            </Animated.View>
                             <Text
                               style={{
                                 fontFamily: "Inter_400Regular",
@@ -700,13 +899,13 @@ export function FreeTrialPreviewScreen() {
                   )}
 
                   {/* ══════════════════════════════════════════
-                      PHASE 2 — Processing (real recording-tab state)
+                      PHASE 3 — Processing (real recording-tab state)
                      ══════════════════════════════════════════ */}
                   {phase === "processing" && (
                     <Animated.View
+                      entering={FadeIn.duration(400)}
                       style={[
                         { flex: 1, alignItems: "center", justifyContent: "center", gap: 18 },
-                        processingPhaseStyle,
                       ]}
                     >
                       <Text
@@ -753,11 +952,113 @@ export function FreeTrialPreviewScreen() {
                   )}
 
                   {/* ══════════════════════════════════════════
-                      PHASE 3 — Entry Results Screen (auto-scrolls through
+                      PHASE 4 — Reflection review + Saving overlay.
+                      Same detected set the entry phase later confirms
+                      (Serenity PRIMARY), so the story stays coherent.
+                     ══════════════════════════════════════════ */}
+                  {phase === "reflection" && (
+                    <Animated.View
+                      entering={FadeIn.duration(400)}
+                      style={{ flex: 1, paddingTop: 14, paddingHorizontal: 16 }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "rgba(255,255,255,0.55)",
+                          fontSize: 7,
+                          textTransform: "uppercase",
+                          letterSpacing: 0.6,
+                          marginBottom: 8,
+                        }}
+                      >
+                        AI detected these emotions
+                      </Text>
+                      {DEMO_EMOTIONS.slice(0, 3).map((e, rank) => (
+                        <AnimatedBar
+                          key={e.label}
+                          label={e.label}
+                          subLabel={e.subLabel}
+                          score={e.score}
+                          barOpacity={[1, 0.75, 0.55][rank]}
+                          isPrimary={rank === 0}
+                          delay={200 + rank * 150}
+                        />
+                      ))}
+                      <Text
+                        style={{
+                          fontFamily: "Inter_600SemiBold",
+                          color: "rgba(255,255,255,0.55)",
+                          fontSize: 7,
+                          textTransform: "uppercase",
+                          letterSpacing: 0.6,
+                          marginTop: 10,
+                          marginBottom: 8,
+                        }}
+                      >
+                        Adjust how it felt
+                      </Text>
+                      <DemoSlider label="Unpleasant ↔ Pleasant" knobPct={70} />
+                      <DemoSlider label="Calm ↔ Activated" knobPct={60} />
+                      <View style={{ alignItems: "center", marginTop: 12 }}>
+                        <Animated.View style={rsaveScaleStyle}>
+                          <LinearGradient
+                            colors={themeColors.buttonGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={{
+                              borderRadius: 24,
+                              paddingHorizontal: 32,
+                              paddingVertical: 10,
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontFamily: "Inter_600SemiBold",
+                                color: "#FFFFFF",
+                                fontSize: 13,
+                              }}
+                            >
+                              Save
+                            </Text>
+                          </LinearGradient>
+                        </Animated.View>
+                      </View>
+                      {clock >= T.savingStart && (
+                        <View
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(0,0,0,0.45)",
+                            borderRadius: 24,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: "Inter_500Medium",
+                              color: "#FFFFFF",
+                              fontSize: 13,
+                            }}
+                          >
+                            Saving...
+                          </Text>
+                        </View>
+                      )}
+                    </Animated.View>
+                  )}
+
+                  {/* ══════════════════════════════════════════
+                      PHASE 5 — Entry Results Screen (auto-scrolls through
                       the ENTIRE screen, matching entry-detail.tsx)
                      ══════════════════════════════════════════ */}
                   {phase === "entry" && (
-                    <Animated.View style={[{ flex: 1 }, entryPhaseStyle]}>
+                    <Animated.View entering={FadeIn.duration(400)} style={{ flex: 1 }}>
                       {/* Fixed header bar — back / edit / delete, stays put
                           while the body below scrolls, exactly as in the
                           real app. */}
@@ -1223,6 +1524,151 @@ export function FreeTrialPreviewScreen() {
                               ))}
                             </View>
                           </View>
+                        </Animated.ScrollView>
+                      </View>
+                    </Animated.View>
+                  )}
+
+                  {/* ══════════════════════════════════════════
+                      PHASE 6 — Insights (streak card + the real
+                      BodyHeatmapCard, auto-gliding like the entry pass)
+                     ══════════════════════════════════════════ */}
+                  {phase === "insights" && (
+                    <Animated.View entering={FadeIn.duration(400)} style={{ flex: 1 }}>
+                      <View
+                        style={{ flex: 1 }}
+                        onLayout={(e) => setInsightsViewportHeight(e.nativeEvent.layout.height)}
+                      >
+                        <Animated.ScrollView
+                          ref={insightsScrollRef}
+                          scrollEnabled={false}
+                          showsVerticalScrollIndicator={false}
+                          onContentSizeChange={(_w, h) => setInsightsContentHeight(h)}
+                          contentContainerStyle={{
+                            paddingHorizontal: 14,
+                            paddingTop: 12,
+                            paddingBottom: 16,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: "Fraunces_700Bold",
+                              color: "#FFFFFF",
+                              fontSize: 14,
+                              textAlign: "center",
+                            }}
+                          >
+                            Good morning, Alex!
+                          </Text>
+                          <View
+                            style={{
+                              borderRadius: 14,
+                              backgroundColor: "rgba(255,255,255,0.12)",
+                              borderWidth: 1.5,
+                              borderColor: "rgba(255,255,255,0.20)",
+                              padding: 10,
+                              marginTop: 10,
+                              marginBottom: 10,
+                            }}
+                          >
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 8,
+                                marginBottom: 8,
+                              }}
+                            >
+                              <View
+                                style={{
+                                  width: 26,
+                                  height: 26,
+                                  borderRadius: 13,
+                                  backgroundColor: "rgba(255,255,255,0.12)",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Flame size={13} color="#FBBF24" weight="fill" />
+                              </View>
+                              <View>
+                                <Text
+                                  style={{
+                                    fontFamily: "Inter_600SemiBold",
+                                    color: "#FFFFFF",
+                                    fontSize: 11,
+                                  }}
+                                >
+                                  7 days streak
+                                </Text>
+                                <Text
+                                  style={{
+                                    fontFamily: "Inter_400Regular",
+                                    color: "rgba(255,255,255,0.75)",
+                                    fontSize: 8,
+                                  }}
+                                >
+                                  Next: 14-day streak
+                                </Text>
+                              </View>
+                            </View>
+                            <View
+                              style={{
+                                height: 1,
+                                backgroundColor: "rgba(147,112,219,0.15)",
+                                marginVertical: 6,
+                              }}
+                            />
+                            <View
+                              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+                            >
+                              <View
+                                style={{
+                                  width: 26,
+                                  height: 26,
+                                  borderRadius: 13,
+                                  backgroundColor: "rgba(255,255,255,0.12)",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Trophy size={13} color="#FFFFFF" weight="regular" />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                <Text
+                                  style={{
+                                    fontFamily: "Inter_400Regular",
+                                    color: "#FFFFFF",
+                                    fontSize: 9,
+                                    marginBottom: 4,
+                                  }}
+                                >
+                                  Next: 30-Day Milestone
+                                </Text>
+                                <View
+                                  style={{
+                                    height: 5,
+                                    borderRadius: 3,
+                                    backgroundColor: "rgba(147,112,219,0.15)",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  <View
+                                    style={{
+                                      height: "100%",
+                                      borderRadius: 3,
+                                      width: "46%",
+                                      backgroundColor: "#FFFFFF",
+                                    }}
+                                  />
+                                </View>
+                              </View>
+                            </View>
+                          </View>
+                          <BodyHeatmapCard
+                            entries={DEMO_HEATMAP_ENTRIES}
+                            primaryColor={themeColors.primary}
+                          />
                         </Animated.ScrollView>
                       </View>
                     </Animated.View>
