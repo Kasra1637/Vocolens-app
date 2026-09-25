@@ -44,7 +44,6 @@ import {
   Text,
   Pressable,
   Platform,
-  StyleSheet,
   type LayoutChangeEvent,
   type ViewStyle,
 } from "react-native";
@@ -90,12 +89,6 @@ import { MicButton } from "@/components/MicButton";
 import BodyHeatmapCard from "@/components/BodyHeatmapCard";
 import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
 import AdjustmentSliderCard from "@/components/shared/AdjustmentSliderCard";
-import {
-  MicTabIcon,
-  BookTabIcon,
-  BarChartTabIcon,
-} from "@/components/TabIcons";
-import { hexToRgba } from "@/lib/glass";
 import type { JournalEntry } from "@/lib/types";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 
@@ -450,126 +443,6 @@ function ScaledMock({
   );
 }
 
-// ── Demo tab bar — the real bar's structure, labels and icons
-//    ((tabs)/_layout.tsx:62-170 + TabIcons.tsx), reduced to the three tabs the
-//    story actually visits. The newly active tab presses with the app's own
-//    pill spring (AnimatedPill.tsx:47-52, scale 0.95) so switching screens
-//    reads as navigation rather than a cut.
-const DEMO_TABS = [
-  { label: "Record", Icon: MicTabIcon },
-  { label: "Entries", Icon: BookTabIcon },
-  { label: "Insights", Icon: BarChartTabIcon },
-] as const;
-
-// ── One tab. Split out of the bar below because a hook can't be called from
-//    inside a .map() callback.
-function DemoTabItem({
-  label,
-  Icon,
-  isActive,
-  primaryColor,
-}: {
-  label: string;
-  Icon: (p: { size?: number; color?: string; filled?: boolean }) => React.ReactElement;
-  isActive: boolean;
-  primaryColor: string;
-}) {
-  const scale = useSharedValue(1);
-
-  useEffect(() => {
-    scale.value = isActive
-      ? withSequence(
-          withSpring(0.95, { damping: 15, stiffness: 300 }),
-          withSpring(1, { damping: 12, stiffness: 200 }),
-        )
-      : withSpring(1, { damping: 12, stiffness: 200 });
-  }, [isActive, scale]);
-
-  const style = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 3,
-        paddingBottom: 5,
-      }}
-    >
-      <Animated.View style={style}>
-        {isActive ? (
-          <View
-            style={{
-              position: "absolute",
-              top: -6,
-              left: 9,
-              width: 5,
-              height: 5,
-              borderRadius: 2.5,
-              backgroundColor: primaryColor,
-            }}
-          />
-        ) : null}
-        <View
-          style={{ height: 22, width: 22, alignItems: "center", justifyContent: "center" }}
-        >
-          <Icon
-            size={20}
-            color={isActive ? "#FFFFFF" : "rgba(255,255,255,0.45)"}
-            filled={isActive}
-          />
-        </View>
-      </Animated.View>
-      <Text
-        numberOfLines={1}
-        style={{
-          fontFamily: isActive ? "Inter_600SemiBold" : "Inter_400Regular",
-          color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.45)",
-          fontSize: 9,
-          letterSpacing: 0.2,
-          textAlign: "center",
-        }}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function DemoTabBar({
-  activeIndex,
-  primaryColor,
-}: {
-  activeIndex: number;
-  primaryColor: string;
-}) {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingTop: 8,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: hexToRgba(primaryColor, 0.3),
-        backgroundColor: "rgba(15,14,26,0.92)",
-      }}
-    >
-      {DEMO_TABS.map((tab, index) => (
-        <DemoTabItem
-          key={tab.label}
-          label={tab.label}
-          Icon={tab.Icon}
-          isActive={index === activeIndex}
-          primaryColor={primaryColor}
-        />
-      ))}
-    </View>
-  );
-}
-
 export function FreeTrialPreviewScreen() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -597,11 +470,6 @@ export function FreeTrialPreviewScreen() {
   }, [clockSV]);
 
   const phase = phaseAt(clock);
-
-  // The story visits three tabs: Record (idle → recording → processing →
-  // reflection), then Entries for the saved entry, then Insights.
-  const activeTabIndex =
-    clock < T.analyzeEnd ? 0 : clock < T.journalEnd ? 1 : 2;
 
   // Dot navigation — the same four screens the site demo exposes.
   const dotIndex =
@@ -750,15 +618,15 @@ export function FreeTrialPreviewScreen() {
             {/* Title */}
             <Animated.View
               entering={FadeIn.delay(50).duration(600).easing(SOFT)}
-              style={{ alignItems: "center", marginTop: 2 }}
+              style={{ alignItems: "center", marginTop: 4 }}
             >
               <Text
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 23,
+                  fontSize: 30,
                   textAlign: "center",
-                  lineHeight: 29,
+                  lineHeight: 38,
                   opacity: 0.92,
                   letterSpacing: 0.2,
                 }}
@@ -772,54 +640,25 @@ export function FreeTrialPreviewScreen() {
               entering={FadeIn.delay(200).duration(700).easing(SOFT)}
               style={[cardFloatStyle, { flex: 1, marginTop: 10, marginBottom: 12 }]}
             >
-              {/* Device frame — sells the mock as a phone rather than a card. */}
               <View
                 style={{
                   flex: 1,
-                  borderRadius: 30,
-                  padding: 5,
-                  backgroundColor: "#14141A",
-                  borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.14)",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 12 },
-                  shadowOpacity: 0.35,
-                  shadowRadius: 22,
-                  elevation: 10,
+                  borderRadius: 24,
+                  overflow: "hidden",
+                  borderWidth: 1.5,
+                  borderColor: "rgba(255,255,255,0.25)",
                 }}
               >
-                <View
-                  style={{
-                    flex: 1,
-                    borderRadius: 25,
-                    overflow: "hidden",
-                    backgroundColor: themeColors.gradientEnd,
-                  }}
+                <LinearGradient
+                  colors={[
+                    themeColors.gradientStart,
+                    themeColors.primary,
+                    themeColors.secondary,
+                  ]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={{ flex: 1 }}
                 >
-                  {/* Notch */}
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: 5,
-                      left: "50%",
-                      marginLeft: -27,
-                      width: 54,
-                      height: 15,
-                      borderRadius: 8,
-                      backgroundColor: "#14141A",
-                      zIndex: 20,
-                    }}
-                  />
-                  <LinearGradient
-                    colors={[
-                      themeColors.gradientStart,
-                      themeColors.primary,
-                      themeColors.secondary,
-                    ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={{ flex: 1 }}
-                  >
                   {/* ══════════════════════════════════════════
                       PHASE 1 — Idle ("Speak your mind" + real MicButton)
                       A scripted press on the mic starts the recording.
@@ -894,7 +733,7 @@ export function FreeTrialPreviewScreen() {
                         style={{
                           flex: 1,
                           alignItems: "center",
-                          paddingTop: 24,
+                          paddingTop: 16,
                           paddingHorizontal: 16,
                         }}
                       >
@@ -1189,7 +1028,7 @@ export function FreeTrialPreviewScreen() {
                           showsVerticalScrollIndicator={false}
                           onContentSizeChange={reflectScroll.onContentSizeChange}
                           contentContainerStyle={{
-                            paddingTop: 24,
+                            paddingTop: 14,
                             paddingHorizontal: 16,
                             paddingBottom: 20,
                           }}
@@ -1341,7 +1180,7 @@ export function FreeTrialPreviewScreen() {
                           alignItems: "center",
                           justifyContent: "space-between",
                           paddingHorizontal: 14,
-                          paddingTop: 24,
+                          paddingTop: 12,
                           paddingBottom: 8,
                         }}
                       >
@@ -1732,7 +1571,7 @@ export function FreeTrialPreviewScreen() {
                           onContentSizeChange={insightsScroll.onContentSizeChange}
                           contentContainerStyle={{
                             paddingHorizontal: 14,
-                            paddingTop: 24,
+                            paddingTop: 12,
                             paddingBottom: 28,
                           }}
                         >
@@ -1870,25 +1709,7 @@ export function FreeTrialPreviewScreen() {
                       </View>
                     </Animated.View>
                   )}
-                  </LinearGradient>
-                  <DemoTabBar
-                    activeIndex={activeTabIndex}
-                    primaryColor={themeColors.primary}
-                  />
-                </View>
-                {/* Home indicator */}
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: 3,
-                    left: "50%",
-                    marginLeft: -32,
-                    width: 64,
-                    height: 3,
-                    borderRadius: 2,
-                    backgroundColor: "rgba(255,255,255,0.35)",
-                  }}
-                />
+                </LinearGradient>
               </View>
             </Animated.View>
 
