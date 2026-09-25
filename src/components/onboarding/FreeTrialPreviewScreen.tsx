@@ -63,11 +63,8 @@ import {
   Calendar,
   Clock,
   Pulse,
-  SpeakerHigh,
   ChartBar,
   Target,
-  Play,
-  Flame,
   Trophy,
 } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
@@ -75,6 +72,11 @@ import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { MicButton } from "@/components/MicButton";
 import BodyHeatmapCard from "@/components/BodyHeatmapCard";
+import ValenceArousalChart from "@/components/ValenceArousalChart";
+import { RecommendationCard } from "@/components/RecommendationCard";
+import EmotionBreakdownCard from "@/components/EmotionBreakdownCard";
+import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
+import AdjustmentSliderCard from "@/components/shared/AdjustmentSliderCard";
 import type { JournalEntry } from "@/lib/types";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 
@@ -89,18 +91,27 @@ const T = {
   recordEnd: 7550,
   savePressStart: 7550 - PRESS_MS,
   processStart: 7550,
-  processEnd: 9750,
   labelSwap: 7550 + 990,
   reflectStart: 9750,
   rsavePressStart: 12750,
   savingStart: 13100,
   reflectEnd: 14100,
   entryStart: 14100,
-  entryEnd: 23100,
-  insightsStart: 23100,
-  insightsEnd: 26600,
-  total: 26600,
+  entryEnd: 24100,
+  insightsStart: 24100,
+  insightsEnd: 31600,
+  total: 31600,
 } as const;
+
+// Auto-scroll choreography per scrolling phase. The pass is a pure function
+// of the clock (see the useDerivedValue calls below) rather than a setTimeout,
+// so it always targets the true measured maximum, re-aims by itself if the
+// content resizes mid-phase, and then holds at the bottom for whatever is left
+// of the phase so the result is actually readable.
+const ENTRY_SCROLL_DELAY = 800;
+const ENTRY_SCROLL_DURATION = 4000;
+const INSIGHTS_SCROLL_DELAY = 800;
+const INSIGHTS_SCROLL_DURATION = 3000;
 
 const MIN_RECORDING_SECONDS = 50; // matches the real insight-depth goal
 
@@ -278,52 +289,19 @@ const DEMO_EMOTIONS = [
   { label: "Pensiveness", subLabel: "sadness", score: 31 },
 ];
 
-// ── Static reflection slider — mirrors reflection.tsx's valence/arousal
-//    rows ("Unpleasant ↔ Pleasant", "Calm ↔ Activated") at demo scale. ──
-function DemoSlider({ label, knobPct }: { label: string; knobPct: number }) {
-  return (
-    <View style={{ marginBottom: 10 }}>
-      <Text
-        style={{
-          fontFamily: "Inter_600SemiBold",
-          color: "rgba(255,255,255,0.8)",
-          fontSize: 8,
-          marginBottom: 5,
-        }}
-      >
-        {label}
-      </Text>
-      <View
-        style={{
-          height: 6,
-          borderRadius: 3,
-          backgroundColor: "rgba(255,255,255,0.15)",
-        }}
-      >
-        <View
-          style={{
-            position: "absolute",
-            width: 14,
-            height: 14,
-            borderRadius: 7,
-            backgroundColor: "#FFFFFF",
-            left: `${knobPct}%`,
-            top: -4,
-            marginLeft: -7,
-          }}
-        />
-      </View>
-    </View>
-  );
-}
-
 function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 }
 
-// ── Demo entries backing the real BodyHeatmapCard in the Insights phase.
-//    Dated relative to now so the card's 30-day filter always keeps them. ──
-const DEMO_HEATMAP_ENTRIES: JournalEntry[] = [
+const DEMO_ADVICE =
+  "You showed real self-awareness today. Setting boundaries is a sign of growth — keep trusting the process.";
+
+// ── Demo entries backing the real BodyHeatmapCard and ValenceArousalChart
+//    in the Insights phase, and the slider values shown in the Reflection
+//    phase. Dated relative to now so the cards' 30-day filter always keeps
+//    them. Valence/arousal match the reflection sliders, so the story stays
+//    consistent across all three phases.
+const DEMO_ENTRIES: JournalEntry[] = [
   {
     id: "demo-entry-1",
     title: "Morning Reflections",
@@ -365,11 +343,6 @@ const DEMO_HEATMAP_ENTRIES: JournalEntry[] = [
   },
 ];
 
-const WHITE_BADGE_STYLE = {
-  backgroundColor: "rgba(255,255,255,0.12)",
-  borderColor: "rgba(255,255,255,0.25)",
-};
-
 export function FreeTrialPreviewScreen() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -379,7 +352,9 @@ export function FreeTrialPreviewScreen() {
   const playClickSound = useClickSound();
 
   // Demo clock — wall-clock deltas in a 100ms interval, modulo the loop.
+  // `clock` drives JSX; `clockSV` mirrors it for the UI-thread auto-scroll.
   const [clock, setClock] = React.useState(0);
+  const clockSV = useSharedValue(0);
   const clockRef = React.useRef(0);
   React.useEffect(() => {
     const lastRef = { current: Date.now() };
@@ -388,10 +363,11 @@ export function FreeTrialPreviewScreen() {
       const elapsed = now - lastRef.current;
       lastRef.current = now;
       clockRef.current = (clockRef.current + elapsed) % T.total;
+      clockSV.value = clockRef.current;
       setClock(clockRef.current);
     }, 100);
     return () => clearInterval(id);
-  }, []);
+  }, [clockSV]);
 
   const phase = phaseAt(clock);
 
@@ -441,61 +417,40 @@ export function FreeTrialPreviewScreen() {
       ? Math.min(6, Math.max(0, Math.floor((clock - T.recordStart) / 1000)))
       : 0;
 
-  // Auto-scroll through the full results screen — driven by measured
-  // content/viewport heights so it always reaches the bottom regardless of
-  // device size.
+  // Auto-scroll through the full results screen. Heights live in shared
+  // values (not state) so re-measuring never re-runs an effect, and the
+  // scroll offset is derived straight from the clock — no timers to clear,
+  // no stale maxScroll captured before the content finished laying out.
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollY = useSharedValue(0);
-  const [entryViewportHeight, setEntryViewportHeight] = React.useState(0);
-  const [entryContentHeight, setEntryContentHeight] = React.useState(0);
+  const entryContentH = useSharedValue(0);
+  const entryViewportH = useSharedValue(0);
 
-  useDerivedValue(() => {
-    scrollTo(scrollRef, 0, scrollY.value, false);
+  const entryScrollY = useDerivedValue(() => {
+    const raw =
+      (clockSV.value - (T.entryStart + ENTRY_SCROLL_DELAY)) / ENTRY_SCROLL_DURATION;
+    const p = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+    return p * Math.max(0, entryContentH.value - entryViewportH.value);
   });
 
-  useEffect(() => {
-    if (phase !== "entry") {
-      scrollY.value = withTiming(0, { duration: 300 });
-      return;
-    }
-    scrollY.value = 0;
-    const maxScroll = Math.max(0, entryContentHeight - entryViewportHeight);
-    if (maxScroll <= 0) return;
-    const t = setTimeout(() => {
-      scrollY.value = withTiming(maxScroll, {
-        duration: Math.max(2000, T.entryEnd - T.entryStart - 2000),
-        easing: Easing.inOut(Easing.ease),
-      });
-    }, 900);
-    return () => clearTimeout(t);
-  }, [phase, entryContentHeight, entryViewportHeight, scrollY]);
+  useDerivedValue(() => {
+    scrollTo(scrollRef, 0, entryScrollY.value, false);
+  });
 
-  // Insights auto-glide — same measured pattern, shorter window.
+  // Insights auto-glide — same clock-derived pattern, shorter window.
   const insightsScrollRef = useAnimatedRef<Animated.ScrollView>();
-  const insightsScrollY = useSharedValue(0);
-  const [insightsViewportHeight, setInsightsViewportHeight] = React.useState(0);
-  const [insightsContentHeight, setInsightsContentHeight] = React.useState(0);
+  const insightsContentH = useSharedValue(0);
+  const insightsViewportH = useSharedValue(0);
+
+  const insightsScrollY = useDerivedValue(() => {
+    const raw =
+      (clockSV.value - (T.insightsStart + INSIGHTS_SCROLL_DELAY)) / INSIGHTS_SCROLL_DURATION;
+    const p = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+    return p * Math.max(0, insightsContentH.value - insightsViewportH.value);
+  });
 
   useDerivedValue(() => {
     scrollTo(insightsScrollRef, 0, insightsScrollY.value, false);
   });
-
-  useEffect(() => {
-    if (phase !== "insights") {
-      insightsScrollY.value = withTiming(0, { duration: 300 });
-      return;
-    }
-    insightsScrollY.value = 0;
-    const maxScroll = Math.max(0, insightsContentHeight - insightsViewportHeight);
-    if (maxScroll <= 0) return;
-    const t = setTimeout(() => {
-      insightsScrollY.value = withTiming(maxScroll, {
-        duration: Math.max(1500, T.insightsEnd - T.insightsStart - 1000),
-        easing: Easing.inOut(Easing.ease),
-      });
-    }, 600);
-    return () => clearTimeout(t);
-  }, [phase, insightsContentHeight, insightsViewportHeight, insightsScrollY]);
 
   useEffect(() => {
     cardFloat.value = withRepeat(
@@ -997,8 +952,26 @@ export function FreeTrialPreviewScreen() {
                       >
                         Adjust how it felt
                       </Text>
-                      <DemoSlider label="Unpleasant ↔ Pleasant" knobPct={70} />
-                      <DemoSlider label="Calm ↔ Activated" knobPct={60} />
+                      <AdjustmentSliderCard
+                        label="Unpleasant ↔ Pleasant"
+                        value={DEMO_ENTRIES[0].valence}
+                        min={-100}
+                        max={100}
+                        step={5}
+                        onChange={() => {}}
+                        minLabel="Unpleasant"
+                        maxLabel="Pleasant"
+                      />
+                      <AdjustmentSliderCard
+                        label="Calm ↔ Activated"
+                        value={DEMO_ENTRIES[0].arousal}
+                        min={0}
+                        max={100}
+                        step={5}
+                        onChange={() => {}}
+                        minLabel="Calm"
+                        maxLabel="Activated"
+                      />
                       <View style={{ alignItems: "center", marginTop: 12 }}>
                         <Animated.View style={rsaveScaleStyle}>
                           <LinearGradient
@@ -1117,14 +1090,21 @@ export function FreeTrialPreviewScreen() {
                           visible, not just a cropped slice. */}
                       <View
                         style={{ flex: 1 }}
-                        onLayout={(e) => setEntryViewportHeight(e.nativeEvent.layout.height)}
+                        onLayout={(e) => {
+                          entryViewportH.value = e.nativeEvent.layout.height;
+                        }}
                       >
                         <Animated.ScrollView
                           ref={scrollRef}
                           scrollEnabled={false}
                           showsVerticalScrollIndicator={false}
-                          onContentSizeChange={(_w, h) => setEntryContentHeight(h)}
-                          contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 16 }}
+                          onContentSizeChange={(_w, h) => {
+                            entryContentH.value = h;
+                          }}
+                          contentContainerStyle={{
+                            paddingHorizontal: 14,
+                            paddingBottom: 28,
+                          }}
                         >
                           {/* Title + date */}
                           <Text
@@ -1231,91 +1211,15 @@ export function FreeTrialPreviewScreen() {
                             </View>
                           </View>
 
-                          {/* Recommendation card */}
-                          <View
-                            style={{
-                              borderRadius: 14,
-                              backgroundColor: "rgba(255,255,255,0.12)",
-                              borderWidth: 1.5,
-                              borderColor: "rgba(255,255,255,0.20)",
-                              padding: 10,
-                              marginBottom: 10,
-                            }}
-                          >
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                marginBottom: 6,
-                              }}
-                            >
-                              <Sparkle size={11} color="#FFFFFF" weight="regular" />
-                              <Text
-                                style={{
-                                  fontFamily: "Inter_600SemiBold",
-                                  color: "#FFFFFF",
-                                  fontSize: 9.5,
-                                  marginLeft: 5,
-                                }}
-                              >
-                                Recommendation
-                              </Text>
-                            </View>
-                            <View
-                              style={{
-                                backgroundColor: "rgba(255,255,255,0.08)",
-                                borderRadius: 10,
-                                padding: 8,
-                                marginBottom: 8,
-                              }}
-                            >
-                              <AnimatedReflectionText />
-                            </View>
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                                <SpeakerHigh size={9} color="#FFFFFF" weight="regular" />
-                                <Text
-                                  style={{
-                                    fontFamily: "Inter_400Regular",
-                                    color: "rgba(255,255,255,0.5)",
-                                    fontSize: 8,
-                                  }}
-                                >
-                                  Tap to listen
-                                </Text>
-                              </View>
-                              <View
-                                style={{
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                  borderRadius: 12,
-                                  paddingHorizontal: 8,
-                                  paddingVertical: 3,
-                                  backgroundColor: "rgba(255,255,255,0.08)",
-                                  borderWidth: 1,
-                                  borderColor: "rgba(255,255,255,0.13)",
-                                  gap: 4,
-                                }}
-                              >
-                                <Play size={9} color="#FFFFFF" weight="regular" />
-                                <Text
-                                  style={{
-                                    fontFamily: "Inter_600SemiBold",
-                                    color: "#FFFFFF",
-                                    fontSize: 8,
-                                  }}
-                                >
-                                  Listen
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
+                          {/* Recommendation — the real card, compact mode
+                              (it shows the advice instantly, exactly as
+                              entry-detail does). */}
+                          <RecommendationCard
+                            advice={DEMO_ADVICE}
+                            isGenerating={false}
+                            themeColor={themeColors.primary}
+                            compact
+                          />
 
                           {/* Emotion Breakdown card — the ranked results,
                               plus Blended Emotions / Emotional Tension,
@@ -1375,98 +1279,14 @@ export function FreeTrialPreviewScreen() {
                               />
                             ))}
 
-                            {/* Blended Emotions */}
-                            <View
-                              style={{
-                                marginTop: 8,
-                                paddingTop: 10,
-                                borderTopWidth: 1,
-                                borderTopColor: "rgba(255,255,255,0.1)",
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  fontFamily: "Inter_600SemiBold",
-                                  color: "rgba(255,255,255,0.55)",
-                                  fontSize: 7,
-                                  textTransform: "uppercase",
-                                  letterSpacing: 0.6,
-                                  marginBottom: 6,
-                                }}
-                              >
-                                Blended Emotions
-                              </Text>
-                              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5 }}>
-                                {["Love", "Awe"].map((blend) => (
-                                  <View
-                                    key={blend}
-                                    style={{
-                                      borderRadius: 12,
-                                      borderWidth: 1,
-                                      paddingHorizontal: 8,
-                                      paddingVertical: 3,
-                                      ...WHITE_BADGE_STYLE,
-                                    }}
-                                  >
-                                    <Text
-                                      style={{
-                                        fontFamily: "Inter_600SemiBold",
-                                        color: "#FFFFFF",
-                                        fontSize: 8,
-                                      }}
-                                    >
-                                      {blend}
-                                    </Text>
-                                  </View>
-                                ))}
-                              </View>
-                            </View>
-
-                            {/* Emotional Tension */}
-                            <View style={{ marginTop: 10 }}>
-                              <Text
-                                style={{
-                                  fontFamily: "Inter_600SemiBold",
-                                  color: "rgba(255,255,255,0.55)",
-                                  fontSize: 7,
-                                  textTransform: "uppercase",
-                                  letterSpacing: 0.6,
-                                  marginBottom: 6,
-                                }}
-                              >
-                                Emotional Tension
-                              </Text>
-                              <View
-                                style={{
-                                  borderRadius: 12,
-                                  borderWidth: 1,
-                                  paddingHorizontal: 8,
-                                  paddingVertical: 3,
-                                  alignSelf: "flex-start",
-                                  ...WHITE_BADGE_STYLE,
-                                }}
-                              >
-                                <Text
-                                  style={{
-                                    fontFamily: "Inter_600SemiBold",
-                                    color: "#FFFFFF",
-                                    fontSize: 8,
-                                  }}
-                                >
-                                  joy ↔ sadness
-                                </Text>
-                              </View>
-                              <Text
-                                style={{
-                                  fontFamily: "Inter_400Regular",
-                                  color: "rgba(255,255,255,0.4)",
-                                  fontSize: 7,
-                                  marginTop: 5,
-                                }}
-                              >
-                                Opposing emotions detected simultaneously
-                              </Text>
-                            </View>
+                            {/* Blended Emotions + Emotional Tension — the
+                                real extras sub-component, so the badges and
+                                the "opposing emotions" note are the app's
+                                own (including its "joy↔sadness" format). */}
+                            <EmotionBreakdownCard
+                              aiBlendedEmotions={["Love", "Awe"]}
+                              aiAmbivalenceFlags={["joy↔sadness"]}
+                            />
                           </View>
 
                           {/* Topics */}
@@ -1537,17 +1357,21 @@ export function FreeTrialPreviewScreen() {
                     <Animated.View entering={FadeIn.duration(400)} style={{ flex: 1 }}>
                       <View
                         style={{ flex: 1 }}
-                        onLayout={(e) => setInsightsViewportHeight(e.nativeEvent.layout.height)}
+                        onLayout={(e) => {
+                          insightsViewportH.value = e.nativeEvent.layout.height;
+                        }}
                       >
                         <Animated.ScrollView
                           ref={insightsScrollRef}
                           scrollEnabled={false}
                           showsVerticalScrollIndicator={false}
-                          onContentSizeChange={(_w, h) => setInsightsContentHeight(h)}
+                          onContentSizeChange={(_w, h) => {
+                            insightsContentH.value = h;
+                          }}
                           contentContainerStyle={{
                             paddingHorizontal: 14,
                             paddingTop: 12,
-                            paddingBottom: 16,
+                            paddingBottom: 28,
                           }}
                         >
                           <Text
@@ -1583,13 +1407,11 @@ export function FreeTrialPreviewScreen() {
                                 style={{
                                   width: 26,
                                   height: 26,
-                                  borderRadius: 13,
-                                  backgroundColor: "rgba(255,255,255,0.12)",
                                   alignItems: "center",
                                   justifyContent: "center",
                                 }}
                               >
-                                <Flame size={13} color="#FBBF24" weight="fill" />
+                                <AnimatedStreakFlame streak={7} size={26} />
                               </View>
                               <View>
                                 <Text
@@ -1665,8 +1487,12 @@ export function FreeTrialPreviewScreen() {
                               </View>
                             </View>
                           </View>
+                          <ValenceArousalChart
+                            entries={DEMO_ENTRIES}
+                            primaryColor={themeColors.primary}
+                          />
                           <BodyHeatmapCard
-                            entries={DEMO_HEATMAP_ENTRIES}
+                            entries={DEMO_ENTRIES}
                             primaryColor={themeColors.primary}
                           />
                         </Animated.ScrollView>
@@ -1754,37 +1580,5 @@ export function FreeTrialPreviewScreen() {
         </SafeAreaView>
       </LinearGradient>
     </View>
-  );
-}
-
-// ── Animated Recommendation text that types in (demo pacing only — the
-//    real app displays the AI reflection instantly; this reveal is purely
-//    a stylistic device to keep the demo engaging). ──
-function AnimatedReflectionText() {
-  const reflectionText =
-    "You showed real self-awareness today. Setting boundaries is a sign of growth — keep trusting the process.";
-  const [charIndex, setCharIndex] = React.useState(0);
-
-  useEffect(() => {
-    if (charIndex < reflectionText.length) {
-      const t = setTimeout(() => setCharIndex((c) => c + 1), 22);
-      return () => clearTimeout(t);
-    }
-  }, [charIndex]);
-
-  return (
-    <Text
-      style={{
-        fontFamily: "Inter_400Regular",
-        color: "rgba(255,255,255,0.92)",
-        fontSize: 9,
-        lineHeight: 14,
-      }}
-    >
-      {reflectionText.substring(0, charIndex)}
-      {charIndex < reflectionText.length ? (
-        <Text style={{ color: "rgba(255,255,255,0.4)" }}>|</Text>
-      ) : null}
-    </Text>
   );
 }
