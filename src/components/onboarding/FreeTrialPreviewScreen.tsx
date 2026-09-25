@@ -1615,16 +1615,19 @@ export function FreeTrialPreviewScreen() {
                                 marginBottom: 8,
                               }}
                             >
-                              <View
-                                style={{
-                                  width: 26,
-                                  height: 26,
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <AnimatedStreakFlame streak={7} size={26} />
-                              </View>
+                              {/* Flame and trophy share the 30-Day Milestone
+                                  tile spec: 26px circle, 13px glyph. The
+                                  flame needs badgeSize/badgeRadius passed
+                                  explicitly — they default to 48/16, which
+                                  renders an oversized square. */}
+                              <AnimatedStreakFlame
+                                streak={7}
+                                size={13}
+                                badgeSize={26}
+                                badgeRadius={13}
+                                badgeColor="rgba(255,255,255,0.12)"
+                                iconColor="#FFFFFF"
+                              />
                               <View>
                                 <Text
                                   style={{
