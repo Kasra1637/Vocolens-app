@@ -34,7 +34,7 @@
  */
 
 import React, { useEffect } from "react";
-import { View, Text, Pressable, Platform } from "react-native";
+import { View, Text, Pressable, Platform, type LayoutChangeEvent } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -50,6 +50,7 @@ import Animated, {
   withSequence,
   Easing,
 } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
 const SOFT = Easing.bezier(0.16, 1, 0.3, 1);
 import { tapHaptic, successHaptic } from "@/lib/haptics";
 import {
@@ -93,10 +94,10 @@ const T = {
   processStart: 7550,
   labelSwap: 7550 + 990,
   reflectStart: 9750,
-  rsavePressStart: 12750,
-  savingStart: 13100,
-  reflectEnd: 14100,
-  entryStart: 14100,
+  rsavePressStart: 14050,
+  savingStart: 14400,
+  reflectEnd: 15600,
+  entryStart: 15600,
   entryEnd: 24100,
   insightsStart: 24100,
   insightsEnd: 31600,
@@ -104,14 +105,20 @@ const T = {
 } as const;
 
 // Auto-scroll choreography per scrolling phase. The pass is a pure function
-// of the clock (see the useDerivedValue calls below) rather than a setTimeout,
-// so it always targets the true measured maximum, re-aims by itself if the
-// content resizes mid-phase, and then holds at the bottom for whatever is left
-// of the phase so the result is actually readable.
+// of the clock rather than a setTimeout, so it always targets the true
+// measured maximum, re-aims by itself if the content resizes mid-phase, and
+// then holds at the bottom for whatever is left of the phase so the result is
+// actually readable.
+const REFLECT_SCROLL_DELAY = 250;
+const REFLECT_SCROLL_DURATION = 1400;
 const ENTRY_SCROLL_DELAY = 800;
 const ENTRY_SCROLL_DURATION = 4000;
 const INSIGHTS_SCROLL_DELAY = 800;
 const INSIGHTS_SCROLL_DURATION = 3000;
+
+// The panel shows a phone screen, so the real MicButton is scaled to fit the
+// panel's width; every press animates relative to this base.
+const MIC_MOCK_SCALE = 0.78;
 
 const MIN_RECORDING_SECONDS = 50; // matches the real insight-depth goal
 
@@ -343,6 +350,43 @@ const DEMO_ENTRIES: JournalEntry[] = [
   },
 ];
 
+// ── One clock-driven auto-scroll for a demo phase. Returns the ref to put on
+//    the phase's ScrollView plus the two callbacks that feed the measured
+//    content/viewport heights in. Progress is a pure function of the clock, so
+//    the pass always aims at the true maximum, re-aims itself if the content
+//    resizes mid-phase, and then holds at the bottom for the rest of the
+//    phase. Content that already fits yields a max of 0 and never moves.
+function useMockAutoScroll(
+  clockSV: SharedValue<number>,
+  startAt: number,
+  delay: number,
+  duration: number,
+) {
+  const ref = useAnimatedRef<Animated.ScrollView>();
+  const contentH = useSharedValue(0);
+  const viewportH = useSharedValue(0);
+
+  const offset = useDerivedValue(() => {
+    const raw = (clockSV.value - (startAt + delay)) / duration;
+    const p = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+    return p * Math.max(0, contentH.value - viewportH.value);
+  });
+
+  useDerivedValue(() => {
+    scrollTo(ref, 0, offset.value, false);
+  });
+
+  return {
+    ref,
+    onContentSizeChange: (_w: number, h: number) => {
+      contentH.value = h;
+    },
+    onLayout: (e: LayoutChangeEvent) => {
+      viewportH.value = e.nativeEvent.layout.height;
+    },
+  };
+}
+
 export function FreeTrialPreviewScreen() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -376,7 +420,12 @@ export function FreeTrialPreviewScreen() {
   // a bare withSpring(0.92) like the real Pause control. (The real Save
   // buttons carry Shadows.large but no scale animation, so the press itself
   // is a deliberate demo enhancement, not app-verbatim.)
-  const micScale = useSharedValue(1);
+  //
+  // MIC_MOCK_SCALE: the real MicButton is 216dp across (HALO_SIZE 176 + 40),
+  // which is wider than this panel on most phones. The `scale` prop is the
+  // app's own external-scale hook, so the whole button — sonar, halo, bezel —
+  // shrinks together and the press still multiplies out from that base.
+  const micScale = useSharedValue(MIC_MOCK_SCALE);
   const saveScale = useSharedValue(1);
   const rsaveScale = useSharedValue(1);
   const cardFloat = useSharedValue(0);
@@ -386,8 +435,8 @@ export function FreeTrialPreviewScreen() {
 
   React.useEffect(() => {
     micScale.value = micPressed
-      ? withSpring(0.92, { damping: 15, stiffness: 400 })
-      : withSpring(1, { damping: 15, stiffness: 400 });
+      ? withSpring(MIC_MOCK_SCALE * 0.92, { damping: 15, stiffness: 400 })
+      : withSpring(MIC_MOCK_SCALE, { damping: 15, stiffness: 400 });
   }, [micPressed, micScale]);
 
   React.useEffect(() => {
@@ -398,9 +447,6 @@ export function FreeTrialPreviewScreen() {
     rsaveScale.value = rsavePressed ? withSpring(0.92) : withSpring(1);
   }, [rsavePressed, rsaveScale]);
 
-  const micScaleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: micScale.value }],
-  }));
   const saveScaleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: saveScale.value }],
   }));
@@ -417,40 +463,29 @@ export function FreeTrialPreviewScreen() {
       ? Math.min(6, Math.max(0, Math.floor((clock - T.recordStart) / 1000)))
       : 0;
 
-  // Auto-scroll through the full results screen. Heights live in shared
-  // values (not state) so re-measuring never re-runs an effect, and the
-  // scroll offset is derived straight from the clock — no timers to clear,
-  // no stale maxScroll captured before the content finished laying out.
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const entryContentH = useSharedValue(0);
-  const entryViewportH = useSharedValue(0);
-
-  const entryScrollY = useDerivedValue(() => {
-    const raw =
-      (clockSV.value - (T.entryStart + ENTRY_SCROLL_DELAY)) / ENTRY_SCROLL_DURATION;
-    const p = raw < 0 ? 0 : raw > 1 ? 1 : raw;
-    return p * Math.max(0, entryContentH.value - entryViewportH.value);
-  });
-
-  useDerivedValue(() => {
-    scrollTo(scrollRef, 0, entryScrollY.value, false);
-  });
-
-  // Insights auto-glide — same clock-derived pattern, shorter window.
-  const insightsScrollRef = useAnimatedRef<Animated.ScrollView>();
-  const insightsContentH = useSharedValue(0);
-  const insightsViewportH = useSharedValue(0);
-
-  const insightsScrollY = useDerivedValue(() => {
-    const raw =
-      (clockSV.value - (T.insightsStart + INSIGHTS_SCROLL_DELAY)) / INSIGHTS_SCROLL_DURATION;
-    const p = raw < 0 ? 0 : raw > 1 ? 1 : raw;
-    return p * Math.max(0, insightsContentH.value - insightsViewportH.value);
-  });
-
-  useDerivedValue(() => {
-    scrollTo(insightsScrollRef, 0, insightsScrollY.value, false);
-  });
+  // Clock-driven auto-scroll, one instance per scrolling phase. Heights live
+  // in shared values (not state) so re-measuring never re-runs an effect, and
+  // the offset is derived straight from the clock — no timers to clear, no
+  // stale maxScroll captured before the content finished laying out. A phase
+  // whose content fits simply yields a max of 0 and never moves.
+  const reflectScroll = useMockAutoScroll(
+    clockSV,
+    T.reflectStart,
+    REFLECT_SCROLL_DELAY,
+    REFLECT_SCROLL_DURATION,
+  );
+  const entryScroll = useMockAutoScroll(
+    clockSV,
+    T.entryStart,
+    ENTRY_SCROLL_DELAY,
+    ENTRY_SCROLL_DURATION,
+  );
+  const insightsScroll = useMockAutoScroll(
+    clockSV,
+    T.insightsStart,
+    INSIGHTS_SCROLL_DELAY,
+    INSIGHTS_SCROLL_DURATION,
+  );
 
   useEffect(() => {
     cardFloat.value = withRepeat(
@@ -503,24 +538,24 @@ export function FreeTrialPreviewScreen() {
           <View
             style={{
               flex: 1,
-              paddingHorizontal: 24,
+              paddingHorizontal: 16,
               justifyContent: "space-between",
-              paddingTop: 12,
-              paddingBottom: 24,
+              paddingTop: 10,
+              paddingBottom: 20,
             }}
           >
             {/* Title */}
             <Animated.View
               entering={FadeIn.delay(50).duration(600).easing(SOFT)}
-              style={{ alignItems: "center", marginTop: 4 }}
+              style={{ alignItems: "center", marginTop: 2 }}
             >
               <Text
                 style={{
                   fontFamily: "Fraunces_700Bold",
                   color: "#FFFFFF",
-                  fontSize: 30,
+                  fontSize: 23,
                   textAlign: "center",
-                  lineHeight: 38,
+                  lineHeight: 29,
                   opacity: 0.92,
                   letterSpacing: 0.2,
                 }}
@@ -532,7 +567,7 @@ export function FreeTrialPreviewScreen() {
             {/* ── Animated App Demo ── */}
             <Animated.View
               entering={FadeIn.delay(200).duration(700).easing(SOFT)}
-              style={[cardFloatStyle, { flex: 1, maxHeight: 460, marginTop: 12, marginBottom: 16 }]}
+              style={[cardFloatStyle, { flex: 1, marginTop: 10, marginBottom: 12 }]}
             >
               <View
                 style={{
@@ -583,7 +618,7 @@ export function FreeTrialPreviewScreen() {
                       >
                         What&apos;s on your mind today?
                       </Text>
-                      <Animated.View style={[{ marginVertical: 6 }, micScaleStyle]}>
+                      <View style={{ marginVertical: 6 }}>
                         <MicButton
                           onPress={() => {}}
                           disabled
@@ -593,7 +628,7 @@ export function FreeTrialPreviewScreen() {
                           glowColor={themeColors.buttonGlowColor}
                           scale={micScale}
                         />
-                      </Animated.View>
+                      </View>
                       <Text
                         style={{
                           fontFamily: "Inter_400Regular",
@@ -912,22 +947,31 @@ export function FreeTrialPreviewScreen() {
                       (Serenity PRIMARY), so the story stays coherent.
                      ══════════════════════════════════════════ */}
                   {phase === "reflection" && (
-                    <Animated.View
-                      entering={FadeIn.duration(400)}
-                      style={{ flex: 1, paddingTop: 14, paddingHorizontal: 16 }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "rgba(255,255,255,0.55)",
-                          fontSize: 7,
-                          textTransform: "uppercase",
-                          letterSpacing: 0.6,
-                          marginBottom: 8,
-                        }}
-                      >
-                        AI detected these emotions
-                      </Text>
+                    <Animated.View entering={FadeIn.duration(400)} style={{ flex: 1 }}>
+                      <View style={{ flex: 1 }} onLayout={reflectScroll.onLayout}>
+                        <Animated.ScrollView
+                          ref={reflectScroll.ref}
+                          scrollEnabled={false}
+                          showsVerticalScrollIndicator={false}
+                          onContentSizeChange={reflectScroll.onContentSizeChange}
+                          contentContainerStyle={{
+                            paddingTop: 14,
+                            paddingHorizontal: 16,
+                            paddingBottom: 20,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: "Inter_600SemiBold",
+                              color: "rgba(255,255,255,0.55)",
+                              fontSize: 7,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.6,
+                              marginBottom: 8,
+                            }}
+                          >
+                            AI detected these emotions
+                          </Text>
                       {DEMO_EMOTIONS.slice(0, 3).map((e, rank) => (
                         <AnimatedBar
                           key={e.label}
@@ -998,6 +1042,7 @@ export function FreeTrialPreviewScreen() {
                           </LinearGradient>
                         </Animated.View>
                       </View>
+                      </Animated.ScrollView>
                       {clock >= T.savingStart && (
                         <View
                           style={{
@@ -1023,6 +1068,7 @@ export function FreeTrialPreviewScreen() {
                           </Text>
                         </View>
                       )}
+                      </View>
                     </Animated.View>
                   )}
 
@@ -1088,19 +1134,12 @@ export function FreeTrialPreviewScreen() {
                       {/* Scrollable body — auto-scrolls top to bottom over
                           the phase duration so the entire results screen is
                           visible, not just a cropped slice. */}
-                      <View
-                        style={{ flex: 1 }}
-                        onLayout={(e) => {
-                          entryViewportH.value = e.nativeEvent.layout.height;
-                        }}
-                      >
+                      <View style={{ flex: 1 }} onLayout={entryScroll.onLayout}>
                         <Animated.ScrollView
-                          ref={scrollRef}
+                          ref={entryScroll.ref}
                           scrollEnabled={false}
                           showsVerticalScrollIndicator={false}
-                          onContentSizeChange={(_w, h) => {
-                            entryContentH.value = h;
-                          }}
+                          onContentSizeChange={entryScroll.onContentSizeChange}
                           contentContainerStyle={{
                             paddingHorizontal: 14,
                             paddingBottom: 28,
@@ -1355,19 +1394,12 @@ export function FreeTrialPreviewScreen() {
                      ══════════════════════════════════════════ */}
                   {phase === "insights" && (
                     <Animated.View entering={FadeIn.duration(400)} style={{ flex: 1 }}>
-                      <View
-                        style={{ flex: 1 }}
-                        onLayout={(e) => {
-                          insightsViewportH.value = e.nativeEvent.layout.height;
-                        }}
-                      >
+                      <View style={{ flex: 1 }} onLayout={insightsScroll.onLayout}>
                         <Animated.ScrollView
-                          ref={insightsScrollRef}
+                          ref={insightsScroll.ref}
                           scrollEnabled={false}
                           showsVerticalScrollIndicator={false}
-                          onContentSizeChange={(_w, h) => {
-                            insightsContentH.value = h;
-                          }}
+                          onContentSizeChange={insightsScroll.onContentSizeChange}
                           contentContainerStyle={{
                             paddingHorizontal: 14,
                             paddingTop: 12,
@@ -1506,13 +1538,13 @@ export function FreeTrialPreviewScreen() {
             {/* ── No payment text + CTA ── */}
             <Animated.View
               entering={FadeIn.delay(500).duration(600).easing(SOFT)}
-              style={{ alignItems: "center", paddingBottom: 24 }}
+              style={{ alignItems: "center", paddingBottom: 20 }}
             >
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  marginBottom: 16,
+                  marginBottom: 12,
                 }}
               >
                 <Check
@@ -1558,7 +1590,7 @@ export function FreeTrialPreviewScreen() {
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "center",
-                    paddingVertical: 16,
+                    paddingVertical: 13,
                     borderRadius: 48,
                   }}
                 >
@@ -1566,7 +1598,7 @@ export function FreeTrialPreviewScreen() {
                     style={{
                       color: "#FFFFFF",
                       fontFamily: "Inter_700Bold",
-                      fontSize: 18,
+                      fontSize: 16,
                       marginRight: 6,
                     }}
                   >
