@@ -20,22 +20,22 @@
  *   Phase 4 — Reflection review: "AI detected these emotions" + the
  *             "Adjust how it felt" sliders + Save, then the real
  *             "Saving..." overlay.
- *   Phase 5 — Entry results: an auto-scrolling pass down the real
- *             entry-detail screen — header, meta chips, Recommendation
- *             card, and the full Emotion Breakdown card (ranked Plutchik
- *             emotions, Blended Emotions, Emotional Tension) — so the
- *             *entire* results screen is shown, not just a cropped card.
- *   Phase 6 — Insights: streak card + the real BodyHeatmapCard with demo
- *             data, auto-gliding like the entry pass.
+ *   Phase 5 — Entry results: the saved entry — title, date, meta chips, Full
+ *             Transcript, the Emotion Breakdown card (ranked Plutchik
+ *             emotions), collapsed AI Analysis, and Topics.
+ *   Phase 6 — Insights: greeting + streak card + the real BodyHeatmapCard
+ *             with demo data, auto-gliding like the site demo.
  *
  * A single wall-clock driver advances the whole story and loops it; every
  * press occupies the tail of the state it acts on so it bottoms out exactly
  * as that state changes. All colors come from the selected onboarding theme.
  *
- * The demo sits in a device frame with the real tab bar, and every app
- * component inside is rendered at true size then uniformly scaled to the
- * panel's MOCK_SCALE, so real and hand-rolled panels stay in proportion on
- * any device. Tapping the mock jumps to the next stage.
+ * Screens, copy, scores and timing are a deliberate port of the site's hero
+ * demo (site src/components/vocolens/AppDemo.tsx + demo/*) so the two stay in
+ * step; the real app components (MicButton, AdjustmentSliderCard,
+ * BodyHeatmapCard) stand in for the site's hand-drawn equivalents, and the
+ * app's own real-icon tab bar replaces the site chrome. Four dots below the
+ * phone jump between the screens, as on the site.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -80,15 +80,14 @@ import {
   ChartBar,
   Target,
   Trophy,
+  CaretDown as ChevronDown,
+  ChatTeardropText as MessageSquareText,
 } from "phosphor-react-native";
 import useOnboardingStore, { THEME_COLORS } from "@/lib/state/onboarding-store";
 import { ProgressBar } from "@/components/onboarding/ProgressBar";
 import { BackButton } from "@/components/onboarding/BackButton";
 import { MicButton } from "@/components/MicButton";
 import BodyHeatmapCard from "@/components/BodyHeatmapCard";
-import ValenceArousalChart from "@/components/ValenceArousalChart";
-import { RecommendationCard } from "@/components/RecommendationCard";
-import EmotionBreakdownCard from "@/components/EmotionBreakdownCard";
 import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
 import AdjustmentSliderCard from "@/components/shared/AdjustmentSliderCard";
 import {
@@ -108,42 +107,36 @@ const PRESS_MS = 350;
 const T = {
   micPressStart: 1200,
   recordStart: 1200 + PRESS_MS,
-  recordEnd: 5900,
-  savePressStart: 5900 - PRESS_MS,
-  processStart: 5900,
-  labelSwap: 5900 + 860,
-  reflectStart: 7800,
-  rsavePressStart: 10600,
-  savingStart: 10900,
-  reflectEnd: 12000,
-  entryStart: 12000,
-  entryEnd: 17600,
-  insightsStart: 17600,
-  insightsEnd: 22400,
-  total: 22400,
+  recordEnd: 8600,
+  savePressStart: 8600 - PRESS_MS,
+  transcribeEnd: 10600,
+  analyzeEnd: 12600,
+  reflectSavePressStart: 14500,
+  reflectSavePressEnd: 14500 + PRESS_MS,
+  savingEnd: 16600,
+  journalEnd: 20100,
+  total: 23600,
 } as const;
 
-// Stage boundaries, used by the tap-to-skip handler.
-const PHASE_STARTS = [
-  0,
-  T.recordStart,
-  T.processStart,
-  T.reflectStart,
-  T.entryStart,
-  T.insightsStart,
-] as const;
+// Dot navigation mirrors the site demo's four screens
+// (site AppDemo.tsx:37-38, 80-85).
+const DOT_STARTS = [0, T.analyzeEnd, T.savingEnd, T.journalEnd] as const;
+const DOT_LABELS = ["Record", "Reflection", "Entry", "Insights"] as const;
 
 // Auto-scroll choreography per scrolling phase. The pass is a pure function
 // of the clock rather than a setTimeout, so it always targets the true
 // measured maximum, re-aims by itself if the content resizes mid-phase, and
 // then holds at the bottom for whatever is left of the phase so the result is
-// actually readable.
-const REFLECT_SCROLL_DELAY = 250;
-const REFLECT_SCROLL_DURATION = 1200;
+// actually readable. Insights mirrors the site's 950ms delay / 1600ms glide.
+// The site's reflection layer does not scroll; this pass only engages if the
+// real (taller) adjustment sliders overflow the panel, so it degrades
+// gracefully instead of clipping.
+const REFLECT_SCROLL_DELAY = 300;
+const REFLECT_SCROLL_DURATION = 900;
 const ENTRY_SCROLL_DELAY = 700;
 const ENTRY_SCROLL_DURATION = 3000;
-const INSIGHTS_SCROLL_DELAY = 700;
-const INSIGHTS_SCROLL_DURATION = 2400;
+const INSIGHTS_SCROLL_DELAY = 950;
+const INSIGHTS_SCROLL_DURATION = 1600;
 
 // The demo panel is a compressed view of a phone screen, not a full one, so
 // every app component is rendered at its true size and then uniformly scaled
@@ -153,14 +146,22 @@ const MOCK_SCALE = 0.72;
 
 const MIN_RECORDING_SECONDS = 50; // matches the real insight-depth goal
 
-type DemoPhase = "idle" | "recording" | "processing" | "reflection" | "entry" | "insights";
+type DemoPhase =
+  | "idle"
+  | "recording"
+  | "transcribing"
+  | "analyzing"
+  | "reflection"
+  | "entry"
+  | "insights";
 
 function phaseAt(t: number): DemoPhase {
   if (t < T.recordStart) return "idle";
-  if (t < T.processStart) return "recording";
-  if (t < T.reflectStart) return "processing";
-  if (t < T.entryStart) return "reflection";
-  if (t < T.insightsStart) return "entry";
+  if (t < T.recordEnd) return "recording";
+  if (t < T.transcribeEnd) return "transcribing";
+  if (t < T.analyzeEnd) return "analyzing";
+  if (t < T.savingEnd) return "reflection";
+  if (t < T.journalEnd) return "entry";
   return "insights";
 }
 
@@ -318,27 +319,23 @@ function AnimatedBar({
   );
 }
 
-// Ranked demo emotions — same shape/order the real Emotion Breakdown card
-// derives from entry.emotionScores (sorted desc, top 4, rank 0 = PRIMARY).
+// Detected emotions — the exact set and scores the site demo shows
+// (site demo/ReflectionScreen.tsx:11-15 and demo/JournalScreen.tsx:218-222),
+// shared by the reflection review and the entry screen so the two agree.
 const DEMO_EMOTIONS = [
-  { label: "Serenity", subLabel: "trust", score: 78 },
-  { label: "Joy", subLabel: undefined, score: 65 },
-  { label: "Interest", subLabel: "anticipation", score: 52 },
-  { label: "Pensiveness", subLabel: "sadness", score: 31 },
+  { label: "Happiness", subLabel: undefined, score: 85 },
+  { label: "Trust", subLabel: undefined, score: 51 },
+  { label: "Anticipation", subLabel: undefined, score: 42 },
 ];
 
 function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 }
 
-const DEMO_ADVICE =
-  "You showed real self-awareness today. Setting boundaries is a sign of growth — keep trusting the process.";
+const DEMO_TRANSCRIPT =
+  "Started my day with a great workout. Feeling energized and ready to tackle the day. The sunrise was beautiful and I feel grateful for this moment of peace.";
 
-// ── Demo entries backing the real BodyHeatmapCard and ValenceArousalChart
-//    in the Insights phase, and the slider values shown in the Reflection
-//    phase. Dated relative to now so the cards' 30-day filter always keeps
-//    them. Valence/arousal match the reflection sliders, so the story stays
-//    consistent across all three phases.
+// ── Demo entries backing the real BodyHeatmapCard in the Insights phase.
 const DEMO_ENTRIES: JournalEntry[] = [
   {
     id: "demo-entry-1",
@@ -604,17 +601,20 @@ export function FreeTrialPreviewScreen() {
   // The story visits three tabs: Record (idle → recording → processing →
   // reflection), then Entries for the saved entry, then Insights.
   const activeTabIndex =
-    clock < T.entryStart ? 0 : clock < T.insightsStart ? 1 : 2;
+    clock < T.analyzeEnd ? 0 : clock < T.journalEnd ? 1 : 2;
 
-  // Tap the mock to jump to the next stage — the 22s loop is short, but an
-  // onboarding visitor should never be stuck watching. Every press and scroll
-  // beat is derived from the clock, so jumping forward replays them cleanly.
-  const skipToNextPhase = useCallback(() => {
-    const next = PHASE_STARTS.find((start) => start > clock);
-    clockRef.current = next === undefined ? 0 : next + 60;
-    clockSV.value = clockRef.current;
-    setClock(clockRef.current);
-  }, [clock, clockSV]);
+  // Dot navigation — the same four screens the site demo exposes.
+  const dotIndex =
+    clock < T.analyzeEnd ? 0 : clock < T.savingEnd ? 1 : clock < T.journalEnd ? 2 : 3;
+
+  const goToScreen = useCallback(
+    (index: number) => {
+      clockRef.current = DOT_STARTS[index];
+      clockSV.value = clockRef.current;
+      setClock(clockRef.current);
+    },
+    [clockSV],
+  );
 
   // Scripted presses — the mic uses the exact spring the real MicButton
   // uses (withSpring 0.92, damping 15, stiffness 400); the Save buttons use
@@ -629,8 +629,9 @@ export function FreeTrialPreviewScreen() {
   const rsaveScale = useSharedValue(1);
   const cardFloat = useSharedValue(0);
   const micPressed = clock >= T.micPressStart && clock < T.recordStart;
-  const savePressed = clock >= T.savePressStart && clock < T.processStart;
-  const rsavePressed = clock >= T.rsavePressStart && clock < T.savingStart;
+  const savePressed = clock >= T.savePressStart && clock < T.transcribeEnd;
+  const rsavePressed =
+    clock >= T.reflectSavePressStart && clock < T.reflectSavePressEnd;
 
   React.useEffect(() => {
     micScale.value = micPressed
@@ -653,13 +654,16 @@ export function FreeTrialPreviewScreen() {
     transform: [{ scale: rsaveScale.value }],
   }));
 
+  // Matches the site demo: the label swaps at 45% of the processing window.
   const processingLabel =
-    clock < T.labelSwap ? "Transcribing your voice..." : "Analyzing emotions...";
+    clock < T.recordEnd + (T.transcribeEnd - T.recordEnd) * 0.45
+      ? "Transcribing your voice..."
+      : "Analyzing emotions...";
 
   // Duration counter — derived from the clock, mirrors the real timer.
   const demoSeconds =
     phase === "recording"
-      ? Math.min(6, Math.max(0, Math.floor((clock - T.recordStart) / 1000)))
+      ? Math.min(7, Math.max(0, Math.floor((clock - T.recordStart) / 1000)))
       : 0;
 
   // Clock-driven auto-scroll, one instance per scrolling phase. Heights live
@@ -669,19 +673,19 @@ export function FreeTrialPreviewScreen() {
   // whose content fits simply yields a max of 0 and never moves.
   const reflectScroll = useMockAutoScroll(
     clockSV,
-    T.reflectStart,
+    T.analyzeEnd,
     REFLECT_SCROLL_DELAY,
     REFLECT_SCROLL_DURATION,
   );
   const entryScroll = useMockAutoScroll(
     clockSV,
-    T.entryStart,
+    T.savingEnd,
     ENTRY_SCROLL_DELAY,
     ENTRY_SCROLL_DURATION,
   );
   const insightsScroll = useMockAutoScroll(
     clockSV,
-    T.insightsStart,
+    T.journalEnd,
     INSIGHTS_SCROLL_DELAY,
     INSIGHTS_SCROLL_DURATION,
   );
@@ -768,12 +772,8 @@ export function FreeTrialPreviewScreen() {
               entering={FadeIn.delay(200).duration(700).easing(SOFT)}
               style={[cardFloatStyle, { flex: 1, marginTop: 10, marginBottom: 12 }]}
             >
-              {/* Device frame — sells the mock as a phone rather than a card.
-                  Tap anywhere inside to skip to the next stage. */}
-              <Pressable
-                onPress={skipToNextPhase}
-                accessibilityRole="button"
-                accessibilityLabel="Skip to the next stage of the app preview"
+              {/* Device frame — sells the mock as a phone rather than a card. */}
+              <View
                 style={{
                   flex: 1,
                   borderRadius: 30,
@@ -1121,9 +1121,11 @@ export function FreeTrialPreviewScreen() {
                   )}
 
                   {/* ══════════════════════════════════════════
-                      PHASE 3 — Processing (real recording-tab state)
+                      PHASE 3/4 — Processing: the transcribing and
+                      analysing states share this screen and swap the
+                      label, exactly as the site demo does.
                      ══════════════════════════════════════════ */}
-                  {phase === "processing" && (
+                  {(phase === "transcribing" || phase === "analyzing") && (
                     <Animated.View
                       entering={FadeIn.duration(400)}
                       style={[
@@ -1195,91 +1197,107 @@ export function FreeTrialPreviewScreen() {
                           <Text
                             style={{
                               fontFamily: "Inter_600SemiBold",
-                              color: "rgba(255,255,255,0.55)",
-                              fontSize: 7,
-                              textTransform: "uppercase",
-                              letterSpacing: 0.6,
+                              color: "rgba(255,255,255,0.8)",
+                              fontSize: 8,
                               marginBottom: 8,
                             }}
                           >
                             AI detected these emotions
                           </Text>
-                      {DEMO_EMOTIONS.slice(0, 3).map((e, rank) => (
-                        <AnimatedBar
-                          key={e.label}
-                          label={e.label}
-                          subLabel={e.subLabel}
-                          score={e.score}
-                          barOpacity={[1, 0.75, 0.55][rank]}
-                          isPrimary={rank === 0}
-                          delay={200 + rank * 150}
-                        />
-                      ))}
-                      <Text
-                        style={{
-                          fontFamily: "Inter_600SemiBold",
-                          color: "rgba(255,255,255,0.55)",
-                          fontSize: 7,
-                          textTransform: "uppercase",
-                          letterSpacing: 0.6,
-                          marginTop: 10,
-                          marginBottom: 8,
-                        }}
-                      >
-                        Adjust how it felt
-                      </Text>
-                      <ScaledMock>
-                        <AdjustmentSliderCard
-                          label="Unpleasant ↔ Pleasant"
-                          value={DEMO_ENTRIES[0].valence}
-                          min={-100}
-                          max={100}
-                          step={5}
-                          onChange={() => {}}
-                          minLabel="Unpleasant"
-                          maxLabel="Pleasant"
-                        />
-                      </ScaledMock>
-                      <ScaledMock>
-                        <AdjustmentSliderCard
-                          label="Calm ↔ Activated"
-                          value={DEMO_ENTRIES[0].arousal}
-                          min={0}
-                          max={100}
-                          step={5}
-                          onChange={() => {}}
-                          minLabel="Calm"
-                          maxLabel="Activated"
-                        />
-                      </ScaledMock>
-                      <View style={{ alignItems: "center", marginTop: 12 }}>
-                        <Animated.View style={rsaveScaleStyle}>
-                          <LinearGradient
-                            colors={themeColors.buttonGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 0, y: 1 }}
+                          {DEMO_EMOTIONS.map((e, rank) => (
+                            <AnimatedBar
+                              key={e.label}
+                              label={e.label}
+                              subLabel={e.subLabel}
+                              score={e.score}
+                              barOpacity={[1, 0.55, 0.55][rank]}
+                              isPrimary={rank === 0}
+                              delay={200 + rank * 150}
+                            />
+                          ))}
+                          <Text
                             style={{
-                              borderRadius: 24,
-                              paddingHorizontal: 32,
-                              paddingVertical: 10,
-                              alignItems: "center",
-                              justifyContent: "center",
+                              fontFamily: "Inter_400Regular",
+                              color: "rgba(255,255,255,0.5)",
+                              fontSize: 7,
+                              marginTop: 6,
                             }}
                           >
+                            Not quite right? Tap to edit
+                          </Text>
+                          <Text
+                            style={{
+                              fontFamily: "Inter_600SemiBold",
+                              color: "rgba(255,255,255,0.8)",
+                              fontSize: 8,
+                              marginTop: 12,
+                              marginBottom: 8,
+                            }}
+                          >
+                            Adjust how it felt
+                          </Text>
+                          <ScaledMock>
+                            <AdjustmentSliderCard
+                              label="Unpleasant ↔ Pleasant"
+                              value={24}
+                              min={-100}
+                              max={100}
+                              step={2}
+                              onChange={() => {}}
+                              minLabel="Unpleasant"
+                              maxLabel="Pleasant"
+                            />
+                          </ScaledMock>
+                          <ScaledMock>
+                            <AdjustmentSliderCard
+                              label="Calm ↔ Activated"
+                              value={54}
+                              min={0}
+                              max={100}
+                              step={2}
+                              onChange={() => {}}
+                              minLabel="Calm"
+                              maxLabel="Activated"
+                            />
+                          </ScaledMock>
+                          <View style={{ alignItems: "center", marginTop: 12 }}>
+                            <Animated.View style={rsaveScaleStyle}>
+                              <LinearGradient
+                                colors={themeColors.buttonGradient}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 0, y: 1 }}
+                                style={{
+                                  borderRadius: 24,
+                                  paddingHorizontal: 32,
+                                  paddingVertical: 10,
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    fontFamily: "Inter_600SemiBold",
+                                    color: "#FFFFFF",
+                                    fontSize: 11,
+                                  }}
+                                >
+                                  Save
+                                </Text>
+                              </LinearGradient>
+                            </Animated.View>
                             <Text
                               style={{
-                                fontFamily: "Inter_600SemiBold",
-                                color: "#FFFFFF",
-                                fontSize: 13,
+                                fontFamily: "Inter_400Regular",
+                                color: "rgba(255,255,255,0.5)",
+                                fontSize: 8,
+                                marginTop: 6,
                               }}
                             >
-                              Save
+                              Skip this step
                             </Text>
-                          </LinearGradient>
-                        </Animated.View>
-                      </View>
-                      </Animated.ScrollView>
-                      {clock >= T.savingStart && (
+                          </View>
+                        </Animated.ScrollView>
+                        {clock >= T.reflectSavePressEnd && (
                         <View
                           style={{
                             position: "absolute",
@@ -1390,7 +1408,7 @@ export function FreeTrialPreviewScreen() {
                               marginBottom: 2,
                             }}
                           >
-                            A Moment of Clarity
+                            Morning Reflections
                           </Text>
                           <Text
                             style={{
@@ -1400,7 +1418,7 @@ export function FreeTrialPreviewScreen() {
                               marginBottom: 10,
                             }}
                           >
-                            Monday, April 14, 2025
+                            Wednesday, February 4, 2026
                           </Text>
 
                           {/* Meta chips row — Time / Duration / Intensity */}
@@ -1426,7 +1444,7 @@ export function FreeTrialPreviewScreen() {
                                   marginTop: 3,
                                 }}
                               >
-                                8:32 PM
+                                9:10 PM
                               </Text>
                               <Text
                                 style={{
@@ -1449,7 +1467,7 @@ export function FreeTrialPreviewScreen() {
                                   marginTop: 3,
                                 }}
                               >
-                                3m
+                                2m
                               </Text>
                               <Text
                                 style={{
@@ -1472,7 +1490,7 @@ export function FreeTrialPreviewScreen() {
                                   marginTop: 3,
                                 }}
                               >
-                                72%
+                                85%
                               </Text>
                               <Text
                                 style={{
@@ -1486,27 +1504,61 @@ export function FreeTrialPreviewScreen() {
                             </View>
                           </View>
 
-                          {/* Recommendation — the real card, compact mode
-                              (it shows the advice instantly, exactly as
-                              entry-detail does). */}
-                          <ScaledMock>
-                            <RecommendationCard
-                              advice={DEMO_ADVICE}
-                              isGenerating={false}
-                              themeColor={themeColors.primary}
-                              compact
-                            />
-                          </ScaledMock>
-
-                          {/* Emotion Breakdown card — the ranked results,
-                              plus Blended Emotions / Emotional Tension,
-                              exactly as entry-detail.tsx renders them. */}
+                          {/* Full Transcript — the site's entry card
+                              (site demo/JournalScreen.tsx:132-144). */}
                           <View
                             style={{
                               borderRadius: 14,
-                              backgroundColor: "rgba(255,255,255,0.12)",
+                              backgroundColor: "rgba(255,255,255,0.08)",
                               borderWidth: 1.5,
-                              borderColor: "rgba(255,255,255,0.20)",
+                              borderColor: "rgba(255,255,255,0.18)",
+                              padding: 10,
+                              marginBottom: 10,
+                            }}
+                          >
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                marginBottom: 6,
+                              }}
+                            >
+                              <MessageSquareText
+                                size={11}
+                                color="rgba(255,255,255,0.85)"
+                                weight="regular"
+                              />
+                              <Text
+                                style={{
+                                  fontFamily: "Inter_600SemiBold",
+                                  color: "#FFFFFF",
+                                  fontSize: 9.5,
+                                  marginLeft: 5,
+                                }}
+                              >
+                                Full Transcript
+                              </Text>
+                            </View>
+                            <Text
+                              style={{
+                                fontFamily: "Inter_400Regular",
+                                color: "rgba(255,255,255,0.6)",
+                                fontSize: 8,
+                                lineHeight: 12,
+                              }}
+                            >
+                              {DEMO_TRANSCRIPT}
+                            </Text>
+                          </View>
+
+                          {/* Emotion Breakdown card — the same three ranked
+                              emotions the reflection review detected. */}
+                          <View
+                            style={{
+                              borderRadius: 14,
+                              backgroundColor: "rgba(255,255,255,0.08)",
+                              borderWidth: 1.5,
+                              borderColor: "rgba(255,255,255,0.18)",
                               padding: 10,
                               marginBottom: 10,
                             }}
@@ -1550,31 +1602,69 @@ export function FreeTrialPreviewScreen() {
                                 label={e.label}
                                 subLabel={e.subLabel}
                                 score={e.score}
-                                barOpacity={[1, 0.75, 0.55, 0.4][rank]}
+                                barOpacity={[1, 0.55, 0.55][rank]}
                                 isPrimary={rank === 0}
                                 delay={200 + rank * 150}
                               />
                             ))}
+                          </View>
 
-                            {/* Blended Emotions + Emotional Tension — the
-                                real extras sub-component, so the badges and
-                                the "opposing emotions" note are the app's
-                                own (including its "joy↔sadness" format). */}
-                            <ScaledMock>
-                              <EmotionBreakdownCard
-                                aiBlendedEmotions={["Love", "Awe"]}
-                                aiAmbivalenceFlags={["joy↔sadness"]}
+                          {/* AI Analysis — collapsed, matching the site's
+                              entry screen (site demo/JournalScreen.tsx:167-181). */}
+                          <View
+                            style={{
+                              borderRadius: 14,
+                              backgroundColor: "rgba(255,255,255,0.06)",
+                              borderWidth: 1.5,
+                              borderColor: "rgba(255,255,255,0.14)",
+                              padding: 10,
+                              marginBottom: 10,
+                            }}
+                          >
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <MessageSquareText
+                                  size={11}
+                                  color="rgba(255,255,255,0.4)"
+                                  weight="regular"
+                                />
+                                <Text
+                                  style={{
+                                    fontFamily: "Inter_600SemiBold",
+                                    color: "#FFFFFF",
+                                    fontSize: 9.5,
+                                    marginLeft: 5,
+                                  }}
+                                >
+                                  AI Analysis
+                                </Text>
+                              </View>
+                              <ChevronDown
+                                size={11}
+                                color="rgba(255,255,255,0.4)"
+                                weight="regular"
                               />
-                            </ScaledMock>
+                            </View>
                           </View>
 
                           {/* Topics */}
                           <View
                             style={{
                               borderRadius: 14,
-                              backgroundColor: "rgba(255,255,255,0.12)",
+                              backgroundColor: "rgba(255,255,255,0.08)",
                               borderWidth: 1.5,
-                              borderColor: "rgba(255,255,255,0.20)",
+                              borderColor: "rgba(255,255,255,0.18)",
                               padding: 10,
                             }}
                           >
@@ -1598,7 +1688,7 @@ export function FreeTrialPreviewScreen() {
                               </Text>
                             </View>
                             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5 }}>
-                              {["Self-Awareness", "Boundaries", "Growth"].map((topic) => (
+                              {["Exercise", "Gratitude"].map((topic) => (
                                 <View
                                   key={topic}
                                   style={{
@@ -1656,14 +1746,25 @@ export function FreeTrialPreviewScreen() {
                           >
                             Good morning, Alex!
                           </Text>
+                          <Text
+                            style={{
+                              fontFamily: "Inter_400Regular",
+                              color: "rgba(255,255,255,0.65)",
+                              fontSize: 8,
+                              textAlign: "center",
+                              marginTop: 2,
+                              marginBottom: 6,
+                            }}
+                          >
+                            Here&apos;s what your voice revealed about you.
+                          </Text>
                           <View
                             style={{
                               borderRadius: 14,
-                              backgroundColor: "rgba(255,255,255,0.12)",
+                              backgroundColor: "rgba(255,255,255,0.08)",
                               borderWidth: 1.5,
-                              borderColor: "rgba(255,255,255,0.20)",
+                              borderColor: "rgba(255,255,255,0.18)",
                               padding: 10,
-                              marginTop: 10,
                               marginBottom: 10,
                             }}
                           >
@@ -1760,12 +1861,6 @@ export function FreeTrialPreviewScreen() {
                             </View>
                           </View>
                           <ScaledMock>
-                            <ValenceArousalChart
-                              entries={DEMO_ENTRIES}
-                              primaryColor={themeColors.primary}
-                            />
-                          </ScaledMock>
-                          <ScaledMock>
                             <BodyHeatmapCard
                               entries={DEMO_ENTRIES}
                               primaryColor={themeColors.primary}
@@ -1794,8 +1889,48 @@ export function FreeTrialPreviewScreen() {
                     backgroundColor: "rgba(255,255,255,0.35)",
                   }}
                 />
-              </Pressable>
+              </View>
             </Animated.View>
+
+            {/* ── Stage dots — the same four the site demo exposes ── */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                paddingVertical: 6,
+                borderRadius: 999,
+                backgroundColor: "rgba(255,255,255,0.08)",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.15)",
+                alignSelf: "center",
+                marginBottom: 10,
+              }}
+            >
+              {DOT_STARTS.map((start, index) => (
+                <Pressable
+                  key={start}
+                  onPress={() => goToScreen(index)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: dotIndex === index }}
+                  accessibilityLabel={DOT_LABELS[index]}
+                  style={{ padding: 6 }}
+                >
+                  <View
+                    style={{
+                      width: dotIndex === index ? 18 : 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor:
+                        dotIndex === index
+                          ? themeColors.primary
+                          : "rgba(147,112,219,0.35)",
+                    }}
+                  />
+                </Pressable>
+              ))}
+            </View>
 
             {/* ── No payment text + CTA ── */}
             <Animated.View
