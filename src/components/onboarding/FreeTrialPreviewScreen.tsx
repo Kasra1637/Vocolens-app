@@ -31,10 +31,23 @@
  * A single wall-clock driver advances the whole story and loops it; every
  * press occupies the tail of the state it acts on so it bottoms out exactly
  * as that state changes. All colors come from the selected onboarding theme.
+ *
+ * The demo sits in a device frame with the real tab bar, and every app
+ * component inside is rendered at true size then uniformly scaled to the
+ * panel's MOCK_SCALE, so real and hand-rolled panels stay in proportion on
+ * any device. Tapping the mock jumps to the next stage.
  */
 
-import React, { useEffect } from "react";
-import { View, Text, Pressable, Platform, type LayoutChangeEvent } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  Platform,
+  StyleSheet,
+  type LayoutChangeEvent,
+  type ViewStyle,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -78,6 +91,12 @@ import { RecommendationCard } from "@/components/RecommendationCard";
 import EmotionBreakdownCard from "@/components/EmotionBreakdownCard";
 import { AnimatedStreakFlame } from "@/components/AnimatedStreakFlame";
 import AdjustmentSliderCard from "@/components/shared/AdjustmentSliderCard";
+import {
+  MicTabIcon,
+  BookTabIcon,
+  BarChartTabIcon,
+} from "@/components/TabIcons";
+import { hexToRgba } from "@/lib/glass";
 import type { JournalEntry } from "@/lib/types";
 import { useClickSound } from "@/lib/hooks/useClickSound";
 
@@ -89,20 +108,30 @@ const PRESS_MS = 350;
 const T = {
   micPressStart: 1200,
   recordStart: 1200 + PRESS_MS,
-  recordEnd: 7550,
-  savePressStart: 7550 - PRESS_MS,
-  processStart: 7550,
-  labelSwap: 7550 + 990,
-  reflectStart: 9750,
-  rsavePressStart: 14050,
-  savingStart: 14400,
-  reflectEnd: 15600,
-  entryStart: 15600,
-  entryEnd: 24100,
-  insightsStart: 24100,
-  insightsEnd: 31600,
-  total: 31600,
+  recordEnd: 5900,
+  savePressStart: 5900 - PRESS_MS,
+  processStart: 5900,
+  labelSwap: 5900 + 860,
+  reflectStart: 7800,
+  rsavePressStart: 10600,
+  savingStart: 10900,
+  reflectEnd: 12000,
+  entryStart: 12000,
+  entryEnd: 17600,
+  insightsStart: 17600,
+  insightsEnd: 22400,
+  total: 22400,
 } as const;
+
+// Stage boundaries, used by the tap-to-skip handler.
+const PHASE_STARTS = [
+  0,
+  T.recordStart,
+  T.processStart,
+  T.reflectStart,
+  T.entryStart,
+  T.insightsStart,
+] as const;
 
 // Auto-scroll choreography per scrolling phase. The pass is a pure function
 // of the clock rather than a setTimeout, so it always targets the true
@@ -110,15 +139,17 @@ const T = {
 // then holds at the bottom for whatever is left of the phase so the result is
 // actually readable.
 const REFLECT_SCROLL_DELAY = 250;
-const REFLECT_SCROLL_DURATION = 1400;
-const ENTRY_SCROLL_DELAY = 800;
-const ENTRY_SCROLL_DURATION = 4000;
-const INSIGHTS_SCROLL_DELAY = 800;
-const INSIGHTS_SCROLL_DURATION = 3000;
+const REFLECT_SCROLL_DURATION = 1200;
+const ENTRY_SCROLL_DELAY = 700;
+const ENTRY_SCROLL_DURATION = 3000;
+const INSIGHTS_SCROLL_DELAY = 700;
+const INSIGHTS_SCROLL_DURATION = 2400;
 
-// The panel shows a phone screen, so the real MicButton is scaled to fit the
-// panel's width; every press animates relative to this base.
-const MIC_MOCK_SCALE = 0.78;
+// The demo panel is a compressed view of a phone screen, not a full one, so
+// every app component is rendered at its true size and then uniformly scaled
+// to the panel's scale. One constant drives the lot so the real components and
+// the hand-rolled panels stay in proportion with each other on any device.
+const MOCK_SCALE = 0.72;
 
 const MIN_RECORDING_SECONDS = 50; // matches the real insight-depth goal
 
@@ -387,6 +418,161 @@ function useMockAutoScroll(
   };
 }
 
+// ── Renders a real app component at its true size, scaled to the demo panel's
+//    scale. The child is laid out at panelWidth / MOCK_SCALE so that after the
+//    transform it lands exactly on the panel width, and a spacer reserves the
+//    scaled height so surrounding layout (including the auto-scroll targets)
+//    measures the visual size, not the pre-transform one.
+function ScaledMock({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: ViewStyle;
+}) {
+  const [boxW, setBoxW] = useState(0);
+  const [childH, setChildH] = useState(0);
+
+  return (
+    <View
+      style={style}
+      onLayout={(e) => setBoxW(e.nativeEvent.layout.width)}
+    >
+      <View
+        style={{
+          width: boxW > 0 ? boxW / MOCK_SCALE : undefined,
+          transform: [{ scale: MOCK_SCALE }],
+          transformOrigin: "top left",
+        }}
+        onLayout={(e) => setChildH(e.nativeEvent.layout.height)}
+      >
+        {children}
+      </View>
+      {childH > 0 ? <View style={{ height: childH * MOCK_SCALE }} /> : null}
+    </View>
+  );
+}
+
+// ── Demo tab bar — the real bar's structure, labels and icons
+//    ((tabs)/_layout.tsx:62-170 + TabIcons.tsx), reduced to the three tabs the
+//    story actually visits. The newly active tab presses with the app's own
+//    pill spring (AnimatedPill.tsx:47-52, scale 0.95) so switching screens
+//    reads as navigation rather than a cut.
+const DEMO_TABS = [
+  { label: "Record", Icon: MicTabIcon },
+  { label: "Entries", Icon: BookTabIcon },
+  { label: "Insights", Icon: BarChartTabIcon },
+] as const;
+
+// ── One tab. Split out of the bar below because a hook can't be called from
+//    inside a .map() callback.
+function DemoTabItem({
+  label,
+  Icon,
+  isActive,
+  primaryColor,
+}: {
+  label: string;
+  Icon: (p: { size?: number; color?: string; filled?: boolean }) => React.ReactElement;
+  isActive: boolean;
+  primaryColor: string;
+}) {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = isActive
+      ? withSequence(
+          withSpring(0.95, { damping: 15, stiffness: 300 }),
+          withSpring(1, { damping: 12, stiffness: 200 }),
+        )
+      : withSpring(1, { damping: 12, stiffness: 200 });
+  }, [isActive, scale]);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 3,
+        paddingBottom: 5,
+      }}
+    >
+      <Animated.View style={style}>
+        {isActive ? (
+          <View
+            style={{
+              position: "absolute",
+              top: -6,
+              left: 9,
+              width: 5,
+              height: 5,
+              borderRadius: 2.5,
+              backgroundColor: primaryColor,
+            }}
+          />
+        ) : null}
+        <View
+          style={{ height: 22, width: 22, alignItems: "center", justifyContent: "center" }}
+        >
+          <Icon
+            size={20}
+            color={isActive ? "#FFFFFF" : "rgba(255,255,255,0.45)"}
+            filled={isActive}
+          />
+        </View>
+      </Animated.View>
+      <Text
+        numberOfLines={1}
+        style={{
+          fontFamily: isActive ? "Inter_600SemiBold" : "Inter_400Regular",
+          color: isActive ? "#FFFFFF" : "rgba(255,255,255,0.45)",
+          fontSize: 9,
+          letterSpacing: 0.2,
+          textAlign: "center",
+        }}
+      >
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+function DemoTabBar({
+  activeIndex,
+  primaryColor,
+}: {
+  activeIndex: number;
+  primaryColor: string;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingTop: 8,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: hexToRgba(primaryColor, 0.3),
+        backgroundColor: "rgba(15,14,26,0.92)",
+      }}
+    >
+      {DEMO_TABS.map((tab, index) => (
+        <DemoTabItem
+          key={tab.label}
+          label={tab.label}
+          Icon={tab.Icon}
+          isActive={index === activeIndex}
+          primaryColor={primaryColor}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function FreeTrialPreviewScreen() {
   const selectedTheme = useOnboardingStore((s) => s.selectedTheme);
   const nextStep = useOnboardingStore((s) => s.nextStep);
@@ -397,10 +583,10 @@ export function FreeTrialPreviewScreen() {
 
   // Demo clock — wall-clock deltas in a 100ms interval, modulo the loop.
   // `clock` drives JSX; `clockSV` mirrors it for the UI-thread auto-scroll.
-  const [clock, setClock] = React.useState(0);
+  const [clock, setClock] = useState(0);
   const clockSV = useSharedValue(0);
-  const clockRef = React.useRef(0);
-  React.useEffect(() => {
+  const clockRef = useRef(0);
+  useEffect(() => {
     const lastRef = { current: Date.now() };
     const id = setInterval(() => {
       const now = Date.now();
@@ -415,17 +601,30 @@ export function FreeTrialPreviewScreen() {
 
   const phase = phaseAt(clock);
 
+  // The story visits three tabs: Record (idle → recording → processing →
+  // reflection), then Entries for the saved entry, then Insights.
+  const activeTabIndex =
+    clock < T.entryStart ? 0 : clock < T.insightsStart ? 1 : 2;
+
+  // Tap the mock to jump to the next stage — the 22s loop is short, but an
+  // onboarding visitor should never be stuck watching. Every press and scroll
+  // beat is derived from the clock, so jumping forward replays them cleanly.
+  const skipToNextPhase = useCallback(() => {
+    const next = PHASE_STARTS.find((start) => start > clock);
+    clockRef.current = next === undefined ? 0 : next + 60;
+    clockSV.value = clockRef.current;
+    setClock(clockRef.current);
+  }, [clock, clockSV]);
+
   // Scripted presses — the mic uses the exact spring the real MicButton
   // uses (withSpring 0.92, damping 15, stiffness 400); the Save buttons use
   // a bare withSpring(0.92) like the real Pause control. (The real Save
   // buttons carry Shadows.large but no scale animation, so the press itself
   // is a deliberate demo enhancement, not app-verbatim.)
-  //
-  // MIC_MOCK_SCALE: the real MicButton is 216dp across (HALO_SIZE 176 + 40),
-  // which is wider than this panel on most phones. The `scale` prop is the
-  // app's own external-scale hook, so the whole button — sonar, halo, bezel —
-  // shrinks together and the press still multiplies out from that base.
-  const micScale = useSharedValue(MIC_MOCK_SCALE);
+  // MOCK_SCALE keeps the real MicButton (216dp across) in proportion with the
+  // rest of the panel. `scale` is the app's own external-scale hook, so the
+  // sonar, halo and bezel shrink together and the press springs from there.
+  const micScale = useSharedValue(MOCK_SCALE);
   const saveScale = useSharedValue(1);
   const rsaveScale = useSharedValue(1);
   const cardFloat = useSharedValue(0);
@@ -435,8 +634,8 @@ export function FreeTrialPreviewScreen() {
 
   React.useEffect(() => {
     micScale.value = micPressed
-      ? withSpring(MIC_MOCK_SCALE * 0.92, { damping: 15, stiffness: 400 })
-      : withSpring(MIC_MOCK_SCALE, { damping: 15, stiffness: 400 });
+      ? withSpring(MOCK_SCALE * 0.92, { damping: 15, stiffness: 400 })
+      : withSpring(MOCK_SCALE, { damping: 15, stiffness: 400 });
   }, [micPressed, micScale]);
 
   React.useEffect(() => {
@@ -569,25 +768,58 @@ export function FreeTrialPreviewScreen() {
               entering={FadeIn.delay(200).duration(700).easing(SOFT)}
               style={[cardFloatStyle, { flex: 1, marginTop: 10, marginBottom: 12 }]}
             >
-              <View
+              {/* Device frame — sells the mock as a phone rather than a card.
+                  Tap anywhere inside to skip to the next stage. */}
+              <Pressable
+                onPress={skipToNextPhase}
+                accessibilityRole="button"
+                accessibilityLabel="Skip to the next stage of the app preview"
                 style={{
                   flex: 1,
-                  borderRadius: 24,
-                  overflow: "hidden",
-                  borderWidth: 1.5,
-                  borderColor: "rgba(255,255,255,0.25)",
+                  borderRadius: 30,
+                  padding: 5,
+                  backgroundColor: "#14141A",
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.14)",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 12 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 22,
+                  elevation: 10,
                 }}
               >
-                <LinearGradient
-                  colors={[
-                    themeColors.gradientStart,
-                    themeColors.primary,
-                    themeColors.secondary,
-                  ]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={{ flex: 1 }}
+                <View
+                  style={{
+                    flex: 1,
+                    borderRadius: 25,
+                    overflow: "hidden",
+                    backgroundColor: themeColors.gradientEnd,
+                  }}
                 >
+                  {/* Notch */}
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 5,
+                      left: "50%",
+                      marginLeft: -27,
+                      width: 54,
+                      height: 15,
+                      borderRadius: 8,
+                      backgroundColor: "#14141A",
+                      zIndex: 20,
+                    }}
+                  />
+                  <LinearGradient
+                    colors={[
+                      themeColors.gradientStart,
+                      themeColors.primary,
+                      themeColors.secondary,
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={{ flex: 1 }}
+                  >
                   {/* ══════════════════════════════════════════
                       PHASE 1 — Idle ("Speak your mind" + real MicButton)
                       A scripted press on the mic starts the recording.
@@ -662,7 +894,7 @@ export function FreeTrialPreviewScreen() {
                         style={{
                           flex: 1,
                           alignItems: "center",
-                          paddingTop: 16,
+                          paddingTop: 24,
                           paddingHorizontal: 16,
                         }}
                       >
@@ -955,7 +1187,7 @@ export function FreeTrialPreviewScreen() {
                           showsVerticalScrollIndicator={false}
                           onContentSizeChange={reflectScroll.onContentSizeChange}
                           contentContainerStyle={{
-                            paddingTop: 14,
+                            paddingTop: 24,
                             paddingHorizontal: 16,
                             paddingBottom: 20,
                           }}
@@ -996,26 +1228,30 @@ export function FreeTrialPreviewScreen() {
                       >
                         Adjust how it felt
                       </Text>
-                      <AdjustmentSliderCard
-                        label="Unpleasant ↔ Pleasant"
-                        value={DEMO_ENTRIES[0].valence}
-                        min={-100}
-                        max={100}
-                        step={5}
-                        onChange={() => {}}
-                        minLabel="Unpleasant"
-                        maxLabel="Pleasant"
-                      />
-                      <AdjustmentSliderCard
-                        label="Calm ↔ Activated"
-                        value={DEMO_ENTRIES[0].arousal}
-                        min={0}
-                        max={100}
-                        step={5}
-                        onChange={() => {}}
-                        minLabel="Calm"
-                        maxLabel="Activated"
-                      />
+                      <ScaledMock>
+                        <AdjustmentSliderCard
+                          label="Unpleasant ↔ Pleasant"
+                          value={DEMO_ENTRIES[0].valence}
+                          min={-100}
+                          max={100}
+                          step={5}
+                          onChange={() => {}}
+                          minLabel="Unpleasant"
+                          maxLabel="Pleasant"
+                        />
+                      </ScaledMock>
+                      <ScaledMock>
+                        <AdjustmentSliderCard
+                          label="Calm ↔ Activated"
+                          value={DEMO_ENTRIES[0].arousal}
+                          min={0}
+                          max={100}
+                          step={5}
+                          onChange={() => {}}
+                          minLabel="Calm"
+                          maxLabel="Activated"
+                        />
+                      </ScaledMock>
                       <View style={{ alignItems: "center", marginTop: 12 }}>
                         <Animated.View style={rsaveScaleStyle}>
                           <LinearGradient
@@ -1087,7 +1323,7 @@ export function FreeTrialPreviewScreen() {
                           alignItems: "center",
                           justifyContent: "space-between",
                           paddingHorizontal: 14,
-                          paddingTop: 12,
+                          paddingTop: 24,
                           paddingBottom: 8,
                         }}
                       >
@@ -1253,12 +1489,14 @@ export function FreeTrialPreviewScreen() {
                           {/* Recommendation — the real card, compact mode
                               (it shows the advice instantly, exactly as
                               entry-detail does). */}
-                          <RecommendationCard
-                            advice={DEMO_ADVICE}
-                            isGenerating={false}
-                            themeColor={themeColors.primary}
-                            compact
-                          />
+                          <ScaledMock>
+                            <RecommendationCard
+                              advice={DEMO_ADVICE}
+                              isGenerating={false}
+                              themeColor={themeColors.primary}
+                              compact
+                            />
+                          </ScaledMock>
 
                           {/* Emotion Breakdown card — the ranked results,
                               plus Blended Emotions / Emotional Tension,
@@ -1322,10 +1560,12 @@ export function FreeTrialPreviewScreen() {
                                 real extras sub-component, so the badges and
                                 the "opposing emotions" note are the app's
                                 own (including its "joy↔sadness" format). */}
-                            <EmotionBreakdownCard
-                              aiBlendedEmotions={["Love", "Awe"]}
-                              aiAmbivalenceFlags={["joy↔sadness"]}
-                            />
+                            <ScaledMock>
+                              <EmotionBreakdownCard
+                                aiBlendedEmotions={["Love", "Awe"]}
+                                aiAmbivalenceFlags={["joy↔sadness"]}
+                              />
+                            </ScaledMock>
                           </View>
 
                           {/* Topics */}
@@ -1402,7 +1642,7 @@ export function FreeTrialPreviewScreen() {
                           onContentSizeChange={insightsScroll.onContentSizeChange}
                           contentContainerStyle={{
                             paddingHorizontal: 14,
-                            paddingTop: 12,
+                            paddingTop: 24,
                             paddingBottom: 28,
                           }}
                         >
@@ -1519,20 +1759,42 @@ export function FreeTrialPreviewScreen() {
                               </View>
                             </View>
                           </View>
-                          <ValenceArousalChart
-                            entries={DEMO_ENTRIES}
-                            primaryColor={themeColors.primary}
-                          />
-                          <BodyHeatmapCard
-                            entries={DEMO_ENTRIES}
-                            primaryColor={themeColors.primary}
-                          />
+                          <ScaledMock>
+                            <ValenceArousalChart
+                              entries={DEMO_ENTRIES}
+                              primaryColor={themeColors.primary}
+                            />
+                          </ScaledMock>
+                          <ScaledMock>
+                            <BodyHeatmapCard
+                              entries={DEMO_ENTRIES}
+                              primaryColor={themeColors.primary}
+                            />
+                          </ScaledMock>
                         </Animated.ScrollView>
                       </View>
                     </Animated.View>
                   )}
-                </LinearGradient>
-              </View>
+                  </LinearGradient>
+                  <DemoTabBar
+                    activeIndex={activeTabIndex}
+                    primaryColor={themeColors.primary}
+                  />
+                </View>
+                {/* Home indicator */}
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 3,
+                    left: "50%",
+                    marginLeft: -32,
+                    width: 64,
+                    height: 3,
+                    borderRadius: 2,
+                    backgroundColor: "rgba(255,255,255,0.35)",
+                  }}
+                />
+              </Pressable>
             </Animated.View>
 
             {/* ── No payment text + CTA ── */}
