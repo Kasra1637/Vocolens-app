@@ -90,7 +90,7 @@ export function PersonalizePermissionScreen() {
                   lineHeight: 38,
                 }}
               >
-                Personalize your experience
+                Let&rsquo;s personalize your experience
               </Text>
             </Animated.View>
 
