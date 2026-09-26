@@ -110,7 +110,7 @@ export function PersonalizePermissionScreen() {
                   maxWidth: "85%",
                 }}
               >
-                Answer a few questions so we can tailor everything for you
+                A few quick questions — this is what shapes your journal
               </Text>
             </Animated.View>
 
