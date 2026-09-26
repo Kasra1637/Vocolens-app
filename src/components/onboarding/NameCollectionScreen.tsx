@@ -92,7 +92,7 @@ export function NameCollectionScreen() {
             {/* Title */}
             <Animated.View
               entering={FadeIn.delay(100).duration(900).easing(SOFT)}
-              className="items-center mb-2"
+              className="items-center mb-6"
             >
               <Text
                 className="text-center"
@@ -105,26 +105,6 @@ export function NameCollectionScreen() {
                 }}
               >
                 How should we call you?
-              </Text>
-            </Animated.View>
-
-            {/* Subtitle */}
-            <Animated.View
-              entering={FadeIn.delay(200).duration(900).easing(SOFT)}
-              className="items-center mb-6"
-            >
-              <Text
-                style={{
-                  fontFamily: "Inter_400Regular",
-                  color: "rgba(255,255,255,0.68)",
-                  fontSize: 14,
-                  textAlign: "center",
-                  lineHeight: 22,
-                  letterSpacing: 0.1,
-                  maxWidth: "85%",
-                }}
-              >
-                I'll use it to make your experience feel personal
               </Text>
             </Animated.View>
 
