@@ -104,7 +104,7 @@ export function NameCollectionScreen() {
                   letterSpacing: 0.2,
                 }}
               >
-                How should we call you?
+                What should we call you?
               </Text>
             </Animated.View>
 
