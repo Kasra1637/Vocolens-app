@@ -46,14 +46,16 @@ import { BiometricLockScreen } from './BiometricLockScreen';
 import { BiometricUnlockCelebration } from './BiometricUnlockCelebration';
 import { SubscriptionLapsedPaywall } from './SubscriptionLapsedPaywall';
 import { FirstLaunchCelebration } from './FirstLaunchCelebration';
+import { NotificationService } from '@/lib/services/notification-service';
+import { getDeviceId } from '@/lib/device-id';
 import {
   configureAdapty,
   getProfile,
   hasAccessLevel,
   addProfileListener,
   getPlanTypeFromProfile,
+  identifyUser,
 } from '@/lib/adaptyClient';
-import { NotificationService } from '@/lib/services/notification-service';
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -83,6 +85,13 @@ export function AuthGate({ children }: AuthGateProps) {
   // profile — see checkAuthStatus.
   const planType           = useSubscriptionStore((s) => s.planType);
 
+  // Give this install a stable anonymous Adapty identity exactly once per app
+  // run, so a manually granted access level (via Adapty's server-side
+  // grantAccessLevel) has a profile to attach to. This is identity wiring only
+  // — no login, no UI, no entitlement bypass. The same per-install id is also
+  // used as the usage-metering subject (X-Device-Id), so nothing new leaves the
+  // device, and renames to an existing profile are ignored by Adapty.
+  const [identifyChecked, setIdentifyChecked] = useState(false);
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
 
   // Track whether we should show the unlock celebration overlay.
@@ -222,6 +231,20 @@ export function AuthGate({ children }: AuthGateProps) {
     // If the SDK call failed (not activated / offline), we keep the cached
     // value — but only because isEntitlementValid() already bounded how long
     // that cache stays acceptable.
+
+    // Register a stable anonymous identity with Adapty. Deliberately after the
+    // entitlement check above so a profile change it triggers is treated as the
+    // same "unknown != none" case — the listener re-reads the stored planType
+    // instead of clearing it. Never throws into the launch path: a failure
+    // here (SDK not activated, mock mode, storage unreadable) only means no
+    // identity is registered, exactly as before this call existed.
+    if (!identifyChecked) {
+      const deviceId = await getDeviceId().catch(() => null);
+      if (deviceId) {
+        await identifyUser(deviceId).catch(() => {});
+      }
+      setIdentifyChecked(true);
+    }
 
     setSubscriptionVerified(true);
     setAuthenticated(true);
