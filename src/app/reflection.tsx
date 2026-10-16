@@ -491,13 +491,10 @@ export default function ReflectionScreen() {
                       </View>
                     )}
 
-                    {sel && (
-                      <View
-                        style={[s.checkBadge, { backgroundColor: accentColor }]}
-                      >
-                        <Check size={10} color="#1F2937" weight="regular" />
-                      </View>
-                    )}
+                    {/* No check badge on detected chips — the highlight
+                        (accent border + tint) plus the confidence bar already
+                        marks the AI result. Selection state stays internal so
+                        editing still toggles chips without a visual tick. */}
                   </Pressable>
                 );
               })}
@@ -816,14 +813,6 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.65)",
     textTransform: "capitalize",
     textAlign: "center",
-  },
-  checkBadge: {
-    marginTop: 4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
   },
   defCard: {
     flexDirection: "row",
