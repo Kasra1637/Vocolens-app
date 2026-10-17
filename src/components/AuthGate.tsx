@@ -93,6 +93,10 @@ export function AuthGate({ children }: AuthGateProps) {
   // device, and renames to an existing profile are ignored by Adapty.
   const [identifyChecked, setIdentifyChecked] = useState(false);
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
+  // Gates negative profile-listener events until the first launch
+  // verification has read the identified profile (see checkAuthStatus).
+  // Refs (not state): the listener is registered once and must not go stale.
+  const verifiedRef = useRef(false);
 
   // Track whether we should show the unlock celebration overlay.
   // This fires when the session transitions from locked → unlocked.
@@ -195,7 +199,12 @@ export function AuthGate({ children }: AuthGateProps) {
         // since this listener is registered once and must not go stale.
         const stored = useSubscriptionStore.getState().planType;
         setSubscription(true, getPlanTypeFromProfile(profile) ?? stored);
-      } else {
+      } else if (verifiedRef.current) {
+        // Ignore pre-verification negative events: the profile Adapty emits
+        // at activation is the cached pre-identify (anonymous) one, and
+        // clearing on it would wipe a valid cache before the identity holding
+        // a dashboard grant is even attached. Positive events are always safe
+        // to apply.
         clearSubscription();
       }
     });
@@ -206,6 +215,22 @@ export function AuthGate({ children }: AuthGateProps) {
     if (!hasCompletedOnboarding) {
       setLoading(false);
       return;
+    }
+
+    // Identify FIRST, then read the profile: a dashboard-granted access
+    // level (e.g. free lifetime access) lives on the identified per-install
+    // profile, not the SDK-anonymous one. Checking first and identifying after
+    // is how a valid grant kept reading as "no subscription" on every launch:
+    // the check below ran on the wrong identity, wiped the cache, and parked
+    // the user on the resubscribe screen. Never throws into the launch path: a
+    // failure here (SDK not activated, mock mode, storage unreadable) only
+    // means no identity is registered, exactly as before this call existed.
+    if (!identifyChecked) {
+      const deviceId = await getDeviceId().catch(() => null);
+      if (deviceId) {
+        await identifyUser(deviceId).catch(() => {});
+      }
+      setIdentifyChecked(true);
     }
 
     // Cached fallback, but only while the cache is still inside its grace
@@ -232,21 +257,8 @@ export function AuthGate({ children }: AuthGateProps) {
     // value — but only because isEntitlementValid() already bounded how long
     // that cache stays acceptable.
 
-    // Register a stable anonymous identity with Adapty. Deliberately after the
-    // entitlement check above so a profile change it triggers is treated as the
-    // same "unknown != none" case — the listener re-reads the stored planType
-    // instead of clearing it. Never throws into the launch path: a failure
-    // here (SDK not activated, mock mode, storage unreadable) only means no
-    // identity is registered, exactly as before this call existed.
-    if (!identifyChecked) {
-      const deviceId = await getDeviceId().catch(() => null);
-      if (deviceId) {
-        await identifyUser(deviceId).catch(() => {});
-      }
-      setIdentifyChecked(true);
-    }
-
     setSubscriptionVerified(true);
+    verifiedRef.current = true;
     setAuthenticated(true);
     setLoading(false);
 
